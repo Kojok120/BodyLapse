@@ -75,6 +75,11 @@ struct CalendarView: View {
                 weightViewModel.loadEntries()
                 updateCurrentPhoto()
                 
+                // Initialize chart date to selected date
+                if selectedChartDate == nil {
+                    selectedChartDate = selectedDate
+                }
+                
                 // Debug weight entries after a delay to ensure loading is complete
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     print("[Calendar] Weight entries after delay: \(weightViewModel.weightEntries.count)")
@@ -84,8 +89,9 @@ struct CalendarView: View {
                     print("[Calendar] Is premium: \(userSettings.settings.isPremium)")
                 }
             }
-            .onChange(of: selectedDate) { _ in
+            .onChange(of: selectedDate) { newDate in
                 updateCurrentPhoto()
+                selectedChartDate = newDate  // Sync chart selection when date changes
             }
             .sheet(isPresented: $showingWeightInput) {
                 WeightInputView(photo: $currentPhoto, onSave: { weight, bodyFat in
@@ -140,6 +146,7 @@ struct CalendarView: View {
                     photos: viewModel.photos,
                     onDateSelected: { date in
                         selectedDate = date
+                        selectedChartDate = date  // Sync chart selection
                         if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
                             selectedIndex = index
                         }
@@ -152,13 +159,18 @@ struct CalendarView: View {
                 ImagePicker(image: .constant(nil)) { image in
                     if let image = image {
                         // Save the imported image for the selected date
-                        let photo = Photo(
-                            id: UUID(),
-                            captureDate: selectedDate,
-                            bodyDetected: false,
-                            bodyConfidence: 0.0
-                        )
-                        PhotoStorageService.shared.saveImage(image, for: photo)
+                        print("[CalendarView] Saving photo for date: \(selectedDate)")
+                        do {
+                            let savedPhoto = try PhotoStorageService.shared.replacePhoto(
+                                for: selectedDate,
+                                with: image,
+                                isFaceBlurred: false,
+                                bodyDetectionConfidence: 0.0
+                            )
+                            print("[CalendarView] Photo saved successfully with date: \(savedPhoto.captureDate)")
+                        } catch {
+                            print("[CalendarView] Error saving imported photo: \(error)")
+                        }
                         viewModel.loadPhotos()
                         updateCurrentPhoto()
                     }
@@ -204,6 +216,7 @@ struct CalendarView: View {
                             selectedPeriod = period
                             selectedIndex = dateRange.count - 1
                             selectedDate = dateRange[selectedIndex]
+                            selectedChartDate = dateRange[selectedIndex]  // Sync chart selection
                         }
                     } + [.cancel()]
                 )
@@ -323,6 +336,7 @@ struct CalendarView: View {
                             if newIndex >= 0 && newIndex < dateRange.count {
                                 selectedIndex = newIndex
                                 selectedDate = dateRange[newIndex]
+                                selectedChartDate = dateRange[newIndex]  // Sync chart selection
                             }
                         }
                 )

@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct BodyLapseApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var storeManager = StoreManager.shared
     
     init() {
@@ -22,6 +23,10 @@ struct BodyLapseApp: App {
                 .task {
                     // Initialize StoreKit on app launch
                     await storeManager.loadProducts()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCamera"))) { _ in
+                    // Handle navigation to camera when notification is tapped
+                    // This will be handled by ContentView
                 }
         }
     }

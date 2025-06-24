@@ -9,8 +9,8 @@ struct ComparisonView: View {
                 if viewModel.photos.count >= 2 {
                     VStack {
                         ComparisonControlsView(
-                            firstDate: viewModel.firstPhoto?.captureDate ?? Date(),
-                            secondDate: viewModel.secondPhoto?.captureDate ?? Date(),
+                            firstPhoto: viewModel.firstPhoto,
+                            secondPhoto: viewModel.secondPhoto,
                             onFirstDateTap: { viewModel.showingFirstPhotoPicker = true },
                             onSecondDateTap: { viewModel.showingSecondPhotoPicker = true }
                         )
@@ -63,16 +63,34 @@ struct ComparisonView: View {
             }
             .navigationTitle("Compare Progress")
             .sheet(isPresented: $viewModel.showingFirstPhotoPicker) {
-                PhotoPickerView(photos: viewModel.photos) { photo in
-                    viewModel.firstPhoto = photo
-                    viewModel.showingFirstPhotoPicker = false
-                }
+                CalendarPopupView(
+                    selectedDate: Binding(
+                        get: { viewModel.firstPhoto?.captureDate ?? Date() },
+                        set: { _ in }
+                    ),
+                    photos: viewModel.photos,
+                    onDateSelected: { date in
+                        viewModel.firstPhoto = viewModel.photos.first { photo in
+                            Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                        }
+                        viewModel.showingFirstPhotoPicker = false
+                    }
+                )
             }
             .sheet(isPresented: $viewModel.showingSecondPhotoPicker) {
-                PhotoPickerView(photos: viewModel.photos) { photo in
-                    viewModel.secondPhoto = photo
-                    viewModel.showingSecondPhotoPicker = false
-                }
+                CalendarPopupView(
+                    selectedDate: Binding(
+                        get: { viewModel.secondPhoto?.captureDate ?? Date() },
+                        set: { _ in }
+                    ),
+                    photos: viewModel.photos,
+                    onDateSelected: { date in
+                        viewModel.secondPhoto = viewModel.photos.first { photo in
+                            Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                        }
+                        viewModel.showingSecondPhotoPicker = false
+                    }
+                )
             }
         }
         .onAppear {
@@ -82,8 +100,8 @@ struct ComparisonView: View {
 }
 
 struct ComparisonControlsView: View {
-    let firstDate: Date
-    let secondDate: Date
+    let firstPhoto: Photo?
+    let secondPhoto: Photo?
     let onFirstDateTap: () -> Void
     let onSecondDateTap: () -> Void
     
@@ -96,12 +114,23 @@ struct ComparisonControlsView: View {
     var body: some View {
         HStack(spacing: 20) {
             Button(action: onFirstDateTap) {
-                VStack {
-                    Text("Before")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text(dateFormatter.string(from: firstDate))
-                        .font(.headline)
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "calendar")
+                        Text("Before")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                    
+                    if let photo = firstPhoto {
+                        Text(dateFormatter.string(from: photo.captureDate))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Select Date")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
@@ -113,12 +142,23 @@ struct ComparisonControlsView: View {
                 .foregroundColor(.secondary)
             
             Button(action: onSecondDateTap) {
-                VStack {
-                    Text("After")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text(dateFormatter.string(from: secondDate))
-                        .font(.headline)
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "calendar")
+                        Text("After")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                    
+                    if let photo = secondPhoto {
+                        Text(dateFormatter.string(from: photo.captureDate))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Select Date")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
@@ -146,87 +186,3 @@ struct EmptyPhotoView: View {
     }
 }
 
-struct PhotoPickerView: View {
-    let photos: [Photo]
-    let onSelection: (Photo) -> Void
-    @Environment(\.dismiss) private var dismiss
-    
-    private let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
-    
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(photos) { photo in
-                        PhotoPickerItemView(photo: photo) {
-                            onSelection(photo)
-                        }
-                    }
-                }
-                .padding()
-            }
-            .navigationTitle("Select Photo")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct PhotoPickerItemView: View {
-    let photo: Photo
-    let onTap: () -> Void
-    @State private var image: UIImage?
-    
-    var body: some View {
-        Button(action: onTap) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(UIColor.secondarySystemBackground))
-                    .aspectRatio(1, contentMode: .fit)
-                
-                if let image = image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                } else {
-                    ProgressView()
-                }
-                
-                VStack {
-                    Spacer()
-                    Text(photo.captureDate, style: .date)
-                        .font(.caption2)
-                        .foregroundColor(.white)
-                        .padding(4)
-                        .background(Color.black.opacity(0.7))
-                        .cornerRadius(5)
-                        .padding(5)
-                }
-            }
-        }
-        .onAppear {
-            loadImage()
-        }
-    }
-    
-    private func loadImage() {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let loadedImage = PhotoStorageService.shared.loadImage(for: photo)
-            DispatchQueue.main.async {
-                self.image = loadedImage
-            }
-        }
-    }
-}

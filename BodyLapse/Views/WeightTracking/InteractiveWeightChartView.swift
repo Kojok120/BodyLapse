@@ -191,28 +191,30 @@ struct InteractiveWeightChartView: View {
                     .allowsHitTesting(false)
                 }
             }
-            .chartBackground { chartProxy in
+            .background(Color(UIColor.secondarySystemGroupedBackground))
+            .cornerRadius(15)
+            .overlay(
                 GeometryReader { geometry in
                     Rectangle()
                         .fill(Color.clear)
                         .contentShape(Rectangle())
                         .onTapGesture { location in
-                            updateSelection(at: location.x, geometry: geometry, chartProxy: chartProxy)
+                            print("[InteractiveWeightChartView] Tap detected at: \(location)")
+                            updateSelection(at: location.x, geometry: geometry, chartProxy: nil)
                         }
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
+                                    print("[InteractiveWeightChartView] Drag detected at: \(value.location)")
                                     isDragging = true
-                                    updateSelection(at: value.location.x, geometry: geometry, chartProxy: chartProxy)
+                                    updateSelection(at: value.location.x, geometry: geometry, chartProxy: nil)
                                 }
                                 .onEnded { _ in
                                     isDragging = false
                                 }
                         )
                 }
-            }
-            .background(Color(UIColor.secondarySystemGroupedBackground))
-            .cornerRadius(15)
+            )
             
             // Legend
             HStack(spacing: 30) {
@@ -245,23 +247,23 @@ struct InteractiveWeightChartView: View {
                 selectedDate = lastEntry.date
             }
         }
-        .onChange(of: entries) { _ in
+        .onChange(of: entries) { newEntries in
             // Update selection when entries change
-            if let lastEntry = sortedEntries.last {
+            let sorted = newEntries.sorted { $0.date < $1.date }
+            if let lastEntry = sorted.last {
                 selectedDate = lastEntry.date
             }
         }
     }
     
-    private func updateSelection(at x: CGFloat, geometry: GeometryProxy, chartProxy: ChartProxy) {
+    private func updateSelection(at x: CGFloat, geometry: GeometryProxy, chartProxy: ChartProxy?) {
         guard !sortedEntries.isEmpty else { return }
         
-        let xPosition = x - geometry.frame(in: .local).origin.x
         let plotWidth = geometry.size.width
         
         // Calculate the date based on position
         let dateInterval = dateRange.upperBound.timeIntervalSince(dateRange.lowerBound)
-        let selectedInterval = (xPosition / plotWidth) * dateInterval
+        let selectedInterval = (x / plotWidth) * dateInterval
         let selectedTime = dateRange.lowerBound.addingTimeInterval(selectedInterval)
         
         // Find the closest entry
@@ -271,6 +273,7 @@ struct InteractiveWeightChartView: View {
         
         if let entry = closestEntry {
             selectedDate = entry.date
+            print("[InteractiveWeightChartView] Selected date: \(entry.date)")
         }
     }
     

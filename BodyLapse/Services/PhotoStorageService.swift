@@ -31,7 +31,7 @@ class PhotoStorageService {
         try? FileManager.default.createDirectory(at: photosDirectory, withIntermediateDirectories: true)
     }
     
-    func savePhoto(_ image: UIImage, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
+    func savePhoto(_ image: UIImage, captureDate: Date = Date(), isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
         guard let imageData = image.jpegData(compressionQuality: 0.9) else {
             throw PhotoStorageError.compressionFailed
         }
@@ -42,6 +42,7 @@ class PhotoStorageService {
         try imageData.write(to: fileURL)
         
         let photo = Photo(
+            captureDate: captureDate,
             fileName: fileName,
             isFaceBlurred: isFaceBlurred,
             bodyDetectionConfidence: bodyDetectionConfidence,
@@ -76,11 +77,15 @@ class PhotoStorageService {
     }
     
     func replacePhoto(for date: Date, with image: UIImage, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
+        print("[PhotoStorage] Replacing photo for date: \(date)")
         if let existingPhoto = getPhotoForDate(date) {
+            print("[PhotoStorage] Found existing photo for date, deleting: \(existingPhoto.captureDate)")
             try deletePhoto(existingPhoto)
         }
         
-        return try savePhoto(image, isFaceBlurred: isFaceBlurred, bodyDetectionConfidence: bodyDetectionConfidence, weight: weight, bodyFatPercentage: bodyFatPercentage)
+        let newPhoto = try savePhoto(image, captureDate: date, isFaceBlurred: isFaceBlurred, bodyDetectionConfidence: bodyDetectionConfidence, weight: weight, bodyFatPercentage: bodyFatPercentage)
+        print("[PhotoStorage] New photo saved with date: \(newPhoto.captureDate)")
+        return newPhoto
     }
     
     func updatePhotoMetadata(_ photo: Photo, weight: Double?, bodyFatPercentage: Double?) {

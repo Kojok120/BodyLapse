@@ -41,9 +41,11 @@ extension UserSettings {
 
 @MainActor
 class UserSettingsManager: ObservableObject {
+    static let shared = UserSettingsManager()
     @Published var settings: UserSettings {
         didSet {
             save()
+            handleSettingsChange(oldValue: oldValue)
         }
     }
     
@@ -89,6 +91,17 @@ class UserSettingsManager: ObservableObject {
     @objc private func premiumStatusChanged() {
         Task { @MainActor in
             await syncPremiumStatus()
+        }
+    }
+    
+    private func handleSettingsChange(oldValue: UserSettings) {
+        // Handle reminder settings change
+        if oldValue.reminderEnabled != settings.reminderEnabled ||
+           oldValue.reminderTime != settings.reminderTime {
+            NotificationService.shared.scheduleOrUpdateDailyReminder(
+                at: settings.reminderTime,
+                enabled: settings.reminderEnabled
+            )
         }
     }
 }

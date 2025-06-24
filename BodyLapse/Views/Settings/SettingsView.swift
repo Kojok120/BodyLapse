@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     @State private var showingAbout = false
     @State private var showingPremiumUpgrade = false
     @State private var showingAppLockSettings = false
+    @State private var showingNotificationPermissionAlert = false
     #if DEBUG
     @State private var showingDebugSettings = false
     #endif
@@ -55,6 +56,17 @@ struct SettingsView: View {
                 
                 Section("Reminders") {
                     Toggle("Daily Reminder", isOn: $userSettings.settings.reminderEnabled)
+                        .onChange(of: userSettings.settings.reminderEnabled) { newValue in
+                            if newValue {
+                                // Request permission when enabling reminders
+                                NotificationService.shared.requestNotificationPermission { granted in
+                                    if !granted {
+                                        userSettings.settings.reminderEnabled = false
+                                        showingNotificationPermissionAlert = true
+                                    }
+                                }
+                            }
+                        }
                     
                     if userSettings.settings.reminderEnabled {
                         DatePicker("Reminder Time",
@@ -154,6 +166,16 @@ struct SettingsView: View {
                         .cancel()
                     ]
                 )
+            }
+            .alert("Notification Permission Required", isPresented: $showingNotificationPermissionAlert) {
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Please enable notifications in Settings to receive daily photo reminders.")
             }
         }
     }

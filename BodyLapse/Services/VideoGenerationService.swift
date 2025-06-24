@@ -140,7 +140,7 @@ class VideoGenerationService {
         let pixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(
             assetWriterInput: videoWriterInput,
             sourcePixelBufferAttributes: [
-                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
                 kCVPixelBufferWidthKey as String: options.videoSize.width,
                 kCVPixelBufferHeightKey as String: options.videoSize.height
             ]
@@ -177,15 +177,12 @@ class VideoGenerationService {
                     imageToProcess = image
                 }
                 
-                // Process image
-                let processedImage = processImage(
-                    imageToProcess,
-                    targetSize: options.videoSize,
-                    addWatermark: options.addWatermark
-                )
-                
                 // Convert to pixel buffer
-                if let pixelBuffer = pixelBuffer(from: processedImage, size: options.videoSize) {
+                if let pixelBuffer = createPixelBuffer(
+                    from: imageToProcess,
+                    size: options.videoSize,
+                    addWatermark: options.addWatermark
+                ) {
                     // Wait for input to be ready
                     while !videoWriterInput.isReadyForMoreMediaData {
                         Thread.sleep(forTimeInterval: 0.1)
@@ -220,64 +217,8 @@ class VideoGenerationService {
         return outputURL
     }
     
-    private func processImage(_ image: UIImage, targetSize: CGSize, addWatermark: Bool) -> UIImage {
-        UIGraphicsBeginImageContextWithOptions(targetSize, true, 1.0)
-        defer { UIGraphicsEndImageContext() }
-        
-        guard let context = UIGraphicsGetCurrentContext() else { return image }
-        
-        // Fill background
-        context.setFillColor(UIColor.black.cgColor)
-        context.fill(CGRect(origin: .zero, size: targetSize))
-        
-        // Calculate aspect fit rect
-        let imageSize = image.size
-        let widthRatio = targetSize.width / imageSize.width
-        let heightRatio = targetSize.height / imageSize.height
-        let scale = min(widthRatio, heightRatio)
-        
-        let scaledSize = CGSize(
-            width: imageSize.width * scale,
-            height: imageSize.height * scale
-        )
-        
-        let drawRect = CGRect(
-            x: (targetSize.width - scaledSize.width) / 2,
-            y: (targetSize.height - scaledSize.height) / 2,
-            width: scaledSize.width,
-            height: scaledSize.height
-        )
-        
-        // Draw image
-        image.draw(in: drawRect)
-        
-        // Add watermark if needed
-        if addWatermark {
-            addWatermarkToContext(context, in: CGRect(origin: .zero, size: targetSize))
-        }
-        
-        return UIGraphicsGetImageFromCurrentImageContext() ?? image
-    }
     
-    private func addWatermarkToContext(_ context: CGContext, in rect: CGRect) {
-        let watermarkText = "BodyLapse"
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 24, weight: .semibold),
-            .foregroundColor: UIColor.white.withAlphaComponent(0.7)
-        ]
-        
-        let textSize = watermarkText.size(withAttributes: attributes)
-        let textRect = CGRect(
-            x: rect.width - textSize.width - 20,
-            y: rect.height - textSize.height - 20,
-            width: textSize.width,
-            height: textSize.height
-        )
-        
-        watermarkText.draw(in: textRect, withAttributes: attributes)
-    }
-    
-    private func pixelBuffer(from image: UIImage, size: CGSize) -> CVPixelBuffer? {
+    private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool) -> CVPixelBuffer? {
         let options: [String: Any] = [
             kCVPixelBufferCGImageCompatibilityKey as String: kCFBooleanTrue!,
             kCVPixelBufferCGBitmapContextCompatibilityKey as String: kCFBooleanTrue!
@@ -288,7 +229,7 @@ class VideoGenerationService {
             kCFAllocatorDefault,
             Int(size.width),
             Int(size.height),
-            kCVPixelFormatType_32BGRA,
+            kCVPixelFormatType_32ARGB,
             options as CFDictionary,
             &pixelBuffer
         )
@@ -310,16 +251,69 @@ class VideoGenerationService {
             bitsPerComponent: 8,
             bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
             space: rgbColorSpace,
-            bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
+            bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
         ) else {
             return nil
         }
         
-        UIGraphicsPushContext(context)
-        context.translateBy(x: 0, y: size.height)
-        context.scaleBy(x: 1.0, y: -1.0)
-        image.draw(in: CGRect(origin: .zero, size: size))
-        UIGraphicsPopContext()
+        // Fill background with black
+        context.setFillColor(UIColor.black.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        
+        // Calculate aspect fit rect
+        let imageSize = image.size
+        let widthRatio = size.width / imageSize.width
+        let heightRatio = size.height / imageSize.height
+        let scale = min(widthRatio, heightRatio)
+        
+        let scaledSize = CGSize(
+            width: imageSize.width * scale,
+            height: imageSize.height * scale
+        )
+        
+        let drawRect = CGRect(
+            x: (size.width - scaledSize.width) / 2,
+            y: (size.height - scaledSize.height) / 2,
+            width: scaledSize.width,
+            height: scaledSize.height
+        )
+        
+        // Draw the image
+        if let cgImage = image.cgImage {
+            context.draw(cgImage, in: drawRect)
+        }
+        
+        // Add watermark if needed
+        if addWatermark {
+            let watermarkText = "BodyLapse"
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 24, weight: .semibold),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.7)
+            ]
+            
+            let textSize = watermarkText.size(withAttributes: attributes)
+            let textRect = CGRect(
+                x: size.width - textSize.width - 20,
+                y: size.height - textSize.height - 20,
+                width: textSize.width,
+                height: textSize.height
+            )
+            
+            // Save current context
+            context.saveGState()
+            
+            // Flip coordinate system for text drawing
+            context.translateBy(x: 0, y: size.height)
+            context.scaleBy(x: 1.0, y: -1.0)
+            
+            // Draw text
+            UIGraphicsPushContext(context)
+            watermarkText.draw(in: CGRect(x: textRect.origin.x, y: size.height - textRect.maxY, width: textRect.width, height: textRect.height), withAttributes: attributes)
+            UIGraphicsPopContext()
+            
+            // Restore context
+            context.restoreGState()
+        }
         
         return buffer
     }

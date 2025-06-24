@@ -4,8 +4,10 @@ struct CompareView: View {
     @StateObject private var viewModel = CompareViewModel()
     @State private var firstPhoto: Photo?
     @State private var secondPhoto: Photo?
-    @State private var showingFirstPhotoPicker = false
-    @State private var showingSecondPhotoPicker = false
+    @State private var showingFirstCalendar = false
+    @State private var showingSecondCalendar = false
+    @State private var firstSelectedDate = Date()
+    @State private var secondSelectedDate = Date()
     
     var body: some View {
         NavigationView {
@@ -20,11 +22,34 @@ struct CompareView: View {
             }
             .navigationTitle("Compare")
             .navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showingFirstPhotoPicker) {
-                ComparePhotoPickerView(selectedPhoto: $firstPhoto, excludePhoto: secondPhoto)
+            .onAppear {
+                viewModel.loadPhotos()
             }
-            .sheet(isPresented: $showingSecondPhotoPicker) {
-                ComparePhotoPickerView(selectedPhoto: $secondPhoto, excludePhoto: firstPhoto)
+            .sheet(isPresented: $showingFirstCalendar) {
+                CalendarPopupView(
+                    selectedDate: $firstSelectedDate,
+                    photos: viewModel.photos,
+                    onDateSelected: { date in
+                        firstSelectedDate = date
+                        firstPhoto = viewModel.photos.first { photo in
+                            Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                        }
+                        showingFirstCalendar = false
+                    }
+                )
+            }
+            .sheet(isPresented: $showingSecondCalendar) {
+                CalendarPopupView(
+                    selectedDate: $secondSelectedDate,
+                    photos: viewModel.photos,
+                    onDateSelected: { date in
+                        secondSelectedDate = date
+                        secondPhoto = viewModel.photos.first { photo in
+                            Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                        }
+                        showingSecondCalendar = false
+                    }
+                )
             }
         }
     }
@@ -60,13 +85,18 @@ struct CompareView: View {
                         VStack {
                             HStack {
                                 if let photo = firstPhoto {
-                                    Text(photo.formattedDate)
-                                        .font(.caption)
-                                        .padding(6)
-                                        .background(Color.black.opacity(0.7))
-                                        .foregroundColor(.white)
-                                        .cornerRadius(4)
-                                        .padding(8)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Before")
+                                            .font(.caption)
+                                            .fontWeight(.bold)
+                                        Text(formatDateShort(photo.captureDate))
+                                            .font(.caption2)
+                                    }
+                                    .padding(6)
+                                    .background(Color.black.opacity(0.7))
+                                    .foregroundColor(.white)
+                                    .cornerRadius(4)
+                                    .padding(8)
                                 }
                                 Spacer()
                             }
@@ -106,13 +136,18 @@ struct CompareView: View {
                         VStack {
                             HStack {
                                 if let photo = secondPhoto {
-                                    Text(photo.formattedDate)
-                                        .font(.caption)
-                                        .padding(6)
-                                        .background(Color.black.opacity(0.7))
-                                        .foregroundColor(.white)
-                                        .cornerRadius(4)
-                                        .padding(8)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("After")
+                                            .font(.caption)
+                                            .fontWeight(.bold)
+                                        Text(formatDateShort(photo.captureDate))
+                                            .font(.caption2)
+                                    }
+                                    .padding(6)
+                                    .background(Color.black.opacity(0.7))
+                                    .foregroundColor(.white)
+                                    .cornerRadius(4)
+                                    .padding(8)
                                 }
                                 Spacer()
                             }
@@ -121,14 +156,73 @@ struct CompareView: View {
                     }
                 }
                 
-                // Comparison slider
-                if firstPhoto != nil && secondPhoto != nil {
-                    ComparisonSlider(
-                        firstPhoto: firstPhoto!,
-                        secondPhoto: secondPhoto!,
-                        width: geometry.size.width
-                    )
-                    .frame(height: 60)
+                // Comparison stats and slider
+                if let first = firstPhoto, let second = secondPhoto {
+                    VStack(spacing: 16) {
+                        // Stats display
+                        HStack(spacing: 20) {
+                            // Days between
+                            VStack(spacing: 4) {
+                                Text("\(viewModel.getDaysBetween(first, second))")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                Text("days")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Divider()
+                                .frame(height: 30)
+                            
+                            // Weight difference
+                            if let weightDiff = viewModel.getWeightDifference(first, second) {
+                                VStack(spacing: 4) {
+                                    HStack(spacing: 2) {
+                                        Image(systemName: weightDiff > 0 ? "arrow.up" : "arrow.down")
+                                            .font(.caption)
+                                        Text("\(abs(weightDiff), specifier: "%.1f") kg")
+                                            .font(.title3)
+                                            .fontWeight(.semibold)
+                                    }
+                                    .foregroundColor(weightDiff > 0 ? .red : .green)
+                                    Text("weight")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            // Body fat difference
+                            if let bodyFatDiff = viewModel.getBodyFatDifference(first, second) {
+                                Divider()
+                                    .frame(height: 30)
+                                
+                                VStack(spacing: 4) {
+                                    HStack(spacing: 2) {
+                                        Image(systemName: bodyFatDiff > 0 ? "arrow.up" : "arrow.down")
+                                            .font(.caption)
+                                        Text("\(abs(bodyFatDiff), specifier: "%.1f")%")
+                                            .font(.title3)
+                                            .fontWeight(.semibold)
+                                    }
+                                    .foregroundColor(bodyFatDiff > 0 ? .red : .green)
+                                    Text("body fat")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
+                        .cornerRadius(10)
+                        
+                        ComparisonSlider(
+                            firstPhoto: first,
+                            secondPhoto: second,
+                            width: geometry.size.width
+                        )
+                        .frame(height: 60)
+                    }
+                    .padding(.horizontal)
                 }
             }
         }
@@ -153,11 +247,24 @@ struct CompareView: View {
     private var photoSelectionButtons: some View {
         HStack(spacing: 20) {
             Button(action: {
-                showingFirstPhotoPicker = true
+                showingFirstCalendar = true
             }) {
-                HStack {
-                    Image(systemName: "1.circle.fill")
-                    Text("First Photo")
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "calendar")
+                        Text("Before")
+                    }
+                    .font(.headline)
+                    
+                    if let photo = firstPhoto {
+                        Text(formatDate(photo.captureDate))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Select Date")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
@@ -166,11 +273,24 @@ struct CompareView: View {
             }
             
             Button(action: {
-                showingSecondPhotoPicker = true
+                showingSecondCalendar = true
             }) {
-                HStack {
-                    Image(systemName: "2.circle.fill")
-                    Text("Second Photo")
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "calendar")
+                        Text("After")
+                    }
+                    .font(.headline)
+                    
+                    if let photo = secondPhoto {
+                        Text(formatDate(photo.captureDate))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Select Date")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
@@ -179,6 +299,18 @@ struct CompareView: View {
             }
         }
         .padding()
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter.string(from: date)
+    }
+    
+    private func formatDateShort(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter.string(from: date)
     }
 }
 
@@ -214,104 +346,3 @@ struct ComparisonSlider: View {
     }
 }
 
-struct ComparePhotoPickerView: View {
-    @Binding var selectedPhoto: Photo?
-    let excludePhoto: Photo?
-    @Environment(\.dismiss) private var dismiss
-    @State private var photos: [Photo] = []
-    
-    let columns = [
-        GridItem(.flexible(), spacing: 2),
-        GridItem(.flexible(), spacing: 2),
-        GridItem(.flexible(), spacing: 2)
-    ]
-    
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 2) {
-                    ForEach(photos) { photo in
-                        if excludePhoto?.id != photo.id {
-                            PhotoThumbnail(photo: photo) {
-                                selectedPhoto = photo
-                                dismiss()
-                            }
-                        }
-                    }
-                }
-                .padding(2)
-            }
-            .navigationTitle("Select Photo")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-            .onAppear {
-                photos = PhotoStorageService.shared.photos.sorted { $0.captureDate > $1.captureDate }
-            }
-        }
-    }
-}
-
-struct PhotoThumbnail: View {
-    let photo: Photo
-    let onTap: () -> Void
-    @State private var image: UIImage?
-    
-    var body: some View {
-        Button(action: onTap) {
-            GeometryReader { geometry in
-                ZStack {
-                    if let image = image {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: geometry.size.width, height: geometry.size.width)
-                            .clipped()
-                    } else {
-                        Rectangle()
-                            .fill(Color(UIColor.systemGray5))
-                            .overlay(ProgressView())
-                    }
-                    
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Text(formatDate(photo.captureDate))
-                                .font(.caption2)
-                                .padding(4)
-                                .background(Color.black.opacity(0.7))
-                                .foregroundColor(.white)
-                                .cornerRadius(4)
-                            Spacer()
-                        }
-                        .padding(4)
-                    }
-                }
-            }
-            .aspectRatio(1, contentMode: .fit)
-        }
-        .onAppear {
-            loadImage()
-        }
-    }
-    
-    private func loadImage() {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let loadedImage = PhotoStorageService.shared.loadImage(for: photo)
-            DispatchQueue.main.async {
-                self.image = loadedImage
-            }
-        }
-    }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
-    }
-}
