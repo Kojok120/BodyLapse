@@ -11,7 +11,7 @@ import SwiftUI
 struct BodyLapseApp: App {
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            ContentView()
         }
     }
 }

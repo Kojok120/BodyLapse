@@ -6,13 +6,17 @@ struct Photo: Identifiable, Codable {
     let fileName: String
     let isFaceBlurred: Bool
     let bodyDetectionConfidence: Double?
+    var weight: Double?
+    var bodyFatPercentage: Double?
     
-    init(id: UUID = UUID(), captureDate: Date = Date(), fileName: String, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil) {
+    init(id: UUID = UUID(), captureDate: Date = Date(), fileName: String, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) {
         self.id = id
         self.captureDate = captureDate
         self.fileName = fileName
         self.isFaceBlurred = isFaceBlurred
         self.bodyDetectionConfidence = bodyDetectionConfidence
+        self.weight = weight
+        self.bodyFatPercentage = bodyFatPercentage
     }
     
     var fileURL: URL {

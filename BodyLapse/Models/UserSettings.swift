@@ -3,10 +3,19 @@ import Foundation
 struct UserSettings: Codable {
     var reminderEnabled: Bool = false
     var reminderTime: Date = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
-    var autoFaceBlur: Bool = true
     var showBodyGuidelines: Bool = true
     var isPremium: Bool = false
     var weightUnit: WeightUnit = .kg
+    
+    // Onboarding
+    var hasCompletedOnboarding: Bool = false
+    var targetWeight: Double?
+    var targetBodyFatPercentage: Double?
+    
+    // Security
+    var isAppLockEnabled: Bool = false
+    var appLockMethod: AppLockMethod = .biometric
+    var appPasscode: String?
     
     enum WeightUnit: String, Codable, CaseIterable {
         case kg = "Kilograms"
@@ -18,6 +27,11 @@ struct UserSettings: Codable {
             case .lbs: return "lbs"
             }
         }
+    }
+    
+    enum AppLockMethod: String, Codable {
+        case biometric = "Face ID / Touch ID"
+        case passcode = "Passcode"
     }
 }
 

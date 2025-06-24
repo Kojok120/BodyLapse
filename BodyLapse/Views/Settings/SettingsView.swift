@@ -4,13 +4,50 @@ struct SettingsView: View {
     @StateObject private var userSettings = UserSettingsManager()
     @State private var showingAbout = false
     @State private var showingPremiumUpgrade = false
+    @State private var showingAppLockSettings = false
     
     var body: some View {
         NavigationView {
             Form {
                 Section("Photo Settings") {
-                    Toggle("Auto Face Blur", isOn: $userSettings.settings.autoFaceBlur)
                     Toggle("Show Body Guidelines", isOn: $userSettings.settings.showBodyGuidelines)
+                    
+                    if GuidelineStorageService.shared.hasGuideline() {
+                        Button(action: {
+                            GuidelineStorageService.shared.deleteGuideline()
+                        }) {
+                            Label("Reset Body Guideline", systemImage: "arrow.uturn.backward")
+                                .foregroundColor(.red)
+                        }
+                    }
+                    
+                    Picker("Weight Unit", selection: $userSettings.settings.weightUnit) {
+                        ForEach(UserSettings.WeightUnit.allCases, id: \.self) { unit in
+                            Text(unit.rawValue).tag(unit)
+                        }
+                    }
+                }
+                
+                Section("Security") {
+                    Toggle("App Lock", isOn: $userSettings.settings.isAppLockEnabled)
+                    
+                    if userSettings.settings.isAppLockEnabled {
+                        HStack {
+                            Text("Lock Method")
+                            Spacer()
+                            Text(userSettings.settings.appLockMethod.rawValue)
+                                .foregroundColor(.secondary)
+                        }
+                        .onTapGesture {
+                            showingAppLockSettings = true
+                        }
+                        
+                        if userSettings.settings.appLockMethod == .passcode {
+                            NavigationLink(destination: PasscodeSettingsView()) {
+                                Label("Change Passcode", systemImage: "number")
+                            }
+                        }
+                    }
                 }
                 
                 Section("Reminders") {
@@ -91,6 +128,20 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showingPremiumUpgrade) {
                 PremiumUpgradeView(userSettings: userSettings)
+            }
+            .actionSheet(isPresented: $showingAppLockSettings) {
+                ActionSheet(
+                    title: Text("Select Lock Method"),
+                    buttons: [
+                        .default(Text(UserSettings.AppLockMethod.biometric.rawValue)) {
+                            userSettings.settings.appLockMethod = .biometric
+                        },
+                        .default(Text(UserSettings.AppLockMethod.passcode.rawValue)) {
+                            userSettings.settings.appLockMethod = .passcode
+                        },
+                        .cancel()
+                    ]
+                )
             }
         }
     }
@@ -277,5 +328,80 @@ struct WeightTrackingView: View {
         Text("Weight tracking coming soon!")
             .navigationTitle("Weight Tracking")
             .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct PasscodeSettingsView: View {
+    @State private var currentPasscode = ""
+    @State private var newPasscode = ""
+    @State private var confirmPasscode = ""
+    @State private var showingError = false
+    @State private var errorMessage = ""
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var userSettings = UserSettingsManager()
+    
+    var body: some View {
+        Form {
+            if userSettings.settings.appPasscode != nil {
+                Section(header: Text("Current Passcode")) {
+                    SecureField("Enter current passcode", text: $currentPasscode)
+                        .keyboardType(.numberPad)
+                }
+            }
+            
+            Section(header: Text("New Passcode")) {
+                SecureField("Enter new passcode", text: $newPasscode)
+                    .keyboardType(.numberPad)
+                
+                SecureField("Confirm new passcode", text: $confirmPasscode)
+                    .keyboardType(.numberPad)
+            }
+            
+            Section {
+                Text("Passcode must be at least 4 digits")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .navigationTitle("Change Passcode")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    savePasscode()
+                }
+            }
+        }
+        .alert("Error", isPresented: $showingError) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
+    }
+    
+    private func savePasscode() {
+        // Validate current passcode if exists
+        if let existingPasscode = userSettings.settings.appPasscode,
+           currentPasscode != existingPasscode {
+            errorMessage = "Current passcode is incorrect"
+            showingError = true
+            return
+        }
+        
+        // Validate new passcode
+        guard newPasscode.count >= 4 else {
+            errorMessage = "Passcode must be at least 4 digits"
+            showingError = true
+            return
+        }
+        
+        guard newPasscode == confirmPasscode else {
+            errorMessage = "Passcodes do not match"
+            showingError = true
+            return
+        }
+        
+        userSettings.settings.appPasscode = newPasscode
+        dismiss()
     }
 }

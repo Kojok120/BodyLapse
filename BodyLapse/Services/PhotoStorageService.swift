@@ -29,7 +29,7 @@ class PhotoStorageService {
         try? FileManager.default.createDirectory(at: photosDirectory, withIntermediateDirectories: true)
     }
     
-    func savePhoto(_ image: UIImage, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil) throws -> Photo {
+    func savePhoto(_ image: UIImage, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
         guard let imageData = image.jpegData(compressionQuality: 0.9) else {
             throw PhotoStorageError.compressionFailed
         }
@@ -42,7 +42,9 @@ class PhotoStorageService {
         let photo = Photo(
             fileName: fileName,
             isFaceBlurred: isFaceBlurred,
-            bodyDetectionConfidence: bodyDetectionConfidence
+            bodyDetectionConfidence: bodyDetectionConfidence,
+            weight: weight,
+            bodyFatPercentage: bodyFatPercentage
         )
         
         photos.append(photo)
@@ -51,6 +53,43 @@ class PhotoStorageService {
         savePhotosMetadata()
         
         return photo
+    }
+    
+    func hasPhotoForToday() -> Bool {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        
+        return photos.contains { photo in
+            calendar.isDate(photo.captureDate, inSameDayAs: today)
+        }
+    }
+    
+    func getPhotoForDate(_ date: Date) -> Photo? {
+        let calendar = Calendar.current
+        let targetDay = calendar.startOfDay(for: date)
+        
+        return photos.first { photo in
+            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
+        }
+    }
+    
+    func replacePhoto(for date: Date, with image: UIImage, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
+        if let existingPhoto = getPhotoForDate(date) {
+            try deletePhoto(existingPhoto)
+        }
+        
+        return try savePhoto(image, isFaceBlurred: isFaceBlurred, bodyDetectionConfidence: bodyDetectionConfidence, weight: weight, bodyFatPercentage: bodyFatPercentage)
+    }
+    
+    func updatePhotoMetadata(_ photo: Photo, weight: Double?, bodyFatPercentage: Double?) {
+        guard let index = photos.firstIndex(where: { $0.id == photo.id }) else { return }
+        
+        var updatedPhoto = photo
+        updatedPhoto.weight = weight
+        updatedPhoto.bodyFatPercentage = bodyFatPercentage
+        
+        photos[index] = updatedPhoto
+        savePhotosMetadata()
     }
     
     func deletePhoto(_ photo: Photo) throws {

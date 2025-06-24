@@ -9,6 +9,13 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var capturedImage: UIImage?
     @Published var bodyDetected = false
     @Published var bodyConfidence: Double = 0.0
+    @Published var showingReplaceAlert = false
+    @Published var showingWeightInput = false
+    @Published var tempWeight: Double?
+    @Published var tempBodyFat: Double?
+    @Published var showGuidelines = true
+    @Published var shouldBlurFace = true
+    @Published var capturedPhoto: Photo?
     
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
@@ -46,10 +53,20 @@ class CameraViewModel: NSObject, ObservableObject {
     
     private func setupCamera() {
         session.beginConfiguration()
+        session.sessionPreset = .photo
         
-        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else {
-            alertMessage = "Front camera not available"
+        // Try to get the front wide-angle camera first. If that fails (e.g. on Simulator or devices without front camera), fall back to any available video device.
+        let device: AVCaptureDevice
+        if let front = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
+            device = front
+        } else if let back = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
+            device = back
+        } else if let any = AVCaptureDevice.default(for: .video) {
+            device = any
+        } else {
+            alertMessage = "Camera not available on this device"
             showingAlert = true
+            session.commitConfiguration()
             return
         }
         
@@ -97,17 +114,59 @@ class CameraViewModel: NSObject, ObservableObject {
         output.capturePhoto(with: settings, delegate: self)
     }
     
+    func checkAndSavePhoto(_ image: UIImage) {
+        if PhotoStorageService.shared.hasPhotoForToday() {
+            DispatchQueue.main.async { [weak self] in
+                self?.showingReplaceAlert = true
+            }
+        } else {
+            if userSettings.settings.isPremium {
+                DispatchQueue.main.async { [weak self] in
+                    self?.showingWeightInput = true
+                }
+            } else {
+                savePhoto(image)
+            }
+        }
+    }
+    
     func savePhoto(_ image: UIImage) {
+        // Always save without face blur - face blur is only for video generation
+        saveProcessedPhoto(image, wasBlurred: false)
+    }
+    
+    private func saveProcessedPhoto(_ image: UIImage, wasBlurred: Bool) {
         do {
-            let photo = try PhotoStorageService.shared.savePhoto(
-                image,
-                isFaceBlurred: userSettings.settings.autoFaceBlur,
-                bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil
-            )
+            let photo: Photo
+            if PhotoStorageService.shared.hasPhotoForToday() {
+                photo = try PhotoStorageService.shared.replacePhoto(
+                    for: Date(),
+                    with: image,
+                    isFaceBlurred: wasBlurred,
+                    bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil,
+                    weight: tempWeight,
+                    bodyFatPercentage: tempBodyFat
+                )
+            } else {
+                photo = try PhotoStorageService.shared.savePhoto(
+                    image,
+                    isFaceBlurred: wasBlurred,
+                    bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil,
+                    weight: tempWeight,
+                    bodyFatPercentage: tempBodyFat
+                )
+            }
             print("Photo saved: \(photo.fileName)")
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.tempWeight = nil
+                self?.tempBodyFat = nil
+            }
         } catch {
-            alertMessage = "Failed to save photo: \(error.localizedDescription)"
-            showingAlert = true
+            DispatchQueue.main.async { [weak self] in
+                self?.alertMessage = "Failed to save photo: \(error.localizedDescription)"
+                self?.showingAlert = true
+            }
         }
     }
     
@@ -133,5 +192,42 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.capturedImage = image
         }
+    }
+    
+    func resetCapture() {
+        capturedImage = nil
+        bodyDetected = false
+        bodyConfidence = 0.0
+    }
+    
+    func switchCamera() {
+        guard let currentInput = session.inputs.first as? AVCaptureDeviceInput else { return }
+        
+        session.beginConfiguration()
+        session.removeInput(currentInput)
+        
+        let currentPosition = currentInput.device.position
+        let newPosition: AVCaptureDevice.Position = currentPosition == .front ? .back : .front
+        
+        guard let newDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition) else {
+            session.addInput(currentInput)
+            session.commitConfiguration()
+            return
+        }
+        
+        do {
+            let newInput = try AVCaptureDeviceInput(device: newDevice)
+            if session.canAddInput(newInput) {
+                session.addInput(newInput)
+            }
+        } catch {
+            session.addInput(currentInput)
+        }
+        
+        session.commitConfiguration()
+    }
+    
+    func processCapture(_ image: UIImage) {
+        self.capturedImage = image
     }
 }
