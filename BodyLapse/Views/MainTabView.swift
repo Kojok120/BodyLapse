@@ -30,28 +30,11 @@ struct MainTabView: View {
                 }
                 .tag(3)
             
-            // Premium tab - Weight Tracking
-            if userSettings.settings.isPremium {
-                NavigationView {
-                    WeightTrackingView()
-                }
+            SettingsView()
                 .tabItem {
-                    Label("Weight", systemImage: "chart.line.uptrend.xyaxis")
+                    Label("Settings", systemImage: "gearshape.fill")
                 }
                 .tag(4)
-                
-                SettingsView()
-                    .tabItem {
-                        Label("Settings", systemImage: "gearshape.fill")
-                    }
-                    .tag(5)
-            } else {
-                SettingsView()
-                    .tabItem {
-                        Label("Settings", systemImage: "gearshape.fill")
-                    }
-                    .tag(4)
-            }
         }
     }
 }

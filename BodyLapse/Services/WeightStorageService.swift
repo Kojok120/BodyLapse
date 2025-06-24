@@ -27,17 +27,27 @@ actor WeightStorageService {
     
     // MARK: - Load Entries
     func loadEntries() throws -> [WeightEntry] {
+        print("[WeightStorage] Loading entries from: \(weightsFile.path)")
+        
         guard FileManager.default.fileExists(atPath: weightsFile.path) else {
+            print("[WeightStorage] No weights file exists yet")
             return []
         }
         
         let data = try Data(contentsOf: weightsFile)
-        let entries = try JSONDecoder().decode([WeightEntry].self, from: data)
+        print("[WeightStorage] File size: \(data.count) bytes")
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let entries = try decoder.decode([WeightEntry].self, from: data)
+        
+        print("[WeightStorage] Loaded \(entries.count) entries")
         return entries.sorted { $0.date > $1.date }
     }
     
     // MARK: - Save Entry
     func saveEntry(_ entry: WeightEntry) throws {
+        print("[WeightStorage] Saving entry for date: \(entry.date), weight: \(entry.weight)")
         var entries = try loadEntries()
         
         // Check if there's already an entry for this date
@@ -54,6 +64,7 @@ actor WeightStorageService {
         // Sort and save
         entries.sort { $0.date > $1.date }
         try saveEntries(entries)
+        print("[WeightStorage] Total entries after save: \(entries.count)")
     }
     
     // MARK: - Delete Entry
@@ -93,8 +104,10 @@ actor WeightStorageService {
     private func saveEntries(_ entries: [WeightEntry]) throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = .prettyPrinted
         let data = try encoder.encode(entries)
         try data.write(to: weightsFile, options: .atomic)
+        print("[WeightStorage] Saved \(entries.count) entries to file")
     }
     
     // MARK: - Export/Import

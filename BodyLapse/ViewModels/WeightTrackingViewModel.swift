@@ -200,16 +200,19 @@ class WeightTrackingViewModel: ObservableObject {
     
     // MARK: - Data Management
     func loadEntries() {
+        print("[WeightViewModel] Starting to load entries")
         isLoading = true
         Task {
             do {
                 let entries = try await storage.loadEntries()
+                print("[WeightViewModel] Loaded \(entries.count) entries from storage")
                 await MainActor.run {
                     self.weightEntries = entries
                     self.isLoading = false
+                    print("[WeightViewModel] Updated weightEntries, count: \(self.weightEntries.count)")
                 }
             } catch {
-                print("Failed to load weight entries: \(error)")
+                print("[WeightViewModel] Failed to load weight entries: \(error)")
                 await MainActor.run {
                     self.isLoading = false
                 }
@@ -223,6 +226,7 @@ class WeightTrackingViewModel: ObservableObject {
         date: Date,
         linkedPhotoID: String?
     ) {
+        print("[WeightViewModel] Adding entry - weight: \(weight), bodyFat: \(bodyFat ?? 0), date: \(date)")
         let entry = WeightEntry(
             date: date,
             weight: weight,
@@ -236,9 +240,10 @@ class WeightTrackingViewModel: ObservableObject {
                 await MainActor.run {
                     self.weightEntries.append(entry)
                     self.weightEntries.sort { $0.date > $1.date }
+                    print("[WeightViewModel] Entry added successfully, total entries: \(self.weightEntries.count)")
                 }
             } catch {
-                print("Failed to save weight entry: \(error)")
+                print("[WeightViewModel] Failed to save weight entry: \(error)")
             }
         }
     }

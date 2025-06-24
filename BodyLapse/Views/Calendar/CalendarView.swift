@@ -4,6 +4,7 @@ import AVFoundation
 struct CalendarView: View {
     @StateObject private var viewModel = CalendarViewModel()
     @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var weightViewModel = WeightTrackingViewModel()
     @State private var selectedDate = Date()
     @State private var showingPeriodPicker = false
     @State private var selectedPeriod = TimePeriod.week
@@ -16,6 +17,7 @@ struct CalendarView: View {
     @State private var videoGenerationProgress: Float = 0
     @State private var showingVideoAlert = false
     @State private var videoAlertMessage = ""
+    @State private var selectedChartDate: Date? = nil
     
     enum TimePeriod: String, CaseIterable {
         case week = "7 Days"
@@ -68,7 +70,17 @@ struct CalendarView: View {
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 viewModel.loadPhotos()
+                weightViewModel.loadEntries()
                 updateCurrentPhoto()
+                
+                // Debug weight entries after a delay to ensure loading is complete
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    print("[Calendar] Weight entries after delay: \(weightViewModel.weightEntries.count)")
+                    if let firstEntry = weightViewModel.weightEntries.first {
+                        print("[Calendar] First entry - date: \(firstEntry.date), weight: \(firstEntry.weight)")
+                    }
+                    print("[Calendar] Is premium: \(userSettings.settings.isPremium)")
+                }
             }
             .onChange(of: selectedDate) { _ in
                 updateCurrentPhoto()
@@ -79,6 +91,22 @@ struct CalendarView: View {
                         PhotoStorageService.shared.updatePhotoMetadata(photo, weight: weight, bodyFatPercentage: bodyFat)
                         viewModel.loadPhotos()
                         updateCurrentPhoto()
+                        
+                        // Also save to weight tracking
+                        if let w = weight {
+                            let entry = WeightEntry(
+                                date: photo.captureDate,
+                                weight: w,
+                                bodyFatPercentage: bodyFat,
+                                linkedPhotoID: photo.id.uuidString
+                            )
+                            Task {
+                                try? await WeightStorageService.shared.saveEntry(entry)
+                                await MainActor.run {
+                                    weightViewModel.loadEntries()
+                                }
+                            }
+                        }
                     }
                 })
             }
@@ -280,11 +308,93 @@ struct CalendarView: View {
     }
     
     private var dataGraphSection: some View {
-        VStack {
-            // TODO: Implement weight and body fat graphs for premium users
-            Text("Premium data visualization coming soon")
-                .foregroundColor(.secondary)
+        VStack(spacing: 20) {
+            Text("Weight Tracking")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+            
+            // Debug info at the top
+            HStack {
+                Text("Entries: \(weightViewModel.weightEntries.count)")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                Text("Premium: \(userSettings.settings.isPremium ? "Yes" : "No")")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+            }
+            .padding(.horizontal)
+            
+            if !weightViewModel.weightEntries.isEmpty {
+                if #available(iOS 16.0, *) {
+                    let filteredEntries = weightViewModel.filteredEntries(for: getWeightTimeRange())
+                    if !filteredEntries.isEmpty {
+                        InteractiveWeightChartView(
+                            entries: filteredEntries,
+                            selectedDate: $selectedChartDate
+                        )
+                        .padding(.horizontal)
+                        .onChange(of: selectedChartDate) { newDate in
+                            if let date = newDate {
+                                // Update selected date in calendar when chart date changes
+                                if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
+                                    selectedIndex = index
+                                    selectedDate = date
+                                }
+                            }
+                        }
+                        .onChange(of: selectedPeriod) { _ in
+                            // Reset chart selection when period changes
+                            selectedChartDate = nil
+                        }
+                    } else {
+                        Text("No data for selected period")
+                            .foregroundColor(.secondary)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
+                            .cornerRadius(15)
+                    }
+                } else {
+                    Text("Weight tracking requires iOS 16 or later")
+                        .foregroundColor(.secondary)
+                        .padding()
+                }
+            } else {
+                VStack(spacing: 10) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 40))
+                        .foregroundColor(.gray.opacity(0.3))
+                    Text("No weight data yet")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    Text("Add weight data when saving photos")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Button("Reload Data") {
+                        weightViewModel.loadEntries()
+                    }
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                }
                 .padding()
+                .frame(minHeight: 200)
+                .frame(maxWidth: .infinity)
+                .background(Color(UIColor.secondarySystemGroupedBackground))
+                .cornerRadius(15)
+            }
+        }
+        .padding(.vertical)
+    }
+    
+    private func getWeightTimeRange() -> WeightTimeRange {
+        switch selectedPeriod {
+        case .week: return .week
+        case .month: return .month
+        case .threeMonths: return .threeMonths
+        case .sixMonths: return .threeMonths // Use 3 months as fallback
+        case .year: return .year
         }
     }
     
@@ -349,40 +459,100 @@ struct CalendarView: View {
 struct WeightInputView: View {
     @Binding var photo: Photo?
     let onSave: (Double?, Double?) -> Void
-    @Environment(\.dismiss) private var dismiss
-    @StateObject private var userSettings = UserSettingsManager()
     
     @State private var weightText = ""
     @State private var bodyFatText = ""
+    @StateObject private var userSettings = UserSettingsManager()
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Measurements")) {
-                    HStack {
-                        Text("Weight")
-                        Spacer()
-                        TextField("0.0", text: $weightText)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                        Text(userSettings.settings.weightUnit.symbol)
-                            .foregroundColor(.secondary)
-                    }
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 10) {
+                    Image(systemName: "scalemass")
+                        .font(.system(size: 50))
+                        .foregroundColor(.accentColor)
                     
-                    HStack {
-                        Text("Body Fat")
-                        Spacer()
-                        TextField("0.0", text: $bodyFatText)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                        Text("%")
+                    Text("Update Measurements")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    if let photo = photo {
+                        Text(formatDate(photo.captureDate))
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                 }
+                .padding(.top, 30)
+                .padding(.bottom, 40)
+                
+                // Input fields
+                VStack(spacing: 25) {
+                    // Weight input
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Weight", systemImage: "scalemass")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        HStack {
+                            TextField("Enter weight", text: $weightText)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.title3)
+                            
+                            Text(userSettings.settings.weightUnit.symbol)
+                                .font(.title3)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    // Body fat input
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Body Fat % (Optional)", systemImage: "percent")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        HStack {
+                            TextField("Enter body fat", text: $bodyFatText)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.title3)
+                            
+                            Text("%")
+                                .font(.title3)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.horizontal, 30)
+                
+                Spacer()
+                
+                // Action buttons
+                VStack(spacing: 15) {
+                    Button(action: save) {
+                        Text("Save")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color.accentColor)
+                            .cornerRadius(12)
+                    }
+                    .disabled(weightText.isEmpty)
+                    
+                    if photo?.weight != nil || photo?.bodyFatPercentage != nil {
+                        Button(action: clear) {
+                            Text("Clear Data")
+                                .font(.subheadline)
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+                .padding(.horizontal, 30)
+                .padding(.bottom, 30)
             }
-            .navigationTitle("Add Measurements")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -390,27 +560,50 @@ struct WeightInputView: View {
                         dismiss()
                     }
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        let weight = Double(weightText)
-                        let bodyFat = Double(bodyFatText)
-                        onSave(weight, bodyFat)
-                        dismiss()
-                    }
-                }
             }
-            .onAppear {
-                if let photo = photo {
-                    if let weight = photo.weight {
-                        weightText = String(format: "%.1f", weight)
-                    }
-                    if let bodyFat = photo.bodyFatPercentage {
-                        bodyFatText = String(format: "%.1f", bodyFat)
-                    }
+        }
+        .onAppear {
+            if let photo = photo {
+                if let weight = photo.weight {
+                    weightText = String(format: "%.1f", convertWeight(weight))
+                }
+                if let bodyFat = photo.bodyFatPercentage {
+                    bodyFatText = String(format: "%.1f", bodyFat)
                 }
             }
         }
+    }
+    
+    private func save() {
+        var weight: Double? = nil
+        var bodyFat: Double? = nil
+        
+        if let weightValue = Double(weightText) {
+            // Convert to kg if needed
+            weight = userSettings.settings.weightUnit == .kg ? weightValue : weightValue / 2.20462
+        }
+        
+        if !bodyFatText.isEmpty, let bodyFatValue = Double(bodyFatText) {
+            bodyFat = bodyFatValue
+        }
+        
+        onSave(weight, bodyFat)
+        dismiss()
+    }
+    
+    private func clear() {
+        onSave(nil, nil)
+        dismiss()
+    }
+    
+    private func convertWeight(_ kg: Double) -> Double {
+        userSettings.settings.weightUnit == .kg ? kg : kg * 2.20462
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter.string(from: date)
     }
 }
 

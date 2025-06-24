@@ -54,6 +54,102 @@ struct DebugSettingsView: View {
                     Text("Debug mode lets you test features without making real purchases")
                         .font(.caption)
                 }
+                
+                Section {
+                    QuickActionButton(
+                        title: "Add Sample Weight Entry",
+                        icon: "plus.circle.fill",
+                        color: .blue
+                    ) {
+                        Task {
+                            let entry = WeightEntry(
+                                date: Date(),
+                                weight: 75.5,
+                                bodyFatPercentage: 18.5,
+                                linkedPhotoID: nil
+                            )
+                            try? await WeightStorageService.shared.saveEntry(entry)
+                            print("[Debug] Added sample weight entry")
+                        }
+                    }
+                    
+                    QuickActionButton(
+                        title: "Add 7 Days of Data",
+                        icon: "7.circle.fill",
+                        color: .green
+                    ) {
+                        Task {
+                            let calendar = Calendar.current
+                            for i in 0..<7 {
+                                if let date = calendar.date(byAdding: .day, value: -i, to: Date()) {
+                                    let weight = 75.0 + Double.random(in: -2...2)
+                                    let bodyFat = 18.0 + Double.random(in: -1...1)
+                                    let entry = WeightEntry(
+                                        date: date,
+                                        weight: weight,
+                                        bodyFatPercentage: bodyFat,
+                                        linkedPhotoID: nil
+                                    )
+                                    try? await WeightStorageService.shared.saveEntry(entry)
+                                }
+                            }
+                            print("[Debug] Added 7 sample weight entries")
+                        }
+                    }
+                    
+                    QuickActionButton(
+                        title: "Add 30 Days of Data",
+                        icon: "30.circle.fill",
+                        color: .purple
+                    ) {
+                        Task {
+                            let calendar = Calendar.current
+                            for i in 0..<30 {
+                                if let date = calendar.date(byAdding: .day, value: -i, to: Date()) {
+                                    let weight = 75.0 + Double.random(in: -3...1) - Double(i) * 0.05 // Gradual weight loss
+                                    let bodyFat = 20.0 + Double.random(in: -1...1) - Double(i) * 0.03 // Gradual fat loss
+                                    let entry = WeightEntry(
+                                        date: date,
+                                        weight: weight,
+                                        bodyFatPercentage: bodyFat,
+                                        linkedPhotoID: nil
+                                    )
+                                    try? await WeightStorageService.shared.saveEntry(entry)
+                                }
+                            }
+                            print("[Debug] Added 30 sample weight entries")
+                        }
+                    }
+                    
+                    QuickActionButton(
+                        title: "Clear All Weight Data",
+                        icon: "trash.fill",
+                        color: .red
+                    ) {
+                        Task {
+                            // Clear by saving empty array
+                            let documentsDirectory = FileManager.default.urls(
+                                for: .documentDirectory,
+                                in: .userDomainMask
+                            ).first!
+                            let weightsFile = documentsDirectory
+                                .appendingPathComponent("WeightData")
+                                .appendingPathComponent("entries.json")
+                            
+                            let encoder = JSONEncoder()
+                            encoder.dateEncodingStrategy = .iso8601
+                            if let data = try? encoder.encode([WeightEntry]()) {
+                                try? data.write(to: weightsFile, options: .atomic)
+                                print("[Debug] Cleared all weight data")
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Debug Weight Data")
+                } footer: {
+                    Text("Use these actions to test weight tracking features")
+                        .font(.caption)
+                }
             }
             .navigationTitle("Debug Settings")
             .navigationBarTitleDisplayMode(.inline)

@@ -71,10 +71,6 @@ struct SettingsView: View {
                             Text("Premium Active")
                                 .foregroundColor(.secondary)
                         }
-                        
-                        NavigationLink(destination: WeightTrackingView()) {
-                            Label("Weight Tracking", systemImage: "scalemass")
-                        }
                     } else {
                         Button(action: { showingPremiumUpgrade = true }) {
                             HStack {

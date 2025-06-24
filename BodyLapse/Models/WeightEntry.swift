@@ -1,6 +1,6 @@
 import Foundation
 
-struct WeightEntry: Identifiable, Codable {
+struct WeightEntry: Identifiable, Codable, Equatable {
     let id: UUID
     let date: Date
     let weight: Double // Always stored in kg

@@ -306,7 +306,7 @@ struct WeightEntryRow: View {
             
             Spacer()
             
-            if let photo = entry.linkedPhotoID {
+            if entry.linkedPhotoID != nil {
                 Image(systemName: "camera.fill")
                     .font(.caption)
                     .foregroundColor(.secondary)
