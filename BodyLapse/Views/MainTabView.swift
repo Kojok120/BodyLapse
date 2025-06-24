@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @StateObject private var userSettings = UserSettingsManager()
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -29,11 +30,28 @@ struct MainTabView: View {
                 }
                 .tag(3)
             
-            SettingsView()
+            // Premium tab - Weight Tracking
+            if userSettings.settings.isPremium {
+                NavigationView {
+                    WeightTrackingView()
+                }
                 .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
+                    Label("Weight", systemImage: "chart.line.uptrend.xyaxis")
                 }
                 .tag(4)
+                
+                SettingsView()
+                    .tabItem {
+                        Label("Settings", systemImage: "gearshape.fill")
+                    }
+                    .tag(5)
+            } else {
+                SettingsView()
+                    .tabItem {
+                        Label("Settings", systemImage: "gearshape.fill")
+                    }
+                    .tag(4)
+            }
         }
     }
 }

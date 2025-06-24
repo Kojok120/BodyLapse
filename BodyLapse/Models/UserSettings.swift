@@ -39,6 +39,7 @@ extension UserSettings {
     static let `default` = UserSettings()
 }
 
+@MainActor
 class UserSettingsManager: ObservableObject {
     @Published var settings: UserSettings {
         didSet {
@@ -48,6 +49,7 @@ class UserSettingsManager: ObservableObject {
     
     private let userDefaults = UserDefaults.standard
     private let settingsKey = "BodyLapseUserSettings"
+    private var storeManager: StoreManager?
     
     init() {
         if let data = userDefaults.data(forKey: settingsKey),
@@ -56,6 +58,20 @@ class UserSettingsManager: ObservableObject {
         } else {
             self.settings = UserSettings.default
         }
+        
+        // Initialize StoreKit after init
+        Task { @MainActor in
+            self.storeManager = StoreManager.shared
+            await self.syncPremiumStatus()
+            
+            // Observe premium status changes
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(premiumStatusChanged),
+                name: .premiumStatusChanged,
+                object: nil
+            )
+        }
     }
     
     private func save() {
@@ -63,4 +79,20 @@ class UserSettingsManager: ObservableObject {
             userDefaults.set(encoded, forKey: settingsKey)
         }
     }
+    
+    func syncPremiumStatus() async {
+        guard let storeManager = storeManager else { return }
+        await storeManager.loadProducts()
+        settings.isPremium = storeManager.isPremium
+    }
+    
+    @objc private func premiumStatusChanged() {
+        Task { @MainActor in
+            await syncPremiumStatus()
+        }
+    }
+}
+
+extension Notification.Name {
+    static let premiumStatusChanged = Notification.Name("premiumStatusChanged")
 }

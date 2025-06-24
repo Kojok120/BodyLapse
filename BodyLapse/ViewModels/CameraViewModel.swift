@@ -20,12 +20,16 @@ class CameraViewModel: NSObject, ObservableObject {
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
     private var bodyDetectionRequest: VNDetectHumanBodyPoseRequest?
-    
-    let userSettings = UserSettingsManager()
+    var userSettings: UserSettingsManager?
     
     override init() {
         super.init()
         setupBodyDetection()
+        
+        // Initialize UserSettingsManager on main queue
+        Task { @MainActor in
+            self.userSettings = UserSettingsManager()
+        }
     }
     
     func checkAuthorization() {
@@ -84,6 +88,7 @@ class CameraViewModel: NSObject, ObservableObject {
             
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 self?.session.startRunning()
+                print("[Camera] Session started running")
             }
         } catch {
             alertMessage = "Failed to setup camera: \(error.localizedDescription)"
@@ -120,12 +125,13 @@ class CameraViewModel: NSObject, ObservableObject {
                 self?.showingReplaceAlert = true
             }
         } else {
-            if userSettings.settings.isPremium {
-                DispatchQueue.main.async { [weak self] in
+            Task { @MainActor [weak self] in
+                if self?.userSettings?.settings.isPremium == true {
                     self?.showingWeightInput = true
+                } else {
+                    self?.savePhoto(image)
+                    self?.capturedImage = nil
                 }
-            } else {
-                savePhoto(image)
             }
         }
     }
@@ -156,23 +162,33 @@ class CameraViewModel: NSObject, ObservableObject {
                     bodyFatPercentage: tempBodyFat
                 )
             }
-            print("Photo saved: \(photo.fileName)")
+            print("[Camera] Photo saved successfully: \(photo.fileName)")
             
             DispatchQueue.main.async { [weak self] in
                 self?.tempWeight = nil
                 self?.tempBodyFat = nil
+                self?.capturedImage = nil // Clear the captured image to close the sheet
+                print("[Camera] Cleared captured image")
             }
         } catch {
+            print("[Camera] Failed to save photo: \(error)")
             DispatchQueue.main.async { [weak self] in
                 self?.alertMessage = "Failed to save photo: \(error.localizedDescription)"
                 self?.showingAlert = true
+                self?.capturedImage = nil // Clear even on error
             }
         }
     }
     
+    private var previewLayer: AVCaptureVideoPreviewLayer?
+    
     var cameraPreviewLayer: AVCaptureVideoPreviewLayer {
+        if let existingLayer = previewLayer {
+            return existingLayer
+        }
         let layer = AVCaptureVideoPreviewLayer(session: session)
         layer.videoGravity = .resizeAspectFill
+        previewLayer = layer
         return layer
     }
 }

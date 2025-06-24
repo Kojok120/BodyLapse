@@ -5,6 +5,9 @@ struct SettingsView: View {
     @State private var showingAbout = false
     @State private var showingPremiumUpgrade = false
     @State private var showingAppLockSettings = false
+    #if DEBUG
+    @State private var showingDebugSettings = false
+    #endif
     
     var body: some View {
         NavigationView {
@@ -121,14 +124,27 @@ struct SettingsView: View {
                         Label("Terms of Service", systemImage: "doc.text")
                     }
                 }
+                
+                #if DEBUG
+                Section("Developer") {
+                    Button(action: { showingDebugSettings = true }) {
+                        Label("Debug Settings", systemImage: "wrench.and.screwdriver")
+                    }
+                }
+                #endif
             }
             .navigationTitle("Settings")
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
             .sheet(isPresented: $showingPremiumUpgrade) {
-                PremiumUpgradeView(userSettings: userSettings)
+                PremiumView()
             }
+            #if DEBUG
+            .sheet(isPresented: $showingDebugSettings) {
+                DebugSettingsView()
+            }
+            #endif
             .actionSheet(isPresented: $showingAppLockSettings) {
                 ActionSheet(
                     title: Text("Select Lock Method"),
@@ -323,13 +339,6 @@ struct ExportView: View {
     }
 }
 
-struct WeightTrackingView: View {
-    var body: some View {
-        Text("Weight tracking coming soon!")
-            .navigationTitle("Weight Tracking")
-            .navigationBarTitleDisplayMode(.inline)
-    }
-}
 
 struct PasscodeSettingsView: View {
     @State private var currentPasscode = ""

@@ -4,6 +4,19 @@ import AVFoundation
 struct CameraView: View {
     @StateObject private var viewModel = CameraViewModel()
     @State private var showingPhotoReview = false
+    @State private var activeSheet: ActiveSheet?
+    
+    enum ActiveSheet: Identifiable {
+        case photoReview
+        case weightInput
+        
+        var id: Int {
+            switch self {
+            case .photoReview: return 1
+            case .weightInput: return 2
+            }
+        }
+    }
     
     var body: some View {
         ZStack {
@@ -13,7 +26,7 @@ struct CameraView: View {
                 
                 VStack {
                     HStack {
-                        if viewModel.userSettings.settings.showBodyGuidelines {
+                        if viewModel.userSettings?.settings.showBodyGuidelines == true {
                             BodyGuidelineView(isBodyDetected: viewModel.bodyDetected)
                         }
                     }
@@ -62,23 +75,20 @@ struct CameraView: View {
         } message: {
             Text(viewModel.alertMessage)
         }
-        .sheet(isPresented: .constant(viewModel.capturedImage != nil)) {
-            if let image = viewModel.capturedImage {
-                PhotoReviewView(
-                    image: image,
-                    onSave: { image in
-                        viewModel.checkAndSavePhoto(image)
-                    },
-                    onCancel: {
-                        viewModel.capturedImage = nil
-                    }
-                )
+        .onChange(of: viewModel.capturedImage) { newValue in
+            if newValue != nil {
+                activeSheet = .photoReview
+            }
+        }
+        .onChange(of: viewModel.showingWeightInput) { newValue in
+            if newValue {
+                activeSheet = .weightInput
             }
         }
         .alert("Only One Photo Per Day", isPresented: $viewModel.showingReplaceAlert) {
             Button("Replace", role: .destructive) {
                 if let image = viewModel.capturedImage {
-                    if viewModel.userSettings.settings.isPremium {
+                    if viewModel.userSettings?.settings.isPremium == true {
                         viewModel.showingWeightInput = true
                     } else {
                         viewModel.savePhoto(image)
@@ -92,22 +102,43 @@ struct CameraView: View {
         } message: {
             Text("You can only save one photo per day. Do you want to replace today's photo?")
         }
-        .sheet(isPresented: $viewModel.showingWeightInput) {
-            WeightInputSheet(
-                weight: $viewModel.tempWeight,
-                bodyFat: $viewModel.tempBodyFat,
-                onSave: {
-                    if let image = viewModel.capturedImage {
-                        viewModel.savePhoto(image)
-                        viewModel.capturedImage = nil
-                    }
-                },
-                onCancel: {
-                    viewModel.capturedImage = nil
-                    viewModel.tempWeight = nil
-                    viewModel.tempBodyFat = nil
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .photoReview:
+                if let image = viewModel.capturedImage {
+                    PhotoReviewView(
+                        image: image,
+                        onSave: { image in
+                            viewModel.checkAndSavePhoto(image)
+                            activeSheet = nil
+                        },
+                        onCancel: {
+                            viewModel.capturedImage = nil
+                            activeSheet = nil
+                        }
+                    )
                 }
-            )
+            case .weightInput:
+                WeightInputSheet(
+                    weight: $viewModel.tempWeight,
+                    bodyFat: $viewModel.tempBodyFat,
+                    onSave: {
+                        if let image = viewModel.capturedImage {
+                            viewModel.savePhoto(image)
+                            viewModel.capturedImage = nil
+                        }
+                        viewModel.showingWeightInput = false
+                        activeSheet = nil
+                    },
+                    onCancel: {
+                        viewModel.capturedImage = nil
+                        viewModel.tempWeight = nil
+                        viewModel.tempBodyFat = nil
+                        viewModel.showingWeightInput = false
+                        activeSheet = nil
+                    }
+                )
+            }
         }
     }
 }
@@ -116,21 +147,44 @@ struct CameraPreviewView: UIViewRepresentable {
     let cameraViewModel: CameraViewModel
     
     func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: UIScreen.main.bounds)
+        let view = UIView()
+        view.backgroundColor = .black
+        
         let previewLayer = cameraViewModel.cameraPreviewLayer
         previewLayer.frame = view.bounds
-        if let connection = previewLayer.connection, connection.isVideoOrientationSupported {
+        previewLayer.videoGravity = .resizeAspectFill
+        
+        if let connection = previewLayer.connection {
             connection.videoOrientation = .portrait
+            // Only set video mirroring if automatic adjustment is disabled
+            if connection.isVideoMirroringSupported && !connection.automaticallyAdjustsVideoMirroring {
+                connection.isVideoMirrored = true
+            }
         }
+        
         view.layer.addSublayer(previewLayer)
+        
+        // Ensure the layer is properly sized when the view appears
+        DispatchQueue.main.async {
+            previewLayer.frame = view.bounds
+        }
+        
         return view
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {
-        if let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
+        if let previewLayer = uiView.layer.sublayers?.compactMap({ $0 as? AVCaptureVideoPreviewLayer }).first {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
             previewLayer.frame = uiView.bounds
-            if let connection = previewLayer.connection, connection.isVideoOrientationSupported {
+            CATransaction.commit()
+            
+            if let connection = previewLayer.connection {
                 connection.videoOrientation = .portrait
+                // Only set video mirroring if automatic adjustment is disabled
+                if connection.isVideoMirroringSupported && !connection.automaticallyAdjustsVideoMirroring {
+                    connection.isVideoMirrored = true
+                }
             }
         }
     }
@@ -175,72 +229,3 @@ struct BodyGuidelineView: View {
     }
 }
 
-// Remove UIImage Identifiable extension as it's not needed
-
-struct WeightInputSheet: View {
-    @Binding var weight: Double?
-    @Binding var bodyFat: Double?
-    let onSave: () -> Void
-    let onCancel: () -> Void
-    
-    @Environment(\.dismiss) private var dismiss
-    @StateObject private var userSettings = UserSettingsManager()
-    @State private var weightText = ""
-    @State private var bodyFatText = ""
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Measurements (Optional)")) {
-                    HStack {
-                        Text("Weight")
-                        Spacer()
-                        TextField("0.0", text: $weightText)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                        Text(userSettings.settings.weightUnit.symbol)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Body Fat")
-                        Spacer()
-                        TextField("0.0", text: $bodyFatText)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                        Text("%")
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                Section {
-                    Text("You can add or update these measurements later from the Progress tab")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .navigationTitle("Add Measurements")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Skip") {
-                        onSave()
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        weight = Double(weightText)
-                        bodyFat = Double(bodyFatText)
-                        onSave()
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                }
-            }
-        }
-    }
-}

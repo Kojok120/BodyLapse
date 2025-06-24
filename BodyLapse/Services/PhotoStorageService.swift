@@ -21,8 +21,10 @@ class PhotoStorageService {
     private(set) var photos: [Photo] = []
     
     func initialize() {
+        print("[PhotoStorage] Initializing...")
         createPhotosDirectoryIfNeeded()
         loadPhotosMetadata()
+        print("[PhotoStorage] Initialized with \(photos.count) photos")
     }
     
     private func createPhotosDirectoryIfNeeded() {
@@ -107,18 +109,32 @@ class PhotoStorageService {
     }
     
     private func loadPhotosMetadata() {
-        guard let data = try? Data(contentsOf: metadataURL),
-              let decoded = try? JSONDecoder().decode([Photo].self, from: data) else {
+        print("[PhotoStorage] Loading metadata from: \(metadataURL.path)")
+        
+        guard let data = try? Data(contentsOf: metadataURL) else {
+            print("[PhotoStorage] No metadata file found")
             photos = []
             return
         }
         
-        photos = decoded.sorted { $0.captureDate > $1.captureDate }
+        do {
+            let decoded = try JSONDecoder().decode([Photo].self, from: data)
+            photos = decoded.sorted { $0.captureDate > $1.captureDate }
+            print("[PhotoStorage] Loaded \(photos.count) photos from metadata")
+        } catch {
+            print("[PhotoStorage] Failed to decode metadata: \(error)")
+            photos = []
+        }
     }
     
     private func savePhotosMetadata() {
-        guard let encoded = try? JSONEncoder().encode(photos) else { return }
-        try? encoded.write(to: metadataURL)
+        do {
+            let encoded = try JSONEncoder().encode(photos)
+            try encoded.write(to: metadataURL)
+            print("[PhotoStorage] Saved metadata for \(photos.count) photos")
+        } catch {
+            print("[PhotoStorage] Failed to save metadata: \(error)")
+        }
     }
     
     func photosGroupedByDate() -> [(Date, [Photo])] {
@@ -127,6 +143,24 @@ class PhotoStorageService {
         }
         
         return grouped.sorted { $0.key > $1.key }
+    }
+    
+    func hasPhoto(for date: Date) -> Bool {
+        let calendar = Calendar.current
+        let targetDay = calendar.startOfDay(for: date)
+        
+        return photos.contains { photo in
+            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
+        }
+    }
+    
+    func getPhotoID(for date: Date) -> String? {
+        let calendar = Calendar.current
+        let targetDay = calendar.startOfDay(for: date)
+        
+        return photos.first { photo in
+            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
+        }?.id.uuidString
     }
 }
 

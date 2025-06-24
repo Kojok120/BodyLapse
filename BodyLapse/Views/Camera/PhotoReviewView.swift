@@ -6,6 +6,7 @@ struct PhotoReviewView: View {
     let onCancel: () -> Void
     
     @State private var isProcessing = false
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationView {
@@ -39,9 +40,9 @@ struct PhotoReviewView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         isProcessing = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            onSave(image)
-                        }
+                        // Save the photo without delay
+                        onSave(image)
+                        // Dismiss is handled by the parent view when capturedImage is set to nil
                     }
                     .disabled(isProcessing)
                     .fontWeight(.semibold)
