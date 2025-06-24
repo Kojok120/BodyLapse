@@ -20,6 +20,8 @@ class CameraViewModel: NSObject, ObservableObject {
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
     private var bodyDetectionRequest: VNDetectHumanBodyPoseRequest?
+    private var currentCameraPosition: AVCaptureDevice.Position = .front
+    private var currentInput: AVCaptureDeviceInput?
     var userSettings: UserSettingsManager?
     
     override init() {
@@ -78,6 +80,8 @@ class CameraViewModel: NSObject, ObservableObject {
             let input = try AVCaptureDeviceInput(device: device)
             if session.canAddInput(input) {
                 session.addInput(input)
+                currentInput = input
+                currentCameraPosition = device.position
             }
             
             if session.canAddOutput(output) {
@@ -217,15 +221,15 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
     }
     
     func switchCamera() {
-        guard let currentInput = session.inputs.first as? AVCaptureDeviceInput else { return }
+        guard let currentInput = self.currentInput else { return }
         
         session.beginConfiguration()
         session.removeInput(currentInput)
         
-        let currentPosition = currentInput.device.position
-        let newPosition: AVCaptureDevice.Position = currentPosition == .front ? .back : .front
+        let newPosition: AVCaptureDevice.Position = currentCameraPosition == .front ? .back : .front
         
         guard let newDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition) else {
+            // If we can't get the new camera, add back the current one
             session.addInput(currentInput)
             session.commitConfiguration()
             return
@@ -235,9 +239,16 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
             let newInput = try AVCaptureDeviceInput(device: newDevice)
             if session.canAddInput(newInput) {
                 session.addInput(newInput)
+                self.currentInput = newInput
+                self.currentCameraPosition = newPosition
+            } else {
+                // If we can't add the new input, add back the current one
+                session.addInput(currentInput)
             }
         } catch {
+            // If there's an error, add back the current input
             session.addInput(currentInput)
+            print("Error switching camera: \(error)")
         }
         
         session.commitConfiguration()

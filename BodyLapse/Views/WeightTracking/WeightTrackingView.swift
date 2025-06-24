@@ -57,7 +57,9 @@ struct WeightTrackingView: View {
                             if #available(iOS 16.0, *) {
                                 InteractiveWeightChartView(
                                     entries: viewModel.filteredEntries(for: selectedTimeRange),
-                                    selectedDate: $selectedDate
+                                    selectedDate: $selectedDate,
+                                    currentPhoto: nil,
+                                    onEditWeight: {}
                                 )
                                 .padding(.horizontal)
                             } else {

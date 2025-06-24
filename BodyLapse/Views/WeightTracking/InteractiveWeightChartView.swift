@@ -5,6 +5,8 @@ import Charts
 struct InteractiveWeightChartView: View {
     let entries: [WeightEntry]
     @Binding var selectedDate: Date?
+    let currentPhoto: Photo?
+    let onEditWeight: () -> Void
     @StateObject private var userSettings = UserSettingsManager()
     
     @State private var plotWidth: CGFloat = 0
@@ -50,32 +52,39 @@ struct InteractiveWeightChartView: View {
         VStack(alignment: .leading, spacing: 15) {
             // Selected data display
             if let selectedEntry = selectedEntry {
-                HStack(spacing: 30) {
-                    VStack(alignment: .leading) {
-                        Text("Weight")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                    }
-                    
-                    if let bodyFat = selectedEntry.bodyFatPercentage {
-                        VStack(alignment: .leading) {
-                            Text("Body Fat")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("\(bodyFat, specifier: "%.1f")%")
-                                .font(.headline)
-                                .foregroundColor(.orange)
-                        }
-                    }
+                HStack(spacing: 20) {
+                    Text(selectedEntry.date.formatted(date: .abbreviated, time: .omitted))
+                        .font(.headline)
                     
                     Spacer()
                     
-                    Text(selectedEntry.date.formatted(date: .abbreviated, time: .omitted))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 15) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Weight")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
+                                .font(.body)
+                                .foregroundColor(.blue)
+                        }
+                        
+                        if let bodyFat = selectedEntry.bodyFatPercentage {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Body Fat")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(bodyFat, specifier: "%.1f")%")
+                                    .font(.body)
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                    }
+                    
+                    Button(action: onEditWeight) {
+                        Image(systemName: currentPhoto?.weight != nil ? "pencil.circle.fill" : "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.accentColor)
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 8)
@@ -117,7 +126,7 @@ struct InteractiveWeightChartView: View {
                         }
                 }
             }
-            .frame(height: 250)
+            .frame(height: 200)
             .chartXScale(domain: dateRange)
             .chartYScale(domain: weightRange)
             .chartXAxis {
@@ -162,7 +171,7 @@ struct InteractiveWeightChartView: View {
                             }
                         }
                     }
-                    .frame(height: 250)
+                    .frame(height: 200)
                     .chartXScale(domain: dateRange)
                     .chartYScale(domain: bodyFatRange)
                     .chartXAxis {
@@ -229,22 +238,6 @@ struct InteractiveWeightChartView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 10)
-            
-            // Photo preview if available
-            if let selectedEntry = selectedEntry,
-               let photoID = selectedEntry.linkedPhotoID,
-               let photo = PhotoStorageService.shared.photos.first(where: { $0.id.uuidString == photoID }),
-               let image = PhotoStorageService.shared.loadImage(for: photo) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 200)
-                    .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color(UIColor.separator), lineWidth: 1)
-                    )
-            }
         }
         .onAppear {
             // Select the most recent entry by default
@@ -300,7 +293,9 @@ struct InteractiveWeightChartView_Previews: PreviewProvider {
     static var previews: some View {
         InteractiveWeightChartView(
             entries: [],
-            selectedDate: .constant(nil)
+            selectedDate: .constant(nil),
+            currentPhoto: nil,
+            onEditWeight: {}
         )
     }
 }

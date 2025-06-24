@@ -26,11 +26,26 @@ struct CameraView: View {
                 
                 VStack {
                     HStack {
-                        if viewModel.userSettings?.settings.showBodyGuidelines == true {
-                            BodyGuidelineView(isBodyDetected: viewModel.bodyDetected)
+                        Spacer()
+                        
+                        // Camera switch button
+                        Button(action: {
+                            viewModel.switchCamera()
+                        }) {
+                            Image(systemName: "camera.rotate")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .frame(width: 50, height: 50)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
                         }
+                        .padding(.trailing, 20)
                     }
-                    .padding(.top, 50)
+                    .padding(.top, 60)
+                    
+                    if viewModel.userSettings?.settings.showBodyGuidelines == true {
+                        BodyGuidelineView(isBodyDetected: viewModel.bodyDetected)
+                    }
                     
                     Spacer()
                 }

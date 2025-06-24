@@ -18,6 +18,8 @@ struct CalendarView: View {
     @State private var showingVideoAlert = false
     @State private var videoAlertMessage = ""
     @State private var selectedChartDate: Date? = nil
+    @State private var showingCalendarPopup = false
+    @State private var showingImagePicker = false
     
     enum TimePeriod: String, CaseIterable {
         case week = "7 Days"
@@ -55,7 +57,7 @@ struct CalendarView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
+            VStack(spacing: 12) {
                 headerView
                 
                 photoPreviewSection
@@ -132,24 +134,67 @@ struct CalendarView: View {
                     }
                 }
             )
+            .sheet(isPresented: $showingCalendarPopup) {
+                CalendarPopupView(
+                    selectedDate: $selectedDate,
+                    photos: viewModel.photos,
+                    onDateSelected: { date in
+                        selectedDate = date
+                        if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
+                            selectedIndex = index
+                        }
+                        updateCurrentPhoto()
+                        showingCalendarPopup = false
+                    }
+                )
+            }
+            .sheet(isPresented: $showingImagePicker) {
+                ImagePicker(image: .constant(nil)) { image in
+                    if let image = image {
+                        // Save the imported image for the selected date
+                        let photo = Photo(
+                            id: UUID(),
+                            captureDate: selectedDate,
+                            bodyDetected: false,
+                            bodyConfidence: 0.0
+                        )
+                        PhotoStorageService.shared.saveImage(image, for: photo)
+                        viewModel.loadPhotos()
+                        updateCurrentPhoto()
+                    }
+                }
+            }
         }
     }
     
     private var headerView: some View {
         HStack {
-            Button(action: {
-                showingPeriodPicker = true
-            }) {
-                HStack {
-                    Text(selectedPeriod.rawValue)
-                        .font(.system(size: 16, weight: .medium))
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12))
+            HStack(spacing: 8) {
+                Button(action: {
+                    showingPeriodPicker = true
+                }) {
+                    HStack {
+                        Text(selectedPeriod.rawValue)
+                            .font(.system(size: 16, weight: .medium))
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(8)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(UIColor.secondarySystemBackground))
-                .cornerRadius(8)
+                
+                Button(action: {
+                    showingCalendarPopup = true
+                }) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 18))
+                        .foregroundColor(.primary)
+                        .frame(width: 36, height: 36)
+                        .background(Color(UIColor.secondarySystemBackground))
+                        .cornerRadius(8)
+                }
             }
             .actionSheet(isPresented: $showingPeriodPicker) {
                 ActionSheet(
@@ -182,67 +227,52 @@ struct CalendarView: View {
             }
             .disabled(isGeneratingVideo)
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.vertical, 12)
     }
     
     private var photoPreviewSection: some View {
-        VStack {
+        GeometryReader { geometry in
             if let photo = currentPhoto,
                let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxHeight: UIScreen.main.bounds.height * 0.4)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(formatDate(selectedDate))
-                            .font(.headline)
-                        
-                        if userSettings.settings.isPremium {
-                            HStack {
-                                if let weight = photo.weight {
-                                    Label("\(String(format: "%.1f", weight)) \(userSettings.settings.weightUnit.symbol)", systemImage: "scalemass")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                if let bodyFat = photo.bodyFatPercentage {
-                                    Label("\(String(format: "%.1f", bodyFat))%", systemImage: "percent")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    if userSettings.settings.isPremium {
-                        Button(action: {
-                            showingWeightInput = true
-                        }) {
-                            Image(systemName: photo.weight != nil ? "pencil.circle.fill" : "plus.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(.accentColor)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top, 8)
-            } else {
                 VStack {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: geometry.size.width)
+                        .cornerRadius(12)
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+            } else {
+                VStack(spacing: 20) {
                     Image(systemName: "photo")
                         .font(.system(size: 60))
                         .foregroundColor(.gray)
                     Text("No photo for \(formatDate(selectedDate))")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+                    
+                    Button(action: {
+                        showingImagePicker = true
+                    }) {
+                        Label("Upload Photo", systemImage: "photo.badge.plus")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Color.accentColor)
+                            .cornerRadius(20)
+                    }
                 }
-                .frame(maxHeight: UIScreen.main.bounds.height * 0.4)
+                .frame(width: geometry.size.width, height: geometry.size.height)
             }
         }
+        .frame(height: userSettings.settings.isPremium ? UIScreen.main.bounds.height * 0.3 : UIScreen.main.bounds.height * 0.5)
+        .padding(.horizontal)
+    }
+    
+    private func convertedWeight(_ weight: Double) -> Double {
+        userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
     }
     
     private var progressBarSection: some View {
@@ -308,30 +338,18 @@ struct CalendarView: View {
     }
     
     private var dataGraphSection: some View {
-        VStack(spacing: 20) {
-            Text("Weight Tracking")
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
-            
-            // Debug info at the top
-            HStack {
-                Text("Entries: \(weightViewModel.weightEntries.count)")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                Text("Premium: \(userSettings.settings.isPremium ? "Yes" : "No")")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-            }
-            .padding(.horizontal)
-            
+        VStack(spacing: 10) {
             if !weightViewModel.weightEntries.isEmpty {
                 if #available(iOS 16.0, *) {
                     let filteredEntries = weightViewModel.filteredEntries(for: getWeightTimeRange())
                     if !filteredEntries.isEmpty {
                         InteractiveWeightChartView(
                             entries: filteredEntries,
-                            selectedDate: $selectedChartDate
+                            selectedDate: $selectedChartDate,
+                            currentPhoto: currentPhoto,
+                            onEditWeight: {
+                                showingWeightInput = true
+                            }
                         )
                         .padding(.horizontal)
                         .onChange(of: selectedChartDate) { newDate in
@@ -383,9 +401,9 @@ struct CalendarView: View {
                 .frame(maxWidth: .infinity)
                 .background(Color(UIColor.secondarySystemGroupedBackground))
                 .cornerRadius(15)
+                .padding(.horizontal)
             }
         }
-        .padding(.vertical)
     }
     
     private func getWeightTimeRange() -> WeightTimeRange {
