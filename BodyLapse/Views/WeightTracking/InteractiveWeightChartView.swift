@@ -93,106 +93,116 @@ struct InteractiveWeightChartView: View {
             }
             
             // Chart
-            Chart {
-                // Weight data - Primary Y axis (left)
-                ForEach(sortedEntries) { entry in
-                    if sortedEntries.count > 1 {
-                        LineMark(
-                            x: .value("Date", entry.date),
-                            y: .value("Weight", convertedWeight(entry.weight))
-                        )
-                        .foregroundStyle(Color.blue)
-                        .interpolationMethod(.catmullRom)
+            HStack(spacing: 0) {
+                // Left Y-axis labels for weight
+                VStack(alignment: .trailing, spacing: 0) {
+                    ForEach(Array(stride(from: weightRange.upperBound, through: weightRange.lowerBound, by: -(weightRange.upperBound - weightRange.lowerBound) / 4)), id: \.self) { value in
+                        Text("\(value, specifier: "%.0f")")
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                            .frame(height: 40)
+                        if value > weightRange.lowerBound {
+                            Spacer(minLength: 0)
+                        }
                     }
-                    
-                    PointMark(
-                        x: .value("Date", entry.date),
-                        y: .value("Weight", convertedWeight(entry.weight))
-                    )
-                    .foregroundStyle(Color.blue)
-                    .symbolSize(sortedEntries.count == 1 ? 100 : 50)
                 }
+                .frame(width: 30)
                 
-                // Selection indicator
-                if let selectedDate = selectedDate {
-                    RuleMark(x: .value("Selected", selectedDate))
-                        .foregroundStyle(Color.primary.opacity(0.3))
-                        .lineStyle(StrokeStyle(lineWidth: 2))
-                        .annotation(position: .top) {
-                            Image(systemName: "arrowtriangle.down.fill")
-                                .font(.caption)
-                                .foregroundColor(.primary)
-                                .offset(y: -8)
+                // Main chart
+                ZStack {
+                    // Weight chart
+                    Chart {
+                        ForEach(sortedEntries) { entry in
+                            if sortedEntries.count > 1 {
+                                LineMark(
+                                    x: .value("Date", entry.date),
+                                    y: .value("Weight", convertedWeight(entry.weight))
+                                )
+                                .foregroundStyle(Color.blue)
+                                .interpolationMethod(.catmullRom)
+                            }
+                            
+                            PointMark(
+                                x: .value("Date", entry.date),
+                                y: .value("Weight", convertedWeight(entry.weight))
+                            )
+                            .foregroundStyle(Color.blue)
+                            .symbolSize(sortedEntries.count == 1 ? 100 : 50)
                         }
-                }
-            }
-            .frame(height: 200)
-            .chartXScale(domain: dateRange)
-            .chartYScale(domain: weightRange)
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .day)) { value in
-                    AxisGridLine()
-                    AxisValueLabel(format: .dateTime.month(.abbreviated).day())
-                }
-            }
-            .chartYAxis {
-                AxisMarks(position: .leading) { value in
-                    AxisGridLine()
-                    AxisValueLabel {
-                        if let doubleValue = value.as(Double.self) {
-                            Text("\(doubleValue, specifier: "%.0f") \(userSettings.settings.weightUnit.symbol)")
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                        
+                        // Selection indicator
+                        if let selectedDate = selectedDate {
+                            RuleMark(x: .value("Selected", selectedDate))
+                                .foregroundStyle(Color.primary.opacity(0.3))
+                                .lineStyle(StrokeStyle(lineWidth: 2))
+                                .annotation(position: .top) {
+                                    Image(systemName: "arrowtriangle.down.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.primary)
+                                        .offset(y: -8)
+                                }
                         }
                     }
-                }
-            }
-            .overlay(alignment: .topTrailing) {
-                // Body fat data - Secondary Y axis (right)
-                if !bodyFatEntries.isEmpty {
-                    Chart {
-                        ForEach(bodyFatEntries) { entry in
-                            if let bodyFat = entry.bodyFatPercentage {
-                                if bodyFatEntries.count > 1 {
-                                    LineMark(
+                    .frame(height: 160)
+                    .chartXScale(domain: dateRange)
+                    .chartYScale(domain: weightRange)
+                    .chartXAxis {
+                        AxisMarks { _ in
+                            AxisGridLine()
+                        }
+                    }
+                    .chartYAxis(.hidden)
+                    
+                    // Body fat chart overlay
+                    if !bodyFatEntries.isEmpty {
+                        Chart {
+                            ForEach(bodyFatEntries) { entry in
+                                if let bodyFat = entry.bodyFatPercentage {
+                                    if bodyFatEntries.count > 1 {
+                                        LineMark(
+                                            x: .value("Date", entry.date),
+                                            y: .value("Body Fat", bodyFat)
+                                        )
+                                        .foregroundStyle(Color.orange)
+                                        .interpolationMethod(.catmullRom)
+                                    }
+                                    
+                                    PointMark(
                                         x: .value("Date", entry.date),
                                         y: .value("Body Fat", bodyFat)
                                     )
                                     .foregroundStyle(Color.orange)
-                                    .interpolationMethod(.catmullRom)
-                                }
-                                
-                                PointMark(
-                                    x: .value("Date", entry.date),
-                                    y: .value("Body Fat", bodyFat)
-                                )
-                                .foregroundStyle(Color.orange)
-                                .symbolSize(bodyFatEntries.count == 1 ? 100 : 50)
-                            }
-                        }
-                    }
-                    .frame(height: 200)
-                    .chartXScale(domain: dateRange)
-                    .chartYScale(domain: bodyFatRange)
-                    .chartXAxis {
-                        AxisMarks { _ in }
-                    }
-                    .chartYAxis {
-                        AxisMarks(position: .trailing) { value in
-                            AxisValueLabel {
-                                if let doubleValue = value.as(Double.self) {
-                                    Text("\(doubleValue, specifier: "%.0f")%")
-                                        .font(.caption)
-                                        .foregroundColor(.orange)
+                                    .symbolSize(bodyFatEntries.count == 1 ? 100 : 50)
                                 }
                             }
                         }
+                        .frame(height: 160)
+                        .chartXScale(domain: dateRange)
+                        .chartYScale(domain: bodyFatRange)
+                        .chartXAxis(.hidden)
+                        .chartYAxis(.hidden)
+                        .allowsHitTesting(false)
                     }
-                    .allowsHitTesting(false)
+                }
+                .background(Color(UIColor.secondarySystemGroupedBackground))
+                .cornerRadius(15)
+                
+                // Right Y-axis labels for body fat
+                if !bodyFatEntries.isEmpty {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(stride(from: bodyFatRange.upperBound, through: bodyFatRange.lowerBound, by: -(bodyFatRange.upperBound - bodyFatRange.lowerBound) / 4)), id: \.self) { value in
+                            Text("\(value, specifier: "%.0f")%")
+                                .font(.caption2)
+                                .foregroundColor(.orange)
+                                .frame(height: 40)
+                            if value > bodyFatRange.lowerBound {
+                                Spacer(minLength: 0)
+                            }
+                        }
+                    }
+                    .frame(width: 35)
                 }
             }
-            .background(Color(UIColor.secondarySystemGroupedBackground))
-            .cornerRadius(15)
             .overlay(
                 GeometryReader { geometry in
                     Rectangle()
@@ -216,30 +226,6 @@ struct InteractiveWeightChartView: View {
                 }
             )
             
-            // Legend
-            HStack(spacing: 30) {
-                HStack(spacing: 5) {
-                    Circle()
-                        .fill(Color.blue)
-                        .frame(width: 10, height: 10)
-                    Text("Weight (\(userSettings.settings.weightUnit.symbol))")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                if !bodyFatEntries.isEmpty {
-                    HStack(spacing: 5) {
-                        Circle()
-                            .fill(Color.orange)
-                            .frame(width: 10, height: 10)
-                        Text("Body Fat (%)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.top, 10)
         }
         .onAppear {
             // Select the most recent entry by default

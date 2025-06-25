@@ -305,7 +305,7 @@ struct CalendarView: View {
                 .frame(width: geometry.size.width, height: geometry.size.height)
             }
         }
-        .frame(height: userSettings.settings.isPremium ? UIScreen.main.bounds.height * 0.3 : UIScreen.main.bounds.height * 0.5)
+        .frame(height: userSettings.settings.isPremium ? UIScreen.main.bounds.height * 0.35 : UIScreen.main.bounds.height * 0.5)
         .padding(.horizontal)
     }
     
