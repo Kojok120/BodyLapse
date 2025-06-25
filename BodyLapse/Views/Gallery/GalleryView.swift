@@ -25,6 +25,7 @@ struct GalleryView: View {
                     videosSection
                 }
             }
+            .withBannerAd()
             .navigationTitle("Gallery")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {

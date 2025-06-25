@@ -11,6 +11,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Initialize notification service
         _ = NotificationService.shared
         
+        // Initialize AdMob
+        AdMobService.shared.initializeAdMob()
+        
         // Clear badge on app launch
         application.applicationIconBadgeNumber = 0
         

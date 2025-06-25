@@ -68,6 +68,7 @@ struct CalendarView: View {
                     progressBarSection
                 }
             }
+            .withBannerAd()
             .navigationTitle("Progress")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
@@ -453,38 +454,54 @@ struct CalendarView: View {
     }
     
     private func generateVideo(with options: VideoGenerationService.VideoGenerationOptions) {
-        isGeneratingVideo = true
-        videoGenerationProgress = 0
-        
-        let startDate = dateRange.first ?? Date()
-        let endDate = dateRange.last ?? Date()
-        let dateRange = startDate...endDate
-        
-        VideoGenerationService.shared.generateVideo(
-            from: viewModel.photos,
-            in: dateRange,
-            options: options,
-            progress: { progress in
-                DispatchQueue.main.async {
-                    self.videoGenerationProgress = progress
-                }
-            },
-            completion: { result in
-                DispatchQueue.main.async {
-                    self.isGeneratingVideo = false
-                    self.videoGenerationProgress = 0
-                    
-                    switch result {
-                    case .success:
-                        self.videoAlertMessage = "Video generated successfully! You can view it in the Gallery."
-                        self.showingVideoAlert = true
-                    case .failure(let error):
-                        self.videoAlertMessage = error.localizedDescription
-                        self.showingVideoAlert = true
+        let performVideoGeneration = {
+            self.isGeneratingVideo = true
+            self.videoGenerationProgress = 0
+            
+            let startDate = self.dateRange.first ?? Date()
+            let endDate = self.dateRange.last ?? Date()
+            let dateRange = startDate...endDate
+            
+            VideoGenerationService.shared.generateVideo(
+                from: self.viewModel.photos,
+                in: dateRange,
+                options: options,
+                progress: { progress in
+                    DispatchQueue.main.async {
+                        self.videoGenerationProgress = progress
+                    }
+                },
+                completion: { result in
+                    DispatchQueue.main.async {
+                        self.isGeneratingVideo = false
+                        self.videoGenerationProgress = 0
+                        
+                        switch result {
+                        case .success:
+                            self.videoAlertMessage = "Video generated successfully! You can view it in the Gallery."
+                            self.showingVideoAlert = true
+                        case .failure(let error):
+                            self.videoAlertMessage = error.localizedDescription
+                            self.showingVideoAlert = true
+                        }
                     }
                 }
+            )
+        }
+        
+        // Show interstitial ad for free users before generating video
+        if !userSettings.settings.isPremium {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let rootViewController = windowScene.windows.first?.rootViewController {
+                AdMobService.shared.showInterstitialAd(from: rootViewController) {
+                    performVideoGeneration()
+                }
+            } else {
+                performVideoGeneration()
             }
-        )
+        } else {
+            performVideoGeneration()
+        }
     }
 }
 

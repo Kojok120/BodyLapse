@@ -20,6 +20,7 @@ struct CompareView: View {
                 
                 photoSelectionButtons
             }
+            .withBannerAd()
             .navigationTitle("Compare")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
