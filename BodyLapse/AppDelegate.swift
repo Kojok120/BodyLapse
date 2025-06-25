@@ -11,8 +11,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Initialize notification service
         _ = NotificationService.shared
         
-        // Initialize AdMob
-        AdMobService.shared.initializeAdMob()
+        // Initialize AdMob with delay to ensure proper setup
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            print("[AppDelegate] Initializing AdMob")
+            AdMobService.shared.initializeAdMob()
+        }
         
         // Clear badge on app launch
         application.applicationIconBadgeNumber = 0
@@ -33,5 +36,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Clear badge when app becomes active
         application.applicationIconBadgeNumber = 0
         NotificationService.shared.clearDeliveredNotifications()
+    }
+    
+    // Force portrait orientation
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        return .portrait
     }
 }

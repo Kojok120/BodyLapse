@@ -4,11 +4,11 @@ import SwiftUI
 class GalleryViewModel: ObservableObject {
     @Published var photos: [Photo] = []
     @Published var videos: [Video] = []
-    @Published var selectedSection: GallerySection = .photos
+    @Published var selectedSection: GallerySection = .videos
     
     enum GallerySection: String, CaseIterable {
-        case photos = "Photos"
         case videos = "Videos"
+        case photos = "Photos"
     }
     
     init() {

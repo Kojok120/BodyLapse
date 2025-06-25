@@ -90,6 +90,21 @@ struct CalendarView: View {
                     print("[Calendar] Is premium: \(userSettings.settings.isPremium)")
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday"))) { _ in
+                // Set selected date to today
+                let today = Date()
+                selectedDate = today
+                selectedChartDate = today
+                
+                // Update index to match today's date
+                if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: today) }) {
+                    selectedIndex = index
+                }
+                
+                // Reload photos to ensure we have the latest
+                viewModel.loadPhotos()
+                updateCurrentPhoto()
+            }
             .onChange(of: selectedDate) { newDate in
                 updateCurrentPhoto()
                 selectedChartDate = newDate  // Sync chart selection when date changes
@@ -124,10 +139,19 @@ struct CalendarView: View {
                     period: selectedPeriod,
                     dateRange: dateRange,
                     isGenerating: $isGeneratingVideo,
+                    userSettings: userSettings,
                     onGenerate: { options in
                         generateVideo(with: options)
                     }
                 )
+                .onAppear {
+                    // Pre-load interstitial ad when sheet appears
+                    if !userSettings.settings.isPremium {
+                        print("[VideoGenerationView] Sheet appeared - checking ad status")
+                        AdMobService.shared.checkAdStatus()
+                        AdMobService.shared.loadInterstitialAd()
+                    }
+                }
             }
             .alert("Video Generation", isPresented: $showingVideoAlert) {
                 Button("OK") { }
@@ -454,54 +478,42 @@ struct CalendarView: View {
     }
     
     private func generateVideo(with options: VideoGenerationService.VideoGenerationOptions) {
-        let performVideoGeneration = {
-            self.isGeneratingVideo = true
-            self.videoGenerationProgress = 0
-            
-            let startDate = self.dateRange.first ?? Date()
-            let endDate = self.dateRange.last ?? Date()
-            let dateRange = startDate...endDate
-            
-            VideoGenerationService.shared.generateVideo(
-                from: self.viewModel.photos,
-                in: dateRange,
-                options: options,
-                progress: { progress in
-                    DispatchQueue.main.async {
-                        self.videoGenerationProgress = progress
-                    }
-                },
-                completion: { result in
-                    DispatchQueue.main.async {
-                        self.isGeneratingVideo = false
-                        self.videoGenerationProgress = 0
-                        
-                        switch result {
-                        case .success:
-                            self.videoAlertMessage = "Video generated successfully! You can view it in the Gallery."
-                            self.showingVideoAlert = true
-                        case .failure(let error):
-                            self.videoAlertMessage = error.localizedDescription
-                            self.showingVideoAlert = true
-                        }
-                    }
-                }
-            )
-        }
+        isGeneratingVideo = true
+        videoGenerationProgress = 0
         
-        // Show interstitial ad for free users before generating video
-        if !userSettings.settings.isPremium {
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let rootViewController = windowScene.windows.first?.rootViewController {
-                AdMobService.shared.showInterstitialAd(from: rootViewController) {
-                    performVideoGeneration()
+        let startDate = dateRange.first ?? Date()
+        let endDate = dateRange.last ?? Date()
+        let dateRange = startDate...endDate
+        
+        VideoGenerationService.shared.generateVideo(
+            from: viewModel.photos,
+            in: dateRange,
+            options: options,
+            progress: { progress in
+                DispatchQueue.main.async {
+                    self.videoGenerationProgress = progress
                 }
-            } else {
-                performVideoGeneration()
+            },
+            completion: { result in
+                DispatchQueue.main.async {
+                    self.isGeneratingVideo = false
+                    self.videoGenerationProgress = 0
+                    
+                    switch result {
+                    case .success(let video):
+                        // Navigate to Gallery and play the video
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("NavigateToGalleryAndPlayVideo"),
+                            object: nil,
+                            userInfo: ["videoId": video.id]
+                        )
+                    case .failure(let error):
+                        self.videoAlertMessage = error.localizedDescription
+                        self.showingVideoAlert = true
+                    }
+                }
             }
-        } else {
-            performVideoGeneration()
-        }
+        )
     }
 }
 
@@ -660,10 +672,10 @@ struct VideoGenerationView: View {
     let period: CalendarView.TimePeriod
     let dateRange: [Date]
     @Binding var isGenerating: Bool
+    let userSettings: UserSettingsManager
     let onGenerate: (VideoGenerationService.VideoGenerationOptions) -> Void
     
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var userSettings = UserSettingsManager()
     @State private var selectedSpeed: VideoSpeed = .normal
     @State private var selectedQuality: VideoQuality = .high
     @State private var enableFaceBlur = false
@@ -784,8 +796,43 @@ struct VideoGenerationView: View {
                             transitionStyle: .fade,
                             blurFaces: enableFaceBlur
                         )
-                        onGenerate(options)
-                        dismiss()
+                        
+                        // Show interstitial ad for free users
+                        if !userSettings.settings.isPremium {
+                            print("[VideoGeneration] Free user - showing ad before video generation")
+                            dismiss()
+                            
+                            // Wait longer for dismissal to complete
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                                   let window = windowScene.windows.first {
+                                    
+                                    // Find the topmost presented view controller
+                                    var topController = window.rootViewController
+                                    while let presented = topController?.presentedViewController {
+                                        topController = presented
+                                    }
+                                    
+                                    if let viewController = topController {
+                                        print("[VideoGeneration] Found top view controller: \(type(of: viewController))")
+                                        AdMobService.shared.showInterstitialAd(from: viewController) {
+                                            print("[VideoGeneration] Interstitial ad closed - starting video generation")
+                                            onGenerate(options)
+                                        }
+                                    } else {
+                                        print("[VideoGeneration] Could not find view controller")
+                                        onGenerate(options)
+                                    }
+                                } else {
+                                    print("[VideoGeneration] Could not find window")
+                                    onGenerate(options)
+                                }
+                            }
+                        } else {
+                            print("[VideoGeneration] Premium user - generating video without ad")
+                            dismiss()
+                            onGenerate(options)
+                        }
                     }
                     .fontWeight(.semibold)
                     .disabled(countPhotosInRange() == 0)

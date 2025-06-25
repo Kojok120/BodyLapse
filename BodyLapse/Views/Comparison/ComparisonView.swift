@@ -61,6 +61,7 @@ struct ComparisonView: View {
                     }
                 }
             }
+            .withBannerAd()
             .navigationTitle("Compare Progress")
             .sheet(isPresented: $viewModel.showingFirstPhotoPicker) {
                 CalendarPopupView(
@@ -94,6 +95,7 @@ struct ComparisonView: View {
             }
         }
         .onAppear {
+            print("[ComparisonView] View appeared")
             viewModel.loadPhotos()
         }
     }

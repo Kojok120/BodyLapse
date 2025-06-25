@@ -14,7 +14,7 @@
     <string>BodyLapse uses Face ID to secure your photos</string>
     
     <key>GADApplicationIdentifier</key>
-    <string>YOUR_ADMOB_APP_ID</string>
+    <string>ca-app-pub-3940256099942544~1458002511</string>
 
     <key>SKAdNetworkItems</key>
     <array>
@@ -23,6 +23,29 @@
             <string>cstr6suwn9.skadnetwork</string>
         </dict>
         <!-- Add more SKAdNetwork identifiers as needed -->
-    </array>    
+    </array>
+    
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+        <key>NSAllowsArbitraryLoadsForMedia</key>
+        <true/>
+        <key>NSAllowsArbitraryLoadsInWebContent</key>
+        <true/>
+    </dict>
+    
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    
+    <key>UIDeviceFamily</key>
+    <array>
+        <integer>1</integer>
+    </array>
+    
+    <key>UIRequiresFullScreen</key>
+    <true/>
 </dict>
 </plist>

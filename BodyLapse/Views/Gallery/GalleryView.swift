@@ -2,11 +2,16 @@ import SwiftUI
 import AVKit
 
 struct GalleryView: View {
+    @Binding var videoToPlay: UUID?
     @StateObject private var viewModel = GalleryViewModel()
     @State private var selectedPhoto: Photo?
     @State private var selectedVideo: Video?
     @State private var showingDeleteAlert = false
     @State private var itemToDelete: Any?
+    
+    init(videoToPlay: Binding<UUID?> = .constant(nil)) {
+        self._videoToPlay = videoToPlay
+    }
     
     let columns = [
         GridItem(.flexible(), spacing: 2),
@@ -19,17 +24,24 @@ struct GalleryView: View {
             VStack(spacing: 0) {
                 sectionPicker
                 
-                if viewModel.selectedSection == .photos {
-                    photosSection
-                } else {
+                TabView(selection: $viewModel.selectedSection) {
                     videosSection
+                        .tag(GalleryViewModel.GallerySection.videos)
+                    
+                    photosSection
+                        .tag(GalleryViewModel.GallerySection.photos)
                 }
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             }
             .withBannerAd()
             .navigationTitle("Gallery")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 viewModel.loadData()
+                checkForVideoToPlay()
+            }
+            .onChange(of: videoToPlay) { newValue in
+                checkForVideoToPlay()
             }
             .sheet(item: $selectedPhoto) { photo in
                 PhotoDetailSheet(photo: photo)
@@ -44,6 +56,23 @@ struct GalleryView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Are you sure you want to delete this item? This action cannot be undone.")
+            }
+        }
+    }
+    
+    private func checkForVideoToPlay() {
+        if let videoId = videoToPlay {
+            print("[GalleryView] Checking for video to play: \(videoId)")
+            // Find the video and play it
+            if let video = viewModel.videos.first(where: { $0.id == videoId }) {
+                print("[GalleryView] Found video to play: \(video.fileName)")
+                viewModel.selectedSection = .videos
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    selectedVideo = video
+                    videoToPlay = nil // Clear after playing
+                }
+            } else {
+                print("[GalleryView] Video not found in list. Total videos: \(viewModel.videos.count)")
             }
         }
     }

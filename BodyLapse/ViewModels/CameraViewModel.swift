@@ -173,6 +173,12 @@ class CameraViewModel: NSObject, ObservableObject {
                 self?.tempBodyFat = nil
                 self?.capturedImage = nil // Clear the captured image to close the sheet
                 print("[Camera] Cleared captured image")
+                
+                // Navigate to Calendar with today's date
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("NavigateToCalendarToday"),
+                    object: nil
+                )
             }
         } catch {
             print("[Camera] Failed to save photo: \(error)")

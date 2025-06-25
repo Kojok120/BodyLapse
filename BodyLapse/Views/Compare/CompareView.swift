@@ -11,19 +11,23 @@ struct CompareView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
+            VStack(spacing: 0) {
                 if firstPhoto != nil || secondPhoto != nil {
                     comparisonView
+                        .layoutPriority(1)
                 } else {
                     emptyStateView
+                        .frame(maxHeight: .infinity)
                 }
                 
                 photoSelectionButtons
+                    .padding(.bottom)
             }
             .withBannerAd()
             .navigationTitle("Compare")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
+                print("[CompareView] View appeared")
                 viewModel.loadPhotos()
             }
             .sheet(isPresented: $showingFirstCalendar) {
@@ -299,7 +303,8 @@ struct CompareView: View {
                 .cornerRadius(10)
             }
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.top)
     }
     
     private func formatDate(_ date: Date) -> String {

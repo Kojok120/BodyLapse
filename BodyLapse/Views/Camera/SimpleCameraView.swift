@@ -41,6 +41,19 @@ class SimpleCameraViewController: UIViewController {
         previewLayer?.frame = view.bounds
     }
     
+    // Force portrait orientation
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        return .portrait
+    }
+    
+    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+        return .portrait
+    }
+    
+    override var shouldAutorotate: Bool {
+        return false
+    }
+    
     private func checkCameraAuthorization() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
