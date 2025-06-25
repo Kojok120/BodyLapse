@@ -5,13 +5,17 @@
     <key>NSCameraUsageDescription</key>
     <string>BodyLapse needs camera access to capture your daily progress photos</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>BodyLapse needs photo library access to save your time-lapse videos</string>
+    <string>BodyLapse needs photo library access to save your photos and time-lapse videos</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>BodyLapse needs photo library access to save your time-lapse videos</string>
     <key>NSUserNotificationsUsageDescription</key>
     <string>BodyLapse will send you daily reminders to capture your progress photo</string>
     <key>NSFaceIDUsageDescription</key>
     <string>BodyLapse uses Face ID to secure your photos</string>
+    <key>NSHealthShareUsageDescription</key>
+    <string>BodyLapse reads your weight and body fat data from Health to automatically track your progress</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>BodyLapse saves your weight and body fat measurements to Health for comprehensive tracking</string>
     
     <key>GADApplicationIdentifier</key>
     <string>ca-app-pub-3940256099942544~1458002511</string>

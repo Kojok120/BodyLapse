@@ -342,6 +342,7 @@ struct BaselinePhotoCaptureView: View {
     @State private var detectedContour: [CGPoint]?
     @State private var showingContourConfirmation = false
     @State private var contourError: String?
+    @State private var cameraKey = UUID()
     
     init(onPhotoCapture: @escaping (Photo) -> Void) {
         self.onPhotoCapture = onPhotoCapture
@@ -358,6 +359,7 @@ struct BaselinePhotoCaptureView: View {
                     cameraController = controller
                 }
                 .edgesIgnoringSafeArea(.all)
+                .id(cameraKey)
             } else if let image = capturedImage, let contour = detectedContour {
                 // Show contour confirmation view
                 ContourConfirmationView(
@@ -370,6 +372,10 @@ struct BaselinePhotoCaptureView: View {
                         showingContourConfirmation = false
                         capturedImage = nil
                         detectedContour = nil
+                        contourError = nil
+                        isProcessing = false
+                        // Force camera to reinitialize
+                        cameraKey = UUID()
                     }
                 )
             }

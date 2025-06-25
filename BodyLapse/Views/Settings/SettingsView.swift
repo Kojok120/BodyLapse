@@ -9,6 +9,9 @@ struct SettingsView: View {
     #if DEBUG
     @State private var showingDebugSettings = false
     #endif
+    @State private var healthKitEnabled = false
+    @State private var showingHealthKitPermission = false
+    @State private var healthKitSyncInProgress = false
     
     var body: some View {
         NavigationView {
@@ -82,6 +85,42 @@ struct SettingsView: View {
                                 .foregroundColor(.yellow)
                             Text("Premium Active")
                                 .foregroundColor(.secondary)
+                        }
+                        
+                        // HealthKit Integration
+                        Toggle(isOn: $healthKitEnabled) {
+                            HStack {
+                                Image(systemName: "heart.fill")
+                                    .foregroundColor(.red)
+                                VStack(alignment: .leading) {
+                                    Text("Sync with Health")
+                                    Text("Auto-import weight & body fat")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .onChange(of: healthKitEnabled) { newValue in
+                            if newValue {
+                                requestHealthKitPermission()
+                            } else {
+                                userSettings.settings.healthKitEnabled = false
+                            }
+                        }
+                        
+                        if healthKitEnabled {
+                            Button(action: syncHealthData) {
+                                HStack {
+                                    if healthKitSyncInProgress {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                    } else {
+                                        Image(systemName: "arrow.triangle.2.circlepath")
+                                    }
+                                    Text("Sync Now")
+                                }
+                            }
+                            .disabled(healthKitSyncInProgress)
                         }
                     } else {
                         Button(action: { showingPremiumUpgrade = true }) {
@@ -176,6 +215,43 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Please enable notifications in Settings to receive daily photo reminders.")
+            }
+            .alert("Health Access Required", isPresented: $showingHealthKitPermission) {
+                Button("OK") { }
+            } message: {
+                Text("Please grant access to read and write weight and body fat data in the Health app.")
+            }
+            .onAppear {
+                healthKitEnabled = userSettings.settings.healthKitEnabled
+            }
+        }
+    }
+    
+    private func requestHealthKitPermission() {
+        HealthKitService.shared.requestAuthorization { success, error in
+            if success {
+                userSettings.settings.healthKitEnabled = true
+                healthKitEnabled = true
+                // Perform initial sync
+                syncHealthData()
+            } else {
+                healthKitEnabled = false
+                if error != nil {
+                    showingHealthKitPermission = true
+                }
+            }
+        }
+    }
+    
+    private func syncHealthData() {
+        healthKitSyncInProgress = true
+        
+        HealthKitService.shared.syncHealthDataToApp { success, error in
+            healthKitSyncInProgress = false
+            
+            if success {
+                // Reload weight data in the app
+                NotificationCenter.default.post(name: Notification.Name("HealthKitDataSynced"), object: nil)
             }
         }
     }

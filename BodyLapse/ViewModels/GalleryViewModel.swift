@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Photos
 
 class GalleryViewModel: ObservableObject {
     @Published var photos: [Photo] = []
@@ -44,6 +45,45 @@ class GalleryViewModel: ObservableObject {
             loadVideos()
         } catch {
             print("Failed to delete video: \(error)")
+        }
+    }
+    
+    func savePhotoToLibrary(_ photo: Photo, completion: @escaping (Bool, Error?) -> Void) {
+        PHPhotoLibrary.requestAuthorization { status in
+            guard status == .authorized else {
+                completion(false, NSError(domain: "GalleryViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Photo library access denied"]))
+                return
+            }
+            
+            guard let image = PhotoStorageService.shared.loadImage(for: photo) else {
+                completion(false, NSError(domain: "GalleryViewModel", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"]))
+                return
+            }
+            
+            PHPhotoLibrary.shared().performChanges({
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }) { success, error in
+                DispatchQueue.main.async {
+                    completion(success, error)
+                }
+            }
+        }
+    }
+    
+    func saveVideoToLibrary(_ video: Video, completion: @escaping (Bool, Error?) -> Void) {
+        PHPhotoLibrary.requestAuthorization { status in
+            guard status == .authorized else {
+                completion(false, NSError(domain: "GalleryViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Photo library access denied"]))
+                return
+            }
+            
+            PHPhotoLibrary.shared().performChanges({
+                PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: video.fileURL)
+            }) { success, error in
+                DispatchQueue.main.async {
+                    completion(success, error)
+                }
+            }
         }
     }
     

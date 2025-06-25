@@ -136,6 +136,14 @@ struct WeightInputSheet: View {
             Task {
                 try? await WeightStorageService.shared.saveEntry(entry)
             }
+            
+            // Save to HealthKit if enabled
+            if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled {
+                HealthKitService.shared.saveWeight(w, date: Date()) { _, _ in }
+                if let bf = bodyFat {
+                    HealthKitService.shared.saveBodyFatPercentage(bf, date: Date()) { _, _ in }
+                }
+            }
         }
         
         onSave()

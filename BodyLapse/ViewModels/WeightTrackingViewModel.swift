@@ -198,6 +198,22 @@ class WeightTrackingViewModel: ObservableObject {
         return weightEntries.filter { $0.date >= cutoffDate }
     }
     
+    init() {
+        loadEntries()
+        
+        // Listen for HealthKit sync notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(healthKitDataSynced),
+            name: Notification.Name("HealthKitDataSynced"),
+            object: nil
+        )
+    }
+    
+    @objc private func healthKitDataSynced() {
+        loadEntries()
+    }
+    
     // MARK: - Data Management
     func loadEntries() {
         print("[WeightViewModel] Starting to load entries")

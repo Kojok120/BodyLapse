@@ -6,6 +6,7 @@ struct UserSettings: Codable {
     var showBodyGuidelines: Bool = true
     var isPremium: Bool = false
     var weightUnit: WeightUnit = .kg
+    var healthKitEnabled: Bool = false
     
     // Onboarding
     var hasCompletedOnboarding: Bool = false

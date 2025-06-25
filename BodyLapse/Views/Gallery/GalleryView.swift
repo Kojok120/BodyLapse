@@ -8,6 +8,8 @@ struct GalleryView: View {
     @State private var selectedVideo: Video?
     @State private var showingDeleteAlert = false
     @State private var itemToDelete: Any?
+    @State private var showingSaveSuccess = false
+    @State private var saveSuccessMessage = ""
     
     init(videoToPlay: Binding<UUID?> = .constant(nil)) {
         self._videoToPlay = videoToPlay
@@ -57,6 +59,13 @@ struct GalleryView: View {
             } message: {
                 Text("Are you sure you want to delete this item? This action cannot be undone.")
             }
+            .overlay(alignment: .top) {
+                if showingSaveSuccess {
+                    saveSuccessToast
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .animation(.spring(), value: showingSaveSuccess)
+                }
+            }
         }
     }
     
@@ -102,6 +111,8 @@ struct GalleryView: View {
                                     } onDelete: {
                                         itemToDelete = photo
                                         showingDeleteAlert = true
+                                    } onSave: {
+                                        savePhoto(photo)
                                     }
                                 }
                             }
@@ -128,6 +139,8 @@ struct GalleryView: View {
                                     } onDelete: {
                                         itemToDelete = video
                                         showingDeleteAlert = true
+                                    } onSave: {
+                                        saveVideo(video)
                                     }
                                 }
                             }
@@ -172,12 +185,67 @@ struct GalleryView: View {
         }
         itemToDelete = nil
     }
+    
+    private var saveSuccessToast: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+                .font(.title2)
+            
+            Text(saveSuccessMessage)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            Capsule()
+                .fill(Color(UIColor.systemBackground))
+                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+        )
+        .padding(.top, 50)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                withAnimation {
+                    showingSaveSuccess = false
+                }
+            }
+        }
+    }
+    
+    private func showSaveSuccess(message: String) {
+        saveSuccessMessage = message
+        withAnimation {
+            showingSaveSuccess = true
+        }
+    }
+    
+    private func savePhoto(_ photo: Photo) {
+        viewModel.savePhotoToLibrary(photo) { success, error in
+            if success {
+                showSaveSuccess(message: "Photo saved to library")
+            } else {
+                print("Failed to save photo: \(error?.localizedDescription ?? "Unknown error")")
+            }
+        }
+    }
+    
+    private func saveVideo(_ video: Video) {
+        viewModel.saveVideoToLibrary(video) { success, error in
+            if success {
+                showSaveSuccess(message: "Video saved to library")
+            } else {
+                print("Failed to save video: \(error?.localizedDescription ?? "Unknown error")")
+            }
+        }
+    }
 }
 
 struct PhotoGridItem: View {
     let photo: Photo
     let onTap: () -> Void
     let onDelete: () -> Void
+    let onSave: () -> Void
     @State private var image: UIImage?
     
     var body: some View {
@@ -201,6 +269,14 @@ struct PhotoGridItem: View {
                     HStack {
                         Spacer()
                         Menu {
+                            Button {
+                                onSave()
+                            } label: {
+                                Label("Save to Photos", systemImage: "square.and.arrow.down")
+                            }
+                            
+                            Divider()
+                            
                             Button(role: .destructive) {
                                 onDelete()
                             } label: {
@@ -243,6 +319,7 @@ struct VideoGridItem: View {
     let video: Video
     let onTap: () -> Void
     let onDelete: () -> Void
+    let onSave: () -> Void
     @State private var thumbnail: UIImage?
     
     var body: some View {
@@ -268,6 +345,14 @@ struct VideoGridItem: View {
                     HStack {
                         Spacer()
                         Menu {
+                            Button {
+                                onSave()
+                            } label: {
+                                Label("Save to Photos", systemImage: "square.and.arrow.down")
+                            }
+                            
+                            Divider()
+                            
                             Button(role: .destructive) {
                                 onDelete()
                             } label: {

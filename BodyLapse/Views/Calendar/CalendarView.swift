@@ -133,6 +133,21 @@ struct CalendarView: View {
                         }
                     }
                 })
+                .onAppear {
+                    // Auto-fill from HealthKit if enabled
+                    if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled && currentPhoto?.weight == nil {
+                        HealthKitService.shared.fetchLatestWeight { weight, _ in
+                            if let w = weight, self.currentPhoto?.weight == nil {
+                                self.currentPhoto?.weight = w
+                            }
+                        }
+                        HealthKitService.shared.fetchLatestBodyFatPercentage { bodyFat, _ in
+                            if let bf = bodyFat, self.currentPhoto?.bodyFatPercentage == nil {
+                                self.currentPhoto?.bodyFatPercentage = bf
+                            }
+                        }
+                    }
+                }
             }
             .sheet(isPresented: $showingVideoGeneration) {
                 VideoGenerationView(
@@ -649,6 +664,19 @@ struct WeightInputView: View {
         }
         
         onSave(weight, bodyFat)
+        
+        // Save to HealthKit if enabled
+        if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled {
+            if let photo = photo {
+                if let w = weight {
+                    HealthKitService.shared.saveWeight(w, date: photo.captureDate) { _, _ in }
+                }
+                if let bf = bodyFat {
+                    HealthKitService.shared.saveBodyFatPercentage(bf, date: photo.captureDate) { _, _ in }
+                }
+            }
+        }
+        
         dismiss()
     }
     
