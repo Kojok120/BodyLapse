@@ -2,40 +2,49 @@ import SwiftUI
 
 struct CompareView: View {
     @StateObject private var viewModel = CompareViewModel()
+    @StateObject private var userSettings = UserSettingsManager.shared
     @State private var firstPhoto: Photo?
     @State private var secondPhoto: Photo?
     @State private var showingFirstCalendar = false
     @State private var showingSecondCalendar = false
-    @State private var firstSelectedDate = Date()
-    @State private var secondSelectedDate = Date()
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                if firstPhoto != nil || secondPhoto != nil {
-                    comparisonView
-                        .layoutPriority(1)
-                } else {
-                    emptyStateView
-                        .frame(maxHeight: .infinity)
+            ZStack {
+                Color(UIColor.systemBackground)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Photo selection buttons
+                    photoSelectionButtons
+                    
+                    // Main comparison view
+                    if firstPhoto != nil || secondPhoto != nil {
+                        comparisonView
+                    } else {
+                        emptyStateView
+                    }
                 }
                 
-                photoSelectionButtons
-                    .padding(.bottom)
+                // Banner ad at bottom
+                VStack {
+                    Spacer()
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(height: 50)
+                        .modifier(BannerAdModifier())
+                }
             }
-            .withBannerAd()
-            .navigationTitle("Compare")
-            .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                print("[CompareView] View appeared")
-                viewModel.loadPhotos()
-            }
+            .navigationTitle("Compare Progress")
+            .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $showingFirstCalendar) {
                 CalendarPopupView(
-                    selectedDate: $firstSelectedDate,
+                    selectedDate: Binding(
+                        get: { firstPhoto?.captureDate ?? Date() },
+                        set: { _ in }
+                    ),
                     photos: viewModel.photos,
                     onDateSelected: { date in
-                        firstSelectedDate = date
                         firstPhoto = viewModel.photos.first { photo in
                             Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
                         }
@@ -45,10 +54,12 @@ struct CompareView: View {
             }
             .sheet(isPresented: $showingSecondCalendar) {
                 CalendarPopupView(
-                    selectedDate: $secondSelectedDate,
+                    selectedDate: Binding(
+                        get: { secondPhoto?.captureDate ?? Date() },
+                        set: { _ in }
+                    ),
                     photos: viewModel.photos,
                     onDateSelected: { date in
-                        secondSelectedDate = date
                         secondPhoto = viewModel.photos.first { photo in
                             Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
                         }
@@ -57,179 +68,310 @@ struct CompareView: View {
                 )
             }
         }
+        .onAppear {
+            print("[ComparisonView] View appeared")
+            viewModel.loadPhotos()
+            // Load any photos with today's date
+            let today = Date()
+            firstPhoto = viewModel.photos.first { photo in
+                Calendar.current.isDate(photo.captureDate, inSameDayAs: today)
+            }
+        }
     }
     
     private var comparisonView: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                    // First photo
-                    ZStack {
-                        if let photo = firstPhoto,
-                           let image = PhotoStorageService.shared.loadImage(for: photo) {
-                            Image(uiImage: image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: geometry.size.width / 2)
-                        } else {
-                            Rectangle()
-                                .fill(Color(UIColor.systemGray5))
-                                .frame(width: geometry.size.width / 2)
-                                .overlay(
-                                    VStack {
-                                        Image(systemName: "photo")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.gray)
-                                        Text("Select First Photo")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                )
-                        }
-                        
-                        VStack {
-                            HStack {
-                                if let photo = firstPhoto {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Before")
-                                            .font(.caption)
-                                            .fontWeight(.bold)
-                                        Text(formatDateShort(photo.captureDate))
-                                            .font(.caption2)
-                                    }
-                                    .padding(6)
-                                    .background(Color.black.opacity(0.7))
-                                    .foregroundColor(.white)
-                                    .cornerRadius(4)
-                                    .padding(8)
+        ScrollView {
+            VStack(spacing: 16) {
+                // Photos and weight/body fat section
+                HStack(alignment: .top, spacing: 2) {
+                    // First photo column
+                    VStack(spacing: 0) {
+                        // Photo container
+                        Group {
+                            if let photo = firstPhoto,
+                               let image = PhotoStorageService.shared.loadImage(for: photo) {
+                                ZStack {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                        .clipped()
+                                        .overlay(
+                                            VStack {
+                                                HStack {
+                                                    VStack(alignment: .leading, spacing: 2) {
+                                                        Text("Before")
+                                                            .font(.caption)
+                                                            .fontWeight(.bold)
+                                                        Text(formatDateShort(photo.captureDate))
+                                                            .font(.caption2)
+                                                    }
+                                                    .padding(6)
+                                                    .background(Color.black.opacity(0.7))
+                                                    .foregroundColor(.white)
+                                                    .cornerRadius(4)
+                                                    .padding(8)
+                                                    Spacer()
+                                                }
+                                                Spacer()
+                                            }
+                                        )
                                 }
-                                Spacer()
+                            } else {
+                                Rectangle()
+                                    .fill(Color(UIColor.systemGray5))
+                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                    .overlay(
+                                        VStack {
+                                            Image(systemName: "photo")
+                                                .font(.system(size: 40))
+                                                .foregroundColor(.gray)
+                                            Text("Select First Photo")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    )
                             }
-                            Spacer()
+                        }
+                        .frame(height: 250)
+                        
+                        // Weight and body fat display for premium users
+                        if userSettings.settings.isPremium {
+                            VStack(spacing: 4) {
+                                if let photo = firstPhoto {
+                                    let _ = print("[CompareView] First photo - weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
+                                    // Weight row
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "scalemass")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.secondary)
+                                        if let weight = photo.weight {
+                                            Text("\(convertedWeight(weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.primary)
+                                        } else {
+                                            Text("No weight")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    
+                                    // Body fat row
+                                    if let bodyFat = photo.bodyFatPercentage {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "percent")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.secondary)
+                                            Text("\(bodyFat, specifier: "%.1f")%")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                } else {
+                                    Text("Select photo")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 4)
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                            )
+                            .padding(.top, 4)
                         }
                     }
                     
                     // Divider
                     Rectangle()
-                        .fill(Color.white)
+                        .fill(Color.gray.opacity(0.3))
                         .frame(width: 2)
                     
-                    // Second photo
-                    ZStack {
-                        if let photo = secondPhoto,
-                           let image = PhotoStorageService.shared.loadImage(for: photo) {
-                            Image(uiImage: image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: geometry.size.width / 2)
-                        } else {
-                            Rectangle()
-                                .fill(Color(UIColor.systemGray5))
-                                .frame(width: geometry.size.width / 2)
-                                .overlay(
-                                    VStack {
-                                        Image(systemName: "photo")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.gray)
-                                        Text("Select Second Photo")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                )
-                        }
-                        
-                        VStack {
-                            HStack {
-                                if let photo = secondPhoto {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("After")
-                                            .font(.caption)
-                                            .fontWeight(.bold)
-                                        Text(formatDateShort(photo.captureDate))
-                                            .font(.caption2)
-                                    }
-                                    .padding(6)
-                                    .background(Color.black.opacity(0.7))
-                                    .foregroundColor(.white)
-                                    .cornerRadius(4)
-                                    .padding(8)
+                    // Second photo column
+                    VStack(spacing: 0) {
+                        // Photo container
+                        Group {
+                            if let photo = secondPhoto,
+                               let image = PhotoStorageService.shared.loadImage(for: photo) {
+                                ZStack {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                        .clipped()
+                                        .overlay(
+                                            VStack {
+                                                HStack {
+                                                    VStack(alignment: .leading, spacing: 2) {
+                                                        Text("After")
+                                                            .font(.caption)
+                                                            .fontWeight(.bold)
+                                                        Text(formatDateShort(photo.captureDate))
+                                                            .font(.caption2)
+                                                    }
+                                                    .padding(6)
+                                                    .background(Color.black.opacity(0.7))
+                                                    .foregroundColor(.white)
+                                                    .cornerRadius(4)
+                                                    .padding(8)
+                                                    Spacer()
+                                                }
+                                                Spacer()
+                                            }
+                                        )
                                 }
-                                Spacer()
+                            } else {
+                                Rectangle()
+                                    .fill(Color(UIColor.systemGray5))
+                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                    .overlay(
+                                        VStack {
+                                            Image(systemName: "photo")
+                                                .font(.system(size: 40))
+                                                .foregroundColor(.gray)
+                                            Text("Select Second Photo")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    )
                             }
-                            Spacer()
                         }
-                    }
-                }
-                
-                // Comparison stats and slider
-                if let first = firstPhoto, let second = secondPhoto {
-                    VStack(spacing: 16) {
-                        // Stats display
-                        HStack(spacing: 20) {
-                            // Days between
+                        .frame(height: 250)
+                        
+                        // Weight and body fat display for premium users
+                        if userSettings.settings.isPremium {
                             VStack(spacing: 4) {
-                                Text("\(viewModel.getDaysBetween(first, second))")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                Text("days")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Divider()
-                                .frame(height: 30)
-                            
-                            // Weight difference
-                            if let weightDiff = viewModel.getWeightDifference(first, second) {
-                                VStack(spacing: 4) {
-                                    HStack(spacing: 2) {
-                                        Image(systemName: weightDiff > 0 ? "arrow.up" : "arrow.down")
-                                            .font(.caption)
-                                        Text("\(abs(weightDiff), specifier: "%.1f") kg")
-                                            .font(.title3)
-                                            .fontWeight(.semibold)
+                                if let photo = secondPhoto {
+                                    let _ = print("[CompareView] Second photo - weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
+                                    // Weight row
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "scalemass")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.secondary)
+                                        if let weight = photo.weight {
+                                            Text("\(convertedWeight(weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.primary)
+                                        } else {
+                                            Text("No weight")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
-                                    .foregroundColor(weightDiff > 0 ? .red : .green)
-                                    Text("weight")
-                                        .font(.caption)
+                                    
+                                    // Body fat row
+                                    if let bodyFat = photo.bodyFatPercentage {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "percent")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.secondary)
+                                            Text("\(bodyFat, specifier: "%.1f")%")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                } else {
+                                    Text("Select photo")
+                                        .font(.system(size: 12))
                                         .foregroundColor(.secondary)
                                 }
                             }
-                            
-                            // Body fat difference
-                            if let bodyFatDiff = viewModel.getBodyFatDifference(first, second) {
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 4)
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                            )
+                            .padding(.top, 4)
+                        }
+                    }
+                }
+                .padding(.horizontal, 2)
+                
+                // Comparison stats
+                if let first = firstPhoto, let second = secondPhoto {
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            // Stats display
+                            HStack(spacing: 20) {
+                                // Days between
+                                VStack(spacing: 4) {
+                                    Text("\(viewModel.getDaysBetween(first, second))")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                    Text("days")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
                                 Divider()
                                     .frame(height: 30)
                                 
-                                VStack(spacing: 4) {
-                                    HStack(spacing: 2) {
-                                        Image(systemName: bodyFatDiff > 0 ? "arrow.up" : "arrow.down")
+                                // Weight difference
+                                if let weightDiff = viewModel.getWeightDifference(first, second) {
+                                    VStack(spacing: 4) {
+                                        HStack(spacing: 2) {
+                                            Image(systemName: weightDiff > 0 ? "arrow.up" : "arrow.down")
+                                                .font(.caption)
+                                            Text("\(abs(convertedWeight(weightDiff)), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
+                                                .font(.title3)
+                                                .fontWeight(.semibold)
+                                        }
+                                        .foregroundColor(weightDiff > 0 ? .red : .green)
+                                        Text("weight")
                                             .font(.caption)
-                                        Text("\(abs(bodyFatDiff), specifier: "%.1f")%")
-                                            .font(.title3)
-                                            .fontWeight(.semibold)
+                                            .foregroundColor(.secondary)
                                     }
-                                    .foregroundColor(bodyFatDiff > 0 ? .red : .green)
-                                    Text("body fat")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                }
+                                
+                                // Body fat difference
+                                if let bodyFatDiff = viewModel.getBodyFatDifference(first, second) {
+                                    Divider()
+                                        .frame(height: 30)
+                                    
+                                    VStack(spacing: 4) {
+                                        HStack(spacing: 2) {
+                                            Image(systemName: bodyFatDiff > 0 ? "arrow.up" : "arrow.down")
+                                                .font(.caption)
+                                            Text("\(abs(bodyFatDiff), specifier: "%.1f")%")
+                                                .font(.title3)
+                                                .fontWeight(.semibold)
+                                        }
+                                        .foregroundColor(bodyFatDiff > 0 ? .red : .green)
+                                        Text("body fat")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
                             }
+                            .padding()
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
+                            .cornerRadius(10)
+                            
+                            ComparisonSlider(
+                                firstPhoto: first,
+                                secondPhoto: second,
+                                width: UIScreen.main.bounds.width
+                            )
+                            .frame(height: 60)
                         }
-                        .padding()
-                        .background(Color(UIColor.secondarySystemGroupedBackground))
-                        .cornerRadius(10)
-                        
-                        ComparisonSlider(
-                            firstPhoto: first,
-                            secondPhoto: second,
-                            width: geometry.size.width
-                        )
-                        .frame(height: 60)
+                        .padding(.horizontal)
+                        .padding(.top, 16)
                     }
-                    .padding(.horizontal)
                 }
+                
+                // Add extra space at bottom
+                Spacer()
+                    .frame(height: 100)
             }
+            .padding(.bottom, 60) // Space for banner ad
         }
     }
     
@@ -318,6 +460,10 @@ struct CompareView: View {
         formatter.dateFormat = "MMM d, yyyy"
         return formatter.string(from: date)
     }
+    
+    private func convertedWeight(_ weight: Double) -> Double {
+        userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
+    }
 }
 
 struct ComparisonSlider: View {
@@ -351,4 +497,3 @@ struct ComparisonSlider: View {
         }
     }
 }
-

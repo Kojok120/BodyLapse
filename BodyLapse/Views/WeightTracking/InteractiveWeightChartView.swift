@@ -35,6 +35,10 @@ struct InteractiveWeightChartView: View {
         guard let min = weights.min(), let max = weights.max() else {
             return 0...100
         }
+        // Ensure we have a valid range even with single data point
+        if min == max {
+            return (min - 5)...(max + 5)
+        }
         let padding = (max - min) * 0.1
         return (min - padding)...(max + padding)
     }
@@ -43,6 +47,10 @@ struct InteractiveWeightChartView: View {
         let bodyFats = bodyFatEntries.compactMap { $0.bodyFatPercentage }
         guard let min = bodyFats.min(), let max = bodyFats.max() else {
             return 0...50
+        }
+        // Ensure we have a valid range even with single data point
+        if min == max {
+            return (min - 5)...(max + 5)
         }
         let padding = (max - min) * 0.1
         return (min - padding)...(max + padding)
@@ -96,7 +104,8 @@ struct InteractiveWeightChartView: View {
             HStack(spacing: 0) {
                 // Left Y-axis labels for weight
                 VStack(alignment: .trailing, spacing: 0) {
-                    ForEach(Array(stride(from: weightRange.upperBound, through: weightRange.lowerBound, by: -(weightRange.upperBound - weightRange.lowerBound) / 4)), id: \.self) { value in
+                    let stepSize = max((weightRange.upperBound - weightRange.lowerBound) / 4, 0.1)
+                    ForEach(Array(stride(from: weightRange.upperBound, through: weightRange.lowerBound, by: -stepSize)), id: \.self) { value in
                         Text("\(value, specifier: "%.0f")")
                             .font(.caption2)
                             .foregroundColor(.blue)
@@ -190,7 +199,8 @@ struct InteractiveWeightChartView: View {
                 // Right Y-axis labels for body fat
                 if !bodyFatEntries.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(stride(from: bodyFatRange.upperBound, through: bodyFatRange.lowerBound, by: -(bodyFatRange.upperBound - bodyFatRange.lowerBound) / 4)), id: \.self) { value in
+                        let stepSize = max((bodyFatRange.upperBound - bodyFatRange.lowerBound) / 4, 0.1)
+                        ForEach(Array(stride(from: bodyFatRange.upperBound, through: bodyFatRange.lowerBound, by: -stepSize)), id: \.self) { value in
                             Text("\(value, specifier: "%.0f")%")
                                 .font(.caption2)
                                 .foregroundColor(.orange)

@@ -207,6 +207,7 @@ class HealthKitService {
         }
     }
     
+    
     // MARK: - Sync
     
     func syncHealthDataToApp(completion: @escaping (Bool, Error?) -> Void) {

@@ -2,9 +2,11 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var authService = AuthenticationService.shared
     @State private var showingAbout = false
     @State private var showingPremiumUpgrade = false
-    @State private var showingAppLockSettings = false
+    @State private var showingPasswordSetup = false
+    @State private var showingChangePassword = false
     @State private var showingNotificationPermissionAlert = false
     #if DEBUG
     @State private var showingDebugSettings = false
@@ -36,23 +38,30 @@ struct SettingsView: View {
                 }
                 
                 Section("Security") {
-                    Toggle("App Lock", isOn: $userSettings.settings.isAppLockEnabled)
-                    
-                    if userSettings.settings.isAppLockEnabled {
-                        HStack {
-                            Text("Lock Method")
-                            Spacer()
-                            Text(userSettings.settings.appLockMethod.rawValue)
-                                .foregroundColor(.secondary)
-                        }
-                        .onTapGesture {
-                            showingAppLockSettings = true
-                        }
-                        
-                        if userSettings.settings.appLockMethod == .passcode {
-                            NavigationLink(destination: PasscodeSettingsView()) {
-                                Label("Change Passcode", systemImage: "number")
+                    Toggle("App Lock", isOn: .init(
+                        get: { authService.isAuthenticationEnabled },
+                        set: { newValue in
+                            if newValue {
+                                if !authService.hasPassword {
+                                    showingPasswordSetup = true
+                                } else {
+                                    authService.isAuthenticationEnabled = true
+                                }
+                            } else {
+                                authService.isAuthenticationEnabled = false
                             }
+                        }
+                    ))
+                    
+                    if authService.isAuthenticationEnabled {
+                        Toggle("\(authService.biometricTypeString)", isOn: .init(
+                            get: { authService.isBiometricEnabled },
+                            set: { authService.isBiometricEnabled = $0 }
+                        ))
+                        .disabled(authService.biometricType == .none)
+                        
+                        Button(action: { showingChangePassword = true }) {
+                            Label("Change PIN", systemImage: "number.square")
                         }
                     }
                 }
@@ -187,25 +196,19 @@ struct SettingsView: View {
             .sheet(isPresented: $showingPremiumUpgrade) {
                 PremiumView()
             }
+            .sheet(isPresented: $showingPasswordSetup) {
+                PasswordSetupView {
+                    authService.isAuthenticationEnabled = true
+                }
+            }
+            .sheet(isPresented: $showingChangePassword) {
+                ChangePasswordView()
+            }
             #if DEBUG
             .sheet(isPresented: $showingDebugSettings) {
                 DebugSettingsView()
             }
             #endif
-            .actionSheet(isPresented: $showingAppLockSettings) {
-                ActionSheet(
-                    title: Text("Select Lock Method"),
-                    buttons: [
-                        .default(Text(UserSettings.AppLockMethod.biometric.rawValue)) {
-                            userSettings.settings.appLockMethod = .biometric
-                        },
-                        .default(Text(UserSettings.AppLockMethod.passcode.rawValue)) {
-                            userSettings.settings.appLockMethod = .passcode
-                        },
-                        .cancel()
-                    ]
-                )
-            }
             .alert("Notification Permission Required", isPresented: $showingNotificationPermissionAlert) {
                 Button("Open Settings") {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
@@ -434,77 +437,3 @@ struct ExportView: View {
 }
 
 
-struct PasscodeSettingsView: View {
-    @State private var currentPasscode = ""
-    @State private var newPasscode = ""
-    @State private var confirmPasscode = ""
-    @State private var showingError = false
-    @State private var errorMessage = ""
-    @Environment(\.dismiss) private var dismiss
-    @StateObject private var userSettings = UserSettingsManager()
-    
-    var body: some View {
-        Form {
-            if userSettings.settings.appPasscode != nil {
-                Section(header: Text("Current Passcode")) {
-                    SecureField("Enter current passcode", text: $currentPasscode)
-                        .keyboardType(.numberPad)
-                }
-            }
-            
-            Section(header: Text("New Passcode")) {
-                SecureField("Enter new passcode", text: $newPasscode)
-                    .keyboardType(.numberPad)
-                
-                SecureField("Confirm new passcode", text: $confirmPasscode)
-                    .keyboardType(.numberPad)
-            }
-            
-            Section {
-                Text("Passcode must be at least 4 digits")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .navigationTitle("Change Passcode")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Save") {
-                    savePasscode()
-                }
-            }
-        }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
-    }
-    
-    private func savePasscode() {
-        // Validate current passcode if exists
-        if let existingPasscode = userSettings.settings.appPasscode,
-           currentPasscode != existingPasscode {
-            errorMessage = "Current passcode is incorrect"
-            showingError = true
-            return
-        }
-        
-        // Validate new passcode
-        guard newPasscode.count >= 4 else {
-            errorMessage = "Passcode must be at least 4 digits"
-            showingError = true
-            return
-        }
-        
-        guard newPasscode == confirmPasscode else {
-            errorMessage = "Passcodes do not match"
-            showingError = true
-            return
-        }
-        
-        userSettings.settings.appPasscode = newPasscode
-        dismiss()
-    }
-}

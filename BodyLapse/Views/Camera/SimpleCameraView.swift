@@ -13,7 +13,10 @@ struct SimpleCameraView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> SimpleCameraViewController {
         let controller = SimpleCameraViewController()
         controller.onCapture = onCapture
-        onReady?(controller)
+        // Delay onReady callback to avoid state modification during view update
+        DispatchQueue.main.async {
+            onReady?(controller)
+        }
         return controller
     }
     
@@ -39,6 +42,28 @@ class SimpleCameraViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer?.frame = view.bounds
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Restart the capture session if it exists
+        if let captureSession = captureSession, !captureSession.isRunning {
+            DispatchQueue.global(qos: .userInitiated).async {
+                captureSession.startRunning()
+            }
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // Stop the capture session when view disappears
+        captureSession?.stopRunning()
+    }
+    
+    deinit {
+        // Clean up capture session
+        captureSession?.stopRunning()
+        captureSession = nil
     }
     
     // Force portrait orientation

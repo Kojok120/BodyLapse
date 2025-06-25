@@ -540,6 +540,7 @@ struct WeightInputView: View {
     @State private var bodyFatText = ""
     @StateObject private var userSettings = UserSettingsManager()
     @Environment(\.dismiss) private var dismiss
+    @State private var isLoadingHealthData = false
     
     var body: some View {
         NavigationView {
@@ -567,9 +568,18 @@ struct WeightInputView: View {
                 VStack(spacing: 25) {
                     // Weight input
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Weight", systemImage: "scalemass")
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                        HStack {
+                            Label("Weight", systemImage: "scalemass")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                            
+                            if isLoadingHealthData {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            }
+                        }
                         
                         HStack {
                             TextField("Enter weight", text: $weightText)
@@ -646,6 +656,11 @@ struct WeightInputView: View {
                 if let bodyFat = photo.bodyFatPercentage {
                     bodyFatText = String(format: "%.1f", bodyFat)
                 }
+                
+                // If no weight data and HealthKit is enabled, try to fetch it
+                if photo.weight == nil && userSettings.settings.isPremium && userSettings.settings.healthKitEnabled {
+                    fetchHealthKitData()
+                }
             }
         }
     }
@@ -693,6 +708,29 @@ struct WeightInputView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d, yyyy"
         return formatter.string(from: date)
+    }
+    
+    private func fetchHealthKitData() {
+        isLoadingHealthData = true
+        
+        // Fetch weight data from HealthKit
+        HealthKitService.shared.fetchLatestWeight { weightKg, error in
+            DispatchQueue.main.async {
+                if let weightKg = weightKg {
+                    self.weightText = String(format: "%.1f", self.convertWeight(weightKg))
+                }
+                
+                // Also fetch body fat
+                HealthKitService.shared.fetchLatestBodyFatPercentage { bodyFatPercent, error in
+                    DispatchQueue.main.async {
+                        if let bodyFatPercent = bodyFatPercent {
+                            self.bodyFatText = String(format: "%.1f", bodyFatPercent)
+                        }
+                        self.isLoadingHealthData = false
+                    }
+                }
+            }
+        }
     }
 }
 

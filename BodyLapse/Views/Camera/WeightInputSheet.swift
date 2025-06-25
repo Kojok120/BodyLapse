@@ -10,6 +10,7 @@ struct WeightInputSheet: View {
     @State private var bodyFatText = ""
     @StateObject private var userSettings = UserSettingsManager()
     @Environment(\.dismiss) private var dismiss
+    @State private var isLoadingHealthData = false
     
     var body: some View {
         NavigationView {
@@ -35,9 +36,18 @@ struct WeightInputSheet: View {
                 VStack(spacing: 25) {
                     // Weight input
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Weight", systemImage: "scalemass")
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                        HStack {
+                            Label("Weight", systemImage: "scalemass")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                            
+                            if isLoadingHealthData {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            }
+                        }
                         
                         HStack {
                             TextField("Enter weight", text: $weightText)
@@ -106,11 +116,17 @@ struct WeightInputSheet: View {
             }
         }
         .onAppear {
+            // First set any existing values
             if let w = weight {
                 weightText = String(format: "%.1f", convertWeight(w))
             }
             if let bf = bodyFat {
                 bodyFatText = String(format: "%.1f", bf)
+            }
+            
+            // Then try to fetch from HealthKit if enabled and no values set
+            if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled && weight == nil {
+                fetchHealthKitData()
             }
         }
     }
@@ -159,6 +175,35 @@ struct WeightInputSheet: View {
     
     private func convertWeight(_ kg: Double) -> Double {
         userSettings.settings.weightUnit == .kg ? kg : kg * 2.20462
+    }
+    
+    private func fetchHealthKitData() {
+        isLoadingHealthData = true
+        
+        // Get today's start date
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        
+        // Fetch weight data from HealthKit
+        HealthKitService.shared.fetchLatestWeight { weightKg, error in
+            DispatchQueue.main.async {
+                if let weightKg = weightKg {
+                    self.weight = weightKg
+                    self.weightText = String(format: "%.1f", self.convertWeight(weightKg))
+                }
+                
+                // Also fetch body fat
+                HealthKitService.shared.fetchLatestBodyFatPercentage { bodyFatPercent, error in
+                    DispatchQueue.main.async {
+                        if let bodyFatPercent = bodyFatPercent {
+                            self.bodyFat = bodyFatPercent
+                            self.bodyFatText = String(format: "%.1f", bodyFatPercent)
+                        }
+                        self.isLoadingHealthData = false
+                    }
+                }
+            }
+        }
     }
 }
 

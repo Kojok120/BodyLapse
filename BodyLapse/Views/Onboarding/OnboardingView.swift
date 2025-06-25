@@ -342,7 +342,7 @@ struct BaselinePhotoCaptureView: View {
     @State private var detectedContour: [CGPoint]?
     @State private var showingContourConfirmation = false
     @State private var contourError: String?
-    @State private var cameraKey = UUID()
+    @State private var shouldShowCamera = true
     
     init(onPhotoCapture: @escaping (Photo) -> Void) {
         self.onPhotoCapture = onPhotoCapture
@@ -352,14 +352,13 @@ struct BaselinePhotoCaptureView: View {
     
     var body: some View {
         ZStack {
-            if !showingContourConfirmation {
+            if shouldShowCamera && !showingContourConfirmation {
                 SimpleCameraView { image in
                     handlePhotoCapture(image)
                 } onReady: { controller in
                     cameraController = controller
                 }
                 .edgesIgnoringSafeArea(.all)
-                .id(cameraKey)
             } else if let image = capturedImage, let contour = detectedContour {
                 // Show contour confirmation view
                 ContourConfirmationView(
@@ -369,18 +368,12 @@ struct BaselinePhotoCaptureView: View {
                         saveGuidelineAndPhoto(image: image, contour: contour)
                     },
                     onRetry: {
-                        showingContourConfirmation = false
-                        capturedImage = nil
-                        detectedContour = nil
-                        contourError = nil
-                        isProcessing = false
-                        // Force camera to reinitialize
-                        cameraKey = UUID()
+                        resetForRetake()
                     }
                 )
             }
             
-            if !showingContourConfirmation {
+            if shouldShowCamera && !showingContourConfirmation {
                 VStack {
                     Spacer()
                 
@@ -400,7 +393,8 @@ struct BaselinePhotoCaptureView: View {
                             .shadow(radius: 2)
                         
                         Button(action: {
-                            cameraController?.capturePhoto()
+                            guard let controller = cameraController, !isProcessing else { return }
+                            controller.capturePhoto()
                         }) {
                             Circle()
                                 .fill(Color.white)
@@ -411,7 +405,9 @@ struct BaselinePhotoCaptureView: View {
                                         .frame(width: 80, height: 80)
                                 )
                         }
-                        .disabled(isProcessing)
+                        .disabled(isProcessing || cameraController == nil)
+                        .opacity(isProcessing || cameraController == nil ? 0.5 : 1.0)
+                        .animation(.easeInOut(duration: 0.2), value: cameraController == nil)
                         .padding(.bottom, 40)
                     }
                     .padding()
@@ -451,6 +447,24 @@ struct BaselinePhotoCaptureView: View {
                     self.showingContourConfirmation = true
                 }
             }
+        }
+    }
+    
+    private func resetForRetake() {
+        // Reset all state immediately
+        showingContourConfirmation = false
+        capturedImage = nil
+        detectedContour = nil
+        contourError = nil
+        isProcessing = false
+        cameraController = nil
+        
+        // Toggle camera visibility to force complete re-initialization
+        shouldShowCamera = false
+        
+        // Re-enable camera after next run loop to ensure clean state
+        DispatchQueue.main.async {
+            self.shouldShowCamera = true
         }
     }
     
