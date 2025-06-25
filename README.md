@@ -36,94 +36,126 @@ BodyLapse is an iOS app that helps users track their fitness progress by taking 
 ### Technology Stack
 - **Language**: Swift 5.9+
 - **UI Framework**: SwiftUI
-- **Minimum iOS Version**: iOS 16.0
+- **Target iOS Version**: iOS 18.2 (should be iOS 16.0)
 - **Architecture Pattern**: MVVM
-- **Data Storage**: Local file system + UserDefaults/Core Data
-- **Image Processing**: Vision framework for body detection
+- **Data Storage**: Local file system + UserDefaults
+- **Image Processing**: Vision framework for body/face detection
 - **Video Generation**: AVFoundation
+- **Ads**: Google Mobile Ads SDK v12
+- **In-App Purchases**: StoreKit 2
 
 ### Key Dependencies
 - Vision framework (body/face detection)
 - AVFoundation (video generation)
 - PhotosUI (image handling)
 - UserNotifications (daily reminders)
+- GoogleMobileAds (ad monetization)
+- StoreKit (in-app purchases)
+- Charts (weight tracking visualization)
 
 ## Project Structure
 
 ```
 BodyLapse/
-├── App/
-│   ├── BodyLapseApp.swift
-│   └── AppDelegate.swift
+├── BodyLapseApp.swift
+├── AppDelegate.swift
 ├── Models/
 │   ├── Photo.swift
-│   ├── UserProfile.swift
-│   ├── PoseGuideline.swift
-│   └── ProgressData.swift
+│   ├── Video.swift
+│   ├── UserSettings.swift
+│   ├── Guideline.swift
+│   ├── WeightEntry.swift
+│   └── PremiumFeature.swift
 ├── Views/
 │   ├── Onboarding/
+│   │   ├── OnboardingView.swift
 │   │   ├── WelcomeView.swift
-│   │   ├── GoalSettingView.swift
-│   │   └── PoseSetupView.swift
-│   ├── Main/
-│   │   ├── HomeView.swift
-│   │   ├── CameraView.swift
+│   │   ├── GoalSelectionView.swift
+│   │   └── GuidelineCaptureView.swift
+│   ├── Calendar/
 │   │   ├── CalendarView.swift
-│   │   └── SettingsView.swift
+│   │   ├── CalendarPopupView.swift
+│   │   └── InteractiveWeightChartView.swift
+│   ├── Camera/
+│   │   ├── CameraView.swift
+│   │   └── CameraPreviewView.swift
+│   ├── Gallery/
+│   │   ├── GalleryView.swift
+│   │   ├── VideoDetailView.swift
+│   │   └── PhotoGridView.swift
 │   ├── Comparison/
 │   │   └── ComparisonView.swift
-│   └── Components/
-│       ├── CameraOverlay.swift
-│       └── ShareSheet.swift
+│   ├── Settings/
+│   │   ├── SettingsView.swift
+│   │   ├── NotificationSettingsView.swift
+│   │   └── PremiumView.swift
+│   ├── Components/
+│   │   ├── BannerAdView.swift
+│   │   ├── WeightTrackingView.swift
+│   │   └── ShareSheet.swift
+│   └── MainTabView.swift
 ├── ViewModels/
 │   ├── CameraViewModel.swift
 │   ├── CalendarViewModel.swift
-│   └── VideoGeneratorViewModel.swift
+│   ├── GalleryViewModel.swift
+│   ├── ComparisonViewModel.swift
+│   ├── WeightTrackingViewModel.swift
+│   └── PremiumViewModel.swift
 ├── Services/
 │   ├── PhotoStorageService.swift
-│   ├── VideoGeneratorService.swift
+│   ├── VideoGenerationService.swift
 │   ├── BodyDetectionService.swift
 │   ├── FaceBlurService.swift
-│   └── NotificationService.swift
-├── Utils/
-│   ├── Constants.swift
-│   ├── Extensions/
-│   └── Helpers/
+│   ├── NotificationService.swift
+│   ├── AdMobService.swift
+│   ├── WeightStorageService.swift
+│   └── StoreManager.swift
 └── Resources/
     ├── Assets.xcassets
-    └── Localizable.strings
+    ├── Info.plist
+    └── BodyLapse.entitlements
 ```
 
-## Implementation Plan
+## Implementation Status
 
-### Phase 1: Foundation (Week 1-2)
-1. Project setup and basic navigation structure
-2. Camera integration with basic photo capture
-3. Local photo storage system
-4. Basic calendar view for photo browsing
+### ✅ Completed Features
 
-### Phase 2: Core Features (Week 3-4)
-1. Body detection and pose guideline system
-2. Camera overlay with guideline display
-3. Face detection and blur functionality
-4. Photo comparison view
+#### Phase 1: Foundation
+- Project setup with tab-based navigation
+- Camera integration with photo capture and camera switching
+- Local photo storage with metadata support
+- Calendar view with photo browsing and time period selection
 
-### Phase 3: Video Generation (Week 5-6)
-1. Time-lapse video generation from photos
-2. Video export and sharing functionality
-3. Watermark overlay for free plan
+#### Phase 2: Core Features  
+- Body detection with pose guidelines (red overlay)
+- Camera overlay with guideline display
+- Face blur functionality (privacy feature)
+- Photo comparison view with date selection
 
-### Phase 4: Premium Features (Week 7)
-1. Weight/body fat tracking
-2. Data visualization
-3. In-app purchase integration
-4. Ad integration for free plan
+#### Phase 3: Video Generation
+- Time-lapse video generation with customizable speed/quality
+- Video export and sharing functionality  
+- Watermark overlay for free users
+- Auto-navigation to Gallery after generation
 
-### Phase 5: Polish (Week 8)
-1. Notification system
-2. UI/UX refinements
-3. Performance optimization
-4. Testing and bug fixes
+#### Phase 4: Premium Features
+- Weight/body fat tracking with data entry
+- Interactive weight charts with multiple time ranges
+- StoreKit integration for premium subscriptions
+- Google AdMob integration (banner and interstitial ads)
+
+#### Phase 5: Polish & Enhancements
+- Daily reminder notifications
+- Photo import functionality
+- Swipe navigation in Gallery (Videos ↔ Photos)
+- Auto-navigation from Camera to Calendar
+- iPhone-only configuration
+- Settings for units, notifications, and debug options
+
+### 🚧 Pending Tasks
+- Update deployment target to iOS 16.0 (currently iOS 18.2)
+- App Store submission preparation
+- Additional UI polish and animations
 
 ## UI/UX Design Principles
 
@@ -175,15 +207,15 @@ struct PoseGuideline {
 
 ### Free Plan
 - Full photo tracking and video generation
-- Banner ads
+- Banner ads (Google AdMob v12)
 - Watermark on exported videos
-- 30-day premium trial
+- Interstitial ads before video generation
 
 ### Premium Plan ($4.99/month)
 - No ads
 - No watermark
-- Weight/body fat tracking
-- Advanced analytics
+- Weight/body fat tracking with interactive charts
+- Body fat percentage tracking
 
 ## Development Notes
 
@@ -218,4 +250,26 @@ struct PoseGuideline {
 - Offline functionality
 - Visual progress tracking
 - Simple daily habit
+
+## Recent Development Notes
+
+### Key Navigation Flows
+1. **Photo Capture → Calendar**: After taking a photo, automatically navigates to Calendar view showing today's date
+2. **Video Generation → Gallery**: After generating video, automatically navigates to Gallery and plays the new video
+3. **Gallery Navigation**: Swipe left/right between Videos and Photos sections
+
+### Ad Implementation
+- **Banner Ads**: Display at bottom of Calendar, Compare, and Gallery screens for free users only
+- **Interstitial Ads**: Show before video generation starts for free users
+- **Premium Detection**: Uses UserSettingsManager.shared for consistent premium status checking
+
+### Device Support
+- **iPhone Only**: App is configured for iPhone-only usage (UIDeviceFamily = 1)
+- **Orientation**: Portrait only with UIRequiresFullScreen enabled
+- **Image Orientation**: Fixed orientation handling for proper video generation
+
+### Known Issues to Address
+1. Deployment target needs update from iOS 18.2 to iOS 16.0
+2. Consider adding app entitlements for enhanced functionality
+3. May need additional Info.plist configurations for App Store submission
 
