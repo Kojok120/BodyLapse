@@ -43,6 +43,8 @@ BodyLapse is an iOS app that helps users track their fitness progress by taking 
 - **Video Generation**: AVFoundation
 - **Ads**: Google Mobile Ads SDK v12
 - **In-App Purchases**: StoreKit 2
+- **Health Data**: HealthKit integration for weight/body fat syncing
+- **Authentication**: LocalAuthentication for Face ID/Touch ID
 
 ### Key Dependencies
 - Vision framework (body/face detection)
@@ -52,6 +54,8 @@ BodyLapse is an iOS app that helps users track their fitness progress by taking 
 - GoogleMobileAds (ad monetization)
 - StoreKit (in-app purchases)
 - Charts (weight tracking visualization)
+- HealthKit (weight and body fat percentage syncing)
+- LocalAuthentication (Face ID/Touch ID support)
 
 ## Project Structure
 
@@ -69,9 +73,10 @@ BodyLapse/
 ├── Views/
 │   ├── Onboarding/
 │   │   ├── OnboardingView.swift
-│   │   ├── WelcomeView.swift
-│   │   ├── GoalSelectionView.swift
-│   │   └── GuidelineCaptureView.swift
+│   │   └── ContourConfirmationView.swift
+│   ├── Authentication/
+│   │   ├── AuthenticationView.swift
+│   │   └── PasswordSetupView.swift
 │   ├── Calendar/
 │   │   ├── CalendarView.swift
 │   │   ├── CalendarPopupView.swift
@@ -104,11 +109,15 @@ BodyLapse/
 ├── Services/
 │   ├── PhotoStorageService.swift
 │   ├── VideoGenerationService.swift
-│   ├── BodyDetectionService.swift
+│   ├── VideoStorageService.swift
+│   ├── BodyContourService.swift
 │   ├── FaceBlurService.swift
 │   ├── NotificationService.swift
 │   ├── AdMobService.swift
 │   ├── WeightStorageService.swift
+│   ├── GuidelineStorageService.swift
+│   ├── HealthKitService.swift
+│   ├── AuthenticationService.swift
 │   └── StoreManager.swift
 └── Resources/
     ├── Assets.xcassets
@@ -152,10 +161,21 @@ BodyLapse/
 - iPhone-only configuration
 - Settings for units, notifications, and debug options
 
+#### Phase 6: Health & Security (December 2025)
+- HealthKit integration for automatic weight/body fat syncing
+- Face ID/Touch ID authentication support
+- Passcode authentication option
+- Complete 3-step onboarding flow (goals, baseline photo, security)
+- Fixed onboarding camera retake bug
+- Fixed weight/body fat display layout issues
+
 ### 🚧 Pending Tasks
 - Update deployment target to iOS 16.0 (currently iOS 18.2)
-- App Store submission preparation
+- App Store submission preparation (icons, screenshots, descriptions)
+- Privacy policy and terms of service
 - Additional UI polish and animations
+- Performance optimization for large photo collections
+- Localization support
 
 ## UI/UX Design Principles
 
@@ -201,7 +221,10 @@ struct PoseGuideline {
 - All photos stored in app's private Documents directory
 - No network requests for core functionality
 - Face blur processing done on-device
-- Option to enable FaceID/TouchID for app access
+- Face ID/Touch ID authentication support
+- Passcode authentication option
+- HealthKit data stays on device unless user explicitly syncs
+- No user data leaves device without explicit user action
 
 ## Monetization
 
@@ -216,6 +239,7 @@ struct PoseGuideline {
 - No watermark
 - Weight/body fat tracking with interactive charts
 - Body fat percentage tracking
+- HealthKit integration for automatic data syncing
 
 ## Development Notes
 
@@ -270,6 +294,12 @@ struct PoseGuideline {
 
 ### Known Issues to Address
 1. Deployment target needs update from iOS 18.2 to iOS 16.0
-2. Consider adding app entitlements for enhanced functionality
-3. May need additional Info.plist configurations for App Store submission
+2. Add all required app icon sizes for App Store submission
+3. Complete privacy policy and terms of service documents
+
+### Recent Bug Fixes (December 2025)
+1. **Onboarding Camera Retake**: Fixed issue where capture button became unresponsive after pressing retake button
+   - Solution: Properly managed camera controller lifecycle with async state updates
+2. **Weight/Body Fat Display**: Fixed layout issues causing text to wrap incorrectly
+   - Solution: Added minWidth constraints and line limits to ensure consistent layout
 
