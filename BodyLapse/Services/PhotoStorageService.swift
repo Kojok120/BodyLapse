@@ -45,7 +45,10 @@ class PhotoStorageService {
             throw PhotoStorageError.directoryAccessFailed
         }
         
-        guard let imageData = image.jpegData(compressionQuality: 0.9) else {
+        // Fix image orientation to ensure it's always saved in portrait
+        let orientedImage = image.fixedOrientation()
+        
+        guard let imageData = orientedImage.jpegData(compressionQuality: 0.9) else {
             throw PhotoStorageError.compressionFailed
         }
         
