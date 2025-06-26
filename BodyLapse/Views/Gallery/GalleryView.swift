@@ -10,6 +10,8 @@ struct GalleryView: View {
     @State private var itemToDelete: Any?
     @State private var showingSaveSuccess = false
     @State private var saveSuccessMessage = ""
+    @State private var itemToShare: Any?
+    @State private var showingShareSheet = false
     
     init(videoToPlay: Binding<UUID?> = .constant(nil)) {
         self._videoToPlay = videoToPlay
@@ -66,6 +68,11 @@ struct GalleryView: View {
                         .animation(.spring(), value: showingSaveSuccess)
                 }
             }
+            .sheet(isPresented: $showingShareSheet) {
+                if let items = itemToShare as? [Any] {
+                    ShareSheet(activityItems: items)
+                }
+            }
         }
     }
     
@@ -113,6 +120,8 @@ struct GalleryView: View {
                                         showingDeleteAlert = true
                                     } onSave: {
                                         savePhoto(photo)
+                                    } onShare: {
+                                        sharePhoto(photo)
                                     }
                                 }
                             }
@@ -141,6 +150,8 @@ struct GalleryView: View {
                                         showingDeleteAlert = true
                                     } onSave: {
                                         saveVideo(video)
+                                    } onShare: {
+                                        shareVideo(video)
                                     }
                                 }
                             }
@@ -239,6 +250,17 @@ struct GalleryView: View {
             }
         }
     }
+    
+    private func sharePhoto(_ photo: Photo) {
+        guard let image = PhotoStorageService.shared.loadImage(for: photo) else { return }
+        itemToShare = [image]
+        showingShareSheet = true
+    }
+    
+    private func shareVideo(_ video: Video) {
+        itemToShare = [video.fileURL]
+        showingShareSheet = true
+    }
 }
 
 struct PhotoGridItem: View {
@@ -246,6 +268,7 @@ struct PhotoGridItem: View {
     let onTap: () -> Void
     let onDelete: () -> Void
     let onSave: () -> Void
+    let onShare: () -> Void
     @State private var image: UIImage?
     
     var body: some View {
@@ -269,6 +292,12 @@ struct PhotoGridItem: View {
                     HStack {
                         Spacer()
                         Menu {
+                            Button {
+                                onShare()
+                            } label: {
+                                Label("Share", systemImage: "square.and.arrow.up")
+                            }
+                            
                             Button {
                                 onSave()
                             } label: {
@@ -320,6 +349,7 @@ struct VideoGridItem: View {
     let onTap: () -> Void
     let onDelete: () -> Void
     let onSave: () -> Void
+    let onShare: () -> Void
     @State private var thumbnail: UIImage?
     
     var body: some View {
@@ -345,6 +375,12 @@ struct VideoGridItem: View {
                     HStack {
                         Spacer()
                         Menu {
+                            Button {
+                                onShare()
+                            } label: {
+                                Label("Share", systemImage: "square.and.arrow.up")
+                            }
+                            
                             Button {
                                 onSave()
                             } label: {
@@ -414,6 +450,7 @@ struct PhotoDetailSheet: View {
     let photo: Photo
     @Environment(\.dismiss) private var dismiss
     @StateObject private var userSettings = UserSettingsManager()
+    @State private var showingShareSheet = false
     
     var body: some View {
         NavigationView {
@@ -456,10 +493,25 @@ struct PhotoDetailSheet: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        if let image = PhotoStorageService.shared.loadImage(for: photo) {
+                            showingShareSheet = true
+                        }
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
+                }
+            }
+            .sheet(isPresented: $showingShareSheet) {
+                if let image = PhotoStorageService.shared.loadImage(for: photo) {
+                    ShareSheet(activityItems: [image])
                 }
             }
         }
@@ -470,6 +522,7 @@ struct VideoPlayerView: View {
     let video: Video
     @Environment(\.dismiss) private var dismiss
     @State private var player: AVPlayer?
+    @State private var showingShareSheet = false
     
     var body: some View {
         NavigationView {
@@ -498,11 +551,22 @@ struct VideoPlayerView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        showingShareSheet = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
                 }
+            }
+            .sheet(isPresented: $showingShareSheet) {
+                ShareSheet(activityItems: [video.fileURL])
             }
             .onAppear {
                 setupPlayer()
