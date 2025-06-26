@@ -44,6 +44,8 @@ struct ContourConfirmationView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black.opacity(0.3))
+                    .cornerRadius(12)
                 }
                 .padding()
                 
@@ -116,16 +118,31 @@ struct ContourOverlay: View {
     }
     
     var body: some View {
-        Path { path in
-            guard scaledContour.count > 2 else { return }
-            
-            path.move(to: scaledContour[0])
-            for i in 1..<scaledContour.count {
-                path.addLine(to: scaledContour[i])
+        ZStack {
+            if !contour.isEmpty && scaledContour.count > 2 {
+                // Ultra thin material background
+                Path { path in
+                    path.move(to: scaledContour[0])
+                    for i in 1..<scaledContour.count {
+                        path.addLine(to: scaledContour[i])
+                    }
+                    path.closeSubpath()
+                }
+                .fill(.ultraThinMaterial)
+                .opacity(0.6)
+                
+                // Draw the contour outline
+                Path { path in
+                    path.move(to: scaledContour[0])
+                    for i in 1..<scaledContour.count {
+                        path.addLine(to: scaledContour[i])
+                    }
+                    path.closeSubpath()
+                }
+                .stroke(Color.green, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                .shadow(color: .black.opacity(0.8), radius: 4, x: 0, y: 2)
+                .shadow(color: .green.opacity(0.6), radius: 8)
             }
-            path.closeSubpath()
         }
-        .stroke(Color.green, lineWidth: 3)
-        .shadow(color: .black, radius: 2)
     }
 }

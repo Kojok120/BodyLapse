@@ -375,8 +375,25 @@ struct BaselinePhotoCaptureView: View {
             
             if shouldShowCamera && !showingContourConfirmation {
                 VStack {
-                    Spacer()
-                
+                    // Camera switch button at top
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            guard let controller = cameraController else { return }
+                            controller.switchCamera()
+                        }) {
+                            Image(systemName: "camera.rotate")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Circle().fill(Color.black.opacity(0.5)))
+                        }
+                        .disabled(cameraController == nil)
+                        .opacity(cameraController == nil ? 0.5 : 1.0)
+                        .padding(.trailing, 20)
+                        .padding(.top, 60)
+                    }
+                    
                     Spacer()
                 
                     VStack(spacing: 20) {
@@ -434,6 +451,7 @@ struct BaselinePhotoCaptureView: View {
                 
                 switch result {
                 case .success(let contour):
+                    print("BaselinePhotoCaptureView: Detected \(contour.count) contour points")
                     self.detectedContour = contour
                     self.isProcessing = false
                     self.showingContourConfirmation = true
@@ -442,7 +460,7 @@ struct BaselinePhotoCaptureView: View {
                     print("Failed to detect body contour: \(error)")
                     self.contourError = error.localizedDescription
                     self.isProcessing = false
-                    // Still show confirmation, but without contour
+                    // Still show confirmation without contour to let user proceed
                     self.detectedContour = []
                     self.showingContourConfirmation = true
                 }
