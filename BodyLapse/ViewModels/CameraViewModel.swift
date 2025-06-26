@@ -64,7 +64,17 @@ class CameraViewModel: NSObject, ObservableObject {
     }
     
     private func setupCamera() {
+        // Clean up any existing configuration
         session.beginConfiguration()
+        
+        // Remove existing inputs and outputs
+        for input in session.inputs {
+            session.removeInput(input)
+        }
+        for output in session.outputs {
+            session.removeOutput(output)
+        }
+        
         session.sessionPreset = .photo
         
         // Try to get the front wide-angle camera first. If that fails (e.g. on Simulator or devices without front camera), fall back to any available video device.
@@ -101,6 +111,7 @@ class CameraViewModel: NSObject, ObservableObject {
                 print("[Camera] Session started running")
             }
         } catch {
+            session.commitConfiguration()
             alertMessage = "Failed to setup camera: \(error.localizedDescription)"
             showingAlert = true
         }
@@ -199,7 +210,7 @@ class CameraViewModel: NSObject, ObservableObject {
     private var previewLayer: AVCaptureVideoPreviewLayer?
     
     var cameraPreviewLayer: AVCaptureVideoPreviewLayer {
-        if let existingLayer = previewLayer {
+        if let existingLayer = previewLayer, existingLayer.session != nil {
             return existingLayer
         }
         let layer = AVCaptureVideoPreviewLayer(session: session)
@@ -213,6 +224,20 @@ class CameraViewModel: NSObject, ObservableObject {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 self?.session.stopRunning()
                 print("[Camera] Session stopped")
+            }
+        }
+    }
+    
+    func restartSession() {
+        if isAuthorized {
+            // If session has no inputs/outputs, set it up again
+            if session.inputs.isEmpty || session.outputs.isEmpty {
+                setupCamera()
+            } else if !session.isRunning {
+                DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                    self?.session.startRunning()
+                    print("[Camera] Session restarted")
+                }
             }
         }
     }
@@ -287,5 +312,18 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
     func cleanup() {
         stopSession()
         cleanupPreviewLayer()
+        
+        // Remove all inputs and outputs from the session
+        session.beginConfiguration()
+        for input in session.inputs {
+            session.removeInput(input)
+        }
+        for output in session.outputs {
+            session.removeOutput(output)
+        }
+        session.commitConfiguration()
+        
+        // Clear the current input reference
+        currentInput = nil
     }
 }

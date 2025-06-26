@@ -22,7 +22,7 @@ struct CameraView: View {
         ZStack {
             if viewModel.isAuthorized {
                 CameraPreviewView(cameraViewModel: viewModel)
-                    .ignoresSafeArea()
+                    .ignoresSafeArea(.container, edges: .top)
                 
                 VStack {
                     HStack {
@@ -48,14 +48,14 @@ struct CameraView: View {
                     }
                     
                     Spacer()
-                }
-                // Capture button above bottom safe area (e.g., TabBar)
-                .safeAreaInset(edge: .bottom) {
+                    
+                    // Capture button above tab bar
                     CaptureButton {
                         viewModel.capturePhoto()
                     }
-                    .padding(.bottom, 10)
+                    .padding(.bottom, 20)
                 }
+                .ignoresSafeArea(.container, edges: .top)
             } else {
                 VStack(spacing: 20) {
                     Image(systemName: "camera.fill")
@@ -82,11 +82,15 @@ struct CameraView: View {
             }
         }
         .onAppear {
-            viewModel.checkAuthorization()
+            if viewModel.isAuthorized {
+                viewModel.restartSession()
+            } else {
+                viewModel.checkAuthorization()
+            }
             PhotoStorageService.shared.initialize()
         }
         .onDisappear {
-            viewModel.cleanup()
+            viewModel.stopSession()
         }
         .alert("Error", isPresented: $viewModel.showingAlert) {
             Button("OK", role: .cancel) { }
@@ -191,7 +195,26 @@ struct CameraPreviewView: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {
-        if let previewLayer = uiView.layer.sublayers?.compactMap({ $0 as? AVCaptureVideoPreviewLayer }).first {
+        // Check if we need to recreate the preview layer
+        let existingPreviewLayer = uiView.layer.sublayers?.compactMap({ $0 as? AVCaptureVideoPreviewLayer }).first
+        
+        if existingPreviewLayer == nil || existingPreviewLayer?.session == nil {
+            // Remove any existing layers and recreate
+            uiView.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
+            
+            let previewLayer = cameraViewModel.cameraPreviewLayer
+            previewLayer.frame = uiView.bounds
+            previewLayer.videoGravity = .resizeAspectFill
+            
+            if let connection = previewLayer.connection {
+                connection.videoOrientation = .portrait
+                if connection.isVideoMirroringSupported && !connection.automaticallyAdjustsVideoMirroring {
+                    connection.isVideoMirrored = true
+                }
+            }
+            
+            uiView.layer.addSublayer(previewLayer)
+        } else if let previewLayer = existingPreviewLayer {
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             previewLayer.frame = uiView.bounds
@@ -199,7 +222,6 @@ struct CameraPreviewView: UIViewRepresentable {
             
             if let connection = previewLayer.connection {
                 connection.videoOrientation = .portrait
-                // Only set video mirroring if automatic adjustment is disabled
                 if connection.isVideoMirroringSupported && !connection.automaticallyAdjustsVideoMirroring {
                     connection.isVideoMirrored = true
                 }
@@ -208,7 +230,7 @@ struct CameraPreviewView: UIViewRepresentable {
     }
     
     func dismantleUIView(_ uiView: UIView, coordinator: ()) {
-        cameraViewModel.cleanupPreviewLayer()
+        // Don't clean up the preview layer here as it will be reused
     }
 }
 
