@@ -112,23 +112,40 @@ struct CalendarView: View {
             .sheet(isPresented: $showingWeightInput) {
                 WeightInputView(photo: $currentPhoto, onSave: { weight, bodyFat in
                     if let photo = currentPhoto {
+                        print("[CalendarView] Saving weight data - weight: \(weight ?? -1), bodyFat: \(bodyFat ?? -1)")
+                        
+                        // Update photo metadata
                         PhotoStorageService.shared.updatePhotoMetadata(photo, weight: weight, bodyFatPercentage: bodyFat)
                         viewModel.loadPhotos()
                         updateCurrentPhoto()
                         
-                        // Also save to weight tracking
-                        if let w = weight {
-                            let entry = WeightEntry(
-                                date: photo.captureDate,
-                                weight: w,
-                                bodyFatPercentage: bodyFat,
-                                linkedPhotoID: photo.id.uuidString
-                            )
-                            Task {
-                                try? await WeightStorageService.shared.saveEntry(entry)
+                        // Save to weight tracking - handle both saving new data and clearing existing data
+                        let entry = WeightEntry(
+                            date: photo.captureDate,
+                            weight: weight ?? 0, // Use 0 if weight is nil (cleared)
+                            bodyFatPercentage: bodyFat,
+                            linkedPhotoID: photo.id.uuidString
+                        )
+                        
+                        Task {
+                            do {
+                                if weight != nil || bodyFat != nil {
+                                    // Save the entry if we have any data
+                                    try await WeightStorageService.shared.saveEntry(entry)
+                                    print("[CalendarView] Saved weight entry to WeightStorageService")
+                                } else {
+                                    // Delete the entry if both are nil
+                                    if let existingEntry = try await WeightStorageService.shared.getEntry(for: photo.captureDate) {
+                                        try await WeightStorageService.shared.deleteEntry(existingEntry)
+                                        print("[CalendarView] Deleted weight entry from WeightStorageService")
+                                    }
+                                }
+                                
                                 await MainActor.run {
                                     weightViewModel.loadEntries()
                                 }
+                            } catch {
+                                print("[CalendarView] Error saving/deleting weight entry: \(error)")
                             }
                         }
                     }
@@ -192,7 +209,9 @@ struct CalendarView: View {
                         }
                         updateCurrentPhoto()
                         showingCalendarPopup = false
-                    }
+                    },
+                    minDate: nil,
+                    maxDate: nil
                 )
             }
             .sheet(isPresented: $showingImagePicker) {

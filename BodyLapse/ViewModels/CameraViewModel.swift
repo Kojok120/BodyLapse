@@ -34,6 +34,12 @@ class CameraViewModel: NSObject, ObservableObject {
         }
     }
     
+    deinit {
+        stopSession()
+        previewLayer?.removeFromSuperlayer()
+        previewLayer = nil
+    }
+    
     func checkAuthorization() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
@@ -201,6 +207,20 @@ class CameraViewModel: NSObject, ObservableObject {
         previewLayer = layer
         return layer
     }
+    
+    func stopSession() {
+        if session.isRunning {
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.session.stopRunning()
+                print("[Camera] Session stopped")
+            }
+        }
+    }
+    
+    func cleanupPreviewLayer() {
+        previewLayer?.removeFromSuperlayer()
+        previewLayer = nil
+    }
 }
 
 extension CameraViewModel: AVCapturePhotoCaptureDelegate {
@@ -262,5 +282,10 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
     
     func processCapture(_ image: UIImage) {
         self.capturedImage = image
+    }
+    
+    func cleanup() {
+        stopSession()
+        cleanupPreviewLayer()
     }
 }

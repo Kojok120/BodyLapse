@@ -13,7 +13,7 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
-            ComparisonView()
+            CompareView()
                 .tabItem {
                     Label("Compare", systemImage: "square.on.square")
                 }

@@ -4,6 +4,8 @@ struct CalendarPopupView: View {
     @Binding var selectedDate: Date
     let photos: [Photo]
     let onDateSelected: (Date) -> Void
+    let minDate: Date?
+    let maxDate: Date?
     @Environment(\.dismiss) private var dismiss
     
     @State private var displayedMonth = Date()
@@ -52,6 +54,16 @@ struct CalendarPopupView: View {
     
     private func isCurrentMonth(_ date: Date) -> Bool {
         calendar.isDate(date, equalTo: displayedMonth, toGranularity: .month)
+    }
+    
+    private func isDateEnabled(_ date: Date) -> Bool {
+        if let minDate = minDate, date < minDate {
+            return false
+        }
+        if let maxDate = maxDate, date > maxDate {
+            return false
+        }
+        return true
     }
     
     var body: some View {
@@ -117,18 +129,20 @@ struct CalendarPopupView: View {
                                 VStack(spacing: 4) {
                                     Text("\(calendar.component(.day, from: date))")
                                         .font(.system(size: 16, weight: calendar.isDate(date, inSameDayAs: Date()) ? .bold : .regular))
-                                        .foregroundColor(isCurrentMonth(date) ? .primary : .secondary)
+                                        .foregroundColor(isCurrentMonth(date) && isDateEnabled(date) ? .primary : .secondary)
+                                        .opacity(isDateEnabled(date) ? 1.0 : 0.3)
                                     
                                     if hasPhoto(for: date) {
                                         Circle()
                                             .fill(Color.green)
                                             .frame(width: 6, height: 6)
+                                            .opacity(isDateEnabled(date) ? 1.0 : 0.3)
                                     }
                                 }
                             }
                             .frame(height: 45)
                         }
-                        .disabled(!isCurrentMonth(date))
+                        .disabled(!isCurrentMonth(date) || !isDateEnabled(date))
                     }
                 }
                 .padding(.horizontal)
@@ -178,7 +192,9 @@ struct CalendarPopupView_Previews: PreviewProvider {
         CalendarPopupView(
             selectedDate: .constant(Date()),
             photos: [],
-            onDateSelected: { _ in }
+            onDateSelected: { _ in },
+            minDate: nil,
+            maxDate: nil
         )
     }
 }

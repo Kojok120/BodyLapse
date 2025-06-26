@@ -45,11 +45,25 @@ struct CompareView: View {
                     ),
                     photos: viewModel.photos,
                     onDateSelected: { date in
-                        firstPhoto = viewModel.photos.first { photo in
-                            Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                        // Reload photos to get latest weight/body fat data
+                        print("[CompareView] Selecting first photo for date: \(date)")
+                        viewModel.loadPhotos()
+                        
+                        // Wait a bit for weight sync to complete
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            firstPhoto = viewModel.photos.first { photo in
+                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                            }
+                            if let selected = firstPhoto {
+                                print("[CompareView] Selected first photo - id: \(selected.id), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
+                            } else {
+                                print("[CompareView] No photo found for date: \(date)")
+                            }
                         }
                         showingFirstCalendar = false
-                    }
+                    },
+                    minDate: nil,
+                    maxDate: secondPhoto?.captureDate
                 )
             }
             .sheet(isPresented: $showingSecondCalendar) {
@@ -60,11 +74,25 @@ struct CompareView: View {
                     ),
                     photos: viewModel.photos,
                     onDateSelected: { date in
-                        secondPhoto = viewModel.photos.first { photo in
-                            Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                        // Reload photos to get latest weight/body fat data
+                        print("[CompareView] Selecting second photo for date: \(date)")
+                        viewModel.loadPhotos()
+                        
+                        // Wait a bit for weight sync to complete
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            secondPhoto = viewModel.photos.first { photo in
+                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                            }
+                            if let selected = secondPhoto {
+                                print("[CompareView] Selected second photo - id: \(selected.id), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
+                            } else {
+                                print("[CompareView] No photo found for date: \(date)")
+                            }
                         }
                         showingSecondCalendar = false
-                    }
+                    },
+                    minDate: firstPhoto?.captureDate,
+                    maxDate: nil
                 )
             }
         }
@@ -75,6 +103,17 @@ struct CompareView: View {
             let today = Date()
             firstPhoto = viewModel.photos.first { photo in
                 Calendar.current.isDate(photo.captureDate, inSameDayAs: today)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            // Reload photos when app comes to foreground to get latest data
+            viewModel.loadPhotos()
+            // Update selected photos with fresh data
+            if let first = firstPhoto {
+                firstPhoto = viewModel.photos.first { $0.id == first.id }
+            }
+            if let second = secondPhoto {
+                secondPhoto = viewModel.photos.first { $0.id == second.id }
             }
         }
     }
@@ -139,7 +178,7 @@ struct CompareView: View {
                         if userSettings.settings.isPremium {
                             VStack(spacing: 4) {
                                 if let photo = firstPhoto {
-                                    let _ = print("[CompareView] First photo - weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
+                                    let _ = print("[CompareView] First photo - id: \(photo.id), date: \(photo.captureDate), weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
                                     // Weight row
                                     HStack(spacing: 4) {
                                         Image(systemName: "scalemass")
@@ -246,7 +285,7 @@ struct CompareView: View {
                         if userSettings.settings.isPremium {
                             VStack(spacing: 4) {
                                 if let photo = secondPhoto {
-                                    let _ = print("[CompareView] Second photo - weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
+                                    let _ = print("[CompareView] Second photo - id: \(photo.id), date: \(photo.captureDate), weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
                                     // Weight row
                                     HStack(spacing: 4) {
                                         Image(systemName: "scalemass")
@@ -301,19 +340,6 @@ struct CompareView: View {
                         VStack(spacing: 16) {
                             // Stats display
                             HStack(spacing: 20) {
-                                // Days between
-                                VStack(spacing: 4) {
-                                    Text("\(viewModel.getDaysBetween(first, second))")
-                                        .font(.title2)
-                                        .fontWeight(.bold)
-                                    Text("days")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Divider()
-                                    .frame(height: 30)
-                                
                                 // Weight difference
                                 if let weightDiff = viewModel.getWeightDifference(first, second) {
                                     VStack(spacing: 4) {
@@ -333,8 +359,10 @@ struct CompareView: View {
                                 
                                 // Body fat difference
                                 if let bodyFatDiff = viewModel.getBodyFatDifference(first, second) {
-                                    Divider()
-                                        .frame(height: 30)
+                                    if viewModel.getWeightDifference(first, second) != nil {
+                                        Divider()
+                                            .frame(height: 30)
+                                    }
                                     
                                     VStack(spacing: 4) {
                                         HStack(spacing: 2) {
@@ -354,13 +382,6 @@ struct CompareView: View {
                             .padding()
                             .background(Color(UIColor.secondarySystemGroupedBackground))
                             .cornerRadius(10)
-                            
-                            ComparisonSlider(
-                                firstPhoto: first,
-                                secondPhoto: second,
-                                width: UIScreen.main.bounds.width
-                            )
-                            .frame(height: 60)
                         }
                         .padding(.horizontal)
                         .padding(.top, 16)
@@ -466,34 +487,3 @@ struct CompareView: View {
     }
 }
 
-struct ComparisonSlider: View {
-    let firstPhoto: Photo
-    let secondPhoto: Photo
-    let width: CGFloat
-    
-    @State private var sliderPosition: CGFloat = 0.5
-    
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Background track
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color(UIColor.systemGray5))
-                    .frame(height: 4)
-                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
-                
-                // Slider handle
-                Circle()
-                    .fill(Color.accentColor)
-                    .frame(width: 20, height: 20)
-                    .position(x: sliderPosition * geometry.size.width, y: geometry.size.height / 2)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                sliderPosition = max(0, min(1, value.location.x / geometry.size.width))
-                            }
-                    )
-            }
-        }
-    }
-}

@@ -19,8 +19,8 @@ struct Photo: Identifiable, Codable {
         self.bodyFatPercentage = bodyFatPercentage
     }
     
-    var fileURL: URL {
-        PhotoStorageService.shared.documentsDirectory.appendingPathComponent(fileName)
+    var fileURL: URL? {
+        PhotoStorageService.shared.documentsDirectory?.appendingPathComponent(fileName)
     }
 }
 

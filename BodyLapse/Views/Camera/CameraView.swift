@@ -85,6 +85,9 @@ struct CameraView: View {
             viewModel.checkAuthorization()
             PhotoStorageService.shared.initialize()
         }
+        .onDisappear {
+            viewModel.cleanup()
+        }
         .alert("Error", isPresented: $viewModel.showingAlert) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -202,6 +205,10 @@ struct CameraPreviewView: UIViewRepresentable {
                 }
             }
         }
+    }
+    
+    func dismantleUIView(_ uiView: UIView, coordinator: ()) {
+        cameraViewModel.cleanupPreviewLayer()
     }
 }
 

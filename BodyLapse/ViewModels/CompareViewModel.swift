@@ -9,7 +9,66 @@ class CompareViewModel: ObservableObject {
     }
     
     func loadPhotos() {
+        // Force reload metadata from disk to get latest weight/body fat data
+        PhotoStorageService.shared.reloadPhotosFromDisk()
         photos = PhotoStorageService.shared.photos.sorted { $0.captureDate > $1.captureDate }
+        print("[CompareViewModel] Loaded \(photos.count) photos from PhotoStorageService")
+        
+        // Also sync weight data from WeightStorageService
+        Task { @MainActor in
+            do {
+                let weightEntries = try await WeightStorageService.shared.loadEntries()
+                syncWeightDataToPhotos(weightEntries)
+            } catch {
+                print("[CompareViewModel] Failed to load weight entries: \(error)")
+            }
+        }
+    }
+    
+    private func syncWeightDataToPhotos(_ weightEntries: [WeightEntry]) {
+        print("[CompareViewModel] Syncing weight data from \(weightEntries.count) weight entries")
+        
+        for entry in weightEntries {
+            // Find photo for the same date
+            if let photoIndex = photos.firstIndex(where: { photo in
+                Calendar.current.isDate(photo.captureDate, inSameDayAs: entry.date)
+            }) {
+                var updatedPhoto = photos[photoIndex]
+                var needsUpdate = false
+                
+                // Always sync weight data from WeightEntry if it exists
+                if entry.weight > 0 && updatedPhoto.weight != entry.weight {
+                    updatedPhoto.weight = entry.weight
+                    needsUpdate = true
+                    print("[CompareViewModel] Synced weight \(entry.weight) to photo on \(entry.date)")
+                }
+                
+                // Always sync body fat data from WeightEntry if it exists
+                if let bodyFat = entry.bodyFatPercentage, updatedPhoto.bodyFatPercentage != bodyFat {
+                    updatedPhoto.bodyFatPercentage = bodyFat
+                    needsUpdate = true
+                    print("[CompareViewModel] Synced body fat \(bodyFat) to photo on \(entry.date)")
+                }
+                
+                if needsUpdate {
+                    photos[photoIndex] = updatedPhoto
+                    
+                    // Also update in PhotoStorageService to persist the change
+                    PhotoStorageService.shared.updatePhotoMetadata(updatedPhoto, weight: updatedPhoto.weight, bodyFatPercentage: updatedPhoto.bodyFatPercentage)
+                }
+            } else {
+                print("[CompareViewModel] No photo found for weight entry date: \(entry.date)")
+            }
+        }
+        
+        // Re-sort after updates
+        photos = photos.sorted { $0.captureDate > $1.captureDate }
+        
+        // Debug: Print updated photos
+        print("[CompareViewModel] After sync - First 5 photos:")
+        for (index, photo) in photos.prefix(5).enumerated() {
+            print("  Photo \(index): date=\(photo.captureDate), weight=\(photo.weight ?? -1), bodyFat=\(photo.bodyFatPercentage ?? -1)")
+        }
     }
     
     func getDaysBetween(_ firstPhoto: Photo, _ secondPhoto: Photo) -> Int {

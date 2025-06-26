@@ -6,16 +6,16 @@ class PhotoStorageService {
     
     private init() {}
     
-    var documentsDirectory: URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    var documentsDirectory: URL? {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
     }
     
-    private var photosDirectory: URL {
-        documentsDirectory.appendingPathComponent("Photos")
+    private var photosDirectory: URL? {
+        documentsDirectory?.appendingPathComponent("Photos")
     }
     
-    private var metadataURL: URL {
-        documentsDirectory.appendingPathComponent("photos_metadata.json")
+    private var metadataURL: URL? {
+        documentsDirectory?.appendingPathComponent("photos_metadata.json")
     }
     
     private(set) var photos: [Photo] = []
@@ -28,10 +28,23 @@ class PhotoStorageService {
     }
     
     private func createPhotosDirectoryIfNeeded() {
-        try? FileManager.default.createDirectory(at: photosDirectory, withIntermediateDirectories: true)
+        guard let photosDirectory = photosDirectory else {
+            print("[PhotoStorage] Error: Could not access photos directory")
+            return
+        }
+        
+        do {
+            try FileManager.default.createDirectory(at: photosDirectory, withIntermediateDirectories: true)
+        } catch {
+            print("[PhotoStorage] Error creating photos directory: \(error)")
+        }
     }
     
     func savePhoto(_ image: UIImage, captureDate: Date = Date(), isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
+        guard let photosDirectory = photosDirectory else {
+            throw PhotoStorageError.directoryAccessFailed
+        }
+        
         guard let imageData = image.jpegData(compressionQuality: 0.9) else {
             throw PhotoStorageError.compressionFailed
         }
@@ -50,10 +63,14 @@ class PhotoStorageService {
             bodyFatPercentage: bodyFatPercentage
         )
         
+        print("[PhotoStorage] Created photo - weight: \(weight ?? -1), bodyFat: \(bodyFatPercentage ?? -1)")
+        
         photos.append(photo)
         photos.sort { $0.captureDate > $1.captureDate }
         
         savePhotosMetadata()
+        
+        print("[PhotoStorage] Photo saved to metadata - total photos: \(photos.count)")
         
         return photo
     }
@@ -89,17 +106,28 @@ class PhotoStorageService {
     }
     
     func updatePhotoMetadata(_ photo: Photo, weight: Double?, bodyFatPercentage: Double?) {
-        guard let index = photos.firstIndex(where: { $0.id == photo.id }) else { return }
+        guard let index = photos.firstIndex(where: { $0.id == photo.id }) else {
+            print("[PhotoStorage] updatePhotoMetadata - Photo not found for id: \(photo.id)")
+            return
+        }
         
         var updatedPhoto = photo
         updatedPhoto.weight = weight
         updatedPhoto.bodyFatPercentage = bodyFatPercentage
         
+        print("[PhotoStorage] updatePhotoMetadata - Updating photo date: \(photo.captureDate), weight: \(weight ?? -1) -> \(updatedPhoto.weight ?? -1), bodyFat: \(bodyFatPercentage ?? -1) -> \(updatedPhoto.bodyFatPercentage ?? -1)")
+        
         photos[index] = updatedPhoto
         savePhotosMetadata()
+        
+        print("[PhotoStorage] updatePhotoMetadata - Successfully updated and saved metadata")
     }
     
     func deletePhoto(_ photo: Photo) throws {
+        guard let photosDirectory = photosDirectory else {
+            throw PhotoStorageError.directoryAccessFailed
+        }
+        
         let fileURL = photosDirectory.appendingPathComponent(photo.fileName)
         try FileManager.default.removeItem(at: fileURL)
         
@@ -108,12 +136,28 @@ class PhotoStorageService {
     }
     
     func loadImage(for photo: Photo) -> UIImage? {
+        guard let photosDirectory = photosDirectory else {
+            print("[PhotoStorage] Error: Could not access photos directory")
+            return nil
+        }
+        
         let fileURL = photosDirectory.appendingPathComponent(photo.fileName)
         guard let imageData = try? Data(contentsOf: fileURL) else { return nil }
         return UIImage(data: imageData)
     }
     
+    func reloadPhotosFromDisk() {
+        print("[PhotoStorage] Reloading photos metadata from disk")
+        loadPhotosMetadata()
+    }
+    
     private func loadPhotosMetadata() {
+        guard let metadataURL = metadataURL else {
+            print("[PhotoStorage] Error: Could not access metadata URL")
+            photos = []
+            return
+        }
+        
         print("[PhotoStorage] Loading metadata from: \(metadataURL.path)")
         
         guard let data = try? Data(contentsOf: metadataURL) else {
@@ -126,6 +170,11 @@ class PhotoStorageService {
             let decoded = try JSONDecoder().decode([Photo].self, from: data)
             photos = decoded.sorted { $0.captureDate > $1.captureDate }
             print("[PhotoStorage] Loaded \(photos.count) photos from metadata")
+            
+            // Debug: Print first few photos with weight data
+            for (index, photo) in photos.prefix(3).enumerated() {
+                print("[PhotoStorage] Photo \(index): date=\(photo.captureDate), weight=\(photo.weight ?? -1), bodyFat=\(photo.bodyFatPercentage ?? -1)")
+            }
         } catch {
             print("[PhotoStorage] Failed to decode metadata: \(error)")
             photos = []
@@ -133,6 +182,11 @@ class PhotoStorageService {
     }
     
     private func savePhotosMetadata() {
+        guard let metadataURL = metadataURL else {
+            print("[PhotoStorage] Error: Could not access metadata URL")
+            return
+        }
+        
         do {
             let encoded = try JSONEncoder().encode(photos)
             try encoded.write(to: metadataURL)
@@ -172,6 +226,7 @@ class PhotoStorageService {
 enum PhotoStorageError: LocalizedError {
     case compressionFailed
     case saveFailed
+    case directoryAccessFailed
     
     var errorDescription: String? {
         switch self {
@@ -179,6 +234,8 @@ enum PhotoStorageError: LocalizedError {
             return "Failed to compress the image"
         case .saveFailed:
             return "Failed to save the photo"
+        case .directoryAccessFailed:
+            return "Failed to access the documents directory"
         }
     }
 }

@@ -47,6 +47,7 @@ struct PhotoCaptureView: View {
                 if let photo = capturedPhoto {
                     PhotoWeightInputView(photo: photo) { weight, bodyFat in
                         if weight != nil || bodyFat != nil {
+                            print("[PhotoCapture] Updating photo metadata - weight: \(weight ?? -1), bodyFat: \(bodyFat ?? -1)")
                             PhotoStorageService.shared.updatePhotoMetadata(
                                 photo,
                                 weight: weight,
@@ -206,9 +207,13 @@ struct PhotoWeightInputView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        let weight = Double(weightText)
+                        var weightInKg: Double? = nil
+                        if let weight = Double(weightText) {
+                            // Convert to kg if user is using lbs
+                            weightInKg = userSettings.settings.weightUnit == .kg ? weight : weight / 2.20462
+                        }
                         let bodyFat = Double(bodyFatText)
-                        onSave(weight, bodyFat)
+                        onSave(weightInKg, bodyFat)
                         dismiss()
                     }
                     .fontWeight(.semibold)

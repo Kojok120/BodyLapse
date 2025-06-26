@@ -142,48 +142,42 @@ class VideoGenerationService {
                 return
             }
             
-            do {
-                let videoURL = try self.createVideo(
-                    from: filteredPhotos,
-                    options: options,
-                    progress: progress
-                )
-                
-                Task {
-                    do {
-                        // Save video to storage
-                        let video = try await VideoStorageService.shared.saveVideo(
-                            videoURL,
-                            startDate: dateRange.lowerBound,
-                            endDate: dateRange.upperBound,
-                            frameCount: filteredPhotos.count
-                        )
-                        
-                        // Clean up temporary file
-                        try? FileManager.default.removeItem(at: videoURL)
-                        
-                        await MainActor.run {
-                            completion(.success(video))
-                        }
-                    } catch {
-                        await MainActor.run {
-                            completion(.failure(error))
-                        }
+            Task {
+                do {
+                    let videoURL = try await self.createVideoAsync(
+                        from: filteredPhotos,
+                        options: options,
+                        progress: progress
+                    )
+                    
+                    // Save video to storage
+                    let video = try await VideoStorageService.shared.saveVideo(
+                        videoURL,
+                        startDate: dateRange.lowerBound,
+                        endDate: dateRange.upperBound,
+                        frameCount: filteredPhotos.count
+                    )
+                    
+                    // Clean up temporary file
+                    try? FileManager.default.removeItem(at: videoURL)
+                    
+                    await MainActor.run {
+                        completion(.success(video))
                     }
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    completion(.failure(error))
+                } catch {
+                    await MainActor.run {
+                        completion(.failure(error))
+                    }
                 }
             }
         }
     }
     
-    private func createVideo(
+    private func createVideoAsync(
         from photos: [Photo],
         options: VideoGenerationOptions,
         progress: @escaping (Float) -> Void
-    ) throws -> URL {
+    ) async throws -> URL {
         let outputURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("mp4")
@@ -227,58 +221,49 @@ class VideoGenerationService {
         let totalPhotos = photos.count
         
         for (index, photo) in photos.enumerated() {
-            autoreleasepool {
-                guard let image = PhotoStorageService.shared.loadImage(for: photo) else { return }
-                
-                // Apply face blur if enabled
-                let imageToProcess: UIImage
-                if options.blurFaces {
-                    let semaphore = DispatchSemaphore(value: 0)
-                    var blurredImage: UIImage?
-                    
-                    FaceBlurService.shared.processImage(image) { result in
-                        blurredImage = result ?? image
-                        semaphore.signal()
-                    }
-                    
-                    semaphore.wait()
-                    imageToProcess = blurredImage ?? image
-                } else {
-                    imageToProcess = image
-                }
-                
-                // Convert to pixel buffer
-                if let pixelBuffer = createPixelBuffer(
+            guard let image = PhotoStorageService.shared.loadImage(for: photo) else { continue }
+            
+            // Apply face blur if enabled
+            let imageToProcess: UIImage
+            if options.blurFaces {
+                imageToProcess = await FaceBlurService.shared.processImageAsync(image)
+            } else {
+                imageToProcess = image
+            }
+            
+            // Convert to pixel buffer
+            if let pixelBuffer = autoreleasepool(invoking: { () -> CVPixelBuffer? in
+                createPixelBuffer(
                     from: imageToProcess,
                     size: options.videoSize,
                     addWatermark: options.addWatermark
-                ) {
-                    // Wait for input to be ready
-                    while !videoWriterInput.isReadyForMoreMediaData {
-                        Thread.sleep(forTimeInterval: 0.1)
-                    }
-                    
-                    // Append pixel buffer
-                    pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: currentTime)
-                    currentTime = CMTimeAdd(currentTime, options.frameDuration)
+                )
+            }) {
+                // Wait for input to be ready using async
+                while !videoWriterInput.isReadyForMoreMediaData {
+                    try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                 }
                 
-                // Update progress
-                let progressValue = Float(index + 1) / Float(totalPhotos)
-                DispatchQueue.main.async {
-                    progress(progressValue)
-                }
+                // Append pixel buffer
+                pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: currentTime)
+                currentTime = CMTimeAdd(currentTime, options.frameDuration)
+            }
+            
+            // Update progress
+            let progressValue = Float(index + 1) / Float(totalPhotos)
+            await MainActor.run {
+                progress(progressValue)
             }
         }
         
         // Finish writing
         videoWriterInput.markAsFinished()
         
-        let semaphore = DispatchSemaphore(value: 0)
-        videoWriter.finishWriting {
-            semaphore.signal()
+        await withCheckedContinuation { continuation in
+            videoWriter.finishWriting {
+                continuation.resume()
+            }
         }
-        semaphore.wait()
         
         guard videoWriter.status == .completed else {
             throw VideoGenerationError.videoCreationFailed
@@ -286,6 +271,7 @@ class VideoGenerationService {
         
         return outputURL
     }
+    
     
     
     private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool) -> CVPixelBuffer? {

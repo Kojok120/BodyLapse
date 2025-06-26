@@ -10,6 +10,14 @@ class FaceBlurService {
     
     private init() {}
     
+    func processImageAsync(_ image: UIImage) async -> UIImage {
+        await withCheckedContinuation { continuation in
+            processImage(image) { result in
+                continuation.resume(returning: result ?? image)
+            }
+        }
+    }
+    
     func processImage(_ image: UIImage, completion: @escaping (UIImage?) -> Void) {
         guard let cgImage = image.cgImage else {
             completion(nil)
