@@ -66,7 +66,7 @@ struct InteractiveWeightChartView: View {
                     
                     Spacer()
                     
-                    HStack(spacing: 15) {
+                    HStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Weight")
                                 .font(.caption)
@@ -74,7 +74,10 @@ struct InteractiveWeightChartView: View {
                             Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
                                 .font(.body)
                                 .foregroundColor(.blue)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
+                        .frame(minWidth: 60)
                         
                         if let bodyFat = selectedEntry.bodyFatPercentage {
                             VStack(alignment: .leading, spacing: 2) {
@@ -84,7 +87,10 @@ struct InteractiveWeightChartView: View {
                                 Text("\(bodyFat, specifier: "%.1f")%")
                                     .font(.body)
                                     .foregroundColor(.orange)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
                             }
+                            .frame(minWidth: 60)
                         }
                     }
                     
