@@ -68,7 +68,7 @@ struct SettingsView: View {
                 
                 Section("Reminders") {
                     Toggle("Daily Reminder", isOn: $userSettings.settings.reminderEnabled)
-                        .onChange(of: userSettings.settings.reminderEnabled) { newValue in
+                        .onChange(of: userSettings.settings.reminderEnabled) {  _, newValue in
                             if newValue {
                                 // Request permission when enabling reminders
                                 NotificationService.shared.requestNotificationPermission { granted in
@@ -109,7 +109,7 @@ struct SettingsView: View {
                                 }
                             }
                         }
-                        .onChange(of: healthKitEnabled) { newValue in
+                        .onChange(of: healthKitEnabled) { _, newValue in
                             if newValue {
                                 requestHealthKitPermission()
                             } else {

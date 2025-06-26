@@ -105,7 +105,7 @@ struct CalendarView: View {
                 viewModel.loadPhotos()
                 updateCurrentPhoto()
             }
-            .onChange(of: selectedDate) { newDate in
+            .onChange(of: selectedDate) { _, newDate in
                 updateCurrentPhoto()
                 selectedChartDate = newDate  // Sync chart selection when date changes
             }
@@ -425,7 +425,7 @@ struct CalendarView: View {
                             }
                         )
                         .padding(.horizontal)
-                        .onChange(of: selectedChartDate) { newDate in
+                        .onChange(of: selectedChartDate) { _, newDate in
                             if let date = newDate {
                                 // Update selected date in calendar when chart date changes
                                 if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
@@ -434,7 +434,7 @@ struct CalendarView: View {
                                 }
                             }
                         }
-                        .onChange(of: selectedPeriod) { _ in
+                        .onChange(of: selectedPeriod) { _, _ in
                             // Reset chart selection when period changes
                             selectedChartDate = nil
                         }

@@ -89,8 +89,12 @@ class NotificationService: NSObject {
     // MARK: - Badge Management
     
     func clearBadge() {
-        DispatchQueue.main.async {
-            UIApplication.shared.applicationIconBadgeNumber = 0
+        Task {
+            do {
+                try await UNUserNotificationCenter.current().setBadgeCount(0)
+            } catch {
+                print("Error clearing badge count: \(error)")
+            }
         }
     }
     
@@ -112,7 +116,7 @@ extension NotificationService: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         // Show notification even when app is in foreground
-        completionHandler([.alert, .sound, .badge])
+        completionHandler([.banner, .list, .sound, .badge])
     }
     
     // Handle notification tap

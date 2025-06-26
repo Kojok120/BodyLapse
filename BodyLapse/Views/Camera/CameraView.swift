@@ -97,12 +97,12 @@ struct CameraView: View {
         } message: {
             Text(viewModel.alertMessage)
         }
-        .onChange(of: viewModel.capturedImage) { newValue in
+        .onChange(of: viewModel.capturedImage) { _, newValue in
             if newValue != nil {
                 activeSheet = .photoReview
             }
         }
-        .onChange(of: viewModel.showingWeightInput) { newValue in
+        .onChange(of: viewModel.showingWeightInput) { _, newValue in
             if newValue {
                 activeSheet = .weightInput
             }
@@ -177,7 +177,7 @@ struct CameraPreviewView: UIViewRepresentable {
         previewLayer.videoGravity = .resizeAspectFill
         
         if let connection = previewLayer.connection {
-            connection.videoOrientation = .portrait
+            connection.videoRotationAngle = 90 // .portrait is 90 degrees
             // Only set video mirroring if automatic adjustment is disabled
             if connection.isVideoMirroringSupported && !connection.automaticallyAdjustsVideoMirroring {
                 connection.isVideoMirrored = true
@@ -207,7 +207,7 @@ struct CameraPreviewView: UIViewRepresentable {
             previewLayer.videoGravity = .resizeAspectFill
             
             if let connection = previewLayer.connection {
-                connection.videoOrientation = .portrait
+                connection.videoRotationAngle = 90 // .portrait is 90 degrees
                 if connection.isVideoMirroringSupported && !connection.automaticallyAdjustsVideoMirroring {
                     connection.isVideoMirrored = true
                 }
@@ -221,7 +221,7 @@ struct CameraPreviewView: UIViewRepresentable {
             CATransaction.commit()
             
             if let connection = previewLayer.connection {
-                connection.videoOrientation = .portrait
+                connection.videoRotationAngle = 90 // .portrait is 90 degrees
                 if connection.isVideoMirroringSupported && !connection.automaticallyAdjustsVideoMirroring {
                     connection.isVideoMirrored = true
                 }

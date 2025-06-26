@@ -793,7 +793,7 @@ class BodyContourService {
         guard points.count > 5 else { return points }
         
         // First pass: basic smoothing
-        var smoothed = smoothContour(points)
+        let smoothed = smoothContour(points)
         
         // Second pass: apply Gaussian-like smoothing with larger window
         let windowSize = 5

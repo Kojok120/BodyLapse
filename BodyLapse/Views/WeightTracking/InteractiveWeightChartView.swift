@@ -249,7 +249,7 @@ struct InteractiveWeightChartView: View {
                 selectedDate = lastEntry.date
             }
         }
-        .onChange(of: entries) { newEntries in
+        .onChange(of: entries) { _, newEntries in
             // Update selection when entries change
             let sorted = newEntries.sorted { $0.date < $1.date }
             if let lastEntry = sorted.last {

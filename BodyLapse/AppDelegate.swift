@@ -18,7 +18,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         }
         
         // Clear badge on app launch
-        application.applicationIconBadgeNumber = 0
+        Task {
+            do {
+                try await UNUserNotificationCenter.current().setBadgeCount(0)
+            } catch {
+                print("Error clearing badge count: \(error)")
+            }
+        }
         
         // Setup notification based on current settings
         let settings = UserSettingsManager.shared.settings
@@ -34,7 +40,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Clear badge when app becomes active
-        application.applicationIconBadgeNumber = 0
+        Task {
+            do {
+                try await UNUserNotificationCenter.current().setBadgeCount(0)
+            } catch {
+                print("Error clearing badge count: \(error)")
+            }
+        }
         NotificationService.shared.clearDeliveredNotifications()
     }
     

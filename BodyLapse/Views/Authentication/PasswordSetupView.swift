@@ -25,7 +25,7 @@ struct PasswordSetupView: View {
                         SecureField("4-digit PIN", text: $password)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
-                            .onChange(of: password) { newValue in
+                            .onChange(of: password) { _, newValue in
                                 // Limit to 4 digits
                                 if newValue.count > 4 {
                                     password = String(newValue.prefix(4))
@@ -35,7 +35,7 @@ struct PasswordSetupView: View {
                         SecureField("Confirm PIN", text: $confirmPassword)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
-                            .onChange(of: confirmPassword) { newValue in
+                            .onChange(of: confirmPassword) { _, newValue in
                                 // Limit to 4 digits
                                 if newValue.count > 4 {
                                     confirmPassword = String(newValue.prefix(4))
@@ -127,7 +127,7 @@ struct ChangePasswordView: View {
                         SecureField("Current PIN", text: $currentPassword)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
-                            .onChange(of: currentPassword) { newValue in
+                            .onChange(of: currentPassword) { _, newValue in
                                 if newValue.count > 4 {
                                     currentPassword = String(newValue.prefix(4))
                                 }
@@ -138,7 +138,7 @@ struct ChangePasswordView: View {
                         SecureField("New PIN", text: $newPassword)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
-                            .onChange(of: newPassword) { newValue in
+                            .onChange(of: newPassword) { _, newValue in
                                 if newValue.count > 4 {
                                     newPassword = String(newValue.prefix(4))
                                 }
@@ -147,7 +147,7 @@ struct ChangePasswordView: View {
                         SecureField("Confirm New PIN", text: $confirmPassword)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
-                            .onChange(of: confirmPassword) { newValue in
+                            .onChange(of: confirmPassword) { _, newValue in
                                 if newValue.count > 4 {
                                     confirmPassword = String(newValue.prefix(4))
                                 }

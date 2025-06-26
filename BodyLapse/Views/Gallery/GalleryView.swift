@@ -42,7 +42,7 @@ struct GalleryView: View {
                 viewModel.loadData()
                 checkForVideoToPlay()
             }
-            .onChange(of: videoToPlay) { newValue in
+            .onChange(of: videoToPlay) { _, newValue in
                 checkForVideoToPlay()
             }
             .sheet(item: $selectedPhoto) { photo in
