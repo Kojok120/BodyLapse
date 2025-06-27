@@ -36,7 +36,7 @@ BodyLapse is an iOS app that helps users track their fitness progress by taking 
 ### Technology Stack
 - **Language**: Swift 5.9+
 - **UI Framework**: SwiftUI
-- **Target iOS Version**: iOS 18.2 (should be iOS 16.0)
+- **Target iOS Version**: iOS 17.0 (for advanced Vision framework features)
 - **Architecture Pattern**: MVVM
 - **Data Storage**: Local file system + UserDefaults
 - **Image Processing**: Vision framework for body/face detection
@@ -93,7 +93,8 @@ BodyLapse/
 │   ├── Settings/
 │   │   ├── SettingsView.swift
 │   │   ├── NotificationSettingsView.swift
-│   │   └── PremiumView.swift
+│   │   ├── PremiumView.swift
+│   │   └── ResetGuidelineView.swift
 │   ├── Components/
 │   │   ├── BannerAdView.swift
 │   │   ├── WeightTrackingView.swift
@@ -169,8 +170,14 @@ BodyLapse/
 - Fixed onboarding camera retake bug
 - Fixed weight/body fat display layout issues
 
+#### Phase 7: UI Enhancements & Features (December 27, 2025)
+- Body guideline reset feature in Settings
+- Enhanced CalendarView with improved layout and date selection
+- Increased face blur effect intensity
+- Camera improvements (default to back camera, save camera position with guidelines)
+- UI refinements for weight/body fat charts
+
 ### 🚧 Pending Tasks
-- Update deployment target to iOS 16.0 (currently iOS 18.2)
 - App Store submission preparation (icons, screenshots, descriptions)
 - Privacy policy and terms of service
 - Additional UI polish and animations
@@ -293,9 +300,8 @@ struct PoseGuideline {
 - **Image Orientation**: Fixed orientation handling for proper video generation
 
 ### Known Issues to Address
-1. Deployment target needs update from iOS 18.2 to iOS 16.0
-2. Add all required app icon sizes for App Store submission
-3. Complete privacy policy and terms of service documents
+1. Add all required app icon sizes for App Store submission
+2. Complete privacy policy and terms of service documents
 
 ### Recent Bug Fixes (December 2025)
 1. **Onboarding Camera Retake**: Fixed issue where capture button became unresponsive after pressing retake button
