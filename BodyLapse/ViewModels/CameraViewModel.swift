@@ -36,12 +36,21 @@ class CameraViewModel: NSObject, ObservableObject {
         Task { @MainActor in
             self.userSettings = UserSettingsManager()
         }
+        
+        // Listen for guideline updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reloadGuideline),
+            name: Notification.Name("GuidelineUpdated"),
+            object: nil
+        )
     }
     
     deinit {
         stopSession()
         previewLayer?.removeFromSuperlayer()
         previewLayer = nil
+        NotificationCenter.default.removeObserver(self)
     }
     
     func checkAuthorization() {
@@ -64,6 +73,12 @@ class CameraViewModel: NSObject, ObservableObject {
             showingAlert = true
         @unknown default:
             isAuthorized = false
+        }
+    }
+    
+    @objc private func reloadGuideline() {
+        DispatchQueue.main.async { [weak self] in
+            self?.savedGuideline = GuidelineStorageService.shared.loadGuideline()
         }
     }
     

@@ -14,6 +14,8 @@ struct SettingsView: View {
     @State private var healthKitEnabled = false
     @State private var showingHealthKitPermission = false
     @State private var healthKitSyncInProgress = false
+    @State private var showingResetGuidelineConfirmation = false
+    @State private var showingResetGuideline = false
     
     var body: some View {
         NavigationView {
@@ -23,7 +25,7 @@ struct SettingsView: View {
                     
                     if GuidelineStorageService.shared.hasGuideline() {
                         Button(action: {
-                            GuidelineStorageService.shared.deleteGuideline()
+                            showingResetGuidelineConfirmation = true
                         }) {
                             Label("Reset Body Guideline", systemImage: "arrow.uturn.backward")
                                 .foregroundColor(.red)
@@ -223,6 +225,17 @@ struct SettingsView: View {
                 Button("OK") { }
             } message: {
                 Text("Please grant access to read and write weight and body fat data in the Health app.")
+            }
+            .alert("Reset Body Guideline", isPresented: $showingResetGuidelineConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Reset", role: .destructive) {
+                    showingResetGuideline = true
+                }
+            } message: {
+                Text("Are you sure you want to reset your body guideline? You will need to take a new photo to set it up again.")
+            }
+            .fullScreenCover(isPresented: $showingResetGuideline) {
+                ResetGuidelineView()
             }
             .onAppear {
                 healthKitEnabled = userSettings.settings.healthKitEnabled
