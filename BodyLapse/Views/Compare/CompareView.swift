@@ -101,7 +101,7 @@ struct CompareView: View {
             viewModel.loadPhotos()
             // Load any photos with today's date
             let today = Date()
-            firstPhoto = viewModel.photos.first { photo in
+            secondPhoto = viewModel.photos.first { photo in
                 Calendar.current.isDate(photo.captureDate, inSameDayAs: today)
             }
         }
@@ -339,49 +339,67 @@ struct CompareView: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             // Stats display
-                            HStack(spacing: 20) {
-                                // Weight difference
-                                if let weightDiff = viewModel.getWeightDifference(first, second) {
-                                    VStack(spacing: 4) {
-                                        HStack(spacing: 2) {
-                                            Image(systemName: weightDiff > 0 ? "arrow.up" : "arrow.down")
+                            if userSettings.settings.isPremium {
+                                HStack(spacing: 20) {
+                                    // Weight difference
+                                    if let weightDiff = viewModel.getWeightDifference(first, second) {
+                                        VStack(spacing: 4) {
+                                            HStack(spacing: 2) {
+                                                Image(systemName: weightDiff > 0 ? "arrow.up" : "arrow.down")
+                                                    .font(.caption)
+                                                Text("\(abs(convertedWeight(weightDiff)), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
+                                                    .font(.title3)
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .foregroundColor(weightDiff > 0 ? .red : .green)
+                                            Text("weight")
                                                 .font(.caption)
-                                            Text("\(abs(convertedWeight(weightDiff)), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
-                                                .font(.title3)
-                                                .fontWeight(.semibold)
+                                                .foregroundColor(.secondary)
                                         }
-                                        .foregroundColor(weightDiff > 0 ? .red : .green)
-                                        Text("weight")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                                
-                                // Body fat difference
-                                if let bodyFatDiff = viewModel.getBodyFatDifference(first, second) {
-                                    if viewModel.getWeightDifference(first, second) != nil {
-                                        Divider()
-                                            .frame(height: 30)
                                     }
                                     
-                                    VStack(spacing: 4) {
-                                        HStack(spacing: 2) {
-                                            Image(systemName: bodyFatDiff > 0 ? "arrow.up" : "arrow.down")
-                                                .font(.caption)
-                                            Text("\(abs(bodyFatDiff), specifier: "%.1f")%")
-                                                .font(.title3)
-                                                .fontWeight(.semibold)
+                                    // Body fat difference
+                                    if let bodyFatDiff = viewModel.getBodyFatDifference(first, second) {
+                                        if viewModel.getWeightDifference(first, second) != nil {
+                                            Divider()
+                                                .frame(height: 30)
                                         }
-                                        .foregroundColor(bodyFatDiff > 0 ? .red : .green)
-                                        Text("body fat")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                                        
+                                        VStack(spacing: 4) {
+                                            HStack(spacing: 2) {
+                                                Image(systemName: bodyFatDiff > 0 ? "arrow.up" : "arrow.down")
+                                                    .font(.caption)
+                                                Text("\(abs(bodyFatDiff), specifier: "%.1f")%")
+                                                    .font(.title3)
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .foregroundColor(bodyFatDiff > 0 ? .red : .green)
+                                            Text("body fat")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
                                 }
+                                .padding()
+                                .background(Color(UIColor.secondarySystemGroupedBackground))
+                                .cornerRadius(10)
+                            } else {
+                                // Free user message
+                                VStack(spacing: 8) {
+                                    Image(systemName: "lock.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.secondary)
+                                    Text("Upgrade to Premium")
+                                        .font(.headline)
+                                    Text("Compare weight and body fat changes")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color(UIColor.secondarySystemGroupedBackground))
+                                .cornerRadius(10)
                             }
-                            .padding()
-                            .background(Color(UIColor.secondarySystemGroupedBackground))
-                            .cornerRadius(10)
                         }
                         .padding(.horizontal)
                         .padding(.top, 16)
