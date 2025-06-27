@@ -387,7 +387,12 @@ struct CalendarView: View {
                                 .stroke(Color.accentColor, lineWidth: 3)
                         )
                         .position(
-                            x: (geometry.size.width / CGFloat(dateRange.count)) * CGFloat(selectedIndex) + (geometry.size.width / CGFloat(dateRange.count) / 2),
+                            x: {
+                                let segmentWidth = geometry.size.width / CGFloat(dateRange.count)
+                                let centerX = segmentWidth * CGFloat(selectedIndex) + (segmentWidth / 2)
+                                // Constrain position to keep circle fully visible
+                                return max(10, min(geometry.size.width - 10, centerX))
+                            }(),
                             y: 30
                         )
                 }

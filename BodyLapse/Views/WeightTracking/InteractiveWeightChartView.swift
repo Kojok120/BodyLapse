@@ -110,18 +110,20 @@ struct InteractiveWeightChartView: View {
             HStack(spacing: 0) {
                 // Left Y-axis labels for weight
                 VStack(alignment: .trailing, spacing: 0) {
-                    let stepSize = max((weightRange.upperBound - weightRange.lowerBound) / 4, 0.1)
-                    ForEach(Array(stride(from: weightRange.upperBound, through: weightRange.lowerBound, by: -stepSize)), id: \.self) { value in
-                        Text("\(value, specifier: "%.0f")")
+                    let stepSize = max((weightRange.upperBound - weightRange.lowerBound) / 3, 0.1)
+                    let values = Array(stride(from: weightRange.upperBound, through: weightRange.lowerBound, by: -stepSize))
+                    // Skip the first (topmost) value to give more space
+                    ForEach(Array(values.dropFirst()), id: \.self) { value in
+                        Text("\(value, specifier: "%.0f")\(userSettings.settings.weightUnit.symbol)")
                             .font(.caption2)
                             .foregroundColor(.blue)
-                            .frame(height: 40)
+                            .frame(height: 53)
                         if value > weightRange.lowerBound {
                             Spacer(minLength: 0)
                         }
                     }
                 }
-                .frame(width: 30)
+                .frame(width: 40)
                 
                 // Main chart
                 ZStack {
@@ -205,12 +207,14 @@ struct InteractiveWeightChartView: View {
                 // Right Y-axis labels for body fat
                 if !bodyFatEntries.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
-                        let stepSize = max((bodyFatRange.upperBound - bodyFatRange.lowerBound) / 4, 0.1)
-                        ForEach(Array(stride(from: bodyFatRange.upperBound, through: bodyFatRange.lowerBound, by: -stepSize)), id: \.self) { value in
-                            Text("\(value, specifier: "%.0f")%")
+                        let stepSize = max((bodyFatRange.upperBound - bodyFatRange.lowerBound) / 3, 0.1)
+                        let values = Array(stride(from: bodyFatRange.upperBound, through: bodyFatRange.lowerBound, by: -stepSize))
+                        // Skip the first (topmost) value to give more space
+                        ForEach(Array(values.dropFirst()), id: \.self) { value in
+                            Text("\(value, specifier: "%.1f")%")
                                 .font(.caption2)
                                 .foregroundColor(.orange)
-                                .frame(height: 40)
+                                .frame(height: 53)
                             if value > bodyFatRange.lowerBound {
                                 Spacer(minLength: 0)
                             }
