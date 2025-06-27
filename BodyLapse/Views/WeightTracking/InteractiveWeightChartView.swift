@@ -29,6 +29,18 @@ struct InteractiveWeightChartView: View {
         return first...last
     }
     
+    private var paddedDateRange: ClosedRange<Date> {
+        guard let first = sortedEntries.first?.date,
+              let last = sortedEntries.last?.date else {
+            let now = Date()
+            return now...now
+        }
+        let duration = last.timeIntervalSince(first)
+        // If there's only one data point, add 1 day of padding
+        let padding = duration > 0 ? duration * 0.05 : 86400 // 5% padding or 1 day
+        return first.addingTimeInterval(-padding)...last.addingTimeInterval(padding)
+    }
+    
     // Calculate Y-axis ranges
     private var weightRange: ClosedRange<Double> {
         let weights = sortedEntries.map { convertedWeight($0.weight) }
@@ -161,7 +173,7 @@ struct InteractiveWeightChartView: View {
                         }
                     }
                     .frame(height: 160)
-                    .chartXScale(domain: dateRange)
+                    .chartXScale(domain: paddedDateRange)
                     .chartYScale(domain: weightRange)
                     .chartXAxis {
                         AxisMarks { _ in
@@ -194,7 +206,7 @@ struct InteractiveWeightChartView: View {
                             }
                         }
                         .frame(height: 160)
-                        .chartXScale(domain: dateRange)
+                        .chartXScale(domain: paddedDateRange)
                         .chartYScale(domain: bodyFatRange)
                         .chartXAxis(.hidden)
                         .chartYAxis(.hidden)
@@ -203,6 +215,7 @@ struct InteractiveWeightChartView: View {
                 }
                 .background(Color(UIColor.secondarySystemGroupedBackground))
                 .cornerRadius(15)
+                .clipped()
                 
                 // Right Y-axis labels for body fat
                 if !bodyFatEntries.isEmpty {

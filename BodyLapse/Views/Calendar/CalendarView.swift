@@ -393,10 +393,11 @@ struct CalendarView: View {
                                 // Constrain position to keep circle fully visible
                                 return max(10, min(geometry.size.width - 10, centerX))
                             }(),
-                            y: 30
+                            y: 40
                         )
                 }
                 .frame(height: 60)
+                .padding(.vertical, 10)
                 .gesture(
                     DragGesture()
                         .onChanged { value in
@@ -423,7 +424,7 @@ struct CalendarView: View {
                     }
                 }
             }
-            .frame(height: 60)
+            .frame(height: 80)
             .padding(.horizontal)
             
             Text(formatDateRange())
