@@ -63,13 +63,13 @@ class FaceBlurService {
         for face in faceObservations {
             let boundingBox = VNImageRectForNormalizedRect(face.boundingBox, Int(imageSize.width), Int(imageSize.height))
             
-            let expandedBox = expandBoundingBox(boundingBox, by: 1.2, in: imageSize)
+            let expandedBox = expandBoundingBox(boundingBox, by: 1.4, in: imageSize)
             
             let croppedFace = ciImage.cropped(to: expandedBox)
             
             let blurFilter = CIFilter.gaussianBlur()
             blurFilter.inputImage = croppedFace
-            blurFilter.radius = 25
+            blurFilter.radius = 60
             
             guard let blurredFace = blurFilter.outputImage else { continue }
             
