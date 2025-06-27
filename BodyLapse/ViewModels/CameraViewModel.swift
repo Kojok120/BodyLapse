@@ -21,7 +21,7 @@ class CameraViewModel: NSObject, ObservableObject {
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
     private var bodyDetectionRequest: VNDetectHumanBodyPoseRequest?
-    @Published var currentCameraPosition: AVCaptureDevice.Position = .front
+    @Published var currentCameraPosition: AVCaptureDevice.Position = .back
     private var currentInput: AVCaptureDeviceInput?
     var userSettings: UserSettingsManager?
     
@@ -81,12 +81,12 @@ class CameraViewModel: NSObject, ObservableObject {
         
         session.sessionPreset = .photo
         
-        // Try to get the front wide-angle camera first. If that fails (e.g. on Simulator or devices without front camera), fall back to any available video device.
+        // Try to get the back wide-angle camera first. If that fails (e.g. on Simulator), fall back to front camera or any available video device.
         let device: AVCaptureDevice
-        if let front = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
-            device = front
-        } else if let back = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
+        if let back = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
             device = back
+        } else if let front = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
+            device = front
         } else if let any = AVCaptureDevice.default(for: .video) {
             device = any
         } else {
