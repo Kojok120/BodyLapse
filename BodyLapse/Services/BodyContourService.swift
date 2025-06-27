@@ -55,7 +55,7 @@ class BodyContourService {
                 let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
                 
                 // Extract contour from the foreground mask
-                self?.extractContourFromForegroundMask(observation: observation, handler: handler, imageSize: CGSize(width: cgImage.width, height: cgImage.height)) { result in
+                self?.extractContourFromForegroundMask(observation: observation, handler: handler, imageSize: CGSize(width: cgImage.width, height: cgImage.height), originalImage: image) { result in
                     DispatchQueue.main.async {
                         completion(result)
                     }
@@ -113,7 +113,7 @@ class BodyContourService {
     }
     
     @available(iOS 17.0, *)
-    private func extractContourFromForegroundMask(observation: VNObservation, handler: VNImageRequestHandler, imageSize: CGSize, completion: @escaping (Result<[CGPoint], Error>) -> Void) {
+    private func extractContourFromForegroundMask(observation: VNObservation, handler: VNImageRequestHandler, imageSize: CGSize, originalImage: UIImage, completion: @escaping (Result<[CGPoint], Error>) -> Void) {
         guard let instanceMask = observation as? VNInstanceMaskObservation else {
             completion(.failure(ContourError.imageProcessingFailed))
             return
@@ -147,8 +147,46 @@ class BodyContourService {
             // Debug: Save mask as image for inspection
             debugSaveMask(pixelBuffer: maskedPixelBuffer)
             
-            // Extract contour from the masked pixel buffer
-            extractContourFromMask(pixelBuffer: maskedPixelBuffer, imageSize: imageSize, completion: completion)
+            // Convert mask to UIImage first
+            let ciImage = CIImage(cvPixelBuffer: maskedPixelBuffer)
+            let context = CIContext()
+            
+            if let cgMask = context.createCGImage(ciImage, from: ciImage.extent) {
+                let maskImage = UIImage(cgImage: cgMask)
+                
+                // Use OpenCV for better contour extraction
+                if let cgImage = originalImage.cgImage {
+                    // Get the actual image size
+                    let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+                    
+                    let contourPoints = OpenCVWrapper.processContour(from: originalImage, withMaskImage: maskImage)
+                    
+                    // Convert NSArray<NSValue> to [CGPoint]
+                    var points: [CGPoint] = []
+                    for value in contourPoints {
+                        points.append(value.cgPointValue)
+                    }
+                    
+                    if points.isEmpty {
+                        // Fallback to original method
+                        extractContourFromMask(pixelBuffer: maskedPixelBuffer, imageSize: imageSize, completion: completion)
+                    } else {
+                        // Debug log
+                        print("OpenCV returned \(points.count) points")
+                        if let firstPoint = points.first, let lastPoint = points.last {
+                            print("First point: \(firstPoint), Last point: \(lastPoint)")
+                            print("Image size from cgImage: \(imageSize)")
+                        }
+                        completion(.success(points))
+                    }
+                } else {
+                    // Fallback to original method
+                    extractContourFromMask(pixelBuffer: maskedPixelBuffer, imageSize: imageSize, completion: completion)
+                }
+            } else {
+                // Fallback to original method
+                extractContourFromMask(pixelBuffer: maskedPixelBuffer, imageSize: imageSize, completion: completion)
+            }
         } catch {
             print("Failed to generate scaled mask: \(error)")
             // Try generating masked image instead
@@ -179,10 +217,16 @@ class BodyContourService {
             
             // Save to temporary directory for debugging
             if let data = uiImage.pngData() {
-                let tempDir = FileManager.default.temporaryDirectory
-                let maskURL = tempDir.appendingPathComponent("debug_mask_\(Date().timeIntervalSince1970).png")
+                // Save to Documents directory for easier access
+                let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                let maskURL = documentsPath.appendingPathComponent("vision_mask_\(Date().timeIntervalSince1970).png")
                 try? data.write(to: maskURL)
-                print("Debug mask saved to: \(maskURL.path)")
+                print("Debug mask saved to Documents: \(maskURL.path)")
+                
+                // Also save to tmp
+                let tempDir = FileManager.default.temporaryDirectory
+                let tempURL = tempDir.appendingPathComponent("debug_mask_\(Date().timeIntervalSince1970).png")
+                try? data.write(to: tempURL)
             }
         }
     }

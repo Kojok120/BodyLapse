@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		484212C32E0B8F56001390A9 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 484212C22E0B8F56001390A9 /* GoogleMobileAds */; };
+		48AC9B352E0DA4FF0067E51E /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48AC9B342E0DA4FF0067E51E /* opencv2.framework */; };
+		48AC9B362E0DA4FF0067E51E /* opencv2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 48AC9B342E0DA4FF0067E51E /* opencv2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,7 +29,22 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		48AC9B372E0DA4FF0067E51E /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				48AC9B362E0DA4FF0067E51E /* opencv2.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		48AC9B342E0DA4FF0067E51E /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		48D6378F2E0A0D0800133751 /* BodyLapse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BodyLapse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48D637A02E0A0D0900133751 /* BodyLapseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BodyLapseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		48D637AA2E0A0D0900133751 /* BodyLapseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BodyLapseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -69,6 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				48AC9B352E0DA4FF0067E51E /* opencv2.framework in Frameworks */,
 				484212C32E0B8F56001390A9 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,6 +111,7 @@
 		484212C12E0B8F56001390A9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				48AC9B342E0DA4FF0067E51E /* opencv2.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -128,6 +147,7 @@
 				48D6378B2E0A0D0800133751 /* Sources */,
 				48D6378C2E0A0D0800133751 /* Frameworks */,
 				48D6378D2E0A0D0800133751 /* Resources */,
+				48AC9B372E0DA4FF0067E51E /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -357,6 +377,8 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OBJC_BRIDGING_HEADER = "BodyLapse/BodyLapse-Bridging-Header.h";
+				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -412,6 +434,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OBJC_BRIDGING_HEADER = "BodyLapse/BodyLapse-Bridging-Header.h";
 			};
 			name = Release;
 		};
@@ -427,6 +450,10 @@
 				DEVELOPMENT_TEAM = PG5P26J3W2;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_ARCHS = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -450,6 +477,7 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "BodyLapse/BodyLapse-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VALID_ARCHS = arm64;
@@ -468,6 +496,10 @@
 				DEVELOPMENT_TEAM = PG5P26J3W2;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_ARCHS = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -491,6 +523,7 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "BodyLapse/BodyLapse-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VALID_ARCHS = arm64;
