@@ -24,6 +24,19 @@ struct CameraView: View {
                 CameraPreviewView(cameraViewModel: viewModel)
                     .ignoresSafeArea(.container, edges: .top)
                 
+                // Overlay the saved guideline if available
+                if let guideline = viewModel.savedGuideline,
+                   viewModel.userSettings?.settings.showBodyGuidelines == true {
+                    GeometryReader { geometry in
+                        GuidelineOverlayView(
+                            guideline: guideline,
+                            viewSize: geometry.size,
+                            currentCameraPosition: viewModel.currentCameraPosition
+                        )
+                    }
+                    .ignoresSafeArea(.container, edges: .top)
+                }
+                
                 VStack {
                     HStack {
                         Spacer()
@@ -269,6 +282,85 @@ struct BodyGuidelineView: View {
             .padding(.vertical, 6)
             .background(Color.black.opacity(0.7))
             .cornerRadius(20)
+        }
+    }
+}
+
+struct GuidelineOverlayView: View {
+    let guideline: BodyGuideline
+    let viewSize: CGSize
+    let currentCameraPosition: AVCaptureDevice.Position
+    
+    // Calculate scaled points with aspect fill logic (same as camera preview)
+    private var aspectFillScaledContour: [CGPoint] {
+        let originalSize = guideline.imageSize
+        
+        // Calculate scale factors for aspect fill
+        let scaleX = viewSize.width / originalSize.width
+        let scaleY = viewSize.height / originalSize.height
+        // Use the larger scale to ensure the view is filled
+        let scale = max(scaleX, scaleY)
+        
+        // Calculate the size after scaling
+        let scaledWidth = originalSize.width * scale
+        let scaledHeight = originalSize.height * scale
+        
+        // Calculate offset to center the scaled content
+        let offsetX = (viewSize.width - scaledWidth) / 2
+        let offsetY = (viewSize.height - scaledHeight) / 2
+        
+        // Get the guideline points
+        var points = guideline.points
+        
+        // Check if we need to mirror the guideline
+        // Mirror if:
+        // - Guideline was captured with front camera AND we're now using back camera
+        // - Guideline was captured with back camera AND we're now using front camera
+        let shouldMirror = (guideline.isFrontCamera && currentCameraPosition == .back) ||
+                          (!guideline.isFrontCamera && currentCameraPosition == .front)
+        
+        if shouldMirror {
+            // Mirror the X coordinates
+            points = points.map { point in
+                CGPoint(x: originalSize.width - point.x, y: point.y)
+            }
+        }
+        
+        // Apply scale and offset to contour points
+        return points.map { point in
+            CGPoint(
+                x: point.x * scale + offsetX,
+                y: point.y * scale + offsetY
+            )
+        }
+    }
+    
+    var body: some View {
+        ZStack {
+            let scaledContour = aspectFillScaledContour
+            
+            if !scaledContour.isEmpty && scaledContour.count > 2 {
+                // Semi-transparent background fill
+                Path { path in
+                    path.move(to: scaledContour[0])
+                    for i in 1..<scaledContour.count {
+                        path.addLine(to: scaledContour[i])
+                    }
+                    path.closeSubpath()
+                }
+                .fill(Color.white.opacity(0.1))
+                
+                // Draw the contour outline
+                Path { path in
+                    path.move(to: scaledContour[0])
+                    for i in 1..<scaledContour.count {
+                        path.addLine(to: scaledContour[i])
+                    }
+                    path.closeSubpath()
+                }
+                .stroke(Color.green.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+            }
         }
     }
 }

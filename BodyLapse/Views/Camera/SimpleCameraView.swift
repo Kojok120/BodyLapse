@@ -31,7 +31,7 @@ class SimpleCameraViewController: UIViewController {
     private var captureSession: AVCaptureSession?
     private var photoOutput: AVCapturePhotoOutput?
     private var previewLayer: AVCaptureVideoPreviewLayer?
-    private var currentPosition: AVCaptureDevice.Position = .back
+    private(set) var currentPosition: AVCaptureDevice.Position = .back
     
     override func viewDidLoad() {
         super.viewDidLoad()

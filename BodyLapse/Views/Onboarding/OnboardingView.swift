@@ -493,7 +493,18 @@ struct BaselinePhotoCaptureView: View {
             do {
                 // Save the guideline if we have a valid contour
                 if !contour.isEmpty {
-                    let guideline = BodyGuideline(points: contour, imageSize: image.size)
+                    // Check if front camera and mirror the contour points if needed
+                    let isFrontCamera = self.cameraController?.currentPosition == .front
+                    var finalContour = contour
+                    
+                    if isFrontCamera {
+                        // Mirror the X coordinates of all points
+                        finalContour = contour.map { point in
+                            CGPoint(x: image.size.width - point.x, y: point.y)
+                        }
+                    }
+                    
+                    let guideline = BodyGuideline(points: finalContour, imageSize: image.size, isFrontCamera: isFrontCamera)
                     GuidelineStorageService.shared.saveGuideline(guideline)
                 }
                 

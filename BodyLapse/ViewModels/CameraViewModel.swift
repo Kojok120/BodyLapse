@@ -16,17 +16,21 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var showGuidelines = true
     @Published var shouldBlurFace = true
     @Published var capturedPhoto: Photo?
+    @Published var savedGuideline: BodyGuideline?
     
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
     private var bodyDetectionRequest: VNDetectHumanBodyPoseRequest?
-    private var currentCameraPosition: AVCaptureDevice.Position = .front
+    @Published var currentCameraPosition: AVCaptureDevice.Position = .front
     private var currentInput: AVCaptureDeviceInput?
     var userSettings: UserSettingsManager?
     
     override init() {
         super.init()
         setupBodyDetection()
+        
+        // Load saved guideline
+        savedGuideline = GuidelineStorageService.shared.loadGuideline()
         
         // Initialize UserSettingsManager on main queue
         Task { @MainActor in

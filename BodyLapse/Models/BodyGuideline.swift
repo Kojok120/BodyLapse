@@ -5,11 +5,29 @@ struct BodyGuideline: Codable {
     let points: [CGPoint]
     let imageSize: CGSize
     let createdDate: Date
+    let isFrontCamera: Bool
     
-    init(points: [CGPoint], imageSize: CGSize) {
+    enum CodingKeys: String, CodingKey {
+        case points
+        case imageSize
+        case createdDate
+        case isFrontCamera
+    }
+    
+    init(points: [CGPoint], imageSize: CGSize, isFrontCamera: Bool = false) {
         self.points = points
         self.imageSize = imageSize
         self.createdDate = Date()
+        self.isFrontCamera = isFrontCamera
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.points = try container.decode([CGPoint].self, forKey: .points)
+        self.imageSize = try container.decode(CGSize.self, forKey: .imageSize)
+        self.createdDate = try container.decode(Date.self, forKey: .createdDate)
+        // Default to false for backward compatibility
+        self.isFrontCamera = try container.decodeIfPresent(Bool.self, forKey: .isFrontCamera) ?? false
     }
     
     // Convert points to relative coordinates (0-1 range)

@@ -32,8 +32,9 @@ struct ContourConfirmationView: View {
                     ZStack {
                         Image(uiImage: image)
                             .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
                         
                         if showingContourPreview {
                             ContourOverlay(
@@ -90,24 +91,19 @@ struct ContourOverlay: View {
     let viewSize: CGSize
     
     private var scaledContour: [CGPoint] {
-        let imageAspect = imageSize.width / imageSize.height
-        let viewAspect = viewSize.width / viewSize.height
+        // Use aspect fill logic to match camera preview
+        let scaleX = viewSize.width / imageSize.width
+        let scaleY = viewSize.height / imageSize.height
+        // Use the larger scale to ensure the view is filled
+        let scale = max(scaleX, scaleY)
         
-        var scale: CGFloat
-        var offsetX: CGFloat = 0
-        var offsetY: CGFloat = 0
+        // Calculate the size after scaling
+        let scaledWidth = imageSize.width * scale
+        let scaledHeight = imageSize.height * scale
         
-        if imageAspect > viewAspect {
-            // Image is wider, fit to width
-            scale = viewSize.width / imageSize.width
-            let scaledHeight = imageSize.height * scale
-            offsetY = (viewSize.height - scaledHeight) / 2
-        } else {
-            // Image is taller, fit to height
-            scale = viewSize.height / imageSize.height
-            let scaledWidth = imageSize.width * scale
-            offsetX = (viewSize.width - scaledWidth) / 2
-        }
+        // Calculate offset to center the scaled content
+        let offsetX = (viewSize.width - scaledWidth) / 2
+        let offsetY = (viewSize.height - scaledHeight) / 2
         
         return contour.map { point in
             CGPoint(
