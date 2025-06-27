@@ -74,6 +74,13 @@ struct CalendarView: View {
             .onAppear {
                 viewModel.loadPhotos()
                 weightViewModel.loadEntries()
+                
+                // Initialize selectedIndex to today (rightmost position)
+                selectedIndex = dateRange.count - 1
+                if !dateRange.isEmpty {
+                    selectedDate = dateRange[selectedIndex]
+                }
+                
                 updateCurrentPhoto()
                 
                 // Initialize chart date to selected date
@@ -399,6 +406,17 @@ struct CalendarView: View {
                             }
                         }
                 )
+                .onTapGesture { location in
+                    let totalWidth = geometry.size.width
+                    let segmentWidth = totalWidth / CGFloat(dateRange.count)
+                    let newIndex = Int((location.x / segmentWidth).rounded())
+                    
+                    if newIndex >= 0 && newIndex < dateRange.count {
+                        selectedIndex = newIndex
+                        selectedDate = dateRange[newIndex]
+                        selectedChartDate = dateRange[newIndex]  // Sync chart selection
+                    }
+                }
             }
             .frame(height: 60)
             .padding(.horizontal)
