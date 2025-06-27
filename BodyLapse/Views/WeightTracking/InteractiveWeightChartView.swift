@@ -7,7 +7,7 @@ struct InteractiveWeightChartView: View {
     @Binding var selectedDate: Date?
     let currentPhoto: Photo?
     let onEditWeight: () -> Void
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     
     @State private var plotWidth: CGFloat = 0
     @State private var isDragging = false
@@ -69,7 +69,7 @@ struct InteractiveWeightChartView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
+        VStack(alignment: .leading, spacing: 8) {
             // Selected data display
             if let selectedEntry = selectedEntry {
                 HStack(spacing: 20) {
@@ -112,8 +112,8 @@ struct InteractiveWeightChartView: View {
                             .foregroundColor(.accentColor)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
                 .background(Color(UIColor.systemGray6))
                 .cornerRadius(10)
             }

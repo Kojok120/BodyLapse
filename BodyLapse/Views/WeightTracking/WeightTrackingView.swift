@@ -170,7 +170,7 @@ struct StatCard: View {
 struct WeightChartView: View {
     let entries: [WeightEntry]
     let title: String
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {

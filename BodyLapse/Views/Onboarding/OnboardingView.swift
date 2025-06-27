@@ -597,5 +597,5 @@ struct PasscodeSetupView: View {
 
 #Preview {
     OnboardingView()
-        .environmentObject(UserSettingsManager())
+        .environmentObject(UserSettingsManager.shared)
 }

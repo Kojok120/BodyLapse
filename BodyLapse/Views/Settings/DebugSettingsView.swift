@@ -2,7 +2,7 @@ import SwiftUI
 
 #if DEBUG
 struct DebugSettingsView: View {
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {

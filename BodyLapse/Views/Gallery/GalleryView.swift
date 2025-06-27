@@ -449,7 +449,7 @@ struct VideoGridItem: View {
 struct PhotoDetailSheet: View {
     let photo: Photo
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     @State private var showingShareSheet = false
     
     var body: some View {

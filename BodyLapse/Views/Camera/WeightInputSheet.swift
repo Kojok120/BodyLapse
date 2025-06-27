@@ -8,7 +8,7 @@ struct WeightInputSheet: View {
     
     @State private var weightText = ""
     @State private var bodyFatText = ""
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var isLoadingHealthData = false
     

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PhotoCaptureView: View {
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     @State private var showingReplaceAlert = false
     @State private var pendingPhoto: UIImage?
     @State private var showingWeightInput = false
@@ -157,7 +157,7 @@ struct PhotoWeightInputView: View {
     let photo: Photo
     let onSave: (Double?, Double?) -> Void
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     
     @State private var weightText = ""
     @State private var bodyFatText = ""

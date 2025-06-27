@@ -3,7 +3,7 @@ import AVFoundation
 
 struct CalendarView: View {
     @StateObject private var viewModel = CalendarViewModel()
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     @StateObject private var weightViewModel = WeightTrackingViewModel()
     @State private var selectedDate = Date()
     @State private var showingPeriodPicker = false
@@ -57,7 +57,7 @@ struct CalendarView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 12) {
+            VStack(spacing: 6) {
                 headerView
                 
                 photoPreviewSection
@@ -307,7 +307,7 @@ struct CalendarView: View {
             .disabled(isGeneratingVideo)
         }
         .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)
     }
     
     private var photoPreviewSection: some View {
@@ -346,7 +346,7 @@ struct CalendarView: View {
                 .frame(width: geometry.size.width, height: geometry.size.height)
             }
         }
-        .frame(height: userSettings.settings.isPremium ? UIScreen.main.bounds.height * 0.35 : UIScreen.main.bounds.height * 0.5)
+        .frame(height: userSettings.settings.isPremium ? UIScreen.main.bounds.height * 0.42 : UIScreen.main.bounds.height * 0.5)
         .padding(.horizontal)
     }
     
@@ -435,7 +435,7 @@ struct CalendarView: View {
     }
     
     private var dataGraphSection: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 6) {
             if !weightViewModel.weightEntries.isEmpty {
                 if #available(iOS 16.0, *) {
                     let filteredEntries = weightViewModel.filteredEntries(for: getWeightTimeRange())
@@ -581,7 +581,7 @@ struct WeightInputView: View {
     
     @State private var weightText = ""
     @State private var bodyFatText = ""
-    @StateObject private var userSettings = UserSettingsManager()
+    @StateObject private var userSettings = UserSettingsManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var isLoadingHealthData = false
     
