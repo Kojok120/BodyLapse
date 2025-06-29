@@ -21,60 +21,72 @@ struct InteractiveWeightChartView: View {
         sortedEntries.filter { $0.bodyFatPercentage != nil }
     }
     
-    private var dateRange: ClosedRange<Date> {
-        guard let first = sortedEntries.first?.date,
-              let last = sortedEntries.last?.date else {
-            let now = Date()
-            return now...now
-        }
-        return first...last
-    }
-    
-    private var paddedDateRange: ClosedRange<Date> {
-        // If fullDateRange is provided, use it
+    // Constrained date range - never go beyond today
+    private var constrainedDateRange: ClosedRange<Date> {
+        let today = Date()
+        
         if let fullRange = fullDateRange {
-            let duration = fullRange.upperBound.timeIntervalSince(fullRange.lowerBound)
-            let padding = duration * 0.05 // 5% padding
-            return fullRange.lowerBound.addingTimeInterval(-padding)...fullRange.upperBound.addingTimeInterval(padding)
+            // Use fullDateRange but cap at today
+            let upperBound = min(fullRange.upperBound, today)
+            return fullRange.lowerBound...upperBound
         }
         
-        // Otherwise fall back to entries-based range
+        // Fall back to entries-based range
         guard let first = sortedEntries.first?.date,
               let last = sortedEntries.last?.date else {
-            let now = Date()
-            return now...now
+            return today...today
         }
-        let duration = last.timeIntervalSince(first)
-        // If there's only one data point, add 1 day of padding
-        let padding = duration > 0 ? duration * 0.05 : 86400 // 5% padding or 1 day
-        return first.addingTimeInterval(-padding)...last.addingTimeInterval(padding)
+        
+        let upperBound = min(last, today)
+        return first...upperBound
     }
     
-    // Calculate Y-axis ranges
+    // Calculate Y-axis ranges with proper normalization
     private var weightRange: ClosedRange<Double> {
         let weights = sortedEntries.map { convertedWeight($0.weight) }
         guard let min = weights.min(), let max = weights.max() else {
-            return 0...100
+            return 70...80 // Default range
         }
-        // Ensure we have a valid range even with single data point
-        if min == max {
-            return (min - 5)...(max + 5)
+        
+        // Ensure minimum range for single data point
+        let range = max - min
+        if range < 5 {
+            let center = (min + max) / 2
+            return (center - 5)...(center + 5)
         }
-        let padding = (max - min) * 0.1
+        
+        // Add 10% padding
+        let padding = range * 0.1
         return (min - padding)...(max + padding)
     }
     
     private var bodyFatRange: ClosedRange<Double> {
         let bodyFats = bodyFatEntries.compactMap { $0.bodyFatPercentage }
         guard let min = bodyFats.min(), let max = bodyFats.max() else {
-            return 0...50
+            return 15...25 // Default range
         }
-        // Ensure we have a valid range even with single data point
-        if min == max {
-            return (min - 5)...(max + 5)
+        
+        // Ensure minimum range for single data point
+        let range = max - min
+        if range < 5 {
+            let center = (min + max) / 2
+            return (center - 5)...(center + 5)
         }
-        let padding = (max - min) * 0.1
+        
+        // Add 10% padding
+        let padding = range * 0.1
         return (min - padding)...(max + padding)
+    }
+    
+    // Normalize value to 0-1 range for accurate positioning
+    private func normalizeWeight(_ weight: Double) -> Double {
+        let range = weightRange.upperBound - weightRange.lowerBound
+        return (weight - weightRange.lowerBound) / range
+    }
+    
+    private func normalizeBodyFat(_ bodyFat: Double) -> Double {
+        let range = bodyFatRange.upperBound - bodyFatRange.lowerBound
+        return (bodyFat - bodyFatRange.lowerBound) / range
     }
     
     var body: some View {
@@ -139,147 +151,178 @@ struct InteractiveWeightChartView: View {
                 .cornerRadius(10)
             }
             
-            // Chart
+            // Chart with normalized Y-axes
             HStack(spacing: 0) {
                 // Left Y-axis labels for weight
                 VStack(alignment: .trailing, spacing: 0) {
-                    let stepSize = max((weightRange.upperBound - weightRange.lowerBound) / 3, 0.1)
-                    let values = Array(stride(from: weightRange.upperBound, through: weightRange.lowerBound, by: -stepSize))
-                    // Skip the first (topmost) value to give more space
-                    ForEach(Array(values.dropFirst()), id: \.self) { value in
-                        Text("\(value, specifier: "%.0f")\(userSettings.settings.weightUnit.symbol)")
+                    // Create 4 evenly spaced labels
+                    ForEach(0..<4) { index in
+                        let fraction = Double(3 - index) / 3.0
+                        let value = weightRange.lowerBound + (weightRange.upperBound - weightRange.lowerBound) * fraction
+                        
+                        Text("\(Int(round(value)))\(userSettings.settings.weightUnit.symbol)")
                             .font(.caption2)
                             .foregroundColor(.bodyLapseTurquoise)
-                            .frame(height: 53)
-                        if value > weightRange.lowerBound {
-                            Spacer(minLength: 0)
-                        }
+                            .frame(maxHeight: .infinity, alignment: index == 0 ? .top : (index == 3 ? .bottom : .center))
                     }
                 }
-                .frame(width: 40)
+                .frame(width: 40, height: 160)
+                .padding(.trailing, 4)
                 
-                // Main chart
+                // Main chart area
                 ZStack {
-                    // Weight chart
-                    Chart {
-                        ForEach(sortedEntries) { entry in
+                    // Background
+                    RoundedRectangle(cornerRadius: 15)
+                        .fill(Color(UIColor.secondarySystemGroupedBackground))
+                    
+                    // Chart content
+                    GeometryReader { geometry in
+                        let chartWidth = geometry.size.width
+                        let chartHeight = geometry.size.height
+                        
+                        // Grid lines
+                        Path { path in
+                            // Horizontal grid lines
+                            for i in 0...3 {
+                                let y = chartHeight * CGFloat(i) / 3
+                                path.move(to: CGPoint(x: 0, y: y))
+                                path.addLine(to: CGPoint(x: chartWidth, y: y))
+                            }
+                        }
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 0.5)
+                        
+                        // Weight data
+                        if !sortedEntries.isEmpty {
+                            // Line
                             if sortedEntries.count > 1 {
-                                LineMark(
-                                    x: .value("Date", entry.date),
-                                    y: .value("Weight", convertedWeight(entry.weight))
-                                )
-                                .foregroundStyle(Color.bodyLapseTurquoise)
-                                .interpolationMethod(.catmullRom)
+                                Path { path in
+                                    for (index, entry) in sortedEntries.enumerated() {
+                                        let x = xPosition(for: entry.date, in: chartWidth)
+                                        let normalizedY = 1 - normalizeWeight(convertedWeight(entry.weight))
+                                        let y = chartHeight * normalizedY
+                                        
+                                        if index == 0 {
+                                            path.move(to: CGPoint(x: x, y: y))
+                                        } else {
+                                            path.addLine(to: CGPoint(x: x, y: y))
+                                        }
+                                    }
+                                }
+                                .stroke(Color.bodyLapseTurquoise, lineWidth: 2)
                             }
                             
-                            PointMark(
-                                x: .value("Date", entry.date),
-                                y: .value("Weight", convertedWeight(entry.weight))
-                            )
-                            .foregroundStyle(Color.bodyLapseTurquoise)
-                            .symbolSize(sortedEntries.count == 1 ? 100 : 50)
+                            // Points
+                            ForEach(sortedEntries) { entry in
+                                let x = xPosition(for: entry.date, in: chartWidth)
+                                let normalizedY = 1 - normalizeWeight(convertedWeight(entry.weight))
+                                let y = chartHeight * normalizedY
+                                
+                                Circle()
+                                    .fill(Color.bodyLapseTurquoise)
+                                    .frame(width: sortedEntries.count == 1 ? 10 : 6, 
+                                           height: sortedEntries.count == 1 ? 10 : 6)
+                                    .position(x: x, y: y)
+                            }
+                        }
+                        
+                        // Body fat data
+                        if !bodyFatEntries.isEmpty {
+                            // Line
+                            if bodyFatEntries.count > 1 {
+                                Path { path in
+                                    for (index, entry) in bodyFatEntries.enumerated() {
+                                        if let bodyFat = entry.bodyFatPercentage {
+                                            let x = xPosition(for: entry.date, in: chartWidth)
+                                            let normalizedY = 1 - normalizeBodyFat(bodyFat)
+                                            let y = chartHeight * normalizedY
+                                            
+                                            if index == 0 {
+                                                path.move(to: CGPoint(x: x, y: y))
+                                            } else {
+                                                path.addLine(to: CGPoint(x: x, y: y))
+                                            }
+                                        }
+                                    }
+                                }
+                                .stroke(Color.orange, lineWidth: 2)
+                            }
+                            
+                            // Points
+                            ForEach(bodyFatEntries) { entry in
+                                if let bodyFat = entry.bodyFatPercentage {
+                                    let x = xPosition(for: entry.date, in: chartWidth)
+                                    let normalizedY = 1 - normalizeBodyFat(bodyFat)
+                                    let y = chartHeight * normalizedY
+                                    
+                                    Circle()
+                                        .fill(Color.orange)
+                                        .frame(width: bodyFatEntries.count == 1 ? 10 : 6,
+                                               height: bodyFatEntries.count == 1 ? 10 : 6)
+                                        .position(x: x, y: y)
+                                }
+                            }
                         }
                         
                         // Selection indicator
                         if let selectedDate = selectedDate {
-                            RuleMark(x: .value("Selected", selectedDate))
-                                .foregroundStyle(Color.primary.opacity(0.3))
-                                .lineStyle(StrokeStyle(lineWidth: 2))
-                                .annotation(position: .top) {
-                                    Image(systemName: "arrowtriangle.down.fill")
-                                        .font(.caption)
-                                        .foregroundColor(.primary)
-                                        .offset(y: -8)
-                                }
+                            let x = xPosition(for: selectedDate, in: chartWidth)
+                            
+                            Rectangle()
+                                .fill(Color.primary.opacity(0.2))
+                                .frame(width: 2)
+                                .position(x: x, y: chartHeight / 2)
+                                .frame(height: chartHeight)
+                            
+                            // Triangle indicator at top
+                            Path { path in
+                                path.move(to: CGPoint(x: x, y: 0))
+                                path.addLine(to: CGPoint(x: x - 6, y: -10))
+                                path.addLine(to: CGPoint(x: x + 6, y: -10))
+                                path.closeSubpath()
+                            }
+                            .fill(Color.primary)
+                            .offset(y: -5)
                         }
+                        
+                        // Interaction overlay
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture { location in
+                                updateSelection(at: location.x, width: chartWidth)
+                            }
+                            .gesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { value in
+                                        isDragging = true
+                                        updateSelection(at: value.location.x, width: chartWidth)
+                                    }
+                                    .onEnded { _ in
+                                        isDragging = false
+                                    }
+                            )
                     }
                     .frame(height: 160)
-                    .chartXScale(domain: paddedDateRange)
-                    .chartYScale(domain: weightRange)
-                    .chartXAxis {
-                        AxisMarks { _ in
-                            AxisGridLine()
-                        }
-                    }
-                    .chartYAxis(.hidden)
-                    
-                    // Body fat chart overlay
-                    if !bodyFatEntries.isEmpty {
-                        Chart {
-                            ForEach(bodyFatEntries) { entry in
-                                if let bodyFat = entry.bodyFatPercentage {
-                                    if bodyFatEntries.count > 1 {
-                                        LineMark(
-                                            x: .value("Date", entry.date),
-                                            y: .value("Body Fat", bodyFat)
-                                        )
-                                        .foregroundStyle(Color.orange)
-                                        .interpolationMethod(.catmullRom)
-                                    }
-                                    
-                                    PointMark(
-                                        x: .value("Date", entry.date),
-                                        y: .value("Body Fat", bodyFat)
-                                    )
-                                    .foregroundStyle(Color.orange)
-                                    .symbolSize(bodyFatEntries.count == 1 ? 100 : 50)
-                                }
-                            }
-                        }
-                        .frame(height: 160)
-                        .chartXScale(domain: paddedDateRange)
-                        .chartYScale(domain: bodyFatRange)
-                        .chartXAxis(.hidden)
-                        .chartYAxis(.hidden)
-                        .allowsHitTesting(false)
-                    }
+                    .clipped()
                 }
-                .background(Color(UIColor.secondarySystemGroupedBackground))
-                .cornerRadius(15)
-                .clipped()
                 
                 // Right Y-axis labels for body fat
                 if !bodyFatEntries.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
-                        let stepSize = max((bodyFatRange.upperBound - bodyFatRange.lowerBound) / 3, 0.1)
-                        let values = Array(stride(from: bodyFatRange.upperBound, through: bodyFatRange.lowerBound, by: -stepSize))
-                        // Skip the first (topmost) value to give more space
-                        ForEach(Array(values.dropFirst()), id: \.self) { value in
+                        // Create 4 evenly spaced labels
+                        ForEach(0..<4) { index in
+                            let fraction = Double(3 - index) / 3.0
+                            let value = bodyFatRange.lowerBound + (bodyFatRange.upperBound - bodyFatRange.lowerBound) * fraction
+                            
                             Text("\(value, specifier: "%.1f")%")
                                 .font(.caption2)
                                 .foregroundColor(.orange)
-                                .frame(height: 53)
-                            if value > bodyFatRange.lowerBound {
-                                Spacer(minLength: 0)
-                            }
+                                .frame(maxHeight: .infinity, alignment: index == 0 ? .top : (index == 3 ? .bottom : .center))
                         }
                     }
-                    .frame(width: 35)
+                    .frame(width: 35, height: 160)
+                    .padding(.leading, 4)
                 }
             }
-            .overlay(
-                GeometryReader { geometry in
-                    Rectangle()
-                        .fill(Color.clear)
-                        .contentShape(Rectangle())
-                        .onTapGesture { location in
-                            print("[InteractiveWeightChartView] Tap detected at: \(location)")
-                            updateSelection(at: location.x, geometry: geometry, chartProxy: nil)
-                        }
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    print("[InteractiveWeightChartView] Drag detected at: \(value.location)")
-                                    isDragging = true
-                                    updateSelection(at: value.location.x, geometry: geometry, chartProxy: nil)
-                                }
-                                .onEnded { _ in
-                                    isDragging = false
-                                }
-                        )
-                }
-            )
-            
         }
         .onAppear {
             // Select the most recent entry by default
@@ -296,49 +339,56 @@ struct InteractiveWeightChartView: View {
         }
     }
     
-    private func updateSelection(at x: CGFloat, geometry: GeometryProxy, chartProxy: ChartProxy?) {
-        let plotWidth = geometry.size.width
+    private func xPosition(for date: Date, in width: CGFloat) -> CGFloat {
+        let range = constrainedDateRange
+        let totalInterval = range.upperBound.timeIntervalSince(range.lowerBound)
         
-        // Use fullDateRange if available, otherwise use entries-based range
-        let displayRange = fullDateRange ?? dateRange
+        if totalInterval <= 0 {
+            return width / 2
+        }
         
-        // Calculate the date based on position
-        let dateInterval = displayRange.upperBound.timeIntervalSince(displayRange.lowerBound)
-        let selectedInterval = (x / plotWidth) * dateInterval
-        let selectedTime = displayRange.lowerBound.addingTimeInterval(selectedInterval)
+        let dateInterval = date.timeIntervalSince(range.lowerBound)
+        let fraction = dateInterval / totalInterval
         
-        // Define snap threshold as 3% of the total date range
-        let snapThreshold = dateInterval * 0.03
+        // Add small padding on sides (5%)
+        return width * 0.05 + (width * 0.9 * CGFloat(fraction))
+    }
+    
+    private func updateSelection(at x: CGFloat, width: CGFloat) {
+        let range = constrainedDateRange
         
-        // Find the closest data point
-        if !sortedEntries.isEmpty {
-            let closestEntry = sortedEntries.min(by: { entry1, entry2 in
-                abs(entry1.date.timeIntervalSince(selectedTime)) < abs(entry2.date.timeIntervalSince(selectedTime))
-            })
-            
-            if let entry = closestEntry {
-                let distance = abs(entry.date.timeIntervalSince(selectedTime))
-                if distance <= snapThreshold {
-                    // Snap to data point if close enough
-                    selectedDate = entry.date
-                    print("[InteractiveWeightChartView] Snapped to data point: \(entry.date)")
-                } else {
-                    // Too far from any data point, use calculated date
-                    selectedDate = selectedTime
-                    print("[InteractiveWeightChartView] No nearby data point, using calculated date: \(selectedTime)")
-                }
+        // Remove padding calculation
+        let fraction = (x - width * 0.05) / (width * 0.9)
+        let clampedFraction = max(0, min(1, fraction))
+        
+        let totalInterval = range.upperBound.timeIntervalSince(range.lowerBound)
+        let selectedInterval = totalInterval * Double(clampedFraction)
+        let selectedTime = range.lowerBound.addingTimeInterval(selectedInterval)
+        
+        // Ensure we don't select future dates
+        let today = Date()
+        let constrainedTime = min(selectedTime, today)
+        
+        // Snap to nearest data point if close
+        let snapThreshold = totalInterval * 0.03 // 3% of range
+        
+        if let closestEntry = sortedEntries.min(by: { entry1, entry2 in
+            abs(entry1.date.timeIntervalSince(constrainedTime)) < abs(entry2.date.timeIntervalSince(constrainedTime))
+        }) {
+            let distance = abs(closestEntry.date.timeIntervalSince(constrainedTime))
+            if distance <= snapThreshold {
+                selectedDate = closestEntry.date
+            } else {
+                selectedDate = constrainedTime
             }
         } else {
-            // No entries, just use the calculated date
-            selectedDate = selectedTime
-            print("[InteractiveWeightChartView] No data points, using calculated date: \(selectedTime)")
+            selectedDate = constrainedTime
         }
     }
     
     private var selectedEntry: WeightEntry? {
         guard let selectedDate = selectedDate else { return nil }
         
-        // Find the entry for the selected date
         return sortedEntries.first { entry in
             Calendar.current.isDate(entry.date, inSameDayAs: selectedDate)
         }
