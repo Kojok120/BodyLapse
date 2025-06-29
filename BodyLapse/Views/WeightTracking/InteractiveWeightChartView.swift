@@ -85,7 +85,7 @@ struct InteractiveWeightChartView: View {
                                 .foregroundColor(.secondary)
                             Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
                                 .font(.body)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.bodyLapseTurquoise)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
                         }
@@ -128,7 +128,7 @@ struct InteractiveWeightChartView: View {
                     ForEach(Array(values.dropFirst()), id: \.self) { value in
                         Text("\(value, specifier: "%.0f")\(userSettings.settings.weightUnit.symbol)")
                             .font(.caption2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.bodyLapseTurquoise)
                             .frame(height: 53)
                         if value > weightRange.lowerBound {
                             Spacer(minLength: 0)
@@ -147,7 +147,7 @@ struct InteractiveWeightChartView: View {
                                     x: .value("Date", entry.date),
                                     y: .value("Weight", convertedWeight(entry.weight))
                                 )
-                                .foregroundStyle(Color.blue)
+                                .foregroundStyle(Color.bodyLapseTurquoise)
                                 .interpolationMethod(.catmullRom)
                             }
                             
@@ -155,7 +155,7 @@ struct InteractiveWeightChartView: View {
                                 x: .value("Date", entry.date),
                                 y: .value("Weight", convertedWeight(entry.weight))
                             )
-                            .foregroundStyle(Color.blue)
+                            .foregroundStyle(Color.bodyLapseTurquoise)
                             .symbolSize(sortedEntries.count == 1 ? 100 : 50)
                         }
                         

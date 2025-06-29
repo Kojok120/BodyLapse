@@ -298,10 +298,10 @@ struct CalendarView: View {
                     Text("Generate")
                 }
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.accentColor)
+                .background(Color.bodyLapseYellow)
                 .cornerRadius(20)
             }
             .disabled(isGeneratingVideo)
@@ -336,10 +336,10 @@ struct CalendarView: View {
                     }) {
                         Label("Upload Photo", systemImage: "photo.badge.plus")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
-                            .background(Color.accentColor)
+                            .background(Color.bodyLapseYellow)
                             .cornerRadius(20)
                     }
                 }

@@ -126,6 +126,13 @@ struct GalleryView: View {
                                 }
                             }
                             .padding(.horizontal, 2)
+                            
+                            // Add divider between month sections
+                            if viewModel.photosGroupedByMonth().last?.0 != month {
+                                Divider()
+                                    .background(Color.bodyLapseLightGray)
+                                    .padding(.vertical, 8)
+                            }
                         }
                     }
                 }
@@ -156,6 +163,13 @@ struct GalleryView: View {
                                 }
                             }
                             .padding(.horizontal, 2)
+                            
+                            // Add divider between month sections
+                            if viewModel.videosGroupedByMonth().last?.0 != month {
+                                Divider()
+                                    .background(Color.bodyLapseLightGray)
+                                    .padding(.vertical, 8)
+                            }
                         }
                     }
                 }

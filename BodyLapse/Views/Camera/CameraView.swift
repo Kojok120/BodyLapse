@@ -254,11 +254,11 @@ struct CaptureButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(Color.white)
+                    .fill(Color.bodyLapseYellow)
                     .frame(width: 70, height: 70)
                 
                 Circle()
-                    .stroke(Color.white, lineWidth: 3)
+                    .stroke(Color.bodyLapseYellow, lineWidth: 3)
                     .frame(width: 80, height: 80)
             }
         }

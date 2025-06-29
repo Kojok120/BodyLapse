@@ -20,6 +20,7 @@ struct BodyLapseApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .tint(.bodyLapseTurquoise)
                 .task {
                     // Initialize StoreKit on app launch
                     await storeManager.loadProducts()

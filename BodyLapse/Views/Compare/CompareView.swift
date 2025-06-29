@@ -18,6 +18,11 @@ struct CompareView: View {
                     // Photo selection buttons
                     photoSelectionButtons
                     
+                    // Divider
+                    Divider()
+                        .background(Color.bodyLapseLightGray)
+                        .padding(.horizontal)
+                    
                     // Main comparison view
                     if firstPhoto != nil || secondPhoto != nil {
                         comparisonView
@@ -227,7 +232,7 @@ struct CompareView: View {
                     
                     // Divider
                     Rectangle()
-                        .fill(Color.gray.opacity(0.3))
+                        .fill(Color.bodyLapseLightGray)
                         .frame(width: 2)
                     
                     // Second photo column
