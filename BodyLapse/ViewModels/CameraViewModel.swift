@@ -24,6 +24,7 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var currentCameraPosition: AVCaptureDevice.Position = .back
     private var currentInput: AVCaptureDeviceInput?
     var userSettings: UserSettingsManager?
+    var subscriptionManager: SubscriptionManagerService?
     
     override init() {
         super.init()
@@ -32,9 +33,10 @@ class CameraViewModel: NSObject, ObservableObject {
         // Load saved guideline
         savedGuideline = GuidelineStorageService.shared.loadGuideline()
         
-        // Initialize UserSettingsManager on main queue
+        // Initialize UserSettingsManager and SubscriptionManagerService on main queue
         Task { @MainActor in
             self.userSettings = UserSettingsManager()
+            self.subscriptionManager = SubscriptionManagerService.shared
         }
         
         // Listen for guideline updates
@@ -166,7 +168,7 @@ class CameraViewModel: NSObject, ObservableObject {
             }
         } else {
             Task { @MainActor [weak self] in
-                if self?.userSettings?.settings.isPremium == true {
+                if self?.subscriptionManager?.isPremium == true {
                     self?.showingWeightInput = true
                 } else {
                     self?.savePhoto(image)

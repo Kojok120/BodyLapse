@@ -12,7 +12,7 @@ class AdMobService: NSObject {
         #if DEBUG
         return testBannerAdUnitID
         #else
-        return "YOUR_PRODUCTION_BANNER_AD_UNIT_ID"
+        return "ca-app-pub-2130434444191865/5430877300"
         #endif
     }
     
@@ -20,7 +20,7 @@ class AdMobService: NSObject {
         #if DEBUG
         return testInterstitialAdUnitID
         #else
-        return "YOUR_PRODUCTION_INTERSTITIAL_AD_UNIT_ID"
+        return "ca-app-pub-2130434444191865/8365814795"
         #endif
     }
     

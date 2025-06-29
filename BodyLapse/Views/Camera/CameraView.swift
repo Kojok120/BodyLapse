@@ -123,7 +123,7 @@ struct CameraView: View {
         .alert("camera.one_photo_per_day".localized, isPresented: $viewModel.showingReplaceAlert) {
             Button("common.replace".localized, role: .destructive) {
                 if let image = viewModel.capturedImage {
-                    if viewModel.userSettings?.settings.isPremium == true {
+                    if viewModel.subscriptionManager?.isPremium == true {
                         viewModel.showingWeightInput = true
                     } else {
                         viewModel.savePhoto(image)

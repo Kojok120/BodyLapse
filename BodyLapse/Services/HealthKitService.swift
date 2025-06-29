@@ -212,7 +212,7 @@ class HealthKitService {
     
     func syncHealthDataToApp(completion: @escaping (Bool, Error?) -> Void) {
         Task { @MainActor in
-            guard UserSettingsManager.shared.settings.isPremium else {
+            guard SubscriptionManagerService.shared.isPremium else {
                 completion(false, NSError(domain: "HealthKit", code: 2, userInfo: [NSLocalizedDescriptionKey: "Health sync is only available for premium users"]))
                 return
             }

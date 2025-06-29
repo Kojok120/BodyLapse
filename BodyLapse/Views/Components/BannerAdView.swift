@@ -74,25 +74,25 @@ struct BannerAdView: UIViewRepresentable {
 }
 
 struct BannerAdModifier: ViewModifier {
-    @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     
     func body(content: Content) -> some View {
         VStack(spacing: 0) {
             content
             
-            if !userSettings.settings.isPremium {
-                BannerAdView(isPremium: userSettings.settings.isPremium)
+            if !subscriptionManager.isPremium {
+                BannerAdView(isPremium: subscriptionManager.isPremium)
                     .frame(height: 50)
                     .background(Color(UIColor.systemBackground))
                     .onAppear {
-                        print("[BannerAdModifier] Banner should appear - isPremium: \(userSettings.settings.isPremium)")
+                        print("[BannerAdModifier] Banner should appear - isPremium: \(subscriptionManager.isPremium)")
                     }
             } else {
                 let _ = print("[BannerAdModifier] Banner hidden - user is premium")
             }
         }
         .onAppear {
-            print("[BannerAdModifier] View appeared - isPremium: \(userSettings.settings.isPremium)")
+            print("[BannerAdModifier] View appeared - isPremium: \(subscriptionManager.isPremium)")
         }
     }
 }

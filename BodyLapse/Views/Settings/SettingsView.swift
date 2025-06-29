@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @StateObject private var authService = AuthenticationService.shared
     @StateObject private var languageManager = LanguageManager.shared
     @State private var showingAbout = false
@@ -103,7 +104,7 @@ struct SettingsView: View {
                 }
                 
                 Section("settings.premium_features".localized) {
-                    if userSettings.settings.isPremium {
+                    if subscriptionManager.isPremium {
                         HStack {
                             Image(systemName: "crown.fill")
                                 .foregroundColor(.yellow)
@@ -399,7 +400,7 @@ struct PremiumUpgradeView: View {
                     
                     Button(action: {
                         // TODO: Implement in-app purchase
-                        userSettings.settings.isPremium = true
+                        // Premium status is managed by SubscriptionManagerService
                         dismiss()
                     }) {
                         Text("premium.subscribe".localized)

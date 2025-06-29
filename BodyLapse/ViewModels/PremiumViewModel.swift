@@ -7,22 +7,34 @@ class PremiumViewModel: ObservableObject {
     @Published var isPurchasing = false
     @Published var purchaseError: String?
     
-    private let storeManager = StoreManager.shared
+    private let subscriptionManager = SubscriptionManagerService.shared
     
     var products: [Product] {
-        storeManager.products
+        subscriptionManager.products
     }
     
     var isPremium: Bool {
-        storeManager.isPremium
+        subscriptionManager.isPremium
     }
     
     var isLoadingProducts: Bool {
-        storeManager.isLoadingProducts
+        subscriptionManager.isLoadingProducts
+    }
+    
+    var subscriptionStatusDescription: String {
+        subscriptionManager.subscriptionStatusDescription
+    }
+    
+    var expirationDate: Date? {
+        subscriptionManager.expirationDate
+    }
+    
+    var isAboutToExpire: Bool {
+        subscriptionManager.isAboutToExpire
     }
     
     func loadProducts() async {
-        await storeManager.loadProducts()
+        await subscriptionManager.loadProducts()
     }
     
     func purchase(_ product: Product) async {
@@ -30,7 +42,7 @@ class PremiumViewModel: ObservableObject {
         purchaseError = nil
         
         do {
-            try await storeManager.purchase(product)
+            try await subscriptionManager.purchase(product)
             isShowingPremiumView = false
         } catch {
             purchaseError = error.localizedDescription
@@ -41,26 +53,32 @@ class PremiumViewModel: ObservableObject {
     
     func restorePurchases() async {
         isPurchasing = true
-        await storeManager.restorePurchases()
-        isPurchasing = false
+        purchaseError = nil
         
-        if isPremium {
+        do {
+            try await subscriptionManager.restorePurchases()
             isShowingPremiumView = false
-        } else {
-            purchaseError = "No purchases to restore"
+        } catch {
+            purchaseError = error.localizedDescription
         }
+        
+        isPurchasing = false
     }
     
     // MARK: - Premium Features Check
     func canAccessWeightTracking() -> Bool {
-        return isPremium
+        return subscriptionManager.canAccessWeightTracking()
     }
     
     func canRemoveWatermark() -> Bool {
-        return isPremium
+        return subscriptionManager.canRemoveWatermark()
     }
     
     func shouldShowAds() -> Bool {
-        return !isPremium
+        return subscriptionManager.shouldShowAds()
+    }
+    
+    func canAccessAdvancedCharts() -> Bool {
+        return subscriptionManager.canAccessAdvancedCharts()
     }
 }

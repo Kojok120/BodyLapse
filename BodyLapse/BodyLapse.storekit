@@ -1,0 +1,146 @@
+{
+  "appPolicies" : {
+
+  },
+  "identifier" : "BodyLapse",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "0",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21457308",
+      "localizations" : [
+        {
+          "description" : "Premium features for BodyLapse",
+          "displayName" : "BodyLapse Premium",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "BodyLapseのプレミアム機能",
+          "displayName" : "BodyLapse プレミアム",
+          "locale" : "ja"
+        }
+      ],
+      "name" : "premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6443589120",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Get unlimited access to all premium features including no ads, no watermark on videos, weight tracking, and advanced analytics.",
+              "displayName" : "BodyLapse Premium Monthly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "広告なし、動画の透かしなし、体重トラッキング、詳細な分析を含むすべてのプレミアム機能への無制限アクセス。",
+              "displayName" : "BodyLapse プレミアム 月額",
+              "locale" : "ja"
+            }
+          ],
+          "productID" : "com.J.BodyLapse.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium Monthly",
+          "subscriptionGroupID" : "21457308",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "39.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6443589121",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Save 2 months with annual billing! Get unlimited access to all premium features including no ads, no watermark on videos, weight tracking, and advanced analytics.",
+              "displayName" : "BodyLapse Premium Annual",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "年間請求で2か月分お得！広告なし、動画の透かしなし、体重トラッキング、詳細な分析を含むすべてのプレミアム機能への無制限アクセス。",
+              "displayName" : "BodyLapse プレミアム 年額",
+              "locale" : "ja"
+            }
+          ],
+          "productID" : "com.J.BodyLapse.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Premium Yearly",
+          "subscriptionGroupID" : "21457308",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

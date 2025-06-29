@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PhotoCaptureView: View {
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var showingReplaceAlert = false
     @State private var pendingPhoto: UIImage?
     @State private var showingWeightInput = false
@@ -143,7 +144,7 @@ struct PhotoCaptureView: View {
             capturedPhoto = photo
             
             // Show weight input for premium users
-            if userSettings.settings.isPremium {
+            if subscriptionManager.isPremium {
                 showingWeightInput = true
             }
             

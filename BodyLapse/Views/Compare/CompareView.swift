@@ -3,6 +3,7 @@ import SwiftUI
 struct CompareView: View {
     @StateObject private var viewModel = CompareViewModel()
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var firstPhoto: Photo?
     @State private var secondPhoto: Photo?
     @State private var showingFirstCalendar = false
@@ -180,7 +181,7 @@ struct CompareView: View {
                         .frame(height: 250)
                         
                         // Weight and body fat display for premium users
-                        if userSettings.settings.isPremium {
+                        if subscriptionManager.isPremium {
                             VStack(spacing: 4) {
                                 if let photo = firstPhoto {
                                     let _ = print("[CompareView] First photo - id: \(photo.id), date: \(photo.captureDate), weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
@@ -287,7 +288,7 @@ struct CompareView: View {
                         .frame(height: 250)
                         
                         // Weight and body fat display for premium users
-                        if userSettings.settings.isPremium {
+                        if subscriptionManager.isPremium {
                             VStack(spacing: 4) {
                                 if let photo = secondPhoto {
                                     let _ = print("[CompareView] Second photo - id: \(photo.id), date: \(photo.captureDate), weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
@@ -344,7 +345,7 @@ struct CompareView: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             // Stats display
-                            if userSettings.settings.isPremium {
+                            if subscriptionManager.isPremium {
                                 HStack(spacing: 20) {
                                     // Weight difference
                                     if let weightDiff = viewModel.getWeightDifference(first, second) {

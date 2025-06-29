@@ -11,6 +11,7 @@ import SwiftUI
 struct BodyLapseApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var storeManager = StoreManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @StateObject private var languageManager = LanguageManager.shared
     
     init() {
@@ -24,8 +25,9 @@ struct BodyLapseApp: App {
                 .environmentObject(languageManager)
                 .tint(.bodyLapseTurquoise)
                 .task {
-                    // Initialize StoreKit on app launch
-                    await storeManager.loadProducts()
+                    // Initialize StoreKit and subscription status on app launch
+                    await subscriptionManager.loadProducts()
+                    await subscriptionManager.refreshSubscriptionStatus()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCamera"))) { _ in
                     // Handle navigation to camera when notification is tapped

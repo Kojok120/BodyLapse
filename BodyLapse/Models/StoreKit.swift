@@ -125,7 +125,13 @@ class StoreManager: ObservableObject {
         }
         
         await MainActor.run {
+            let previousProducts = self.purchasedProductIDs
             self.purchasedProductIDs = purchasedProducts
+            
+            // Send notification if premium status changed
+            if previousProducts != purchasedProducts {
+                NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+            }
         }
     }
     

@@ -3,6 +3,7 @@ import SwiftUI
 #if DEBUG
 struct DebugSettingsView: View {
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -17,8 +18,8 @@ struct DebugSettingsView: View {
                     
                     StatusRow(
                         title: "Subscription Status",
-                        value: userSettings.settings.isPremium ? "Premium" : "Free",
-                        color: userSettings.settings.isPremium ? .green : .gray
+                        value: subscriptionManager.isPremium ? "Premium" : "Free",
+                        color: subscriptionManager.isPremium ? .green : .gray
                     )
                 } header: {
                     Text("Current Status")
@@ -166,15 +167,13 @@ struct DebugSettingsView: View {
     private func setDebugMode(premium: Bool) {
         StoreManager.debugMode = true
         StoreManager.debugPremiumStatus = premium
-        userSettings.settings.isPremium = premium
-        NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+        subscriptionManager.setDebugPremiumStatus(premium)
     }
     
     private func resetToProduction() {
         StoreManager.debugMode = false
         Task {
-            await userSettings.syncPremiumStatus()
-            NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+            await subscriptionManager.refreshSubscriptionStatus()
         }
     }
 }

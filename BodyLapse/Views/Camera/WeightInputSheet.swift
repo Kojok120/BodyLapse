@@ -9,6 +9,7 @@ struct WeightInputSheet: View {
     @State private var weightText = ""
     @State private var bodyFatText = ""
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @Environment(\.dismiss) private var dismiss
     @State private var isLoadingHealthData = false
     
@@ -125,7 +126,7 @@ struct WeightInputSheet: View {
             }
             
             // Then try to fetch from HealthKit if enabled and no values set
-            if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled && weight == nil {
+            if subscriptionManager.isPremium && userSettings.settings.healthKitEnabled && weight == nil {
                 fetchHealthKitData()
             }
         }
@@ -154,7 +155,7 @@ struct WeightInputSheet: View {
             }
             
             // Save to HealthKit if enabled
-            if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled {
+            if subscriptionManager.isPremium && userSettings.settings.healthKitEnabled {
                 HealthKitService.shared.saveWeight(w, date: Date()) { _, _ in }
                 if let bf = bodyFat {
                     HealthKitService.shared.saveBodyFatPercentage(bf, date: Date()) { _, _ in }

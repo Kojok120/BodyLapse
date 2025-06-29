@@ -4,7 +4,6 @@ struct UserSettings: Codable {
     var reminderEnabled: Bool = false
     var reminderTime: Date = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
     var showBodyGuidelines: Bool = true
-    var isPremium: Bool = false
     var weightUnit: WeightUnit = .kg
     var healthKitEnabled: Bool = false
     
@@ -52,8 +51,6 @@ class UserSettingsManager: ObservableObject {
     
     private let userDefaults = UserDefaults.standard
     private let settingsKey = "BodyLapseUserSettings"
-    private var storeManager: StoreManager?
-    
     init() {
         if let data = userDefaults.data(forKey: settingsKey),
            let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
@@ -61,37 +58,11 @@ class UserSettingsManager: ObservableObject {
         } else {
             self.settings = UserSettings.default
         }
-        
-        // Initialize StoreKit after init
-        Task { @MainActor in
-            self.storeManager = StoreManager.shared
-            await self.syncPremiumStatus()
-            
-            // Observe premium status changes
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(premiumStatusChanged),
-                name: .premiumStatusChanged,
-                object: nil
-            )
-        }
     }
     
     private func save() {
         if let encoded = try? JSONEncoder().encode(settings) {
             userDefaults.set(encoded, forKey: settingsKey)
-        }
-    }
-    
-    func syncPremiumStatus() async {
-        guard let storeManager = storeManager else { return }
-        await storeManager.loadProducts()
-        settings.isPremium = storeManager.isPremium
-    }
-    
-    @objc private func premiumStatusChanged() {
-        Task { @MainActor in
-            await syncPremiumStatus()
         }
     }
     

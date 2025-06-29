@@ -4,6 +4,7 @@ import AVFoundation
 struct CalendarView: View {
     @StateObject private var viewModel = CalendarViewModel()
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @StateObject private var weightViewModel = WeightTrackingViewModel()
     @State private var selectedDate = Date()
     @State private var showingPeriodPicker = false
@@ -76,7 +77,7 @@ struct CalendarView: View {
             
             photoPreviewSection
             
-            if userSettings.settings.isPremium {
+            if subscriptionManager.isPremium {
                 dataGraphSection
             } else {
                 progressBarSection
@@ -140,7 +141,7 @@ struct CalendarView: View {
             if let firstEntry = weightViewModel.weightEntries.first {
                 print("[Calendar] First entry - date: \(firstEntry.date), weight: \(firstEntry.weight)")
             }
-            print("[Calendar] Is premium: \(userSettings.settings.isPremium)")
+            print("[Calendar] Is premium: \(subscriptionManager.isPremium)")
         }
     }
     
@@ -179,7 +180,7 @@ struct CalendarView: View {
         })
         .onAppear {
             // Auto-fill from HealthKit if enabled
-            if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled && currentPhoto?.weight == nil {
+            if subscriptionManager.isPremium && userSettings.settings.healthKitEnabled && currentPhoto?.weight == nil {
                 HealthKitService.shared.fetchLatestWeight { weight, _ in
                     if let w = weight, self.currentPhoto?.weight == nil {
                         self.currentPhoto?.weight = w
@@ -272,7 +273,7 @@ struct CalendarView: View {
         )
         .onAppear {
             // Pre-load interstitial ad when sheet appears
-            if !userSettings.settings.isPremium {
+            if !subscriptionManager.isPremium {
                 print("[VideoGenerationView] Sheet appeared - checking ad status")
                 AdMobService.shared.checkAdStatus()
                 AdMobService.shared.loadInterstitialAd()
@@ -298,7 +299,7 @@ struct CalendarView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    if userSettings.settings.isPremium {
+                    if subscriptionManager.isPremium {
                         HStack(spacing: 4) {
                             Circle()
                                 .fill(Color.bodyLapseYellow)
@@ -329,7 +330,7 @@ struct CalendarView: View {
                     ),
                     dateRange: (dateRange.first ?? Date())...(dateRange.last ?? Date()),
                     photoDates: getPhotoDates(),
-                    dataDates: userSettings.settings.isPremium ? getDataDates() : Set<Date>()
+                    dataDates: subscriptionManager.isPremium ? getDataDates() : Set<Date>()
                 )
                 .padding(.horizontal)
                 
@@ -443,7 +444,7 @@ struct CalendarView: View {
     private var photoPreviewSection: some View {
         VStack(spacing: 8) {
             // Date display - only for free users
-            if !userSettings.settings.isPremium {
+            if !subscriptionManager.isPremium {
                 Text(formatDate(selectedDate))
                     .font(.headline)
                     .foregroundColor(.primary)
@@ -473,7 +474,7 @@ struct CalendarView: View {
                     .frame(width: geometry.size.width, height: geometry.size.height)
                 }
             }
-            .frame(height: userSettings.settings.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
+            .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
         }
         .padding(.horizontal)
     }
@@ -704,6 +705,7 @@ struct WeightInputView: View {
     @State private var weightText = ""
     @State private var bodyFatText = ""
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @Environment(\.dismiss) private var dismiss
     @State private var isLoadingHealthData = false
     
@@ -821,7 +823,7 @@ struct WeightInputView: View {
                 }
                 
                 // If no weight data and HealthKit is enabled, try to fetch it
-                if photo.weight == nil && userSettings.settings.isPremium && userSettings.settings.healthKitEnabled {
+                if photo.weight == nil && subscriptionManager.isPremium && userSettings.settings.healthKitEnabled {
                     fetchHealthKitData()
                 }
             }
@@ -844,7 +846,7 @@ struct WeightInputView: View {
         onSave(weight, bodyFat)
         
         // Save to HealthKit if enabled
-        if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled {
+        if subscriptionManager.isPremium && userSettings.settings.healthKitEnabled {
             let saveDate = photo?.captureDate ?? selectedDate
             if let w = weight {
                 HealthKitService.shared.saveWeight(w, date: saveDate) { _, _ in }
@@ -999,7 +1001,7 @@ struct VideoGenerationView: View {
                     Toggle("calendar.blur_faces".localized, isOn: $enableFaceBlur)
                 }
                 
-                if !userSettings.settings.isPremium {
+                if !subscriptionManager.isPremium {
                     Section {
                         HStack {
                             Image(systemName: "info.circle")
@@ -1036,13 +1038,13 @@ struct VideoGenerationView: View {
                         let options = VideoGenerationService.VideoGenerationOptions(
                             frameDuration: selectedSpeed.frameDuration,
                             videoSize: selectedQuality.videoSize,
-                            addWatermark: !userSettings.settings.isPremium,
+                            addWatermark: !subscriptionManager.isPremium,
                             transitionStyle: .fade,
                             blurFaces: enableFaceBlur
                         )
                         
                         // Show interstitial ad for free users
-                        if !userSettings.settings.isPremium {
+                        if !subscriptionManager.isPremium {
                             print("[VideoGeneration] Free user - showing ad before video generation")
                             dismiss()
                             

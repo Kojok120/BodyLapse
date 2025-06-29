@@ -464,6 +464,7 @@ struct PhotoDetailSheet: View {
     let photo: Photo
     @Environment(\.dismiss) private var dismiss
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var showingShareSheet = false
     
     var body: some View {
@@ -478,7 +479,7 @@ struct PhotoDetailSheet: View {
                         Text(photo.formattedDate)
                             .font(.headline)
                         
-                        if userSettings.settings.isPremium {
+                        if subscriptionManager.isPremium {
                             HStack {
                                 if let weight = photo.weight {
                                     Label("\(String(format: "%.1f", weight)) \(userSettings.settings.weightUnit.symbol)", systemImage: "scalemass")
