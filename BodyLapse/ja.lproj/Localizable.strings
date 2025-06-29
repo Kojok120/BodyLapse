@@ -260,3 +260,7 @@
 
 /* Language Change */
 "settings.language_changed" = "言語が変更されました。変更を適用するためにアプリが更新されます。";
+
+/* Reset Guideline */
+"reset_guideline.instruction" = "新しい写真を撮って体の輪郭を更新してください";
+"reset_guideline.success_message" = "ボディガイドラインが正常に更新されました！";

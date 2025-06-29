@@ -260,3 +260,7 @@
 
 /* Language Change */
 "settings.language_changed" = "언어가 변경되었습니다. 변경 사항을 적용하기 위해 앱이 새로고침됩니다.";
+
+/* Reset Guideline */
+"reset_guideline.instruction" = "새 사진을 찍어 체형 윤곽을 업데이트하세요";
+"reset_guideline.success_message" = "바디 가이드라인이 성공적으로 업데이트되었습니다!";

@@ -260,3 +260,7 @@
 
 /* Language Change */
 "settings.language_changed" = "Language changed. The app will refresh to apply the changes.";
+
+/* Reset Guideline */
+"reset_guideline.instruction" = "Take a new photo to update your body outline";
+"reset_guideline.success_message" = "Your body guideline has been updated successfully!";

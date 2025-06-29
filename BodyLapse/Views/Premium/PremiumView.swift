@@ -24,12 +24,12 @@ struct PremiumView: View {
                                 .font(.system(size: 60))
                                 .foregroundColor(.yellow)
                             
-                            Text("BodyLapse Premium")
+                            Text("premium.title".localized)
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
                             
-                            Text("Unlock all features and track your journey")
+                            Text("premium.subtitle".localized)
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
@@ -39,26 +39,26 @@ struct PremiumView: View {
                         VStack(alignment: .leading, spacing: 20) {
                             PremiumFeatureRowView(
                                 icon: "chart.line.uptrend.xyaxis",
-                                title: "Weight & Body Fat Tracking",
-                                description: "Track your progress with detailed charts"
+                                title: "premium.feature.tracking".localized,
+                                description: "premium.feature.tracking_desc".localized
                             )
                             
                             PremiumFeatureRowView(
                                 icon: "xmark.circle.fill",
-                                title: "No Ads",
-                                description: "Enjoy an ad-free experience"
+                                title: "premium.feature.no_ads".localized,
+                                description: "premium.feature.no_ads_desc".localized
                             )
                             
                             PremiumFeatureRowView(
                                 icon: "drop.fill",
-                                title: "No Watermark",
-                                description: "Export videos without watermark"
+                                title: "premium.feature.no_watermark".localized,
+                                description: "premium.feature.no_watermark_desc".localized
                             )
                             
                             PremiumFeatureRowView(
                                 icon: "bell.badge.fill",
-                                title: "Advanced Reminders",
-                                description: "Customize notification times"
+                                title: "premium.feature.reminders".localized,
+                                description: "premium.feature.reminders_desc".localized
                             )
                         }
                         .padding(.horizontal)
@@ -93,7 +93,7 @@ struct PremiumView: View {
                                 await viewModel.restorePurchases()
                             }
                         }) {
-                            Text("Restore Purchases")
+                            Text("premium.restore".localized)
                                 .foregroundColor(.white.opacity(0.8))
                                 .underline()
                         }
@@ -101,14 +101,14 @@ struct PremiumView: View {
                         
                         // Terms and Privacy
                         VStack(spacing: 10) {
-                            Text("Subscriptions will automatically renew unless cancelled")
+                            Text("premium.auto_renew".localized)
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.6))
                                 .multilineTextAlignment(.center)
                             
                             HStack(spacing: 20) {
-                                Link("Terms of Service", destination: URL(string: "https://example.com/terms")!)
-                                Link("Privacy Policy", destination: URL(string: "https://example.com/privacy")!)
+                                Link("premium.terms".localized, destination: URL(string: "https://example.com/terms")!)
+                                Link("premium.privacy".localized, destination: URL(string: "https://example.com/privacy")!)
                             }
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.8))
@@ -121,14 +121,14 @@ struct PremiumView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Close") {
+                    Button("common.close".localized) {
                         dismiss()
                     }
                     .foregroundColor(.white)
                 }
             }
-            .alert("Purchase Error", isPresented: .constant(viewModel.purchaseError != nil)) {
-                Button("OK") {
+            .alert("premium.purchase_error".localized, isPresented: .constant(viewModel.purchaseError != nil)) {
+                Button("common.ok".localized) {
                     viewModel.purchaseError = nil
                 }
             } message: {
@@ -138,7 +138,7 @@ struct PremiumView: View {
                 if viewModel.isPurchasing {
                     Color.black.opacity(0.5)
                         .ignoresSafeArea()
-                    ProgressView("Processing...")
+                    ProgressView("common.processing".localized)
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .foregroundColor(.white)
                         .padding()
@@ -192,7 +192,7 @@ struct SubscriptionOptionView: View {
     
     private var savings: String? {
         if product.id.contains("yearly") {
-            return "Save 17%"
+            return "premium.save_percent".localized
         }
         return nil
     }
@@ -220,7 +220,7 @@ struct SubscriptionOptionView: View {
                             .foregroundColor(.white)
                         
                         if let period = product.subscription?.subscriptionPeriod {
-                            Text("per \(period.unit.localizedDescription)")
+                            Text("\("premium.per".localized) \(period.unit.localizedDescription)")
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.8))
                         }

@@ -260,3 +260,7 @@
 
 /* Language Change */
 "settings.language_changed" = "Idioma cambiado. La aplicación se actualizará para aplicar los cambios.";
+
+/* Reset Guideline */
+"reset_guideline.instruction" = "Toma una nueva foto para actualizar tu contorno corporal";
+"reset_guideline.success_message" = "¡Tu guía corporal se ha actualizado con éxito!";

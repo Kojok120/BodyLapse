@@ -69,13 +69,13 @@ struct ResetGuidelineView: View {
                     Spacer()
                 
                     VStack(spacing: 20) {
-                        Text("Reset Body Guideline")
+                        Text("settings.reset_guideline".localized)
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .shadow(radius: 2)
                         
-                        Text("Take a new photo to update your body outline")
+                        Text("reset_guideline.instruction".localized)
                             .font(.body)
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
@@ -111,12 +111,12 @@ struct ResetGuidelineView: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
             }
         }
-        .alert("Success", isPresented: $showingSuccessAlert) {
-            Button("OK") {
+        .alert("common.done".localized, isPresented: $showingSuccessAlert) {
+            Button("common.ok".localized) {
                 dismiss()
             }
         } message: {
-            Text("Your body guideline has been updated successfully!")
+            Text("reset_guideline.success_message".localized)
         }
     }
     

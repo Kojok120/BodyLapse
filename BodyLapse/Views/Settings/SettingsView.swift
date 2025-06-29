@@ -224,28 +224,28 @@ struct SettingsView: View {
                 DebugSettingsView()
             }
             #endif
-            .alert("Notification Permission Required", isPresented: $showingNotificationPermissionAlert) {
-                Button("Open Settings") {
+            .alert("settings.notification_required".localized, isPresented: $showingNotificationPermissionAlert) {
+                Button("settings.open_settings".localized) {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
                         UIApplication.shared.open(url)
                     }
                 }
-                Button("Cancel", role: .cancel) { }
+                Button("common.cancel".localized, role: .cancel) { }
             } message: {
-                Text("Please enable notifications in Settings to receive daily photo reminders.")
+                Text("settings.notification_message".localized)
             }
-            .alert("Health Access Required", isPresented: $showingHealthKitPermission) {
-                Button("OK") { }
+            .alert("settings.health_required".localized, isPresented: $showingHealthKitPermission) {
+                Button("common.ok".localized) { }
             } message: {
-                Text("Please grant access to read and write weight and body fat data in the Health app.")
+                Text("settings.health_message".localized)
             }
-            .alert("Reset Body Guideline", isPresented: $showingResetGuidelineConfirmation) {
-                Button("Cancel", role: .cancel) { }
-                Button("Reset", role: .destructive) {
+            .alert("settings.reset_guideline".localized, isPresented: $showingResetGuidelineConfirmation) {
+                Button("common.cancel".localized, role: .cancel) { }
+                Button("settings.reset".localized, role: .destructive) {
                     showingResetGuideline = true
                 }
             } message: {
-                Text("Are you sure you want to reset your body guideline? You will need to take a new photo to set it up again.")
+                Text("settings.reset_guideline_confirm".localized)
             }
             .fullScreenCover(isPresented: $showingResetGuideline) {
                 ResetGuidelineView()
@@ -309,19 +309,19 @@ struct AboutView: View {
                     .font(.system(size: 80))
                     .foregroundColor(.accentColor)
                 
-                Text("BodyLapse")
+                Text("about.bodylapse".localized)
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
-                Text("Track your fitness journey")
+                Text("about.tagline".localized)
                     .font(.headline)
                     .foregroundColor(.secondary)
                 
                 VStack(alignment: .leading, spacing: 15) {
-                    FeatureRow(icon: "camera.fill", text: "Daily progress photos")
-                    FeatureRow(icon: "calendar", text: "Visual progress calendar")
-                    FeatureRow(icon: "video.fill", text: "Create time-lapse videos")
-                    FeatureRow(icon: "lock.fill", text: "100% private & secure")
+                    FeatureRow(icon: "camera.fill", text: "about.feature1".localized)
+                    FeatureRow(icon: "calendar", text: "about.feature2".localized)
+                    FeatureRow(icon: "video.fill", text: "about.feature3".localized)
+                    FeatureRow(icon: "lock.fill", text: "about.feature4".localized)
                 }
                 .padding()
                 .background(Color(UIColor.secondarySystemBackground))
@@ -330,16 +330,16 @@ struct AboutView: View {
                 
                 Spacer()
                 
-                Text("Made with ❤️ for fitness enthusiasts")
+                Text("about.made_with_love".localized)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             .padding()
-            .navigationTitle("About")
+            .navigationTitle("settings.about".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("common.done".localized) {
                         dismiss()
                     }
                 }
@@ -375,15 +375,15 @@ struct PremiumUpgradeView: View {
                     .font(.system(size: 60))
                     .foregroundColor(.yellow)
                 
-                Text("Upgrade to Premium")
+                Text("settings.upgrade_premium".localized)
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
                 VStack(alignment: .leading, spacing: 15) {
-                    PremiumFeatureRow(icon: "rectangle.badge.xmark", text: "No ads")
-                    PremiumFeatureRow(icon: "drop.fill", text: "No watermark on videos")
-                    PremiumFeatureRow(icon: "scalemass", text: "Weight & body fat tracking")
-                    PremiumFeatureRow(icon: "chart.line.uptrend.xyaxis", text: "Advanced analytics")
+                    PremiumFeatureRow(icon: "rectangle.badge.xmark", text: "premium.feature.no_ads".localized)
+                    PremiumFeatureRow(icon: "drop.fill", text: "premium.feature.no_watermark".localized)
+                    PremiumFeatureRow(icon: "scalemass", text: "premium.feature.tracking".localized)
+                    PremiumFeatureRow(icon: "chart.line.uptrend.xyaxis", text: "premium.feature.reminders".localized)
                 }
                 .padding()
                 .background(Color(UIColor.secondarySystemBackground))
@@ -393,7 +393,7 @@ struct PremiumUpgradeView: View {
                 Spacer()
                 
                 VStack(spacing: 15) {
-                    Text("$4.99 / month")
+                    Text("settings.premium_price".localized)
                         .font(.title2)
                         .fontWeight(.bold)
                     
@@ -402,7 +402,7 @@ struct PremiumUpgradeView: View {
                         userSettings.settings.isPremium = true
                         dismiss()
                     }) {
-                        Text("Subscribe Now")
+                        Text("premium.subscribe".localized)
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -412,7 +412,7 @@ struct PremiumUpgradeView: View {
                     }
                     .padding(.horizontal)
                     
-                    Button("Restore Purchase") {
+                    Button("premium.restore".localized) {
                         // TODO: Implement restore purchase
                     }
                     .font(.caption)
@@ -424,7 +424,7 @@ struct PremiumUpgradeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         dismiss()
                     }
                 }
@@ -452,14 +452,14 @@ struct PremiumFeatureRow: View {
 struct ExportView: View {
     var body: some View {
         VStack(spacing: 20) {
-            Text("Export your photos to share or backup")
+            Text("export.description".localized)
                 .multilineTextAlignment(.center)
                 .padding()
             
             Button(action: {
                 // TODO: Implement export functionality
             }) {
-                Label("Export All Photos", systemImage: "square.and.arrow.up")
+                Label("export.all_photos".localized, systemImage: "square.and.arrow.up")
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.accentColor)
@@ -470,7 +470,7 @@ struct ExportView: View {
             
             Spacer()
         }
-        .navigationTitle("Export Photos")
+        .navigationTitle("export.title".localized)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
