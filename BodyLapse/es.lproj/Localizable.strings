@@ -1,0 +1,262 @@
+/* 
+  Localizable.strings
+  BodyLapse
+  
+  Spanish Localization
+*/
+
+/* Tab Bar */
+"tab.calendar" = "Calendario";
+"tab.compare" = "Comparar";
+"tab.photo" = "Foto";
+"tab.gallery" = "Galería";
+"tab.settings" = "Ajustes";
+
+/* Common Actions */
+"common.delete" = "Eliminar";
+"common.share" = "Compartir";
+"common.save" = "Guardar";
+"common.cancel" = "Cancelar";
+"common.done" = "Hecho";
+"common.ok" = "OK";
+"common.close" = "Cerrar";
+"common.back" = "Atrás";
+"common.next" = "Siguiente";
+"common.continue" = "Continuar";
+"common.skip" = "Omitir";
+"common.finish" = "Finalizar";
+"common.error" = "Error";
+"common.loading" = "Cargando...";
+"common.processing" = "Procesando...";
+"common.replace" = "Reemplazar";
+"common.retake" = "Retomar";
+"common.use_photo" = "Usar Foto";
+"common.save_photo" = "Guardar Foto";
+
+/* Calendar View */
+"calendar.title" = "Progreso";
+"calendar.period.7days" = "7 Días";
+"calendar.period.30days" = "30 Días";
+"calendar.period.3months" = "3 Meses";
+"calendar.period.6months" = "6 Meses";
+"calendar.period.1year" = "1 Año";
+"calendar.generate" = "Generar";
+"calendar.body_detected" = "Cuerpo detectado";
+"calendar.align_body" = "Alinea tu cuerpo";
+"calendar.no_photo" = "Sin foto";
+"calendar.select_time_period" = "Seleccionar Período";
+"calendar.video_generation" = "Generación de Video";
+"calendar.update_measurements" = "Actualizar Medidas";
+"calendar.weight" = "Peso";
+"calendar.enter_weight" = "Ingrese peso";
+"calendar.body_fat_optional" = "% Grasa Corporal (Opcional)";
+"calendar.enter_body_fat" = "Ingrese grasa corporal";
+"calendar.clear_data" = "Borrar Datos";
+"calendar.period_label" = "Período";
+"calendar.selected_period" = "Período Seleccionado";
+"calendar.date_range" = "Rango de Fechas";
+"calendar.photos" = "Fotos";
+"calendar.video_settings" = "Configuración de Video";
+"calendar.speed" = "Velocidad";
+"calendar.quality" = "Calidad";
+"calendar.blur_faces" = "Difuminar Caras";
+"calendar.watermark_notice" = "La versión gratuita incluye marca de agua";
+"calendar.estimated_duration" = "Duración Estimada";
+"calendar.generate_video" = "Generar Video";
+"calendar.speed.slow" = "Lento (0.5s/cuadro)";
+"calendar.speed.normal" = "Normal (0.25s/cuadro)";
+"calendar.speed.fast" = "Rápido (0.1s/cuadro)";
+"calendar.quality.standard" = "Estándar (720p)";
+"calendar.quality.high" = "Alta (1080p)";
+"calendar.quality.ultra" = "Ultra (4K)";
+"calendar.generating_video" = "Generando Video";
+"calendar.select_date" = "Seleccionar Fecha";
+"calendar.has_photo" = "Foto";
+"calendar.has_data" = "Datos";
+"calendar.no_data_period" = "Sin datos para el período seleccionado";
+"calendar.ios16_required" = "El seguimiento de peso requiere iOS 16 o posterior";
+"calendar.no_weight_data" = "Aún sin datos de peso";
+"calendar.add_weight_hint" = "Añade datos de peso al guardar fotos";
+"calendar.reload_data" = "Recargar Datos";
+
+/* Camera View */
+"camera.access_required" = "Se Requiere Acceso a la Cámara";
+"camera.access_message" = "Por favor, habilite el acceso a la cámara en Configuración para tomar fotos";
+"camera.open_settings" = "Abrir Configuración";
+"camera.one_photo_per_day" = "Solo Una Foto Por Día";
+"camera.replace_photo_message" = "Solo puedes guardar una foto por día. ¿Quieres reemplazar la foto de hoy?";
+"camera.face_blurred" = "Cara difuminada";
+
+/* Gallery View */
+"gallery.title" = "Galería";
+"gallery.videos" = "Videos";
+"gallery.photos" = "Fotos";
+"gallery.no_photos" = "Aún sin fotos";
+"gallery.no_videos" = "Aún sin videos";
+"gallery.delete_item" = "Eliminar Elemento";
+"gallery.delete_confirm" = "¿Estás seguro de que quieres eliminar este elemento? Esta acción no se puede deshacer.";
+"gallery.save_to_photos" = "Guardar en Fotos";
+"gallery.photo_saved" = "Foto guardada en la biblioteca";
+"gallery.video_saved" = "Video guardado en la biblioteca";
+"gallery.photos_count" = "fotos";
+
+/* Settings View */
+"settings.title" = "Ajustes";
+"settings.photo_settings" = "Configuración de Fotos";
+"settings.show_guidelines" = "Mostrar Guías Corporales";
+"settings.reset_guideline" = "Restablecer Guía Corporal";
+"settings.weight_unit" = "Unidad de Peso";
+"settings.security" = "Seguridad";
+"settings.app_lock" = "Bloqueo de App";
+"settings.change_pin" = "Cambiar PIN";
+"settings.reminders" = "Recordatorios";
+"settings.daily_reminder" = "Recordatorio Diario";
+"settings.reminder_time" = "Hora del Recordatorio";
+"settings.premium_features" = "Funciones Premium";
+"settings.premium_active" = "Premium Activo";
+"settings.sync_health" = "Sincronizar con Salud";
+"settings.auto_import" = "Importar peso y grasa corporal automáticamente";
+"settings.sync_now" = "Sincronizar Ahora";
+"settings.upgrade_premium" = "Actualizar a Premium";
+"settings.premium_description" = "Elimina anuncios, marca de agua y rastrea peso";
+"settings.premium_price" = "$4.99/mes";
+"settings.data" = "Datos";
+"settings.export_photos" = "Exportar Fotos";
+"settings.clear_all_data" = "Borrar Todos los Datos";
+"settings.about" = "Acerca de";
+"settings.about_bodylapse" = "Acerca de BodyLapse";
+"settings.version" = "v1.0.0";
+"settings.privacy_policy" = "Política de Privacidad";
+"settings.terms_service" = "Términos de Servicio";
+"settings.debug_settings" = "Configuración de Depuración";
+"settings.notification_required" = "Se Requiere Permiso de Notificación";
+"settings.notification_message" = "Por favor, habilite las notificaciones en Configuración para recibir recordatorios diarios de fotos.";
+"settings.health_required" = "Se Requiere Acceso a Salud";
+"settings.health_message" = "Por favor, otorgue acceso para leer y escribir datos de peso y grasa corporal en la app Salud.";
+"settings.reset_guideline_confirm" = "¿Estás seguro de que quieres restablecer tu guía corporal? Necesitarás tomar una nueva foto para configurarla de nuevo.";
+"settings.reset" = "Restablecer";
+"settings.language" = "Idioma";
+
+/* About Section */
+"about.bodylapse" = "BodyLapse";
+"about.tagline" = "Sigue tu viaje fitness";
+"about.feature1" = "Fotos de progreso diarias";
+"about.feature2" = "Calendario visual de progreso";
+"about.feature3" = "Crea videos time-lapse";
+"about.feature4" = "100% privado y seguro";
+"about.made_with_love" = "Hecho con ❤️ para entusiastas del fitness";
+
+/* Export Photos */
+"export.description" = "Exporta tus fotos para compartir o respaldar";
+"export.all_photos" = "Exportar Todas las Fotos";
+"export.title" = "Exportar Fotos";
+
+/* Compare View */
+"compare.title" = "Comparar Progreso";
+"compare.before" = "Antes";
+"compare.after" = "Después";
+"compare.select_first" = "Seleccionar Primera Foto";
+"compare.select_second" = "Seleccionar Segunda Foto";
+"compare.no_weight" = "Sin peso";
+"compare.select_photo" = "Seleccionar foto";
+"compare.weight" = "peso";
+"compare.body_fat" = "grasa corporal";
+"compare.upgrade_premium" = "Actualizar a Premium";
+"compare.premium_feature" = "Compara cambios de peso y grasa corporal";
+"compare.instruction" = "Compara Tu Progreso";
+"compare.select_two_photos" = "Selecciona dos fotos para ver tu transformación";
+"compare.select_date" = "Seleccionar Fecha";
+
+/* Onboarding */
+"onboarding.welcome" = "Bienvenido a BodyLapse";
+"onboarding.setup_account" = "Configurar Tu Cuenta";
+"onboarding.daily_photos.title" = "Fotos de Progreso Diarias";
+"onboarding.daily_photos.subtitle" = "Captura tu transformación con\nfotos diarias consistentes";
+"onboarding.daily_photos.description" = "Las guías visuales te ayudan a mantener\nla misma pose y posición cada vez";
+"onboarding.timelapse.title" = "Videos Time-Lapse";
+"onboarding.timelapse.subtitle" = "Observa tu viaje desarrollarse\ncon impresionantes videos time-lapse";
+"onboarding.timelapse.description" = "Personaliza la velocidad y calidad del video\npara crear el montaje de transformación perfecto";
+"onboarding.privacy.title" = "Protección de Privacidad";
+"onboarding.privacy.subtitle" = "Mantén tu identidad privada con\ntecnología automática de difuminado facial";
+"onboarding.privacy.description" = "Todo el procesamiento ocurre en tu dispositivo\nTus fotos nunca salen de tu teléfono";
+"onboarding.metrics.title" = "Rastrea Tus Métricas";
+"onboarding.metrics.subtitle" = "Registra peso y porcentaje de grasa corporal\npara visualizar tu progreso en el tiempo";
+"onboarding.metrics.description" = "Combina fotos con datos perspicaces\npara un seguimiento integral del progreso";
+"onboarding.comparison.title" = "Comparación Antes y Después";
+"onboarding.comparison.subtitle" = "Selecciona dos fotos para ver\ntu transformación lado a lado";
+"onboarding.comparison.description" = "Compara fácilmente tu punto de partida\ncon tu progreso actual";
+"onboarding.start.title" = "¡Comencemos!";
+"onboarding.start.subtitle" = "Toma tu primera foto y comienza\na rastrear tu viaje de transformación";
+"onboarding.start" = "Comenzar";
+"onboarding.first_photo.title" = "Toma Tu Primera Foto";
+"onboarding.first_photo.subtitle" = "Párate en el marco y\ncaptura tu punto de partida";
+"onboarding.security.title" = "Asegura Tu Progreso";
+"onboarding.security.subtitle" = "Protege tus fotos con\nFace ID o un código de acceso";
+"onboarding.enable_faceid" = "Habilitar Face ID";
+"onboarding.enable_touchid" = "Habilitar Touch ID";
+"onboarding.enable_biometric" = "Habilitar Autenticación Biométrica";
+"onboarding.setup_passcode" = "Configurar Código de Acceso";
+"onboarding.create_passcode" = "Crear Código de Acceso";
+"onboarding.enter_passcode" = "Ingrese Código de 4 Dígitos";
+"onboarding.confirm_passcode" = "Confirmar Código de Acceso";
+"onboarding.passcode_mismatch" = "Los códigos de acceso no coinciden";
+
+/* Authentication */
+"auth.app_name" = "BodyLapse";
+"auth.enter_pin" = "Ingrese su PIN para continuar";
+"auth.enter_pin_short" = "Ingrese PIN";
+"auth.unlock" = "Desbloquear";
+"auth.use_faceid" = "Usar Face ID";
+"auth.use_touchid" = "Usar Touch ID";
+"auth.use_pin" = "Usar PIN";
+"auth.tap_faceid" = "Toque para desbloquear con Face ID";
+"auth.tap_touchid" = "Toque para desbloquear con Touch ID";
+
+/* Premium View */
+"premium.title" = "BodyLapse Premium";
+"premium.subtitle" = "Desbloquea todas las funciones y rastrea tu viaje";
+"premium.feature.tracking" = "Seguimiento de Peso y Grasa Corporal";
+"premium.feature.tracking_desc" = "Rastrea tu progreso con gráficos detallados";
+"premium.feature.no_ads" = "Sin Anuncios";
+"premium.feature.no_ads_desc" = "Disfruta de una experiencia sin anuncios";
+"premium.feature.no_watermark" = "Sin Marca de Agua";
+"premium.feature.no_watermark_desc" = "Exporta videos sin marca de agua";
+"premium.feature.reminders" = "Recordatorios Avanzados";
+"premium.feature.reminders_desc" = "Personaliza los horarios de notificación";
+"premium.restore" = "Restaurar Compras";
+"premium.auto_renew" = "Las suscripciones se renovarán automáticamente a menos que se cancelen";
+"premium.terms" = "Términos de Servicio";
+"premium.privacy" = "Política de Privacidad";
+"premium.purchase_error" = "Error de Compra";
+"premium.save_percent" = "Ahorra 17%";
+"premium.per" = "por";
+"premium.subscribe" = "Suscribirse Ahora";
+
+/* Weight Input */
+"weight.title" = "Entrada de Peso";
+"weight.weight" = "Peso";
+"weight.body_fat" = "% Grasa Corporal";
+"weight.enter_weight" = "Ingrese peso";
+"weight.enter_body_fat" = "Ingrese porcentaje de grasa corporal";
+
+/* Date and Time */
+"date.today" = "Hoy";
+"date.yesterday" = "Ayer";
+"date.days_ago" = "hace %d días";
+"date.week" = "semana";
+"date.month" = "mes";
+"date.year" = "año";
+
+/* Units */
+"unit.kg" = "kg";
+"unit.lbs" = "libras";
+"unit.percent" = "%";
+
+/* Languages */
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.korean" = "한국어";
+"language.spanish" = "Español";
+
+/* Language Change */
+"settings.language_changed" = "Idioma cambiado. La aplicación se actualizará para aplicar los cambios.";

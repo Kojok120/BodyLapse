@@ -65,7 +65,7 @@ struct OnboardingView: View {
                     }
                 }
             }
-            .navigationTitle(isInOnboardingPhase ? "Setup Your Account" : "Welcome to BodyLapse")
+            .navigationTitle(isInOnboardingPhase ? "onboarding.setup_account".localized : "onboarding.welcome".localized)
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarHidden(isInOnboardingPhase && currentStep == 2) // Hide for camera step
         }
@@ -98,45 +98,45 @@ struct OnboardingView: View {
     private var featureStep1: some View {
         featureExplanationView(
             icon: "camera.fill",
-            title: "Daily Progress Photos",
-            description: "Capture your transformation with\nconsistent daily photos",
-            subDescription: "Visual guidelines help you maintain\nthe same pose and position every time"
+            title: "onboarding.daily_photos.title".localized,
+            description: "onboarding.daily_photos.subtitle".localized,
+            subDescription: "onboarding.daily_photos.description".localized
         )
     }
     
     private var featureStep2: some View {
         featureExplanationView(
             icon: "video.fill",
-            title: "Time-Lapse Videos",
-            description: "Watch your journey unfold\nwith stunning time-lapse videos",
-            subDescription: "Customize video speed and quality\nto create the perfect transformation montage"
+            title: "onboarding.timelapse.title".localized,
+            description: "onboarding.timelapse.subtitle".localized,
+            subDescription: "onboarding.timelapse.description".localized
         )
     }
     
     private var featureStep3: some View {
         featureExplanationView(
             icon: "eye.slash.fill",
-            title: "Privacy Protection",
-            description: "Keep your identity private with\nautomatic face blurring technology",
-            subDescription: "All processing happens on your device\nYour photos never leave your phone"
+            title: "onboarding.privacy.title".localized,
+            description: "onboarding.privacy.subtitle".localized,
+            subDescription: "onboarding.privacy.description".localized
         )
     }
     
     private var featureStep4: some View {
         featureExplanationView(
             icon: "chart.line.uptrend.xyaxis",
-            title: "Track Your Metrics",
-            description: "Log weight and body fat percentage\nto visualize your progress over time",
-            subDescription: "Combine photos with data insights\nfor comprehensive progress tracking"
+            title: "onboarding.metrics.title".localized,
+            description: "onboarding.metrics.subtitle".localized,
+            subDescription: "onboarding.metrics.description".localized
         )
     }
     
     private var featureStep5: some View {
         featureExplanationView(
             icon: "photo.on.rectangle.angled",
-            title: "Before & After Comparison",
-            description: "Select any two photos to see\nyour transformation side by side",
-            subDescription: "Easily compare your starting point\nwith your current progress"
+            title: "onboarding.comparison.title".localized,
+            description: "onboarding.comparison.subtitle".localized,
+            subDescription: "onboarding.comparison.description".localized
         )
     }
     
@@ -149,11 +149,11 @@ struct OnboardingView: View {
                 .foregroundColor(.accentColor)
                 .padding(.bottom, 20)
             
-            Text("Let's Get Started!")
+            Text("onboarding.start.title".localized)
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
-            Text("Take your first photo and begin\ntracking your transformation journey")
+            Text("onboarding.start.subtitle".localized)
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -213,11 +213,11 @@ struct OnboardingView: View {
                 .foregroundColor(.accentColor)
                 .padding(.bottom, 20)
             
-            Text("Secure Your Progress")
+            Text("onboarding.security.title".localized)
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
-            Text("Protect your photos with\nFace ID or a passcode")
+            Text("onboarding.security.subtitle".localized)
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -229,7 +229,7 @@ struct OnboardingView: View {
                 }) {
                     HStack {
                         Image(systemName: biometricIcon)
-                        Text("Enable \(biometricName)")
+                        Text(biometricLocalizedName)
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -244,7 +244,7 @@ struct OnboardingView: View {
                 }) {
                     HStack {
                         Image(systemName: "number")
-                        Text("Set Up Passcode")
+                        Text("onboarding.setup_passcode".localized)
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -268,8 +268,8 @@ struct OnboardingView: View {
                 }
             )
         }
-        .alert("Error", isPresented: $showingPasscodeError) {
-            Button("OK") { }
+        .alert("common.error".localized, isPresented: $showingPasscodeError) {
+            Button("common.ok".localized) { }
         } message: {
             Text(passcodeErrorMessage)
         }
@@ -284,7 +284,7 @@ struct OnboardingView: View {
                         currentStep -= 1
                     }
                 }) {
-                    Text("Back")
+                    Text("common.back".localized)
                         .foregroundColor(.accentColor)
                         .fontWeight(.medium)
                 }
@@ -300,7 +300,7 @@ struct OnboardingView: View {
                         currentStep += 1
                     }
                 }) {
-                    Text("Next")
+                    Text("common.next".localized)
                         .frame(minWidth: 80)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
@@ -318,7 +318,7 @@ struct OnboardingView: View {
                         currentStep = 1
                     }
                 }) {
-                    Text("Continue")
+                    Text("common.continue".localized)
                         .frame(minWidth: 80)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
@@ -342,7 +342,7 @@ struct OnboardingView: View {
                         currentStep -= 1
                     }
                 }) {
-                    Text("Back")
+                    Text("common.back".localized)
                         .foregroundColor(.accentColor)
                         .fontWeight(.medium)
                 }
@@ -358,7 +358,7 @@ struct OnboardingView: View {
                         currentStep = 2
                     }
                 }) {
-                    Text("Start")
+                    Text("onboarding.start".localized)
                         .frame(minWidth: 80)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
@@ -373,7 +373,7 @@ struct OnboardingView: View {
                     hideKeyboard()
                     saveSettings(enableLock: false)
                 }) {
-                    Text("Skip")
+                    Text("common.skip".localized)
                         .foregroundColor(.secondary)
                         .fontWeight(.medium)
                 }
@@ -383,7 +383,7 @@ struct OnboardingView: View {
                     hideKeyboard()
                     saveSettings(enableLock: false)
                 }) {
-                    Text("Finish")
+                    Text("common.finish".localized)
                         .frame(minWidth: 80)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
@@ -436,6 +436,23 @@ struct OnboardingView: View {
         return "Biometric Authentication"
     }
     
+    private var biometricLocalizedName: String {
+        let context = LAContext()
+        var error: NSError?
+        
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            switch context.biometryType {
+            case .faceID:
+                return "onboarding.enable_faceid".localized
+            case .touchID:
+                return "onboarding.enable_touchid".localized
+            default:
+                return "onboarding.enable_biometric".localized
+            }
+        }
+        return "onboarding.enable_biometric".localized
+    }
+    
     private func checkBiometricAvailability() {
         let context = LAContext()
         var error: NSError?
@@ -446,7 +463,7 @@ struct OnboardingView: View {
             print("Biometric available, type: \(context.biometryType.rawValue)")
             
             // Request authentication to ensure user grants permission
-            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "Enable biometric authentication to secure your photos") { success, authError in
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "onboarding.enable_biometric".localized) { success, authError in
                 DispatchQueue.main.async {
                     if success {
                         print("Biometric authentication successful")
@@ -460,14 +477,14 @@ struct OnboardingView: View {
                                 return
                             }
                         }
-                        passcodeErrorMessage = authError?.localizedDescription ?? "Failed to enable biometric authentication"
+                        passcodeErrorMessage = authError?.localizedDescription ?? "onboarding.enable_biometric".localized
                         showingPasscodeError = true
                     }
                 }
             }
         } else {
             print("Biometric not available: \(error?.localizedDescription ?? "Unknown error")")
-            passcodeErrorMessage = "Biometric authentication is not available on this device. Please use a passcode instead."
+            passcodeErrorMessage = "onboarding.enable_biometric".localized
             showingPasscodeError = true
         }
     }
@@ -561,13 +578,13 @@ struct BaselinePhotoCaptureView: View {
                     Spacer()
                 
                     VStack(spacing: 20) {
-                        Text("Take Your First Photo")
+                        Text("onboarding.first_photo.title".localized)
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .shadow(radius: 2)
                         
-                        Text("Stand in the frame and\ncapture your starting point")
+                        Text("onboarding.first_photo.subtitle".localized)
                             .font(.body)
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
@@ -703,8 +720,8 @@ struct PasscodeSetupView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Create Passcode")) {
-                    SecureField("Enter 4-digit Passcode", text: $passcode)
+                Section(header: Text("onboarding.create_passcode".localized)) {
+                    SecureField("onboarding.enter_passcode".localized, text: $passcode)
                         .keyboardType(.numberPad)
                         .onChange(of: passcode) { _, newValue in
                             // Limit to 4 digits
@@ -718,7 +735,7 @@ struct PasscodeSetupView: View {
                             }
                         }
                     
-                    SecureField("Confirm Passcode", text: $confirmPasscode)
+                    SecureField("onboarding.confirm_passcode".localized, text: $confirmPasscode)
                         .keyboardType(.numberPad)
                         .onChange(of: confirmPasscode) { _, newValue in
                             // Limit to 4 digits
@@ -733,24 +750,24 @@ struct PasscodeSetupView: View {
                         }
                 }
             }
-            .navigationTitle("Set Up Passcode")
+            .navigationTitle("onboarding.setup_passcode".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         dismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("common.done".localized) {
                         validateAndSave()
                     }
                     .disabled(passcode.count != 4 || confirmPasscode.count != 4)
                 }
             }
-            .alert("Error", isPresented: $showingError) {
-                Button("OK") { }
+            .alert("common.error".localized, isPresented: $showingError) {
+                Button("common.ok".localized) { }
             } message: {
                 Text(errorMessage)
             }
@@ -759,7 +776,7 @@ struct PasscodeSetupView: View {
     
     private func validateAndSave() {
         guard passcode == confirmPasscode else {
-            errorMessage = "Passcodes do not match"
+            errorMessage = "onboarding.passcode_mismatch".localized
             showingError = true
             return
         }

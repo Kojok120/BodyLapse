@@ -75,16 +75,16 @@ struct CameraView: View {
                         .font(.system(size: 60))
                         .foregroundColor(.gray)
                     
-                    Text("Camera Access Required")
+                    Text("camera.access_required".localized)
                         .font(.title2)
                         .fontWeight(.semibold)
                     
-                    Text("Please enable camera access in Settings to take photos")
+                    Text("camera.access_message".localized)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
                     
-                    Button("Open Settings") {
+                    Button("camera.open_settings".localized) {
                         if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                             UIApplication.shared.open(settingsURL)
                         }
@@ -105,8 +105,8 @@ struct CameraView: View {
         .onDisappear {
             viewModel.stopSession()
         }
-        .alert("Error", isPresented: $viewModel.showingAlert) {
-            Button("OK", role: .cancel) { }
+        .alert("common.error".localized, isPresented: $viewModel.showingAlert) {
+            Button("common.ok".localized, role: .cancel) { }
         } message: {
             Text(viewModel.alertMessage)
         }
@@ -120,8 +120,8 @@ struct CameraView: View {
                 activeSheet = .weightInput
             }
         }
-        .alert("Only One Photo Per Day", isPresented: $viewModel.showingReplaceAlert) {
-            Button("Replace", role: .destructive) {
+        .alert("camera.one_photo_per_day".localized, isPresented: $viewModel.showingReplaceAlert) {
+            Button("common.replace".localized, role: .destructive) {
                 if let image = viewModel.capturedImage {
                     if viewModel.userSettings?.settings.isPremium == true {
                         viewModel.showingWeightInput = true
@@ -131,11 +131,11 @@ struct CameraView: View {
                     }
                 }
             }
-            Button("Cancel", role: .cancel) {
+            Button("common.cancel".localized, role: .cancel) {
                 viewModel.capturedImage = nil
             }
         } message: {
-            Text("You can only save one photo per day. Do you want to replace today's photo?")
+            Text("camera.replace_photo_message".localized)
         }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
@@ -274,7 +274,7 @@ struct BodyGuidelineView: View {
                 Image(systemName: isBodyDetected ? "figure.stand" : "figure.stand")
                     .foregroundColor(isBodyDetected ? .green : .orange)
                 
-                Text(isBodyDetected ? "Body detected" : "Align your body")
+                Text(isBodyDetected ? "calendar.body_detected".localized : "calendar.align_body".localized)
                     .font(.caption)
                     .foregroundColor(isBodyDetected ? .green : .orange)
             }

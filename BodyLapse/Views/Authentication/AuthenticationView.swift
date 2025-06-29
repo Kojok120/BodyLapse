@@ -24,11 +24,11 @@ struct AuthenticationView: View {
                         .font(.system(size: 80))
                         .foregroundColor(.accentColor)
                     
-                    Text("BodyLapse")
+                    Text("auth.app_name".localized)
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("Enter your PIN to continue")
+                    Text("auth.enter_pin".localized)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .opacity(showingPasswordField ? 1 : 0)
@@ -37,7 +37,7 @@ struct AuthenticationView: View {
                 // Authentication UI
                 VStack(spacing: 20) {
                     if showingPasswordField {
-                        SecureField("Enter PIN", text: $password)
+                        SecureField("auth.enter_pin_short".localized, text: $password)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
                             .submitLabel(.done)
@@ -53,7 +53,7 @@ struct AuthenticationView: View {
                         
                         Button(action: authenticateWithPassword) {
                             HStack {
-                                Text("Unlock")
+                                Text("auth.unlock".localized)
                                 Image(systemName: "lock.open.fill")
                             }
                             .font(.headline)
@@ -68,7 +68,7 @@ struct AuthenticationView: View {
                         if authService.isBiometricEnabled {
                             Button(action: authenticateWithBiometric) {
                                 HStack {
-                                    Text("Use \(authService.biometricTypeString)")
+                                    Text(authService.biometricType == .faceID ? "auth.use_faceid".localized : "auth.use_touchid".localized)
                                     Image(systemName: biometricIcon)
                                 }
                                 .font(.subheadline)
@@ -84,13 +84,13 @@ struct AuthenticationView: View {
                                         .font(.system(size: 50))
                                         .foregroundColor(.accentColor)
                                     
-                                    Text("Tap to unlock with \(authService.biometricTypeString)")
+                                    Text(authService.biometricType == .faceID ? "auth.tap_faceid".localized : "auth.tap_touchid".localized)
                                         .font(.headline)
                                         .foregroundColor(.primary)
                                 }
                             }
                             
-                            Button("Use PIN Instead") {
+                            Button("auth.use_pin".localized) {
                                 withAnimation {
                                     showingPasswordField = true
                                 }

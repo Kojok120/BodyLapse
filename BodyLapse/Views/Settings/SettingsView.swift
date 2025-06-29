@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @StateObject private var userSettings = UserSettingsManager.shared
     @StateObject private var authService = AuthenticationService.shared
+    @StateObject private var languageManager = LanguageManager.shared
     @State private var showingAbout = false
     @State private var showingPremiumUpgrade = false
     @State private var showingPasswordSetup = false
@@ -16,26 +17,38 @@ struct SettingsView: View {
     @State private var healthKitSyncInProgress = false
     @State private var showingResetGuidelineConfirmation = false
     @State private var showingResetGuideline = false
+    @State private var showingLanguageChangeAlert = false
     
     var body: some View {
         NavigationView {
             Form {
-                Section("Photo Settings") {
-                    Toggle("Show Body Guidelines", isOn: $userSettings.settings.showBodyGuidelines)
+                Section("settings.photo_settings".localized) {
+                    Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
                     
                     if GuidelineStorageService.shared.hasGuideline() {
                         Button(action: {
                             showingResetGuidelineConfirmation = true
                         }) {
-                            Label("Reset Body Guideline", systemImage: "arrow.uturn.backward")
+                            Label("settings.reset_guideline".localized, systemImage: "arrow.uturn.backward")
                                 .foregroundColor(.red)
                         }
                     }
                     
-                    Picker("Weight Unit", selection: $userSettings.settings.weightUnit) {
+                    Picker("settings.weight_unit".localized, selection: $userSettings.settings.weightUnit) {
                         ForEach(UserSettings.WeightUnit.allCases, id: \.self) { unit in
                             Text(unit.rawValue).tag(unit)
                         }
+                    }
+                    
+                    // Language Selection
+                    Picker("settings.language".localized, selection: $languageManager.currentLanguage) {
+                        ForEach(languageManager.supportedLanguages, id: \.self) { language in
+                            Text(languageManager.getLanguageName(for: language))
+                                .tag(language)
+                        }
+                    }
+                    .onChange(of: languageManager.currentLanguage) { _, _ in
+                        showingLanguageChangeAlert = true
                     }
                 }
                 
@@ -191,7 +204,7 @@ struct SettingsView: View {
                 }
                 #endif
             }
-            .navigationTitle("Settings")
+            .navigationTitle("settings.title".localized)
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
@@ -236,6 +249,19 @@ struct SettingsView: View {
             }
             .fullScreenCover(isPresented: $showingResetGuideline) {
                 ResetGuidelineView()
+            }
+            .alert("common.done".localized, isPresented: $showingLanguageChangeAlert) {
+                Button("common.ok".localized) {
+                    // Force app refresh
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                        windowScene.windows.first?.rootViewController = UIHostingController(
+                            rootView: ContentView()
+                                .environmentObject(languageManager)
+                        )
+                    }
+                }
+            } message: {
+                Text("settings.language_changed".localized)
             }
             .onAppear {
                 healthKitEnabled = userSettings.settings.healthKitEnabled

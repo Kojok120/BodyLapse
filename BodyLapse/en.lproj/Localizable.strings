@@ -1,0 +1,262 @@
+/* 
+  Localizable.strings
+  BodyLapse
+  
+  English Localization
+*/
+
+/* Tab Bar */
+"tab.calendar" = "Calendar";
+"tab.compare" = "Compare";
+"tab.photo" = "Photo";
+"tab.gallery" = "Gallery";
+"tab.settings" = "Settings";
+
+/* Common Actions */
+"common.delete" = "Delete";
+"common.share" = "Share";
+"common.save" = "Save";
+"common.cancel" = "Cancel";
+"common.done" = "Done";
+"common.ok" = "OK";
+"common.close" = "Close";
+"common.back" = "Back";
+"common.next" = "Next";
+"common.continue" = "Continue";
+"common.skip" = "Skip";
+"common.finish" = "Finish";
+"common.error" = "Error";
+"common.loading" = "Loading...";
+"common.processing" = "Processing...";
+"common.replace" = "Replace";
+"common.retake" = "Retake";
+"common.use_photo" = "Use Photo";
+"common.save_photo" = "Save Photo";
+
+/* Calendar View */
+"calendar.title" = "Progress";
+"calendar.period.7days" = "7 Days";
+"calendar.period.30days" = "30 Days";
+"calendar.period.3months" = "3 Months";
+"calendar.period.6months" = "6 Months";
+"calendar.period.1year" = "1 Year";
+"calendar.generate" = "Generate";
+"calendar.body_detected" = "Body detected";
+"calendar.align_body" = "Align your body";
+"calendar.no_photo" = "No photo";
+"calendar.select_time_period" = "Select Time Period";
+"calendar.video_generation" = "Video Generation";
+"calendar.update_measurements" = "Update Measurements";
+"calendar.weight" = "Weight";
+"calendar.enter_weight" = "Enter weight";
+"calendar.body_fat_optional" = "Body Fat % (Optional)";
+"calendar.enter_body_fat" = "Enter body fat";
+"calendar.clear_data" = "Clear Data";
+"calendar.period_label" = "Period";
+"calendar.selected_period" = "Selected Period";
+"calendar.date_range" = "Date Range";
+"calendar.photos" = "Photos";
+"calendar.video_settings" = "Video Settings";
+"calendar.speed" = "Speed";
+"calendar.quality" = "Quality";
+"calendar.blur_faces" = "Blur Faces";
+"calendar.watermark_notice" = "Free version includes a watermark";
+"calendar.estimated_duration" = "Estimated Duration";
+"calendar.generate_video" = "Generate Video";
+"calendar.speed.slow" = "Slow (0.5s/frame)";
+"calendar.speed.normal" = "Normal (0.25s/frame)";
+"calendar.speed.fast" = "Fast (0.1s/frame)";
+"calendar.quality.standard" = "Standard (720p)";
+"calendar.quality.high" = "High (1080p)";
+"calendar.quality.ultra" = "Ultra (4K)";
+"calendar.generating_video" = "Generating Video";
+"calendar.select_date" = "Select Date";
+"calendar.has_photo" = "Photo";
+"calendar.has_data" = "Data";
+"calendar.no_data_period" = "No data for selected period";
+"calendar.ios16_required" = "Weight tracking requires iOS 16 or later";
+"calendar.no_weight_data" = "No weight data yet";
+"calendar.add_weight_hint" = "Add weight data when saving photos";
+"calendar.reload_data" = "Reload Data";
+
+/* Camera View */
+"camera.access_required" = "Camera Access Required";
+"camera.access_message" = "Please enable camera access in Settings to take photos";
+"camera.open_settings" = "Open Settings";
+"camera.one_photo_per_day" = "Only One Photo Per Day";
+"camera.replace_photo_message" = "You can only save one photo per day. Do you want to replace today's photo?";
+"camera.face_blurred" = "Face blurred";
+
+/* Gallery View */
+"gallery.title" = "Gallery";
+"gallery.videos" = "Videos";
+"gallery.photos" = "Photos";
+"gallery.no_photos" = "No photos yet";
+"gallery.no_videos" = "No videos yet";
+"gallery.delete_item" = "Delete Item";
+"gallery.delete_confirm" = "Are you sure you want to delete this item? This action cannot be undone.";
+"gallery.save_to_photos" = "Save to Photos";
+"gallery.photo_saved" = "Photo saved to library";
+"gallery.video_saved" = "Video saved to library";
+"gallery.photos_count" = "photos";
+
+/* Settings View */
+"settings.title" = "Settings";
+"settings.photo_settings" = "Photo Settings";
+"settings.show_guidelines" = "Show Body Guidelines";
+"settings.reset_guideline" = "Reset Body Guideline";
+"settings.weight_unit" = "Weight Unit";
+"settings.security" = "Security";
+"settings.app_lock" = "App Lock";
+"settings.change_pin" = "Change PIN";
+"settings.reminders" = "Reminders";
+"settings.daily_reminder" = "Daily Reminder";
+"settings.reminder_time" = "Reminder Time";
+"settings.premium_features" = "Premium Features";
+"settings.premium_active" = "Premium Active";
+"settings.sync_health" = "Sync with Health";
+"settings.auto_import" = "Auto-import weight & body fat";
+"settings.sync_now" = "Sync Now";
+"settings.upgrade_premium" = "Upgrade to Premium";
+"settings.premium_description" = "Remove ads, watermark & track weight";
+"settings.premium_price" = "$4.99/mo";
+"settings.data" = "Data";
+"settings.export_photos" = "Export Photos";
+"settings.clear_all_data" = "Clear All Data";
+"settings.about" = "About";
+"settings.about_bodylapse" = "About BodyLapse";
+"settings.version" = "v1.0.0";
+"settings.privacy_policy" = "Privacy Policy";
+"settings.terms_service" = "Terms of Service";
+"settings.debug_settings" = "Debug Settings";
+"settings.notification_required" = "Notification Permission Required";
+"settings.notification_message" = "Please enable notifications in Settings to receive daily photo reminders.";
+"settings.health_required" = "Health Access Required";
+"settings.health_message" = "Please grant access to read and write weight and body fat data in the Health app.";
+"settings.reset_guideline_confirm" = "Are you sure you want to reset your body guideline? You will need to take a new photo to set it up again.";
+"settings.reset" = "Reset";
+"settings.language" = "Language";
+
+/* About Section */
+"about.bodylapse" = "BodyLapse";
+"about.tagline" = "Track your fitness journey";
+"about.feature1" = "Daily progress photos";
+"about.feature2" = "Visual progress calendar";
+"about.feature3" = "Create time-lapse videos";
+"about.feature4" = "100% private & secure";
+"about.made_with_love" = "Made with ❤️ for fitness enthusiasts";
+
+/* Export Photos */
+"export.description" = "Export your photos to share or backup";
+"export.all_photos" = "Export All Photos";
+"export.title" = "Export Photos";
+
+/* Compare View */
+"compare.title" = "Compare Progress";
+"compare.before" = "Before";
+"compare.after" = "After";
+"compare.select_first" = "Select First Photo";
+"compare.select_second" = "Select Second Photo";
+"compare.no_weight" = "No weight";
+"compare.select_photo" = "Select photo";
+"compare.weight" = "weight";
+"compare.body_fat" = "body fat";
+"compare.upgrade_premium" = "Upgrade to Premium";
+"compare.premium_feature" = "Compare weight and body fat changes";
+"compare.instruction" = "Compare Your Progress";
+"compare.select_two_photos" = "Select two photos to see your transformation";
+"compare.select_date" = "Select Date";
+
+/* Onboarding */
+"onboarding.welcome" = "Welcome to BodyLapse";
+"onboarding.setup_account" = "Setup Your Account";
+"onboarding.daily_photos.title" = "Daily Progress Photos";
+"onboarding.daily_photos.subtitle" = "Capture your transformation with\nconsistent daily photos";
+"onboarding.daily_photos.description" = "Visual guidelines help you maintain\nthe same pose and position every time";
+"onboarding.timelapse.title" = "Time-Lapse Videos";
+"onboarding.timelapse.subtitle" = "Watch your journey unfold\nwith stunning time-lapse videos";
+"onboarding.timelapse.description" = "Customize video speed and quality\nto create the perfect transformation montage";
+"onboarding.privacy.title" = "Privacy Protection";
+"onboarding.privacy.subtitle" = "Keep your identity private with\nautomatic face blurring technology";
+"onboarding.privacy.description" = "All processing happens on your device\nYour photos never leave your phone";
+"onboarding.metrics.title" = "Track Your Metrics";
+"onboarding.metrics.subtitle" = "Log weight and body fat percentage\nto visualize your progress over time";
+"onboarding.metrics.description" = "Combine photos with data insights\nfor comprehensive progress tracking";
+"onboarding.comparison.title" = "Before & After Comparison";
+"onboarding.comparison.subtitle" = "Select any two photos to see\nyour transformation side by side";
+"onboarding.comparison.description" = "Easily compare your starting point\nwith your current progress";
+"onboarding.start.title" = "Let's Get Started!";
+"onboarding.start.subtitle" = "Take your first photo and begin\ntracking your transformation journey";
+"onboarding.start" = "Start";
+"onboarding.first_photo.title" = "Take Your First Photo";
+"onboarding.first_photo.subtitle" = "Stand in the frame and\ncapture your starting point";
+"onboarding.security.title" = "Secure Your Progress";
+"onboarding.security.subtitle" = "Protect your photos with\nFace ID or a passcode";
+"onboarding.enable_faceid" = "Enable Face ID";
+"onboarding.enable_touchid" = "Enable Touch ID";
+"onboarding.enable_biometric" = "Enable Biometric Authentication";
+"onboarding.setup_passcode" = "Set Up Passcode";
+"onboarding.create_passcode" = "Create Passcode";
+"onboarding.enter_passcode" = "Enter 4-digit Passcode";
+"onboarding.confirm_passcode" = "Confirm Passcode";
+"onboarding.passcode_mismatch" = "Passcodes do not match";
+
+/* Authentication */
+"auth.app_name" = "BodyLapse";
+"auth.enter_pin" = "Enter your PIN to continue";
+"auth.enter_pin_short" = "Enter PIN";
+"auth.unlock" = "Unlock";
+"auth.use_faceid" = "Use Face ID";
+"auth.use_touchid" = "Use Touch ID";
+"auth.use_pin" = "Use PIN Instead";
+"auth.tap_faceid" = "Tap to unlock with Face ID";
+"auth.tap_touchid" = "Tap to unlock with Touch ID";
+
+/* Premium View */
+"premium.title" = "BodyLapse Premium";
+"premium.subtitle" = "Unlock all features and track your journey";
+"premium.feature.tracking" = "Weight & Body Fat Tracking";
+"premium.feature.tracking_desc" = "Track your progress with detailed charts";
+"premium.feature.no_ads" = "No Ads";
+"premium.feature.no_ads_desc" = "Enjoy an ad-free experience";
+"premium.feature.no_watermark" = "No Watermark";
+"premium.feature.no_watermark_desc" = "Export videos without watermark";
+"premium.feature.reminders" = "Advanced Reminders";
+"premium.feature.reminders_desc" = "Customize notification times";
+"premium.restore" = "Restore Purchases";
+"premium.auto_renew" = "Subscriptions will automatically renew unless cancelled";
+"premium.terms" = "Terms of Service";
+"premium.privacy" = "Privacy Policy";
+"premium.purchase_error" = "Purchase Error";
+"premium.save_percent" = "Save 17%";
+"premium.per" = "per";
+"premium.subscribe" = "Subscribe Now";
+
+/* Weight Input */
+"weight.title" = "Weight Input";
+"weight.weight" = "Weight";
+"weight.body_fat" = "Body Fat %";
+"weight.enter_weight" = "Enter weight";
+"weight.enter_body_fat" = "Enter body fat percentage";
+
+/* Date and Time */
+"date.today" = "Today";
+"date.yesterday" = "Yesterday";
+"date.days_ago" = "%d days ago";
+"date.week" = "week";
+"date.month" = "month";
+"date.year" = "year";
+
+/* Units */
+"unit.kg" = "kg";
+"unit.lbs" = "lbs";
+"unit.percent" = "%";
+
+/* Languages */
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.korean" = "한국어";
+"language.spanish" = "Español";
+
+/* Language Change */
+"settings.language_changed" = "Language changed. The app will refresh to apply the changes.";

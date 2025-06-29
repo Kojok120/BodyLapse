@@ -40,7 +40,7 @@ struct CompareView: View {
                         .modifier(BannerAdModifier())
                 }
             }
-            .navigationTitle("Compare Progress")
+            .navigationTitle("compare.title".localized)
             .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $showingFirstCalendar) {
                 CalendarPopupView(
@@ -144,7 +144,7 @@ struct CompareView: View {
                                             VStack {
                                                 HStack {
                                                     VStack(alignment: .leading, spacing: 2) {
-                                                        Text("Before")
+                                                        Text("compare.before".localized)
                                                             .font(.caption)
                                                             .fontWeight(.bold)
                                                         Text(formatDateShort(photo.captureDate))
@@ -170,7 +170,7 @@ struct CompareView: View {
                                             Image(systemName: "photo")
                                                 .font(.system(size: 40))
                                                 .foregroundColor(.gray)
-                                            Text("Select First Photo")
+                                            Text("compare.select_first".localized)
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                         }
@@ -194,7 +194,7 @@ struct CompareView: View {
                                                 .font(.system(size: 16, weight: .semibold))
                                                 .foregroundColor(.primary)
                                         } else {
-                                            Text("No weight")
+                                            Text("compare.no_weight".localized)
                                                 .font(.system(size: 12))
                                                 .foregroundColor(.secondary)
                                         }
@@ -212,7 +212,7 @@ struct CompareView: View {
                                         }
                                     }
                                 } else {
-                                    Text("Select photo")
+                                    Text("compare.select_photo".localized)
                                         .font(.system(size: 12))
                                         .foregroundColor(.secondary)
                                 }
@@ -251,7 +251,7 @@ struct CompareView: View {
                                             VStack {
                                                 HStack {
                                                     VStack(alignment: .leading, spacing: 2) {
-                                                        Text("After")
+                                                        Text("compare.after".localized)
                                                             .font(.caption)
                                                             .fontWeight(.bold)
                                                         Text(formatDateShort(photo.captureDate))
@@ -277,7 +277,7 @@ struct CompareView: View {
                                             Image(systemName: "photo")
                                                 .font(.system(size: 40))
                                                 .foregroundColor(.gray)
-                                            Text("Select Second Photo")
+                                            Text("compare.select_second".localized)
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                         }
@@ -301,7 +301,7 @@ struct CompareView: View {
                                                 .font(.system(size: 16, weight: .semibold))
                                                 .foregroundColor(.primary)
                                         } else {
-                                            Text("No weight")
+                                            Text("compare.no_weight".localized)
                                                 .font(.system(size: 12))
                                                 .foregroundColor(.secondary)
                                         }
@@ -319,7 +319,7 @@ struct CompareView: View {
                                         }
                                     }
                                 } else {
-                                    Text("Select photo")
+                                    Text("compare.select_photo".localized)
                                         .font(.system(size: 12))
                                         .foregroundColor(.secondary)
                                 }
@@ -357,7 +357,7 @@ struct CompareView: View {
                                                     .fontWeight(.semibold)
                                             }
                                             .foregroundColor(weightDiff > 0 ? .red : .green)
-                                            Text("weight")
+                                            Text("compare.weight".localized)
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                         }
@@ -379,7 +379,7 @@ struct CompareView: View {
                                                     .fontWeight(.semibold)
                                             }
                                             .foregroundColor(bodyFatDiff > 0 ? .red : .green)
-                                            Text("body fat")
+                                            Text("compare.body_fat".localized)
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                         }
@@ -394,9 +394,9 @@ struct CompareView: View {
                                     Image(systemName: "lock.fill")
                                         .font(.title2)
                                         .foregroundColor(.secondary)
-                                    Text("Upgrade to Premium")
+                                    Text("compare.upgrade_premium".localized)
                                         .font(.headline)
-                                    Text("Compare weight and body fat changes")
+                                    Text("compare.premium_feature".localized)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -424,10 +424,10 @@ struct CompareView: View {
             Image(systemName: "arrow.left.arrow.right")
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
-            Text("Compare Your Progress")
+            Text("compare.instruction".localized)
                 .font(.headline)
                 .foregroundColor(.primary)
-            Text("Select two photos to see your transformation")
+            Text("compare.select_two_photos".localized)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -443,7 +443,7 @@ struct CompareView: View {
                 VStack(spacing: 8) {
                     HStack {
                         Image(systemName: "calendar")
-                        Text("Before")
+                        Text("compare.before".localized)
                     }
                     .font(.headline)
                     
@@ -452,7 +452,7 @@ struct CompareView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     } else {
-                        Text("Select Date")
+                        Text("compare.select_date".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -469,7 +469,7 @@ struct CompareView: View {
                 VStack(spacing: 8) {
                     HStack {
                         Image(systemName: "calendar")
-                        Text("After")
+                        Text("compare.after".localized)
                     }
                     .font(.headline)
                     
@@ -478,7 +478,7 @@ struct CompareView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     } else {
-                        Text("Select Date")
+                        Text("compare.select_date".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		484212C32E0B8F56001390A9 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 484212C22E0B8F56001390A9 /* GoogleMobileAds */; };
-		48AC9B352E0DA4FF0067E51E /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48AC9B342E0DA4FF0067E51E /* opencv2.framework */; };
-		48AC9B362E0DA4FF0067E51E /* opencv2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 48AC9B342E0DA4FF0067E51E /* opencv2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		48A409392E1150AC00DDC199 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48A409382E1150AC00DDC199 /* opencv2.framework */; };
+		48A4093A2E1150AC00DDC199 /* opencv2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 48A409382E1150AC00DDC199 /* opencv2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,7 +36,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				48AC9B362E0DA4FF0067E51E /* opencv2.framework in Embed Frameworks */,
+				48A4093A2E1150AC00DDC199 /* opencv2.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -44,7 +44,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		48AC9B342E0DA4FF0067E51E /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = Frameworks/opencv2.framework; sourceTree = "<group>"; };
+		48A409382E1150AC00DDC199 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		48D6378F2E0A0D0800133751 /* BodyLapse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BodyLapse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48D637A02E0A0D0900133751 /* BodyLapseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BodyLapseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		48D637AA2E0A0D0900133751 /* BodyLapseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BodyLapseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -86,7 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				48AC9B352E0DA4FF0067E51E /* opencv2.framework in Frameworks */,
+				48A409392E1150AC00DDC199 /* opencv2.framework in Frameworks */,
 				484212C32E0B8F56001390A9 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -111,7 +111,7 @@
 		484212C12E0B8F56001390A9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				48AC9B342E0DA4FF0067E51E /* opencv2.framework */,
+				48A409382E1150AC00DDC199 /* opencv2.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -239,6 +239,9 @@
 			knownRegions = (
 				en,
 				Base,
+				ja,
+				ko,
+				es,
 			);
 			mainGroup = 48D637862E0A0D0800133751;
 			minimizedProjectReferenceProxies = 1;
@@ -489,6 +492,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_STANDARD_LIBRARY_HARDENING = fast;
 				CODE_SIGN_ENTITLEMENTS = BodyLapse/BodyLapse.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

@@ -11,6 +11,7 @@ import SwiftUI
 struct BodyLapseApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var storeManager = StoreManager.shared
+    @StateObject private var languageManager = LanguageManager.shared
     
     init() {
         // Initialize PhotoStorageService on app launch
@@ -20,6 +21,7 @@ struct BodyLapseApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(languageManager)
                 .tint(.bodyLapseTurquoise)
                 .task {
                     // Initialize StoreKit on app launch

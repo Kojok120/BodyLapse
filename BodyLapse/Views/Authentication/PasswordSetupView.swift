@@ -13,16 +13,16 @@ struct PasswordSetupView: View {
         NavigationView {
             VStack(spacing: 30) {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("Create a PIN")
+                    Text("settings.change_pin".localized)
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("This 4-digit PIN will be used to unlock your app when biometric authentication is not available.")
+                    Text("onboarding.security.subtitle".localized)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
                     VStack(alignment: .leading, spacing: 15) {
-                        SecureField("4-digit PIN", text: $password)
+                        SecureField("onboarding.enter_passcode".localized, text: $password)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
                             .onChange(of: password) { _, newValue in
@@ -32,7 +32,7 @@ struct PasswordSetupView: View {
                                 }
                             }
                         
-                        SecureField("Confirm PIN", text: $confirmPassword)
+                        SecureField("onboarding.confirm_passcode".localized, text: $confirmPassword)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
                             .onChange(of: confirmPassword) { _, newValue in
@@ -44,11 +44,11 @@ struct PasswordSetupView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 5) {
-                        Label("4 digits required", systemImage: password.count == 4 ? "checkmark.circle.fill" : "circle")
+                        Label("onboarding.enter_passcode".localized, systemImage: password.count == 4 ? "checkmark.circle.fill" : "circle")
                             .font(.caption)
                             .foregroundColor(password.count == 4 ? .green : .secondary)
                         
-                        Label("PINs match", systemImage: passwordsMatch ? "checkmark.circle.fill" : "circle")
+                        Label("onboarding.confirm_passcode".localized, systemImage: passwordsMatch ? "checkmark.circle.fill" : "circle")
                             .font(.caption)
                             .foregroundColor(passwordsMatch ? .green : .secondary)
                     }
@@ -58,7 +58,7 @@ struct PasswordSetupView: View {
                 Spacer()
                 
                 Button(action: savePassword) {
-                    Text("Set PIN")
+                    Text("onboarding.setup_passcode".localized)
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -72,13 +72,13 @@ struct PasswordSetupView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         dismiss()
                     }
                 }
             }
-            .alert("Error", isPresented: $showingError) {
-                Button("OK") { }
+            .alert("common.error".localized, isPresented: $showingError) {
+                Button("common.ok".localized) { }
             } message: {
                 Text(errorMessage)
             }
@@ -100,7 +100,7 @@ struct PasswordSetupView: View {
             onPasswordSet()
             dismiss()
         } else {
-            errorMessage = "Failed to save PIN. Please try again."
+            errorMessage = "common.error".localized
             showingError = true
         }
     }
@@ -119,12 +119,12 @@ struct ChangePasswordView: View {
         NavigationView {
             VStack(spacing: 30) {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("Change PIN")
+                    Text("settings.change_pin".localized)
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
                     VStack(alignment: .leading, spacing: 15) {
-                        SecureField("Current PIN", text: $currentPassword)
+                        SecureField("auth.enter_pin_short".localized, text: $currentPassword)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
                             .onChange(of: currentPassword) { _, newValue in
@@ -135,7 +135,7 @@ struct ChangePasswordView: View {
                         
                         Divider()
                         
-                        SecureField("New PIN", text: $newPassword)
+                        SecureField("onboarding.enter_passcode".localized, text: $newPassword)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
                             .onChange(of: newPassword) { _, newValue in
@@ -144,7 +144,7 @@ struct ChangePasswordView: View {
                                 }
                             }
                         
-                        SecureField("Confirm New PIN", text: $confirmPassword)
+                        SecureField("onboarding.confirm_passcode".localized, text: $confirmPassword)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
                             .onChange(of: confirmPassword) { _, newValue in
@@ -155,11 +155,11 @@ struct ChangePasswordView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 5) {
-                        Label("4 digits required", systemImage: newPassword.count == 4 ? "checkmark.circle.fill" : "circle")
+                        Label("onboarding.enter_passcode".localized, systemImage: newPassword.count == 4 ? "checkmark.circle.fill" : "circle")
                             .font(.caption)
                             .foregroundColor(newPassword.count == 4 ? .green : .secondary)
                         
-                        Label("PINs match", systemImage: passwordsMatch ? "checkmark.circle.fill" : "circle")
+                        Label("onboarding.confirm_passcode".localized, systemImage: passwordsMatch ? "checkmark.circle.fill" : "circle")
                             .font(.caption)
                             .foregroundColor(passwordsMatch ? .green : .secondary)
                     }
@@ -169,7 +169,7 @@ struct ChangePasswordView: View {
                 Spacer()
                 
                 Button(action: changePassword) {
-                    Text("Change PIN")
+                    Text("settings.change_pin".localized)
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -183,22 +183,22 @@ struct ChangePasswordView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         dismiss()
                     }
                 }
             }
-            .alert("Error", isPresented: $showingError) {
-                Button("OK") { }
+            .alert("common.error".localized, isPresented: $showingError) {
+                Button("common.ok".localized) { }
             } message: {
                 Text(errorMessage)
             }
-            .alert("Success", isPresented: $showingSuccess) {
-                Button("OK") {
+            .alert("common.done".localized, isPresented: $showingSuccess) {
+                Button("common.ok".localized) {
                     dismiss()
                 }
             } message: {
-                Text("PIN changed successfully")
+                Text("common.done".localized)
             }
         }
     }
@@ -218,7 +218,7 @@ struct ChangePasswordView: View {
         if AuthenticationService.shared.updatePassword(currentPassword: currentPassword, newPassword: newPassword) {
             showingSuccess = true
         } else {
-            errorMessage = "Current PIN is incorrect"
+            errorMessage = "auth.enter_pin".localized
             showingError = true
         }
     }

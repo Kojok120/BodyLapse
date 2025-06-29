@@ -9,31 +9,31 @@ struct MainTabView: View {
         TabView(selection: $selectedTab) {
             CalendarView()
                 .tabItem {
-                    Label("Calendar", systemImage: "calendar")
+                    Label("tab.calendar".localized, systemImage: "calendar")
                 }
                 .tag(0)
             
             CompareView()
                 .tabItem {
-                    Label("Compare", systemImage: "square.on.square")
+                    Label("tab.compare".localized, systemImage: "square.on.square")
                 }
                 .tag(1)
             
             CameraView()
                 .tabItem {
-                    Label("Photo", systemImage: "camera.fill")
+                    Label("tab.photo".localized, systemImage: "camera.fill")
                 }
                 .tag(2)
             
             GalleryView(videoToPlay: $videoToPlay)
                 .tabItem {
-                    Label("Gallery", systemImage: "photo.stack")
+                    Label("tab.gallery".localized, systemImage: "photo.stack")
                 }
                 .tag(3)
             
             SettingsView()
                 .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
+                    Label("tab.settings".localized, systemImage: "gearshape.fill")
                 }
                 .tag(4)
         }

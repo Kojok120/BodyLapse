@@ -38,7 +38,7 @@ struct GalleryView: View {
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             }
             .withBannerAd()
-            .navigationTitle("Gallery")
+            .navigationTitle("gallery.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 viewModel.loadData()
@@ -53,13 +53,13 @@ struct GalleryView: View {
             .fullScreenCover(item: $selectedVideo) { video in
                 VideoPlayerView(video: video)
             }
-            .alert("Delete Item", isPresented: $showingDeleteAlert) {
-                Button("Delete", role: .destructive) {
+            .alert("gallery.delete_item".localized, isPresented: $showingDeleteAlert) {
+                Button("common.delete".localized, role: .destructive) {
                     deleteSelectedItem()
                 }
-                Button("Cancel", role: .cancel) { }
+                Button("common.cancel".localized, role: .cancel) { }
             } message: {
-                Text("Are you sure you want to delete this item? This action cannot be undone.")
+                Text("gallery.delete_confirm".localized)
             }
             .overlay(alignment: .top) {
                 if showingSaveSuccess {
@@ -96,7 +96,7 @@ struct GalleryView: View {
     private var sectionPicker: some View {
         Picker("Section", selection: $viewModel.selectedSection) {
             ForEach(GalleryViewModel.GallerySection.allCases, id: \.self) { section in
-                Text(section.rawValue)
+                Text(section == .videos ? "gallery.videos".localized : "gallery.photos".localized)
             }
         }
         .pickerStyle(SegmentedPickerStyle())
@@ -106,7 +106,7 @@ struct GalleryView: View {
     private var photosSection: some View {
         ScrollView {
             if viewModel.photos.isEmpty {
-                emptyStateView(message: "No photos yet", icon: "photo")
+                emptyStateView(message: "gallery.no_photos".localized, icon: "photo")
             } else {
                 LazyVStack(pinnedViews: .sectionHeaders) {
                     ForEach(viewModel.photosGroupedByMonth(), id: \.0) { month, photos in
@@ -143,7 +143,7 @@ struct GalleryView: View {
     private var videosSection: some View {
         ScrollView {
             if viewModel.videos.isEmpty {
-                emptyStateView(message: "No videos yet", icon: "video")
+                emptyStateView(message: "gallery.no_videos".localized, icon: "video")
             } else {
                 LazyVStack(pinnedViews: .sectionHeaders) {
                     ForEach(viewModel.videosGroupedByMonth(), id: \.0) { month, videos in
@@ -248,7 +248,7 @@ struct GalleryView: View {
     private func savePhoto(_ photo: Photo) {
         viewModel.savePhotoToLibrary(photo) { success, error in
             if success {
-                showSaveSuccess(message: "Photo saved to library")
+                showSaveSuccess(message: "gallery.photo_saved".localized)
             } else {
                 print("Failed to save photo: \(error?.localizedDescription ?? "Unknown error")")
             }
@@ -258,7 +258,7 @@ struct GalleryView: View {
     private func saveVideo(_ video: Video) {
         viewModel.saveVideoToLibrary(video) { success, error in
             if success {
-                showSaveSuccess(message: "Video saved to library")
+                showSaveSuccess(message: "gallery.video_saved".localized)
             } else {
                 print("Failed to save video: \(error?.localizedDescription ?? "Unknown error")")
             }
@@ -309,13 +309,13 @@ struct PhotoGridItem: View {
                             Button {
                                 onShare()
                             } label: {
-                                Label("Share", systemImage: "square.and.arrow.up")
+                                Label("common.share".localized, systemImage: "square.and.arrow.up")
                             }
                             
                             Button {
                                 onSave()
                             } label: {
-                                Label("Save to Photos", systemImage: "square.and.arrow.down")
+                                Label("gallery.save_to_photos".localized, systemImage: "square.and.arrow.down")
                             }
                             
                             Divider()
@@ -323,7 +323,7 @@ struct PhotoGridItem: View {
                             Button(role: .destructive) {
                                 onDelete()
                             } label: {
-                                Label("Delete", systemImage: "trash")
+                                Label("common.delete".localized, systemImage: "trash")
                             }
                         } label: {
                             Image(systemName: "ellipsis.circle.fill")
@@ -392,13 +392,13 @@ struct VideoGridItem: View {
                             Button {
                                 onShare()
                             } label: {
-                                Label("Share", systemImage: "square.and.arrow.up")
+                                Label("common.share".localized, systemImage: "square.and.arrow.up")
                             }
                             
                             Button {
                                 onSave()
                             } label: {
-                                Label("Save to Photos", systemImage: "square.and.arrow.down")
+                                Label("gallery.save_to_photos".localized, systemImage: "square.and.arrow.down")
                             }
                             
                             Divider()
@@ -406,7 +406,7 @@ struct VideoGridItem: View {
                             Button(role: .destructive) {
                                 onDelete()
                             } label: {
-                                Label("Delete", systemImage: "trash")
+                                Label("common.delete".localized, systemImage: "trash")
                             }
                         } label: {
                             Image(systemName: "ellipsis.circle.fill")
@@ -494,7 +494,7 @@ struct PhotoDetailSheet: View {
                         }
                         
                         if photo.isFaceBlurred {
-                            Label("Face blurred", systemImage: "eye.slash")
+                            Label("camera.face_blurred".localized, systemImage: "eye.slash")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -518,7 +518,7 @@ struct PhotoDetailSheet: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("common.done".localized) {
                         dismiss()
                     }
                 }
@@ -554,7 +554,7 @@ struct VideoPlayerView: View {
                         .font(.headline)
                     
                     HStack {
-                        Label("\(video.frameCount) photos", systemImage: "photo.stack")
+                        Label("\(video.frameCount) " + "gallery.photos_count".localized, systemImage: "photo.stack")
                         Spacer()
                         Label(video.formattedDuration, systemImage: "timer")
                     }
@@ -574,7 +574,7 @@ struct VideoPlayerView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("common.done".localized) {
                         dismiss()
                     }
                 }

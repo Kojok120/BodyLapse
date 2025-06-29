@@ -27,6 +27,16 @@ struct CalendarView: View {
         case sixMonths = "6 Months"
         case year = "1 Year"
         
+        var localizedString: String {
+            switch self {
+            case .week: return "calendar.period.7days".localized
+            case .month: return "calendar.period.30days".localized
+            case .threeMonths: return "calendar.period.3months".localized
+            case .sixMonths: return "calendar.period.6months".localized
+            case .year: return "calendar.period.1year".localized
+            }
+        }
+        
         var days: Int {
             switch self {
             case .week: return 7
@@ -73,7 +83,7 @@ struct CalendarView: View {
             }
         }
         .withBannerAd()
-        .navigationTitle("Progress")
+        .navigationTitle("calendar.title".localized)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: handleOnAppear)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday")), perform: handleNavigateToToday)
@@ -93,8 +103,8 @@ struct CalendarView: View {
         .sheet(isPresented: $showingDatePicker) {
             datePickerSheet
         }
-        .alert("Video Generation", isPresented: $showingVideoAlert) {
-            Button("OK") { }
+        .alert("calendar.video_generation".localized, isPresented: $showingVideoAlert) {
+            Button("common.ok".localized) { }
         } message: {
             Text(videoAlertMessage)
         }
@@ -273,7 +283,7 @@ struct CalendarView: View {
     private var datePickerSheet: some View {
         NavigationView {
             VStack(spacing: 20) {
-                Text("Select Date")
+                Text("calendar.select_date".localized)
                     .font(.headline)
                     .padding(.top, 20)
                 
@@ -283,7 +293,7 @@ struct CalendarView: View {
                         Circle()
                             .fill(Color(red: 0, green: 0.7, blue: 0.8)) // Turquoise blue
                             .frame(width: 8, height: 8)
-                        Text("Photo")
+                        Text("calendar.has_photo".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -293,7 +303,7 @@ struct CalendarView: View {
                             Circle()
                                 .fill(Color.bodyLapseYellow)
                                 .frame(width: 8, height: 8)
-                            Text("Data")
+                            Text("calendar.has_data".localized)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -325,11 +335,11 @@ struct CalendarView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Select Date")
+            .navigationTitle("calendar.select_date".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         showingDatePicker = false
                     }
                 }
@@ -372,7 +382,7 @@ struct CalendarView: View {
                     showingPeriodPicker = true
                 }) {
                     HStack {
-                        Text(selectedPeriod.rawValue)
+                        Text(selectedPeriod.localizedString)
                             .font(.system(size: 16, weight: .medium))
                         Image(systemName: "chevron.down")
                             .font(.system(size: 12))
@@ -396,9 +406,9 @@ struct CalendarView: View {
             }
             .actionSheet(isPresented: $showingPeriodPicker) {
                 ActionSheet(
-                    title: Text("Select Time Period"),
+                    title: Text("calendar.select_time_period".localized),
                     buttons: TimePeriod.allCases.map { period in
-                        .default(Text(period.rawValue)) {
+                        .default(Text(period.localizedString)) {
                             selectedPeriod = period
                             selectedIndex = dateRange.count - 1
                             selectedDate = dateRange[selectedIndex]
@@ -415,7 +425,7 @@ struct CalendarView: View {
             }) {
                 HStack {
                     Image(systemName: "video.fill")
-                    Text("Generate")
+                    Text("calendar.generate".localized)
                 }
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.black)
@@ -456,7 +466,7 @@ struct CalendarView: View {
                         Image(systemName: "photo")
                             .font(.system(size: 60))
                             .foregroundColor(.gray)
-                        Text("No photo")
+                        Text("calendar.no_photo".localized)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -574,7 +584,7 @@ struct CalendarView: View {
                             selectedChartDate = nil
                         }
                     } else {
-                        Text("No data for selected period")
+                        Text("calendar.no_data_period".localized)
                             .foregroundColor(.secondary)
                             .padding()
                             .frame(maxWidth: .infinity)
@@ -582,7 +592,7 @@ struct CalendarView: View {
                             .cornerRadius(15)
                     }
                 } else {
-                    Text("Weight tracking requires iOS 16 or later")
+                    Text("calendar.ios16_required".localized)
                         .foregroundColor(.secondary)
                         .padding()
                 }
@@ -591,14 +601,14 @@ struct CalendarView: View {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.system(size: 40))
                         .foregroundColor(.gray.opacity(0.3))
-                    Text("No weight data yet")
+                    Text("calendar.no_weight_data".localized)
                         .font(.headline)
                         .foregroundColor(.secondary)
-                    Text("Add weight data when saving photos")
+                    Text("calendar.add_weight_hint".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    Button("Reload Data") {
+                    Button("calendar.reload_data".localized) {
                         weightViewModel.loadEntries()
                     }
                     .font(.caption)
@@ -706,7 +716,7 @@ struct WeightInputView: View {
                         .font(.system(size: 50))
                         .foregroundColor(.accentColor)
                     
-                    Text("Update Measurements")
+                    Text("calendar.update_measurements".localized)
                         .font(.title2)
                         .fontWeight(.bold)
                     
@@ -722,7 +732,7 @@ struct WeightInputView: View {
                     // Weight input
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Label("Weight", systemImage: "scalemass")
+                            Label("calendar.weight".localized, systemImage: "scalemass")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
@@ -735,7 +745,7 @@ struct WeightInputView: View {
                         }
                         
                         HStack {
-                            TextField("Enter weight", text: $weightText)
+                            TextField("calendar.enter_weight".localized, text: $weightText)
                                 .keyboardType(.decimalPad)
                                 .textFieldStyle(.roundedBorder)
                                 .font(.title3)
@@ -748,12 +758,12 @@ struct WeightInputView: View {
                     
                     // Body fat input
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Body Fat % (Optional)", systemImage: "percent")
+                        Label("calendar.body_fat_optional".localized, systemImage: "percent")
                             .font(.headline)
                             .foregroundColor(.primary)
                         
                         HStack {
-                            TextField("Enter body fat", text: $bodyFatText)
+                            TextField("calendar.enter_body_fat".localized, text: $bodyFatText)
                                 .keyboardType(.decimalPad)
                                 .textFieldStyle(.roundedBorder)
                                 .font(.title3)
@@ -771,7 +781,7 @@ struct WeightInputView: View {
                 // Action buttons
                 VStack(spacing: 15) {
                     Button(action: save) {
-                        Text("Save")
+                        Text("common.save".localized)
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -783,7 +793,7 @@ struct WeightInputView: View {
                     
                     if photo?.weight != nil || photo?.bodyFatPercentage != nil {
                         Button(action: clear) {
-                            Text("Clear Data")
+                            Text("calendar.clear_data".localized)
                                 .font(.subheadline)
                                 .foregroundColor(.red)
                         }
@@ -795,7 +805,7 @@ struct WeightInputView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         dismiss()
                     }
                 }
@@ -903,6 +913,14 @@ struct VideoGenerationView: View {
         case normal = "Normal (0.25s/frame)"
         case fast = "Fast (0.1s/frame)"
         
+        var localizedString: String {
+            switch self {
+            case .slow: return "calendar.speed.slow".localized
+            case .normal: return "calendar.speed.normal".localized
+            case .fast: return "calendar.speed.fast".localized
+            }
+        }
+        
         var frameDuration: CMTime {
             switch self {
             case .slow: return CMTime(value: 1, timescale: 2)
@@ -917,6 +935,14 @@ struct VideoGenerationView: View {
         case high = "High (1080p)"
         case ultra = "Ultra (4K)"
         
+        var localizedString: String {
+            switch self {
+            case .standard: return "calendar.quality.standard".localized
+            case .high: return "calendar.quality.high".localized
+            case .ultra: return "calendar.quality.ultra".localized
+            }
+        }
+        
         var videoSize: CGSize {
             switch self {
             case .standard: return CGSize(width: 720, height: 1280)
@@ -929,18 +955,18 @@ struct VideoGenerationView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Period")) {
+                Section(header: Text("calendar.period_label".localized)) {
                     HStack {
-                        Text("Selected Period")
+                        Text("calendar.selected_period".localized)
                         Spacer()
-                        Text(period.rawValue)
+                        Text(period.localizedString)
                             .foregroundColor(.secondary)
                     }
                     
                     if let firstDate = dateRange.first,
                        let lastDate = dateRange.last {
                         HStack {
-                            Text("Date Range")
+                            Text("calendar.date_range".localized)
                             Spacer()
                             Text(formatDateRange(from: firstDate, to: lastDate))
                                 .foregroundColor(.secondary)
@@ -950,27 +976,27 @@ struct VideoGenerationView: View {
                     
                     let photoCount = countPhotosInRange()
                     HStack {
-                        Text("Photos")
+                        Text("calendar.photos".localized)
                         Spacer()
                         Text("\(photoCount)")
                             .foregroundColor(.secondary)
                     }
                 }
                 
-                Section(header: Text("Video Settings")) {
-                    Picker("Speed", selection: $selectedSpeed) {
+                Section(header: Text("calendar.video_settings".localized)) {
+                    Picker("calendar.speed".localized, selection: $selectedSpeed) {
                         ForEach(VideoSpeed.allCases, id: \.self) { speed in
-                            Text(speed.rawValue).tag(speed)
+                            Text(speed.localizedString).tag(speed)
                         }
                     }
                     
-                    Picker("Quality", selection: $selectedQuality) {
+                    Picker("calendar.quality".localized, selection: $selectedQuality) {
                         ForEach(VideoQuality.allCases, id: \.self) { quality in
-                            Text(quality.rawValue).tag(quality)
+                            Text(quality.localizedString).tag(quality)
                         }
                     }
                     
-                    Toggle("Blur Faces", isOn: $enableFaceBlur)
+                    Toggle("calendar.blur_faces".localized, isOn: $enableFaceBlur)
                 }
                 
                 if !userSettings.settings.isPremium {
@@ -978,7 +1004,7 @@ struct VideoGenerationView: View {
                         HStack {
                             Image(systemName: "info.circle")
                                 .foregroundColor(.blue)
-                            Text("Free version includes a watermark")
+                            Text("calendar.watermark_notice".localized)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -988,25 +1014,25 @@ struct VideoGenerationView: View {
                 Section {
                     let estimatedDuration = estimateDuration()
                     HStack {
-                        Text("Estimated Duration")
+                        Text("calendar.estimated_duration".localized)
                         Spacer()
                         Text(estimatedDuration)
                             .foregroundColor(.secondary)
                     }
                 }
             }
-            .navigationTitle("Generate Video")
+            .navigationTitle("calendar.generate_video".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         dismiss()
                     }
                     .disabled(isGenerating)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Generate") {
+                    Button("calendar.generate".localized) {
                         let options = VideoGenerationService.VideoGenerationOptions(
                             frameDuration: selectedSpeed.frameDuration,
                             videoSize: selectedQuality.videoSize,
@@ -1106,7 +1132,7 @@ struct VideoGenerationProgressView: View {
                 .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 20) {
-                Text("Generating Video")
+                Text("calendar.generating_video".localized)
                     .font(.headline)
                     .foregroundColor(.white)
                 
