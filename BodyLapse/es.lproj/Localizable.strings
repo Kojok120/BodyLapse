@@ -34,7 +34,7 @@
 "common.save_photo" = "Guardar Foto";
 
 /* Calendar View */
-"calendar.title" = "";
+"calendar.title" = "Calendario";
 "calendar.period.7days" = "7 Días";
 "calendar.period.30days" = "30 Días";
 "calendar.period.3months" = "3 Meses";
@@ -205,6 +205,20 @@
 "onboarding.enter_passcode" = "Ingrese Código de 4 Dígitos";
 "onboarding.confirm_passcode" = "Confirmar Código de Acceso";
 "onboarding.passcode_mismatch" = "Los códigos de acceso no coinciden";
+
+/* Onboarding Premium Features */
+"onboarding.premium.title" = "Desbloquear Funciones Premium";
+"onboarding.premium.subtitle" = "Lleva tu viaje fitness al siguiente nivel con herramientas exclusivas";
+"onboarding.premium.metrics.title" = "Rastrea Tus Métricas";
+"onboarding.premium.metrics.description" = "Monitorea peso y porcentaje de grasa corporal con gráficos detallados";
+"onboarding.premium.nowatermark.title" = "Videos Sin Marca de Agua";
+"onboarding.premium.nowatermark.description" = "Crea videos time-lapse profesionales sin marcas de agua";
+"onboarding.premium.noads.title" = "Experiencia Sin Anuncios";
+"onboarding.premium.noads.description" = "Concéntrate en tu progreso sin interrupciones";
+"onboarding.premium.daterange.title" = "Acceso Completo al Rango de Fechas";
+"onboarding.premium.daterange.description" = "Ve y analiza toda tu línea de tiempo de fitness";
+"onboarding.premium.price" = "$4.99/mes";
+"onboarding.premium.price.detail" = "Cancela cuando quieras • Prueba gratuita disponible";
 
 /* Authentication */
 "auth.app_name" = "BodyLapse";

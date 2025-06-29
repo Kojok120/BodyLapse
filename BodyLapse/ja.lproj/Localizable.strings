@@ -34,7 +34,7 @@
 "common.save_photo" = "写真を保存";
 
 /* Calendar View */
-"calendar.title" = "";
+"calendar.title" = "カレンダー";
 "calendar.period.7days" = "7日間";
 "calendar.period.30days" = "30日間";
 "calendar.period.3months" = "3ヶ月";
@@ -205,6 +205,20 @@
 "onboarding.enter_passcode" = "4桁のパスコードを入力";
 "onboarding.confirm_passcode" = "パスコードを確認";
 "onboarding.passcode_mismatch" = "パスコードが一致しません";
+
+/* Onboarding Premium Features */
+"onboarding.premium.title" = "プレミアム機能をアンロック";
+"onboarding.premium.subtitle" = "専用ツールでフィットネスの旅を次のレベルへ";
+"onboarding.premium.metrics.title" = "メトリクスを追跡";
+"onboarding.premium.metrics.description" = "詳細なチャートで体重と体脂肪率をモニター";
+"onboarding.premium.nowatermark.title" = "ウォーターマークなしの動画";
+"onboarding.premium.nowatermark.description" = "ウォーターマークなしでプロフェッショナルなタイムラプス動画を作成";
+"onboarding.premium.noads.title" = "広告なしの体験";
+"onboarding.premium.noads.description" = "中断なく進捗に集中";
+"onboarding.premium.daterange.title" = "全期間アクセス";
+"onboarding.premium.daterange.description" = "フィットネスジャーニーのタイムライン全体を表示・分析";
+"onboarding.premium.price" = "月額¥650";
+"onboarding.premium.price.detail" = "いつでもキャンセル可能 • 無料トライアルあり";
 
 /* Authentication */
 "auth.app_name" = "BodyLapse";

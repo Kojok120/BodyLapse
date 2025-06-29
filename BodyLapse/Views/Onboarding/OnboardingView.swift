@@ -124,20 +124,15 @@ struct OnboardingView: View {
     
     private var featureStep4: some View {
         featureExplanationView(
-            icon: "chart.line.uptrend.xyaxis",
-            title: "onboarding.metrics.title".localized,
-            description: "onboarding.metrics.subtitle".localized,
-            subDescription: "onboarding.metrics.description".localized
-        )
-    }
-    
-    private var featureStep5: some View {
-        featureExplanationView(
             icon: "photo.on.rectangle.angled",
             title: "onboarding.comparison.title".localized,
             description: "onboarding.comparison.subtitle".localized,
             subDescription: "onboarding.comparison.description".localized
         )
+    }
+    
+    private var featureStep5: some View {
+        premiumFeaturesView
     }
     
     private var letsGetStartedStep: some View {
@@ -197,6 +192,92 @@ struct OnboardingView: View {
             Spacer()
         }
         .padding()
+    }
+    
+    private var premiumFeaturesView: some View {
+        ScrollView {
+            VStack(spacing: 30) {
+                Image(systemName: "star.circle.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(.yellow)
+                    .padding(.bottom, 10)
+                    .padding(.top, 40)
+                
+                Text("onboarding.premium.title".localized)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text("onboarding.premium.subtitle".localized)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .padding(.horizontal, 30)
+                
+                VStack(spacing: 20) {
+                    premiumFeatureItem(
+                        icon: "chart.line.uptrend.xyaxis",
+                        title: "onboarding.premium.metrics.title".localized,
+                        description: "onboarding.premium.metrics.description".localized
+                    )
+                    
+                    premiumFeatureItem(
+                        icon: "video.badge.checkmark",
+                        title: "onboarding.premium.nowatermark.title".localized,
+                        description: "onboarding.premium.nowatermark.description".localized
+                    )
+                    
+                    premiumFeatureItem(
+                        icon: "eye.slash",
+                        title: "onboarding.premium.noads.title".localized,
+                        description: "onboarding.premium.noads.description".localized
+                    )
+                    
+                    premiumFeatureItem(
+                        icon: "calendar.badge.plus",
+                        title: "onboarding.premium.daterange.title".localized,
+                        description: "onboarding.premium.daterange.description".localized
+                    )
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                
+                VStack(spacing: 10) {
+                    Text("onboarding.premium.price".localized)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text("onboarding.premium.price.detail".localized)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.top, 20)
+                .padding(.bottom, 40)
+            }
+        }
+    }
+    
+    private func premiumFeatureItem(icon: String, title: String, description: String) -> some View {
+        HStack(alignment: .top, spacing: 15) {
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundColor(.accentColor)
+                .frame(width: 30)
+            
+            VStack(alignment: .leading, spacing: 5) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, 10)
     }
     
     private var baselinePhotoStep: some View {

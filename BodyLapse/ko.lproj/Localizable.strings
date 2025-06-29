@@ -34,7 +34,7 @@
 "common.save_photo" = "사진 저장";
 
 /* Calendar View */
-"calendar.title" = "";
+"calendar.title" = "달력";
 "calendar.period.7days" = "7일";
 "calendar.period.30days" = "30일";
 "calendar.period.3months" = "3개월";
@@ -205,6 +205,20 @@
 "onboarding.enter_passcode" = "4자리 암호 입력";
 "onboarding.confirm_passcode" = "암호 확인";
 "onboarding.passcode_mismatch" = "암호가 일치하지 않습니다";
+
+/* Onboarding Premium Features */
+"onboarding.premium.title" = "프리미엄 기능 잠금 해제";
+"onboarding.premium.subtitle" = "독점 도구로 피트니스 여정을 한 단계 업그레이드하세요";
+"onboarding.premium.metrics.title" = "측정값 추적";
+"onboarding.premium.metrics.description" = "상세한 차트로 체중과 체지방률 모니터링";
+"onboarding.premium.nowatermark.title" = "워터마크 없는 비디오";
+"onboarding.premium.nowatermark.description" = "워터마크 없이 전문적인 타임랩스 비디오 제작";
+"onboarding.premium.noads.title" = "광고 없는 경험";
+"onboarding.premium.noads.description" = "방해받지 않고 진행 상황에 집중";
+"onboarding.premium.daterange.title" = "전체 날짜 범위 접근";
+"onboarding.premium.daterange.description" = "전체 피트니스 여정 타임라인 보기 및 분석";
+"onboarding.premium.price" = "월 ₩6,500";
+"onboarding.premium.price.detail" = "언제든지 취소 가능 • 무료 체험 제공";
 
 /* Authentication */
 "auth.app_name" = "BodyLapse";
