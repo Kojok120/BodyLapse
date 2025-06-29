@@ -177,6 +177,15 @@ BodyLapse/
 - Camera improvements (default to back camera, save camera position with guidelines)
 - UI refinements for weight/body fat charts
 
+#### Phase 8: Calendar & Security Updates (December 29, 2025)
+- Custom date picker functionality in CalendarView
+- Visual indicators for photo and data entries in calendar
+- Enhanced snapping logic in InteractiveWeightChartView
+- FullDateRange parameter for better date range handling
+- Date display restriction for free users (premium feature)
+- Limited password input to 4 digits
+- Improved authentication settings persistence
+
 ### 🚧 Pending Tasks
 - App Store submission preparation (icons, screenshots, descriptions)
 - Privacy policy and terms of service
