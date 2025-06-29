@@ -7,6 +7,7 @@ struct CalendarView: View {
     @StateObject private var weightViewModel = WeightTrackingViewModel()
     @State private var selectedDate = Date()
     @State private var showingPeriodPicker = false
+    @State private var showingDatePicker = false
     @State private var selectedPeriod = TimePeriod.week
     @State private var showingWeightInput = false
     @State private var currentPhoto: Photo?
@@ -88,6 +89,9 @@ struct CalendarView: View {
         }
         .sheet(isPresented: $showingVideoGeneration) {
             videoGenerationSheet
+        }
+        .sheet(isPresented: $showingDatePicker) {
+            datePickerSheet
         }
         .alert("Video Generation", isPresented: $showingVideoAlert) {
             Button("OK") { }
@@ -266,6 +270,50 @@ struct CalendarView: View {
         }
     }
     
+    private var datePickerSheet: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("Select Date")
+                    .font(.headline)
+                    .padding(.top, 20)
+                
+                DatePicker(
+                    "Select Date",
+                    selection: Binding(
+                        get: { selectedDate },
+                        set: { newDate in
+                            selectedDate = newDate
+                            selectedChartDate = newDate
+                            
+                            // Update index to match selected date
+                            if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: newDate) }) {
+                                selectedIndex = index
+                            }
+                            
+                            updateCurrentPhoto()
+                            showingDatePicker = false
+                        }
+                    ),
+                    in: (dateRange.first ?? Date())...(dateRange.last ?? Date()),
+                    displayedComponents: .date
+                )
+                .datePickerStyle(GraphicalDatePickerStyle())
+                .padding(.horizontal)
+                
+                Spacer()
+            }
+            .navigationTitle("Select Date")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        showingDatePicker = false
+                    }
+                }
+            }
+        }
+    }
+    
     private var headerView: some View {
         HStack {
             HStack(spacing: 8) {
@@ -284,6 +332,16 @@ struct CalendarView: View {
                     .cornerRadius(8)
                 }
                 
+                Button(action: {
+                    showingDatePicker = true
+                }) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 18))
+                        .foregroundColor(.primary)
+                        .padding(8)
+                        .background(Color(UIColor.secondarySystemBackground))
+                        .cornerRadius(8)
+                }
             }
             .actionSheet(isPresented: $showingPeriodPicker) {
                 ActionSheet(
