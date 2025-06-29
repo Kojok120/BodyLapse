@@ -44,6 +44,12 @@ struct AuthenticationView: View {
                             .onSubmit {
                                 authenticateWithPassword()
                             }
+                            .onChange(of: password) { _, newValue in
+                                // Limit to 4 digits
+                                if newValue.count > 4 {
+                                    password = String(newValue.prefix(4))
+                                }
+                            }
                         
                         Button(action: authenticateWithPassword) {
                             HStack {

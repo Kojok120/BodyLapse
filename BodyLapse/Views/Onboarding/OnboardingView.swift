@@ -4,10 +4,7 @@ import LocalAuthentication
 struct OnboardingView: View {
     @EnvironmentObject var userSettings: UserSettingsManager
     @State private var currentStep = 1
-    
-    // Goal setting
-    @State private var targetWeight = ""
-    @State private var targetBodyFat = ""
+    @State private var isInOnboardingPhase = false
     
     // App lock
     @State private var showingAppLockSetup = false
@@ -20,31 +17,73 @@ struct OnboardingView: View {
     var body: some View {
         NavigationView {
             VStack {
-                progressIndicator
-                
-                TabView(selection: $currentStep) {
-                    goalSettingStep
-                        .tag(1)
-                    
-                    baselinePhotoStep
-                        .tag(2)
-                    
-                    appLockStep
-                        .tag(3)
+                if !isInOnboardingPhase {
+                    // Explanation phase
+                    VStack {
+                        explanationProgressIndicator
+                        
+                        TabView(selection: $currentStep) {
+                            featureStep1
+                                .tag(1)
+                            
+                            featureStep2
+                                .tag(2)
+                            
+                            featureStep3
+                                .tag(3)
+                            
+                            featureStep4
+                                .tag(4)
+                            
+                            featureStep5
+                                .tag(5)
+                        }
+                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                        .animation(.easeInOut, value: currentStep)
+                        
+                        explanationNavigationButtons
+                    }
+                } else {
+                    // Onboarding phase
+                    VStack {
+                        onboardingProgressIndicator
+                        
+                        TabView(selection: $currentStep) {
+                            letsGetStartedStep
+                                .tag(1)
+                            
+                            baselinePhotoStep
+                                .tag(2)
+                            
+                            appLockStep
+                                .tag(3)
+                        }
+                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                        .animation(.easeInOut, value: currentStep)
+                        
+                        onboardingNavigationButtons
+                    }
                 }
-                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                .animation(.easeInOut, value: currentStep)
-                
-                navigationButtons
             }
-            .navigationTitle("Welcome to BodyLapse")
+            .navigationTitle(isInOnboardingPhase ? "Setup Your Account" : "Welcome to BodyLapse")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarHidden(currentStep == 2) // Hide for camera step
+            .navigationBarHidden(isInOnboardingPhase && currentStep == 2) // Hide for camera step
         }
         .interactiveDismissDisabled()
     }
     
-    private var progressIndicator: some View {
+    private var explanationProgressIndicator: some View {
+        HStack(spacing: 8) {
+            ForEach(1...5, id: \.self) { step in
+                Circle()
+                    .fill(step <= currentStep ? Color.accentColor : Color.gray.opacity(0.3))
+                    .frame(width: 8, height: 8)
+            }
+        }
+        .padding()
+    }
+    
+    private var onboardingProgressIndicator: some View {
         HStack(spacing: 8) {
             ForEach(1...3, id: \.self) { step in
                 Circle()
@@ -55,53 +94,109 @@ struct OnboardingView: View {
         .padding()
     }
     
-    private var goalSettingStep: some View {
+    // Feature explanation steps
+    private var featureStep1: some View {
+        featureExplanationView(
+            icon: "camera.fill",
+            title: "Daily Progress Photos",
+            description: "Capture your transformation with\nconsistent daily photos",
+            subDescription: "Visual guidelines help you maintain\nthe same pose and position every time"
+        )
+    }
+    
+    private var featureStep2: some View {
+        featureExplanationView(
+            icon: "video.fill",
+            title: "Time-Lapse Videos",
+            description: "Watch your journey unfold\nwith stunning time-lapse videos",
+            subDescription: "Customize video speed and quality\nto create the perfect transformation montage"
+        )
+    }
+    
+    private var featureStep3: some View {
+        featureExplanationView(
+            icon: "eye.slash.fill",
+            title: "Privacy Protection",
+            description: "Keep your identity private with\nautomatic face blurring technology",
+            subDescription: "All processing happens on your device\nYour photos never leave your phone"
+        )
+    }
+    
+    private var featureStep4: some View {
+        featureExplanationView(
+            icon: "chart.line.uptrend.xyaxis",
+            title: "Track Your Metrics",
+            description: "Log weight and body fat percentage\nto visualize your progress over time",
+            subDescription: "Combine photos with data insights\nfor comprehensive progress tracking"
+        )
+    }
+    
+    private var featureStep5: some View {
+        featureExplanationView(
+            icon: "photo.on.rectangle.angled",
+            title: "Before & After Comparison",
+            description: "Select any two photos to see\nyour transformation side by side",
+            subDescription: "Easily compare your starting point\nwith your current progress"
+        )
+    }
+    
+    private var letsGetStartedStep: some View {
+        VStack(spacing: 30) {
+            Spacer()
+            
+            Image(systemName: "figure.arms.open")
+                .font(.system(size: 80))
+                .foregroundColor(.accentColor)
+                .padding(.bottom, 20)
+            
+            Text("Let's Get Started!")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            
+            Text("Take your first photo and begin\ntracking your transformation journey")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+            
+            Spacer()
+            Spacer()
+        }
+        .padding()
+    }
+    
+    private func featureExplanationView(icon: String, title: String, description: String, subDescription: String) -> some View {
         VStack(spacing: 20) {
-            Image(systemName: "target")
+            Spacer()
+            
+            Image(systemName: icon)
                 .font(.system(size: 60))
                 .foregroundColor(.accentColor)
                 .padding(.bottom, 20)
             
-            Text("Set Your Goals")
+            Text(title)
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
-            Text("Track your progress with target weight and body fat percentage")
+            Text(description)
                 .font(.body)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+                .padding(.horizontal, 30)
+            
+            Text(subDescription)
+                .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                .lineSpacing(2)
+                .padding(.horizontal, 40)
+                .padding(.top, 10)
             
-            VStack(spacing: 16) {
-                HStack {
-                    Text("Target Weight")
-                        .frame(width: 120, alignment: .leading)
-                    TextField("Optional", text: $targetWeight)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Text(userSettings.settings.weightUnit.symbol)
-                        .foregroundColor(.secondary)
-                }
-                
-                HStack {
-                    Text("Target Body Fat")
-                        .frame(width: 120, alignment: .leading)
-                    TextField("Optional", text: $targetBodyFat)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Text("%")
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.horizontal, 40)
-            .padding(.top, 20)
-            
+            Spacer()
             Spacer()
         }
         .padding()
-        .onTapGesture {
-            hideKeyboard()
-        }
     }
     
     private var baselinePhotoStep: some View {
@@ -122,7 +217,7 @@ struct OnboardingView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
-            Text("Protect your photos with Face ID or a passcode")
+            Text("Protect your photos with\nFace ID or a passcode")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -149,7 +244,7 @@ struct OnboardingView: View {
                 }) {
                     HStack {
                         Image(systemName: "number")
-                        Text("Set up Passcode")
+                        Text("Set Up Passcode")
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -173,21 +268,83 @@ struct OnboardingView: View {
                 }
             )
         }
-        .alert("Passcode Error", isPresented: $showingPasscodeError) {
+        .alert("Error", isPresented: $showingPasscodeError) {
             Button("OK") { }
         } message: {
             Text(passcodeErrorMessage)
         }
     }
     
-    private var navigationButtons: some View {
+    private var explanationNavigationButtons: some View {
         HStack {
             if currentStep > 1 {
-                Button("Back") {
+                Button(action: {
                     hideKeyboard()
                     withAnimation {
                         currentStep -= 1
                     }
+                }) {
+                    Text("Back")
+                        .foregroundColor(.accentColor)
+                        .fontWeight(.medium)
+                }
+                .padding()
+            }
+            
+            Spacer()
+            
+            if currentStep < 5 {
+                Button(action: {
+                    hideKeyboard()
+                    withAnimation {
+                        currentStep += 1
+                    }
+                }) {
+                    Text("Next")
+                        .frame(minWidth: 80)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .fontWeight(.medium)
+                }
+                .padding()
+            } else {
+                Button(action: {
+                    hideKeyboard()
+                    withAnimation {
+                        isInOnboardingPhase = true
+                        currentStep = 1
+                    }
+                }) {
+                    Text("Continue")
+                        .frame(minWidth: 80)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .fontWeight(.medium)
+                }
+                .padding()
+            }
+        }
+        .padding(.horizontal)
+    }
+    
+    private var onboardingNavigationButtons: some View {
+        HStack {
+            if currentStep > 1 && currentStep != 2 {
+                Button(action: {
+                    hideKeyboard()
+                    withAnimation {
+                        currentStep -= 1
+                    }
+                }) {
+                    Text("Back")
+                        .foregroundColor(.accentColor)
+                        .fontWeight(.medium)
                 }
                 .padding()
             }
@@ -195,29 +352,45 @@ struct OnboardingView: View {
             Spacer()
             
             if currentStep == 1 {
-                Button("Skip") {
+                Button(action: {
                     hideKeyboard()
-                    currentStep = 2
+                    withAnimation {
+                        currentStep = 2
+                    }
+                }) {
+                    Text("Start")
+                        .frame(minWidth: 80)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .fontWeight(.medium)
                 }
                 .padding()
-                
-                Button("Next") {
-                    hideKeyboard()
-                    saveGoals()
-                    currentStep = 2
-                }
-                .padding()
-                .disabled(targetWeight.isEmpty && targetBodyFat.isEmpty)
             } else if currentStep == 3 {
-                Button("Skip") {
+                Button(action: {
                     hideKeyboard()
                     saveSettings(enableLock: false)
+                }) {
+                    Text("Skip")
+                        .foregroundColor(.secondary)
+                        .fontWeight(.medium)
                 }
                 .padding()
                 
-                Button("Finish") {
+                Button(action: {
                     hideKeyboard()
                     saveSettings(enableLock: false)
+                }) {
+                    Text("Finish")
+                        .frame(minWidth: 80)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .fontWeight(.medium)
                 }
                 .padding()
             }
@@ -261,15 +434,6 @@ struct OnboardingView: View {
             }
         }
         return "Biometric Authentication"
-    }
-    
-    private func saveGoals() {
-        if let weight = Double(targetWeight) {
-            userSettings.settings.targetWeight = weight
-        }
-        if let bodyFat = Double(targetBodyFat) {
-            userSettings.settings.targetBodyFatPercentage = bodyFat
-        }
     }
     
     private func checkBiometricAvailability() {
@@ -403,7 +567,7 @@ struct BaselinePhotoCaptureView: View {
                             .foregroundColor(.white)
                             .shadow(radius: 2)
                         
-                        Text("Stand in the frame and capture your starting point")
+                        Text("Stand in the frame and\ncapture your starting point")
                             .font(.body)
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
@@ -540,17 +704,33 @@ struct PasscodeSetupView: View {
         NavigationView {
             Form {
                 Section(header: Text("Create Passcode")) {
-                    SecureField("Enter Passcode", text: $passcode)
+                    SecureField("Enter 4-digit Passcode", text: $passcode)
                         .keyboardType(.numberPad)
+                        .onChange(of: passcode) { _, newValue in
+                            // Limit to 4 digits
+                            if newValue.count > 4 {
+                                passcode = String(newValue.prefix(4))
+                            }
+                            // Only allow numbers
+                            let filtered = newValue.filter { $0.isNumber }
+                            if filtered != newValue {
+                                passcode = filtered
+                            }
+                        }
                     
                     SecureField("Confirm Passcode", text: $confirmPasscode)
                         .keyboardType(.numberPad)
-                }
-                
-                Section {
-                    Text("Your passcode should be at least 4 digits")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .onChange(of: confirmPasscode) { _, newValue in
+                            // Limit to 4 digits
+                            if newValue.count > 4 {
+                                confirmPasscode = String(newValue.prefix(4))
+                            }
+                            // Only allow numbers
+                            let filtered = newValue.filter { $0.isNumber }
+                            if filtered != newValue {
+                                confirmPasscode = filtered
+                            }
+                        }
                 }
             }
             .navigationTitle("Set Up Passcode")
@@ -566,7 +746,7 @@ struct PasscodeSetupView: View {
                     Button("Done") {
                         validateAndSave()
                     }
-                    .disabled(passcode.isEmpty || confirmPasscode.isEmpty)
+                    .disabled(passcode.count != 4 || confirmPasscode.count != 4)
                 }
             }
             .alert("Error", isPresented: $showingError) {
@@ -578,12 +758,6 @@ struct PasscodeSetupView: View {
     }
     
     private func validateAndSave() {
-        guard passcode.count >= 4 else {
-            errorMessage = "Passcode must be at least 4 digits"
-            showingError = true
-            return
-        }
-        
         guard passcode == confirmPasscode else {
             errorMessage = "Passcodes do not match"
             showingError = true

@@ -18,8 +18,6 @@ struct CalendarView: View {
     @State private var showingVideoAlert = false
     @State private var videoAlertMessage = ""
     @State private var selectedChartDate: Date? = nil
-    @State private var showingCalendarPopup = false
-    @State private var showingImagePicker = false
     
     enum TimePeriod: String, CaseIterable {
         case week = "7 Days"
@@ -204,44 +202,6 @@ struct CalendarView: View {
                     }
                 }
             )
-            .sheet(isPresented: $showingCalendarPopup) {
-                CalendarPopupView(
-                    selectedDate: $selectedDate,
-                    photos: viewModel.photos,
-                    onDateSelected: { date in
-                        selectedDate = date
-                        selectedChartDate = date  // Sync chart selection
-                        if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
-                            selectedIndex = index
-                        }
-                        updateCurrentPhoto()
-                        showingCalendarPopup = false
-                    },
-                    minDate: nil,
-                    maxDate: nil
-                )
-            }
-            .sheet(isPresented: $showingImagePicker) {
-                ImagePicker(image: .constant(nil)) { image in
-                    if let image = image {
-                        // Save the imported image for the selected date
-                        print("[CalendarView] Saving photo for date: \(selectedDate)")
-                        do {
-                            let savedPhoto = try PhotoStorageService.shared.replacePhoto(
-                                for: selectedDate,
-                                with: image,
-                                isFaceBlurred: false,
-                                bodyDetectionConfidence: 0.0
-                            )
-                            print("[CalendarView] Photo saved successfully with date: \(savedPhoto.captureDate)")
-                        } catch {
-                            print("[CalendarView] Error saving imported photo: \(error)")
-                        }
-                        viewModel.loadPhotos()
-                        updateCurrentPhoto()
-                    }
-                }
-            }
         }
     }
     
@@ -263,16 +223,6 @@ struct CalendarView: View {
                     .cornerRadius(8)
                 }
                 
-                Button(action: {
-                    showingCalendarPopup = true
-                }) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 18))
-                        .foregroundColor(.primary)
-                        .frame(width: 36, height: 36)
-                        .background(Color(UIColor.secondarySystemBackground))
-                        .cornerRadius(8)
-                }
             }
             .actionSheet(isPresented: $showingPeriodPicker) {
                 ActionSheet(
@@ -311,42 +261,38 @@ struct CalendarView: View {
     }
     
     private var photoPreviewSection: some View {
-        GeometryReader { geometry in
-            if let photo = currentPhoto,
-               let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
-                VStack {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: geometry.size.width)
-                        .cornerRadius(12)
-                }
-                .frame(width: geometry.size.width, height: geometry.size.height)
-            } else {
-                VStack(spacing: 20) {
-                    Image(systemName: "photo")
-                        .font(.system(size: 60))
-                        .foregroundColor(.gray)
-                    Text("No photo for \(formatDate(selectedDate))")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    
-                    Button(action: {
-                        showingImagePicker = true
-                    }) {
-                        Label("Upload Photo", systemImage: "photo.badge.plus")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.black)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
-                            .background(Color.bodyLapseYellow)
-                            .cornerRadius(20)
+        VStack(spacing: 8) {
+            // Date display
+            Text(formatDate(selectedDate))
+                .font(.headline)
+                .foregroundColor(.primary)
+                .padding(.top, 8)
+            
+            GeometryReader { geometry in
+                if let photo = currentPhoto,
+                   let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
+                    VStack {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: geometry.size.width)
+                            .cornerRadius(12)
                     }
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                } else {
+                    VStack(spacing: 20) {
+                        Image(systemName: "photo")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                        Text("No photo")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                 }
-                .frame(width: geometry.size.width, height: geometry.size.height)
             }
+            .frame(height: userSettings.settings.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
         }
-        .frame(height: userSettings.settings.isPremium ? UIScreen.main.bounds.height * 0.42 : UIScreen.main.bounds.height * 0.5)
         .padding(.horizontal)
     }
     

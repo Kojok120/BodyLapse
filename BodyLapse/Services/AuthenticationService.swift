@@ -7,6 +7,16 @@ class AuthenticationService: ObservableObject {
     
     @Published var isAuthenticated = false
     @Published var authenticationError: String?
+    @Published var isAuthenticationEnabled: Bool = false {
+        didSet {
+            UserDefaults.standard.set(isAuthenticationEnabled, forKey: authEnabledKey)
+        }
+    }
+    @Published var isBiometricEnabled: Bool = false {
+        didSet {
+            UserDefaults.standard.set(isBiometricEnabled, forKey: biometricEnabledKey)
+        }
+    }
     
     private let passwordKey = "BodyLapsePassword"
     private let authEnabledKey = "AuthenticationEnabled"
@@ -16,17 +26,11 @@ class AuthenticationService: ObservableObject {
         // Reset authentication state on app launch to prevent frozen state
         isAuthenticated = false
         authenticationError = nil
+        // Load saved settings
+        isAuthenticationEnabled = UserDefaults.standard.bool(forKey: authEnabledKey)
+        isBiometricEnabled = UserDefaults.standard.bool(forKey: biometricEnabledKey)
     }
     
-    var isAuthenticationEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: authEnabledKey) }
-        set { UserDefaults.standard.set(newValue, forKey: authEnabledKey) }
-    }
-    
-    var isBiometricEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: biometricEnabledKey) }
-        set { UserDefaults.standard.set(newValue, forKey: biometricEnabledKey) }
-    }
     
     var hasPassword: Bool {
         return getStoredPassword() != nil
