@@ -55,153 +55,214 @@ struct CalendarView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 6) {
-                headerView
-                
-                photoPreviewSection
-                
-                if userSettings.settings.isPremium {
-                    dataGraphSection
-                } else {
-                    progressBarSection
+            mainContent
+        }
+    }
+    
+    private var mainContent: some View {
+        VStack(spacing: 6) {
+            headerView
+            
+            photoPreviewSection
+            
+            if userSettings.settings.isPremium {
+                dataGraphSection
+            } else {
+                progressBarSection
+            }
+        }
+        .withBannerAd()
+        .navigationTitle("Progress")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: handleOnAppear)
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday")), perform: handleNavigateToToday)
+        .onChange(of: selectedDate) { _, newDate in
+            updateCurrentPhoto()
+            selectedChartDate = newDate  // Sync chart selection when date changes
+        }
+        .onChange(of: selectedChartDate) { _, newDate in
+            handleChartDateChange(newDate)
+        }
+        .sheet(isPresented: $showingWeightInput) {
+            weightInputSheet
+        }
+        .sheet(isPresented: $showingVideoGeneration) {
+            videoGenerationSheet
+        }
+        .alert("Video Generation", isPresented: $showingVideoAlert) {
+            Button("OK") { }
+        } message: {
+            Text(videoAlertMessage)
+        }
+        .overlay(
+            Group {
+                if isGeneratingVideo {
+                    VideoGenerationProgressView(progress: videoGenerationProgress)
                 }
             }
-            .withBannerAd()
-            .navigationTitle("Progress")
-            .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                viewModel.loadPhotos()
-                weightViewModel.loadEntries()
-                
-                // Initialize selectedIndex to today (rightmost position)
-                selectedIndex = dateRange.count - 1
-                if !dateRange.isEmpty {
-                    selectedDate = dateRange[selectedIndex]
-                }
-                
-                updateCurrentPhoto()
-                
-                // Initialize chart date to selected date
-                if selectedChartDate == nil {
-                    selectedChartDate = selectedDate
-                }
-                
-                // Debug weight entries after a delay to ensure loading is complete
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    print("[Calendar] Weight entries after delay: \(weightViewModel.weightEntries.count)")
-                    if let firstEntry = weightViewModel.weightEntries.first {
-                        print("[Calendar] First entry - date: \(firstEntry.date), weight: \(firstEntry.weight)")
+        )
+    }
+    
+    private func handleOnAppear() {
+        viewModel.loadPhotos()
+        weightViewModel.loadEntries()
+        
+        // Initialize selectedIndex to today (rightmost position)
+        selectedIndex = dateRange.count - 1
+        if !dateRange.isEmpty {
+            selectedDate = dateRange[selectedIndex]
+        }
+        
+        updateCurrentPhoto()
+        
+        // Initialize chart date to selected date
+        if selectedChartDate == nil {
+            selectedChartDate = selectedDate
+        }
+        
+        // Debug weight entries after a delay to ensure loading is complete
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            print("[Calendar] Weight entries after delay: \(weightViewModel.weightEntries.count)")
+            if let firstEntry = weightViewModel.weightEntries.first {
+                print("[Calendar] First entry - date: \(firstEntry.date), weight: \(firstEntry.weight)")
+            }
+            print("[Calendar] Is premium: \(userSettings.settings.isPremium)")
+        }
+    }
+    
+    private func handleNavigateToToday(_ notification: Notification) {
+        // Set selected date to today
+        let today = Date()
+        selectedDate = today
+        selectedChartDate = today
+        
+        // Update index to match today's date
+        if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: today) }) {
+            selectedIndex = index
+        }
+        
+        // Reload photos to ensure we have the latest
+        viewModel.loadPhotos()
+        updateCurrentPhoto()
+    }
+    
+    private func handleChartDateChange(_ newDate: Date?) {
+        if let date = newDate {
+            // Update selected date when chart date changes
+            selectedDate = date
+            updateCurrentPhoto()
+            
+            // Update index to match selected date
+            if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
+                selectedIndex = index
+            }
+        }
+    }
+    
+    private var weightInputSheet: some View {
+        WeightInputView(photo: $currentPhoto, selectedDate: selectedDate, onSave: { weight, bodyFat in
+            handleWeightSave(weight: weight, bodyFat: bodyFat)
+        })
+        .onAppear {
+            // Auto-fill from HealthKit if enabled
+            if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled && currentPhoto?.weight == nil {
+                HealthKitService.shared.fetchLatestWeight { weight, _ in
+                    if let w = weight, self.currentPhoto?.weight == nil {
+                        self.currentPhoto?.weight = w
                     }
-                    print("[Calendar] Is premium: \(userSettings.settings.isPremium)")
                 }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday"))) { _ in
-                // Set selected date to today
-                let today = Date()
-                selectedDate = today
-                selectedChartDate = today
-                
-                // Update index to match today's date
-                if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: today) }) {
-                    selectedIndex = index
-                }
-                
-                // Reload photos to ensure we have the latest
-                viewModel.loadPhotos()
-                updateCurrentPhoto()
-            }
-            .onChange(of: selectedDate) { _, newDate in
-                updateCurrentPhoto()
-                selectedChartDate = newDate  // Sync chart selection when date changes
-            }
-            .sheet(isPresented: $showingWeightInput) {
-                WeightInputView(photo: $currentPhoto, onSave: { weight, bodyFat in
-                    if let photo = currentPhoto {
-                        print("[CalendarView] Saving weight data - weight: \(weight ?? -1), bodyFat: \(bodyFat ?? -1)")
-                        
-                        // Update photo metadata
-                        PhotoStorageService.shared.updatePhotoMetadata(photo, weight: weight, bodyFatPercentage: bodyFat)
-                        viewModel.loadPhotos()
-                        updateCurrentPhoto()
-                        
-                        // Save to weight tracking - handle both saving new data and clearing existing data
-                        let entry = WeightEntry(
-                            date: photo.captureDate,
-                            weight: weight ?? 0, // Use 0 if weight is nil (cleared)
-                            bodyFatPercentage: bodyFat,
-                            linkedPhotoID: photo.id.uuidString
-                        )
-                        
-                        Task {
-                            do {
-                                if weight != nil || bodyFat != nil {
-                                    // Save the entry if we have any data
-                                    try await WeightStorageService.shared.saveEntry(entry)
-                                    print("[CalendarView] Saved weight entry to WeightStorageService")
-                                } else {
-                                    // Delete the entry if both are nil
-                                    if let existingEntry = try await WeightStorageService.shared.getEntry(for: photo.captureDate) {
-                                        try await WeightStorageService.shared.deleteEntry(existingEntry)
-                                        print("[CalendarView] Deleted weight entry from WeightStorageService")
-                                    }
-                                }
-                                
-                                await MainActor.run {
-                                    weightViewModel.loadEntries()
-                                }
-                            } catch {
-                                print("[CalendarView] Error saving/deleting weight entry: \(error)")
-                            }
-                        }
-                    }
-                })
-                .onAppear {
-                    // Auto-fill from HealthKit if enabled
-                    if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled && currentPhoto?.weight == nil {
-                        HealthKitService.shared.fetchLatestWeight { weight, _ in
-                            if let w = weight, self.currentPhoto?.weight == nil {
-                                self.currentPhoto?.weight = w
-                            }
-                        }
-                        HealthKitService.shared.fetchLatestBodyFatPercentage { bodyFat, _ in
-                            if let bf = bodyFat, self.currentPhoto?.bodyFatPercentage == nil {
-                                self.currentPhoto?.bodyFatPercentage = bf
-                            }
-                        }
-                    }
-                }
-            }
-            .sheet(isPresented: $showingVideoGeneration) {
-                VideoGenerationView(
-                    period: selectedPeriod,
-                    dateRange: dateRange,
-                    isGenerating: $isGeneratingVideo,
-                    userSettings: userSettings,
-                    onGenerate: { options in
-                        generateVideo(with: options)
-                    }
-                )
-                .onAppear {
-                    // Pre-load interstitial ad when sheet appears
-                    if !userSettings.settings.isPremium {
-                        print("[VideoGenerationView] Sheet appeared - checking ad status")
-                        AdMobService.shared.checkAdStatus()
-                        AdMobService.shared.loadInterstitialAd()
+                HealthKitService.shared.fetchLatestBodyFatPercentage { bodyFat, _ in
+                    if let bf = bodyFat, self.currentPhoto?.bodyFatPercentage == nil {
+                        self.currentPhoto?.bodyFatPercentage = bf
                     }
                 }
             }
-            .alert("Video Generation", isPresented: $showingVideoAlert) {
-                Button("OK") { }
-            } message: {
-                Text(videoAlertMessage)
-            }
-            .overlay(
-                Group {
-                    if isGeneratingVideo {
-                        VideoGenerationProgressView(progress: videoGenerationProgress)
-                    }
-                }
+        }
+    }
+    
+    private func handleWeightSave(weight: Double?, bodyFat: Double?) {
+        if let photo = currentPhoto {
+            print("[CalendarView] Saving weight data - weight: \(weight ?? -1), bodyFat: \(bodyFat ?? -1)")
+            
+            // Update photo metadata
+            PhotoStorageService.shared.updatePhotoMetadata(photo, weight: weight, bodyFatPercentage: bodyFat)
+            viewModel.loadPhotos()
+            updateCurrentPhoto()
+            
+            // Save to weight tracking - handle both saving new data and clearing existing data
+            let saveDate = photo.captureDate
+            let entry = WeightEntry(
+                date: saveDate,
+                weight: weight ?? 0, // Use 0 if weight is nil (cleared)
+                bodyFatPercentage: bodyFat,
+                linkedPhotoID: photo.id.uuidString
             )
+            
+            Task {
+                do {
+                    if weight != nil || bodyFat != nil {
+                        // Save the entry if we have any data
+                        try await WeightStorageService.shared.saveEntry(entry)
+                        print("[CalendarView] Saved weight entry to WeightStorageService")
+                    } else {
+                        // Delete the entry if both are nil
+                        if let existingEntry = try await WeightStorageService.shared.getEntry(for: saveDate) {
+                            try await WeightStorageService.shared.deleteEntry(existingEntry)
+                            print("[CalendarView] Deleted weight entry from WeightStorageService")
+                        }
+                    }
+                    
+                    await MainActor.run {
+                        weightViewModel.loadEntries()
+                    }
+                } catch {
+                    print("[CalendarView] Error saving/deleting weight entry: \(error)")
+                }
+            }
+        } else {
+            // Handle case where there's no photo for the selected date
+            let saveDate = selectedDate
+            let entry = WeightEntry(
+                date: saveDate,
+                weight: weight ?? 0,
+                bodyFatPercentage: bodyFat,
+                linkedPhotoID: nil
+            )
+            
+            Task {
+                do {
+                    if weight != nil || bodyFat != nil {
+                        try await WeightStorageService.shared.saveEntry(entry)
+                        print("[CalendarView] Saved weight entry without photo")
+                    }
+                    
+                    await MainActor.run {
+                        weightViewModel.loadEntries()
+                    }
+                } catch {
+                    print("[CalendarView] Error saving weight entry: \(error)")
+                }
+            }
+        }
+    }
+    
+    private var videoGenerationSheet: some View {
+        VideoGenerationView(
+            period: selectedPeriod,
+            dateRange: dateRange,
+            isGenerating: $isGeneratingVideo,
+            userSettings: userSettings,
+            onGenerate: { options in
+                generateVideo(with: options)
+            }
+        )
+        .onAppear {
+            // Pre-load interstitial ad when sheet appears
+            if !userSettings.settings.isPremium {
+                print("[VideoGenerationView] Sheet appeared - checking ad status")
+                AdMobService.shared.checkAdStatus()
+                AdMobService.shared.loadInterstitialAd()
+            }
         }
     }
     
@@ -386,24 +447,17 @@ struct CalendarView: View {
                 if #available(iOS 16.0, *) {
                     let filteredEntries = weightViewModel.filteredEntries(for: getWeightTimeRange())
                     if !filteredEntries.isEmpty {
+                        let fullRange = !dateRange.isEmpty ? dateRange.first!...dateRange.last! : Date()...Date()
                         InteractiveWeightChartView(
                             entries: filteredEntries,
                             selectedDate: $selectedChartDate,
                             currentPhoto: currentPhoto,
                             onEditWeight: {
                                 showingWeightInput = true
-                            }
+                            },
+                            fullDateRange: fullRange
                         )
                         .padding(.horizontal)
-                        .onChange(of: selectedChartDate) { _, newDate in
-                            if let date = newDate {
-                                // Update selected date in calendar when chart date changes
-                                if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
-                                    selectedIndex = index
-                                    selectedDate = date
-                                }
-                            }
-                        }
                         .onChange(of: selectedPeriod) { _, _ in
                             // Reset chart selection when period changes
                             selectedChartDate = nil
@@ -523,6 +577,7 @@ struct CalendarView: View {
 
 struct WeightInputView: View {
     @Binding var photo: Photo?
+    let selectedDate: Date
     let onSave: (Double?, Double?) -> Void
     
     @State private var weightText = ""
@@ -544,11 +599,9 @@ struct WeightInputView: View {
                         .font(.title2)
                         .fontWeight(.bold)
                     
-                    if let photo = photo {
-                        Text(formatDate(photo.captureDate))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
+                    Text(formatDate(photo?.captureDate ?? selectedDate))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
                 .padding(.top, 30)
                 .padding(.bottom, 40)
@@ -671,13 +724,12 @@ struct WeightInputView: View {
         
         // Save to HealthKit if enabled
         if userSettings.settings.isPremium && userSettings.settings.healthKitEnabled {
-            if let photo = photo {
-                if let w = weight {
-                    HealthKitService.shared.saveWeight(w, date: photo.captureDate) { _, _ in }
-                }
-                if let bf = bodyFat {
-                    HealthKitService.shared.saveBodyFatPercentage(bf, date: photo.captureDate) { _, _ in }
-                }
+            let saveDate = photo?.captureDate ?? selectedDate
+            if let w = weight {
+                HealthKitService.shared.saveWeight(w, date: saveDate) { _, _ in }
+            }
+            if let bf = bodyFat {
+                HealthKitService.shared.saveBodyFatPercentage(bf, date: saveDate) { _, _ in }
             }
         }
         

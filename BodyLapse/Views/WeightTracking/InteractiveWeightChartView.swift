@@ -7,6 +7,7 @@ struct InteractiveWeightChartView: View {
     @Binding var selectedDate: Date?
     let currentPhoto: Photo?
     let onEditWeight: () -> Void
+    let fullDateRange: ClosedRange<Date>? // 全体の期間を指定
     @StateObject private var userSettings = UserSettingsManager.shared
     
     @State private var plotWidth: CGFloat = 0
@@ -30,6 +31,14 @@ struct InteractiveWeightChartView: View {
     }
     
     private var paddedDateRange: ClosedRange<Date> {
+        // If fullDateRange is provided, use it
+        if let fullRange = fullDateRange {
+            let duration = fullRange.upperBound.timeIntervalSince(fullRange.lowerBound)
+            let padding = duration * 0.05 // 5% padding
+            return fullRange.lowerBound.addingTimeInterval(-padding)...fullRange.upperBound.addingTimeInterval(padding)
+        }
+        
+        // Otherwise fall back to entries-based range
         guard let first = sortedEntries.first?.date,
               let last = sortedEntries.last?.date else {
             let now = Date()
@@ -71,43 +80,55 @@ struct InteractiveWeightChartView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Selected data display
-            if let selectedEntry = selectedEntry {
+            if let selectedDate = selectedDate {
                 HStack(spacing: 20) {
-                    Text(selectedEntry.date.formatted(date: .abbreviated, time: .omitted))
+                    Text(selectedDate.formatted(date: .abbreviated, time: .omitted))
                         .font(.headline)
                     
                     Spacer()
                     
                     HStack(spacing: 20) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Weight")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
-                                .font(.body)
-                                .foregroundColor(.bodyLapseTurquoise)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                        }
-                        .frame(minWidth: 60)
-                        
-                        if let bodyFat = selectedEntry.bodyFatPercentage {
+                        if let selectedEntry = selectedEntry {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Body Fat")
+                                Text("Weight")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                Text("\(bodyFat, specifier: "%.1f")%")
+                                Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
                                     .font(.body)
-                                    .foregroundColor(.orange)
+                                    .foregroundColor(.bodyLapseTurquoise)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.8)
                             }
                             .frame(minWidth: 60)
+                            
+                            if let bodyFat = selectedEntry.bodyFatPercentage {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Body Fat")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("\(bodyFat, specifier: "%.1f")%")
+                                        .font(.body)
+                                        .foregroundColor(.orange)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.8)
+                                }
+                                .frame(minWidth: 60)
+                            }
+                        } else {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("No data")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("Tap + to add")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(minWidth: 120)
                         }
                     }
                     
                     Button(action: onEditWeight) {
-                        Image(systemName: currentPhoto?.weight != nil ? "pencil.circle.fill" : "plus.circle.fill")
+                        Image(systemName: selectedEntry != nil ? "pencil.circle.fill" : "plus.circle.fill")
                             .font(.title2)
                             .foregroundColor(.accentColor)
                     }
@@ -276,23 +297,30 @@ struct InteractiveWeightChartView: View {
     }
     
     private func updateSelection(at x: CGFloat, geometry: GeometryProxy, chartProxy: ChartProxy?) {
-        guard !sortedEntries.isEmpty else { return }
-        
         let plotWidth = geometry.size.width
         
+        // Use fullDateRange if available, otherwise use entries-based range
+        let displayRange = fullDateRange ?? dateRange
+        
         // Calculate the date based on position
-        let dateInterval = dateRange.upperBound.timeIntervalSince(dateRange.lowerBound)
+        let dateInterval = displayRange.upperBound.timeIntervalSince(displayRange.lowerBound)
         let selectedInterval = (x / plotWidth) * dateInterval
-        let selectedTime = dateRange.lowerBound.addingTimeInterval(selectedInterval)
+        let selectedTime = displayRange.lowerBound.addingTimeInterval(selectedInterval)
         
-        // Find the closest entry
-        let closestEntry = sortedEntries.min(by: { entry1, entry2 in
-            abs(entry1.date.timeIntervalSince(selectedTime)) < abs(entry2.date.timeIntervalSince(selectedTime))
-        })
-        
-        if let entry = closestEntry {
-            selectedDate = entry.date
-            print("[InteractiveWeightChartView] Selected date: \(entry.date)")
+        // Find the closest data point
+        if !sortedEntries.isEmpty {
+            let closestEntry = sortedEntries.min(by: { entry1, entry2 in
+                abs(entry1.date.timeIntervalSince(selectedTime)) < abs(entry2.date.timeIntervalSince(selectedTime))
+            })
+            
+            if let entry = closestEntry {
+                selectedDate = entry.date
+                print("[InteractiveWeightChartView] Snapped to data point: \(entry.date)")
+            }
+        } else {
+            // No entries, just use the calculated date
+            selectedDate = selectedTime
+            print("[InteractiveWeightChartView] No data points, using calculated date: \(selectedTime)")
         }
     }
     
@@ -317,7 +345,8 @@ struct InteractiveWeightChartView_Previews: PreviewProvider {
             entries: [],
             selectedDate: .constant(nil),
             currentPhoto: nil,
-            onEditWeight: {}
+            onEditWeight: {},
+            fullDateRange: nil
         )
     }
 }

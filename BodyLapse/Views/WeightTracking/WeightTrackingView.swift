@@ -59,7 +59,8 @@ struct WeightTrackingView: View {
                                     entries: viewModel.filteredEntries(for: selectedTimeRange),
                                     selectedDate: $selectedDate,
                                     currentPhoto: nil,
-                                    onEditWeight: {}
+                                    onEditWeight: {},
+                                    fullDateRange: nil
                                 )
                                 .padding(.horizontal)
                             } else {
