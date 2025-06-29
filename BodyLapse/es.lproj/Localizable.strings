@@ -34,7 +34,7 @@
 "common.save_photo" = "Guardar Foto";
 
 /* Calendar View */
-"calendar.title" = "Progreso";
+"calendar.title" = "";
 "calendar.period.7days" = "7 Días";
 "calendar.period.30days" = "30 Días";
 "calendar.period.3months" = "3 Meses";
@@ -136,6 +136,11 @@
 "settings.reset_guideline_confirm" = "¿Estás seguro de que quieres restablecer tu guía corporal? Necesitarás tomar una nueva foto para configurarla de nuevo.";
 "settings.reset" = "Restablecer";
 "settings.language" = "Idioma";
+"settings.open_settings" = "Abrir Configuración";
+"settings.developer" = "Desarrollador";
+"settings.face_id" = "Face ID";
+"settings.touch_id" = "Touch ID";
+"settings.biometric" = "Biométrico";
 
 /* About Section */
 "about.bodylapse" = "BodyLapse";

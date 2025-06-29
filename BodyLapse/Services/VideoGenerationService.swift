@@ -344,36 +344,68 @@ class VideoGenerationService {
         
         // Add watermark if needed
         if addWatermark {
-            let watermarkText = "BodyLapse"
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 24, weight: .semibold),
-                .foregroundColor: UIColor.white.withAlphaComponent(0.7)
-            ]
-            
-            let textSize = watermarkText.size(withAttributes: attributes)
-            let textRect = CGRect(
-                x: size.width - textSize.width - 20,
-                y: size.height - textSize.height - 20,
-                width: textSize.width,
-                height: textSize.height
-            )
-            
-            // Save current context
-            context.saveGState()
-            
-            // Flip coordinate system for text drawing
-            context.translateBy(x: 0, y: size.height)
-            context.scaleBy(x: 1.0, y: -1.0)
-            
-            // Draw text
-            UIGraphicsPushContext(context)
-            watermarkText.draw(in: CGRect(x: textRect.origin.x, y: size.height - textRect.maxY, width: textRect.width, height: textRect.height), withAttributes: attributes)
-            UIGraphicsPopContext()
-            
-            // Restore context
-            context.restoreGState()
+            drawWatermark(in: context, size: size)
         }
         
         return buffer
+    }
+    
+    private func drawWatermark(in context: CGContext, size: CGSize) {
+        // Save current context state
+        context.saveGState()
+        
+        // Watermark text
+        let watermarkText = "BodyLapse"
+        
+        // Calculate appropriate font size based on video size
+        let baseFontSize: CGFloat = min(size.width, size.height) * 0.05 // 5% of smaller dimension
+        let fontSize = max(baseFontSize, 30) // Minimum 30pt
+        
+        // Create watermark attributes with shadow
+        let shadow = NSShadow()
+        shadow.shadowColor = UIColor.black.withAlphaComponent(0.5)
+        shadow.shadowOffset = CGSize(width: 2, height: 2)
+        shadow.shadowBlurRadius = 4
+        
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize, weight: .bold),
+            .foregroundColor: UIColor.white.withAlphaComponent(0.9),
+            .shadow: shadow
+        ]
+        
+        // Calculate text size
+        let textSize = watermarkText.size(withAttributes: attributes)
+        
+        // Position in bottom right corner with padding
+        let padding: CGFloat = min(size.width, size.height) * 0.04 // 4% padding
+        let textRect = CGRect(
+            x: size.width - textSize.width - padding,
+            y: size.height - textSize.height - padding,
+            width: textSize.width,
+            height: textSize.height
+        )
+        
+        // Create a semi-transparent background for better visibility
+        let backgroundRect = textRect.insetBy(dx: -padding/2, dy: -padding/4)
+        context.setFillColor(UIColor.black.withAlphaComponent(0.3).cgColor)
+        context.fillEllipse(in: backgroundRect)
+        
+        // Flip coordinate system for text drawing
+        context.translateBy(x: 0, y: size.height)
+        context.scaleBy(x: 1.0, y: -1.0)
+        
+        // Draw the watermark text
+        UIGraphicsPushContext(context)
+        let flippedRect = CGRect(
+            x: textRect.origin.x,
+            y: size.height - textRect.maxY,
+            width: textRect.width,
+            height: textRect.height
+        )
+        watermarkText.draw(in: flippedRect, withAttributes: attributes)
+        UIGraphicsPopContext()
+        
+        // Restore context state
+        context.restoreGState()
     }
 }

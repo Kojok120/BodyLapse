@@ -34,7 +34,7 @@
 "common.save_photo" = "Save Photo";
 
 /* Calendar View */
-"calendar.title" = "Progress";
+"calendar.title" = "";
 "calendar.period.7days" = "7 Days";
 "calendar.period.30days" = "30 Days";
 "calendar.period.3months" = "3 Months";
@@ -136,6 +136,11 @@
 "settings.reset_guideline_confirm" = "Are you sure you want to reset your body guideline? You will need to take a new photo to set it up again.";
 "settings.reset" = "Reset";
 "settings.language" = "Language";
+"settings.open_settings" = "Open Settings";
+"settings.developer" = "Developer";
+"settings.face_id" = "Face ID";
+"settings.touch_id" = "Touch ID";
+"settings.biometric" = "Biometric";
 
 /* About Section */
 "about.bodylapse" = "BodyLapse";

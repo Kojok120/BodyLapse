@@ -34,7 +34,7 @@
 "common.save_photo" = "사진 저장";
 
 /* Calendar View */
-"calendar.title" = "진행 상황";
+"calendar.title" = "";
 "calendar.period.7days" = "7일";
 "calendar.period.30days" = "30일";
 "calendar.period.3months" = "3개월";
@@ -136,6 +136,11 @@
 "settings.reset_guideline_confirm" = "바디 가이드라인을 재설정하시겠습니까? 다시 설정하려면 새 사진을 찍어야 합니다.";
 "settings.reset" = "재설정";
 "settings.language" = "언어";
+"settings.open_settings" = "설정 열기";
+"settings.developer" = "개발자";
+"settings.face_id" = "Face ID";
+"settings.touch_id" = "Touch ID";
+"settings.biometric" = "생체 인증";
 
 /* About Section */
 "about.bodylapse" = "BodyLapse";

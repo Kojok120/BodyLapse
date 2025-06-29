@@ -63,7 +63,7 @@ class LanguageManager: ObservableObject {
 
 // Extension to support dynamic language switching
 extension Bundle {
-    fileprivate static var languageBundle: Bundle!
+    static var languageBundle: Bundle!
     
     static func setLanguage(_ language: String) {
         defer {
@@ -99,10 +99,14 @@ extension Notification.Name {
 // Helper for localized strings
 extension String {
     var localized: String {
+        if let bundle = Bundle.languageBundle {
+            return bundle.localizedString(forKey: self, value: self, table: nil)
+        }
         return NSLocalizedString(self, comment: "")
     }
     
     func localized(with arguments: CVarArg...) -> String {
-        return String(format: NSLocalizedString(self, comment: ""), arguments: arguments)
+        let localizedString = self.localized
+        return String(format: localizedString, arguments: arguments)
     }
 }

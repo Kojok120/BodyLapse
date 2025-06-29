@@ -45,13 +45,13 @@ class AuthenticationService: ObservableObject {
     var biometricTypeString: String {
         switch biometricType {
         case .faceID:
-            return "Face ID"
+            return "settings.face_id".localized
         case .touchID:
-            return "Touch ID"
+            return "settings.touch_id".localized
         case .none:
-            return "Biometric"
+            return "settings.biometric".localized
         @unknown default:
-            return "Biometric"
+            return "settings.biometric".localized
         }
     }
     

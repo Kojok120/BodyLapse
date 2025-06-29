@@ -52,8 +52,8 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section("Security") {
-                    Toggle("App Lock", isOn: .init(
+                Section("settings.security".localized) {
+                    Toggle("settings.app_lock".localized, isOn: .init(
                         get: { authService.isAuthenticationEnabled },
                         set: { newValue in
                             if newValue {
@@ -76,13 +76,13 @@ struct SettingsView: View {
                         .disabled(authService.biometricType == .none)
                         
                         Button(action: { showingChangePassword = true }) {
-                            Label("Change PIN", systemImage: "number.square")
+                            Label("settings.change_pin".localized, systemImage: "number.square")
                         }
                     }
                 }
                 
-                Section("Reminders") {
-                    Toggle("Daily Reminder", isOn: $userSettings.settings.reminderEnabled)
+                Section("settings.reminders".localized) {
+                    Toggle("settings.daily_reminder".localized, isOn: $userSettings.settings.reminderEnabled)
                         .onChange(of: userSettings.settings.reminderEnabled) {  _, newValue in
                             if newValue {
                                 // Request permission when enabling reminders
@@ -96,18 +96,18 @@ struct SettingsView: View {
                         }
                     
                     if userSettings.settings.reminderEnabled {
-                        DatePicker("Reminder Time",
+                        DatePicker("settings.reminder_time".localized,
                                    selection: $userSettings.settings.reminderTime,
                                    displayedComponents: .hourAndMinute)
                     }
                 }
                 
-                Section("Premium Features") {
+                Section("settings.premium_features".localized) {
                     if userSettings.settings.isPremium {
                         HStack {
                             Image(systemName: "crown.fill")
                                 .foregroundColor(.yellow)
-                            Text("Premium Active")
+                            Text("settings.premium_active".localized)
                                 .foregroundColor(.secondary)
                         }
                         
@@ -117,8 +117,8 @@ struct SettingsView: View {
                                 Image(systemName: "heart.fill")
                                     .foregroundColor(.red)
                                 VStack(alignment: .leading) {
-                                    Text("Sync with Health")
-                                    Text("Auto-import weight & body fat")
+                                    Text("settings.sync_health".localized)
+                                    Text("settings.auto_import".localized)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -141,7 +141,7 @@ struct SettingsView: View {
                                     } else {
                                         Image(systemName: "arrow.triangle.2.circlepath")
                                     }
-                                    Text("Sync Now")
+                                    Text("settings.sync_now".localized)
                                 }
                             }
                             .disabled(healthKitSyncInProgress)
@@ -150,56 +150,56 @@ struct SettingsView: View {
                         Button(action: { showingPremiumUpgrade = true }) {
                             HStack {
                                 VStack(alignment: .leading) {
-                                    Text("Upgrade to Premium")
+                                    Text("settings.upgrade_premium".localized)
                                         .font(.headline)
-                                    Text("Remove ads, watermark & track weight")
+                                    Text("settings.premium_description".localized)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                                 Spacer()
-                                Text("$4.99/mo")
+                                Text("settings.premium_price".localized)
                                     .fontWeight(.semibold)
                             }
                         }
                     }
                 }
                 
-                Section(header: Text("Data")) {
+                Section(header: Text("settings.data".localized)) {
                     NavigationLink(destination: ExportView()) {
-                        Label("Export Photos", systemImage: "square.and.arrow.up")
+                        Label("settings.export_photos".localized, systemImage: "square.and.arrow.up")
                     }
                     
                     Button(role: .destructive) {
                         // TODO: Implement data clearing logic
                     } label: {
-                        Label("Clear All Data", systemImage: "trash")
+                        Label("settings.clear_all_data".localized, systemImage: "trash")
                             .foregroundColor(.red)
                     }
                 }
                 
-                Section("About") {
+                Section("settings.about".localized) {
                     Button(action: { showingAbout = true }) {
                         HStack {
-                            Text("About BodyLapse")
+                            Text("settings.about_bodylapse".localized)
                             Spacer()
-                            Text("v1.0.0")
+                            Text("settings.version".localized)
                                 .foregroundColor(.secondary)
                         }
                     }
                     
                     Link(destination: URL(string: "https://example.com/privacy")!) {
-                        Label("Privacy Policy", systemImage: "hand.raised")
+                        Label("settings.privacy_policy".localized, systemImage: "hand.raised")
                     }
                     
                     Link(destination: URL(string: "https://example.com/terms")!) {
-                        Label("Terms of Service", systemImage: "doc.text")
+                        Label("settings.terms_service".localized, systemImage: "doc.text")
                     }
                 }
                 
                 #if DEBUG
-                Section("Developer") {
+                Section("settings.developer".localized) {
                     Button(action: { showingDebugSettings = true }) {
-                        Label("Debug Settings", systemImage: "wrench.and.screwdriver")
+                        Label("settings.debug_settings".localized, systemImage: "wrench.and.screwdriver")
                     }
                 }
                 #endif
