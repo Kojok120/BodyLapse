@@ -307,6 +307,9 @@ struct InteractiveWeightChartView: View {
         let selectedInterval = (x / plotWidth) * dateInterval
         let selectedTime = displayRange.lowerBound.addingTimeInterval(selectedInterval)
         
+        // Define snap threshold as 3% of the total date range
+        let snapThreshold = dateInterval * 0.03
+        
         // Find the closest data point
         if !sortedEntries.isEmpty {
             let closestEntry = sortedEntries.min(by: { entry1, entry2 in
@@ -314,8 +317,16 @@ struct InteractiveWeightChartView: View {
             })
             
             if let entry = closestEntry {
-                selectedDate = entry.date
-                print("[InteractiveWeightChartView] Snapped to data point: \(entry.date)")
+                let distance = abs(entry.date.timeIntervalSince(selectedTime))
+                if distance <= snapThreshold {
+                    // Snap to data point if close enough
+                    selectedDate = entry.date
+                    print("[InteractiveWeightChartView] Snapped to data point: \(entry.date)")
+                } else {
+                    // Too far from any data point, use calculated date
+                    selectedDate = selectedTime
+                    print("[InteractiveWeightChartView] No nearby data point, using calculated date: \(selectedTime)")
+                }
             }
         } else {
             // No entries, just use the calculated date

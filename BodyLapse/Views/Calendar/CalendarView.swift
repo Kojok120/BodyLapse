@@ -323,11 +323,13 @@ struct CalendarView: View {
     
     private var photoPreviewSection: some View {
         VStack(spacing: 8) {
-            // Date display
-            Text(formatDate(selectedDate))
-                .font(.headline)
-                .foregroundColor(.primary)
-                .padding(.top, 8)
+            // Date display - only for free users
+            if !userSettings.settings.isPremium {
+                Text(formatDate(selectedDate))
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                    .padding(.top, 8)
+            }
             
             GeometryReader { geometry in
                 if let photo = currentPhoto,
