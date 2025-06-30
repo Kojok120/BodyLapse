@@ -569,7 +569,13 @@ struct CalendarView: View {
                 if #available(iOS 16.0, *) {
                     let filteredEntries = weightViewModel.filteredEntries(for: getWeightTimeRange())
                     if !filteredEntries.isEmpty {
-                        let fullRange = !dateRange.isEmpty ? dateRange.first!...dateRange.last! : Date()...Date()
+                        let fullRange: ClosedRange<Date> = {
+                            if let first = dateRange.first, let last = dateRange.last {
+                                return first...last
+                            } else {
+                                return Date()...Date()
+                            }
+                        }()
                         InteractiveWeightChartView(
                             entries: filteredEntries,
                             selectedDate: $selectedChartDate,

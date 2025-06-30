@@ -9,10 +9,17 @@ actor WeightStorageService {
     
     private init() {
         // Get documents directory
-        documentsDirectory = FileManager.default.urls(
+        guard let documentsDir = FileManager.default.urls(
             for: .documentDirectory,
             in: .userDomainMask
-        ).first!
+        ).first else {
+            // This should never happen, but we'll use temporary directory as fallback
+            documentsDirectory = FileManager.default.temporaryDirectory
+            weightsDirectory = documentsDirectory.appendingPathComponent("WeightData")
+            weightsFile = weightsDirectory.appendingPathComponent("entries.json")
+            return
+        }
+        documentsDirectory = documentsDir
         
         // Create weights directory
         weightsDirectory = documentsDirectory.appendingPathComponent("WeightData")

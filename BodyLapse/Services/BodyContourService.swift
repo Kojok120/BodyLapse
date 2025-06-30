@@ -127,7 +127,10 @@ class BodyContourService {
         }
         
         // Use the first instance (usually the most prominent)
-        let firstInstance = instances.first!
+        guard let firstInstance = instances.first else {
+            completion(.failure(ContourError.noPersonDetected))
+            return
+        }
         
         print("Detected \(instances.count) instances, using instance: \(firstInstance)")
         
@@ -218,7 +221,10 @@ class BodyContourService {
             // Save to temporary directory for debugging
             if let data = uiImage.pngData() {
                 // Save to Documents directory for easier access
-                let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                    print("Debug mask save failed: Could not get documents directory")
+                    return
+                }
                 let maskURL = documentsPath.appendingPathComponent("vision_mask_\(Date().timeIntervalSince1970).png")
                 try? data.write(to: maskURL)
                 print("Debug mask saved to Documents: \(maskURL.path)")
@@ -341,10 +347,13 @@ class BodyContourService {
         }
         
         // Find starting point (topmost, then leftmost)
-        let startPoint = edgePixels.min { a, b in
+        guard let startPoint = edgePixels.min(by: { a, b in
             if a.y != b.y { return a.y < b.y }
             return a.x < b.x
-        }!
+        }) else {
+            completion(.failure(ContourError.noPersonDetected))
+            return
+        }
         
         // Trace the contour using Moore neighborhood tracing
         var contourPoints: [CGPoint] = []
@@ -894,10 +903,10 @@ class BodyContourService {
         guard points.count >= 3 else { return points }
         
         // Find the point with the lowest y-coordinate (and leftmost if tie)
-        let start = points.min { a, b in
+        guard let start = points.min(by: { a, b in
             if a.y != b.y { return a.y < b.y }
             return a.x < b.x
-        }!
+        }) else { return points }
         
         // Sort points by polar angle with respect to start point
         let sortedPoints = points.filter { $0 != start }.sorted { a, b in

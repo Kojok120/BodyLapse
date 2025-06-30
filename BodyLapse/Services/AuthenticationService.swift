@@ -60,7 +60,7 @@ class AuthenticationService: ObservableObject {
     func setPassword(_ password: String) -> Bool {
         guard !password.isEmpty else { return false }
         
-        let passwordData = password.data(using: .utf8)!
+        guard let passwordData = password.data(using: .utf8) else { return false }
         
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

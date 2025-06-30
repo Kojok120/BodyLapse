@@ -8,7 +8,11 @@ class VideoStorageService {
     private init() {}
     
     var documentsDirectory: URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        guard let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            // This should never happen, but we'll use temporary directory as fallback
+            return FileManager.default.temporaryDirectory
+        }
+        return url
     }
     
     var videosDirectory: URL {
