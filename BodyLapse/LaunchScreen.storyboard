@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="EHf-IW-A2E">
+            <objects>
+                <viewController id="01J-lp-oVM" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <!-- Gradient Background Views to simulate gradient -->
+                            <!-- Top section - Turquoise -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bCh-Yt-fXH">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="426"/>
+                                <color key="backgroundColor" red="0.0" green="0.686" blue="0.8" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </view>
+                            <!-- Bottom section - Yellow-Green -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gHj-Kl-mNO">
+                                <rect key="frame" x="0.0" y="426" width="393" height="426"/>
+                                <color key="backgroundColor" red="0.6" green="0.8" blue="0.2" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </view>
+                            <!-- Center Logo Container -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zXc-Hb-pQR">
+                                <rect key="frame" x="121.66666666666669" y="351" width="150" height="150"/>
+                                <subviews>
+                                    <!-- Logo Background Circle -->
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="kJh-Fb-wXG">
+                                        <rect key="frame" x="0.0" y="0.0" width="150" height="150"/>
+                                        <color key="backgroundColor" white="1" alpha="0.9" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <userDefinedRuntimeAttributes>
+                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                <real key="value" value="75"/>
+                                            </userDefinedRuntimeAttribute>
+                                        </userDefinedRuntimeAttributes>
+                                    </view>
+                                    <!-- Logo Image View -->
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchIcon" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Xg-rSS">
+                                        <rect key="frame" x="25" y="25" width="100" height="100"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="100" id="7Kf-IJ-WgE"/>
+                                            <constraint firstAttribute="height" constant="100" id="nbe-dc-bTf"/>
+                                        </constraints>
+                                    </imageView>
+                                </subviews>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="150" id="4Xc-Vd-jhG"/>
+                                    <constraint firstAttribute="height" constant="150" id="7mH-zE-lqD"/>
+                                    <constraint firstItem="kJh-Fb-wXG" firstAttribute="leading" secondItem="zXc-Hb-pQR" secondAttribute="leading" id="8kY-OP-efx"/>
+                                    <constraint firstItem="Lbl-Xg-rSS" firstAttribute="centerX" secondItem="zXc-Hb-pQR" secondAttribute="centerX" id="Ibd-aK-xhG"/>
+                                    <constraint firstAttribute="bottom" secondItem="kJh-Fb-wXG" secondAttribute="bottom" id="OqG-1H-cQg"/>
+                                    <constraint firstItem="kJh-Fb-wXG" firstAttribute="top" secondItem="zXc-Hb-pQR" secondAttribute="top" id="RbZ-eT-Gfd"/>
+                                    <constraint firstItem="Lbl-Xg-rSS" firstAttribute="centerY" secondItem="zXc-Hb-pQR" secondAttribute="centerY" id="h8T-3h-VCK"/>
+                                    <constraint firstAttribute="trailing" secondItem="kJh-Fb-wXG" secondAttribute="trailing" id="xdf-EL-1Aj"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <color key="backgroundColor" red="0.0" green="0.686" blue="0.8" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="gHj-Kl-mNO" firstAttribute="height" secondItem="bCh-Yt-fXH" secondAttribute="height" id="1Sf-JO-QLx"/>
+                            <constraint firstItem="bCh-Yt-fXH" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="8Kc-gR-WQg"/>
+                            <constraint firstItem="gHj-Kl-mNO" firstAttribute="top" secondItem="bCh-Yt-fXH" secondAttribute="bottom" id="Ddp-8a-1hd"/>
+                            <constraint firstItem="zXc-Hb-pQR" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="F6b-oc-eYG"/>
+                            <constraint firstAttribute="trailing" secondItem="bCh-Yt-fXH" secondAttribute="trailing" id="GaK-qG-7bJ"/>
+                            <constraint firstItem="gHj-Kl-mNO" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="Lgx-2p-cQ8"/>
+                            <constraint firstAttribute="bottom" secondItem="gHj-Kl-mNO" secondAttribute="bottom" id="QvK-fK-Qbg"/>
+                            <constraint firstAttribute="trailing" secondItem="gHj-Kl-mNO" secondAttribute="trailing" id="SwU-hR-sJc"/>
+                            <constraint firstItem="bCh-Yt-fXH" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="lKf-lY-k7H"/>
+                            <constraint firstItem="zXc-Hb-pQR" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="tZs-sE-JVc"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="53" y="375"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="LaunchIcon" width="180" height="180"/>
+    </resources>
+</document>
