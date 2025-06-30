@@ -8,8 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		484212C32E0B8F56001390A9 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 484212C22E0B8F56001390A9 /* GoogleMobileAds */; };
-		48A409392E1150AC00DDC199 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48A409382E1150AC00DDC199 /* opencv2.framework */; };
-		48A4093A2E1150AC00DDC199 /* opencv2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 48A409382E1150AC00DDC199 /* opencv2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4858EF362E12F56E0085BE55 /* OpenCV in Frameworks */ = {isa = PBXBuildFile; productRef = 4858EF352E12F56E0085BE55 /* OpenCV */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,22 +28,8 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		48AC9B372E0DA4FF0067E51E /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				48A4093A2E1150AC00DDC199 /* opencv2.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
-		48A409382E1150AC00DDC199 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = Frameworks/opencv2.framework; sourceTree = "<group>"; };
+		4858EF2A2E12F14E0085BE55 /* opencv2_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2_ios.framework; path = Frameworks/opencv2_ios.framework; sourceTree = "<group>"; };
 		48D6378F2E0A0D0800133751 /* BodyLapse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BodyLapse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		48D637A02E0A0D0900133751 /* BodyLapseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BodyLapseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		48D637AA2E0A0D0900133751 /* BodyLapseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BodyLapseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -86,8 +71,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				48A409392E1150AC00DDC199 /* opencv2.framework in Frameworks */,
 				484212C32E0B8F56001390A9 /* GoogleMobileAds in Frameworks */,
+				4858EF362E12F56E0085BE55 /* OpenCV in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,7 +96,7 @@
 		484212C12E0B8F56001390A9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				48A409382E1150AC00DDC199 /* opencv2.framework */,
+				4858EF2A2E12F14E0085BE55 /* opencv2_ios.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -147,7 +132,6 @@
 				48D6378B2E0A0D0800133751 /* Sources */,
 				48D6378C2E0A0D0800133751 /* Frameworks */,
 				48D6378D2E0A0D0800133751 /* Resources */,
-				48AC9B372E0DA4FF0067E51E /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -159,6 +143,7 @@
 			name = BodyLapse;
 			packageProductDependencies = (
 				484212C22E0B8F56001390A9 /* GoogleMobileAds */,
+				4858EF352E12F56E0085BE55 /* OpenCV */,
 			);
 			productName = BodyLapse;
 			productReference = 48D6378F2E0A0D0800133751 /* BodyLapse.app */;
@@ -247,6 +232,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				484212452E0B8988001390A9 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				4858EF342E12F56E0085BE55 /* XCRemoteSwiftPackageReference "opencv-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 48D637902E0A0D0800133751 /* Products */;
@@ -449,15 +435,14 @@
 				CODE_SIGN_ENTITLEMENTS = BodyLapse/BodyLapse.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"BodyLapse/Preview Content\"";
 				DEVELOPMENT_TEAM = PG5P26J3W2;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_ARCHS = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "BodyLapse needs camera access to capture your daily progress photos";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "BodyLapse uses Face ID to secure your photos";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "BodyLapse reads your weight and body fat data from Health to automatically track your progress";
@@ -512,11 +497,9 @@
 				DEVELOPMENT_TEAM = PG5P26J3W2;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_ARCHS = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "BodyLapse needs camera access to capture your daily progress photos";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "BodyLapse uses Face ID to secure your photos";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "BodyLapse reads your weight and body fat data from Health to automatically track your progress";
@@ -710,6 +693,14 @@
 				minimumVersion = 12.6.0;
 			};
 		};
+		4858EF342E12F56E0085BE55 /* XCRemoteSwiftPackageReference "opencv-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/yeatse/opencv-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.11.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -717,6 +708,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 484212452E0B8988001390A9 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
 			productName = GoogleMobileAds;
+		};
+		4858EF352E12F56E0085BE55 /* OpenCV */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4858EF342E12F56E0085BE55 /* XCRemoteSwiftPackageReference "opencv-spm" */;
+			productName = OpenCV;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
