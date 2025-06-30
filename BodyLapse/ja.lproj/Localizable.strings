@@ -105,6 +105,7 @@
 "settings.photo_settings" = "写真設定";
 "settings.show_guidelines" = "ボディガイドラインを表示";
 "settings.reset_guideline" = "ボディガイドラインをリセット";
+"settings.set_guideline" = "ボディガイドラインを設定";
 "settings.weight_unit" = "重量単位";
 "settings.security" = "セキュリティ";
 "settings.app_lock" = "アプリロック";

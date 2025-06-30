@@ -105,6 +105,7 @@
 "settings.photo_settings" = "사진 설정";
 "settings.show_guidelines" = "바디 가이드라인 표시";
 "settings.reset_guideline" = "바디 가이드라인 재설정";
+"settings.set_guideline" = "바디 가이드라인 설정";
 "settings.weight_unit" = "무게 단위";
 "settings.security" = "보안";
 "settings.app_lock" = "앱 잠금";

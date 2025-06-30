@@ -23,12 +23,20 @@ struct SettingsView: View {
                 Section("settings.photo_settings".localized) {
                     Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
                     
-                    if GuidelineStorageService.shared.hasGuideline() {
-                        Button(action: {
+                    Button(action: {
+                        if GuidelineStorageService.shared.hasGuideline() {
                             showingResetGuidelineConfirmation = true
-                        }) {
+                        } else {
+                            // If no guideline exists, directly show the guideline setup
+                            showingResetGuideline = true
+                        }
+                    }) {
+                        if GuidelineStorageService.shared.hasGuideline() {
                             Label("settings.reset_guideline".localized, systemImage: "arrow.uturn.backward")
                                 .foregroundColor(.red)
+                        } else {
+                            Label("settings.set_guideline".localized, systemImage: "person.fill.viewfinder")
+                                .foregroundColor(.blue)
                         }
                     }
                     

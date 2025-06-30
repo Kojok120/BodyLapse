@@ -105,6 +105,7 @@
 "settings.photo_settings" = "Photo Settings";
 "settings.show_guidelines" = "Show Body Guidelines";
 "settings.reset_guideline" = "Reset Body Guideline";
+"settings.set_guideline" = "Set Body Guideline";
 "settings.weight_unit" = "Weight Unit";
 "settings.security" = "Security";
 "settings.app_lock" = "App Lock";

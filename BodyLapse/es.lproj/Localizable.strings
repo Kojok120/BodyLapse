@@ -105,6 +105,7 @@
 "settings.photo_settings" = "Configuración de Fotos";
 "settings.show_guidelines" = "Mostrar Guías Corporales";
 "settings.reset_guideline" = "Restablecer Guía Corporal";
+"settings.set_guideline" = "Establecer Guía Corporal";
 "settings.weight_unit" = "Unidad de Peso";
 "settings.security" = "Seguridad";
 "settings.app_lock" = "Bloqueo de App";

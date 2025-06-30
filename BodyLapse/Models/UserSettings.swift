@@ -9,8 +9,6 @@ struct UserSettings: Codable {
     
     // Onboarding
     var hasCompletedOnboarding: Bool = false
-    var targetWeight: Double?
-    var targetBodyFatPercentage: Double?
     
     // Security
     var isAppLockEnabled: Bool = false
