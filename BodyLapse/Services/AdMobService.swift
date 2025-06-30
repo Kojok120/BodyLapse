@@ -34,17 +34,13 @@ class AdMobService: NSObject {
     
     // Public method to check ad status
     func checkAdStatus() {
-        print("[AdMob] === Ad Status Check ===")
-        print("[AdMob] Interstitial ad loaded: \(interstitialAd != nil)")
-        print("[AdMob] Is loading: \(isLoadingInterstitial)")
-        print("[AdMob] Ad Unit ID: \(interstitialAdUnitID)")
-        print("[AdMob] ======================")
+        // Ad status check removed for production
     }
     
     func initializeAdMob() {
         Task {
             await MobileAds.shared.start()
-            print("[AdMob] SDK initialized")
+            // SDK initialized
             
             // Load interstitial ad immediately after initialization
             await MainActor.run {
@@ -55,12 +51,11 @@ class AdMobService: NSObject {
     
     func loadInterstitialAd() {
         guard !isLoadingInterstitial else { 
-            print("[AdMob] Already loading interstitial ad, skipping")
+            // Already loading interstitial ad, skipping
             return 
         }
         
-        print("[AdMob] Starting to load interstitial ad")
-        print("[AdMob] Ad Unit ID: \(interstitialAdUnitID)")
+        // Starting to load interstitial ad
         
         isLoadingInterstitial = true
         let request = Request()
@@ -70,38 +65,32 @@ class AdMobService: NSObject {
             self?.isLoadingInterstitial = false
             
             if let error = error {
-                print("[AdMob] Failed to load interstitial ad: \(error.localizedDescription)")
-                print("[AdMob] Error domain: \(error._domain)")
-                print("[AdMob] Error code: \(error._code)")
+                // Failed to load interstitial ad
                 return
             }
             
             self?.interstitialAd = ad
             self?.interstitialAd?.fullScreenContentDelegate = self
-            print("[AdMob] Interstitial ad loaded successfully")
-            print("[AdMob] Ad object: \(String(describing: ad))")
+            // Interstitial ad loaded successfully
         }
     }
     
     func showInterstitialAd(from viewController: UIViewController, completion: (() -> Void)? = nil) {
-        print("[AdMob] Attempting to show interstitial ad")
-        print("[AdMob] Interstitial ad exists: \(interstitialAd != nil)")
-        print("[AdMob] View controller: \(type(of: viewController))")
-        print("[AdMob] Is loading: \(isLoadingInterstitial)")
+        // Attempting to show interstitial ad
         
         if let ad = interstitialAd {
-            print("[AdMob] Presenting interstitial ad")
+            // Presenting interstitial ad
             interstitialCompletion = completion
             
             // Ensure we're on the main thread
             DispatchQueue.main.async {
                 ad.present(from: viewController)
-                print("[AdMob] Ad presentation called successfully")
+                // Ad presentation called successfully
             }
         } else {
-            print("[AdMob] Interstitial ad not ready")
+            // Interstitial ad not ready
             if !isLoadingInterstitial {
-                print("[AdMob] Loading new interstitial ad")
+                // Loading new interstitial ad
                 loadInterstitialAd()
             }
             completion?()
@@ -111,21 +100,20 @@ class AdMobService: NSObject {
 
 extension AdMobService: FullScreenContentDelegate {
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        print("Interstitial ad dismissed")
+        // Interstitial ad dismissed
         interstitialCompletion?()
         interstitialCompletion = nil
         loadInterstitialAd()
     }
     
     func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
-        print("[AdMob] Failed to present interstitial ad: \(error.localizedDescription)")
-        print("[AdMob] Error: \(error)")
+        // Failed to present interstitial ad
         interstitialCompletion?()
         interstitialCompletion = nil
         loadInterstitialAd()
     }
     
     func adWillPresentFullScreenContent(_ ad: FullScreenPresentingAd) {
-        print("Interstitial ad will present")
+        // Interstitial ad will present
     }
 }

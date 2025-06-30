@@ -13,7 +13,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         
         // Initialize AdMob with delay to ensure proper setup
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            print("[AppDelegate] Initializing AdMob")
+            // Initializing AdMob
             AdMobService.shared.initializeAdMob()
         }
         
@@ -22,7 +22,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             do {
                 try await UNUserNotificationCenter.current().setBadgeCount(0)
             } catch {
-                print("Error clearing badge count: \(error)")
+                // Error clearing badge count
             }
         }
         
@@ -44,7 +44,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             do {
                 try await UNUserNotificationCenter.current().setBadgeCount(0)
             } catch {
-                print("Error clearing badge count: \(error)")
+                // Error clearing badge count
             }
         }
         NotificationService.shared.clearDeliveredNotifications()

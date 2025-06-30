@@ -129,7 +129,7 @@ class CameraViewModel: NSObject, ObservableObject {
             
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 self?.session.startRunning()
-                print("[Camera] Session started running")
+                // Session started running
             }
         } catch {
             session.commitConfiguration()
@@ -204,13 +204,13 @@ class CameraViewModel: NSObject, ObservableObject {
                     bodyFatPercentage: tempBodyFat
                 )
             }
-            print("[Camera] Photo saved successfully: \(photo.fileName)")
+            // Photo saved successfully
             
             DispatchQueue.main.async { [weak self] in
                 self?.tempWeight = nil
                 self?.tempBodyFat = nil
                 self?.capturedImage = nil // Clear the captured image to close the sheet
-                print("[Camera] Cleared captured image")
+                // Cleared captured image
                 
                 // Navigate to Calendar with today's date
                 NotificationCenter.default.post(
@@ -219,7 +219,7 @@ class CameraViewModel: NSObject, ObservableObject {
                 )
             }
         } catch {
-            print("[Camera] Failed to save photo: \(error)")
+            // Failed to save photo
             DispatchQueue.main.async { [weak self] in
                 self?.alertMessage = "Failed to save photo: \(error.localizedDescription)"
                 self?.showingAlert = true
@@ -244,7 +244,7 @@ class CameraViewModel: NSObject, ObservableObject {
         if session.isRunning {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 self?.session.stopRunning()
-                print("[Camera] Session stopped")
+                // Session stopped
             }
         }
     }
@@ -257,7 +257,7 @@ class CameraViewModel: NSObject, ObservableObject {
             } else if !session.isRunning {
                 DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                     self?.session.startRunning()
-                    print("[Camera] Session restarted")
+                    // Session restarted
                 }
             }
         }
@@ -320,7 +320,7 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         } catch {
             // If there's an error, add back the current input
             session.addInput(currentInput)
-            print("Error switching camera: \(error)")
+            // Error switching camera
         }
         
         session.commitConfiguration()

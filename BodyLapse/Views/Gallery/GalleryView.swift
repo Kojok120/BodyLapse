@@ -78,17 +78,17 @@ struct GalleryView: View {
     
     private func checkForVideoToPlay() {
         if let videoId = videoToPlay {
-            print("[GalleryView] Checking for video to play: \(videoId)")
+            // Checking for video to play
             // Find the video and play it
             if let video = viewModel.videos.first(where: { $0.id == videoId }) {
-                print("[GalleryView] Found video to play: \(video.fileName)")
+                // Found video to play
                 viewModel.selectedSection = .videos
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     selectedVideo = video
                     videoToPlay = nil // Clear after playing
                 }
             } else {
-                print("[GalleryView] Video not found in list. Total videos: \(viewModel.videos.count)")
+                // Video not found in list
             }
         }
     }
@@ -250,7 +250,7 @@ struct GalleryView: View {
             if success {
                 showSaveSuccess(message: "gallery.photo_saved".localized)
             } else {
-                print("Failed to save photo: \(error?.localizedDescription ?? "Unknown error")")
+                // Failed to save photo
             }
         }
     }
@@ -260,7 +260,7 @@ struct GalleryView: View {
             if success {
                 showSaveSuccess(message: "gallery.video_saved".localized)
             } else {
-                print("Failed to save video: \(error?.localizedDescription ?? "Unknown error")")
+                // Failed to save video
             }
         }
     }

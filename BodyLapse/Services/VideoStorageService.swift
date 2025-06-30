@@ -69,7 +69,7 @@ class VideoStorageService {
             let duration = try await asset.load(.duration)
             return duration.seconds
         } catch {
-            print("Failed to load duration: \(error)")
+            // Failed to load duration
             return 0
         }
     }
@@ -109,7 +109,7 @@ class VideoStorageService {
                 try data.write(to: thumbnailURL)
             }
         } catch {
-            print("Failed to generate thumbnail: \(error)")
+            // Failed to generate thumbnail
         }
     }
     

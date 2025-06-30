@@ -75,7 +75,7 @@
          </BuildableReference>
       </BuildableProductRunnable>
       <StoreKitConfigurationFileReference
-         identifier = "../../BodyLapse/BodyLapse.storekit">
+         identifier = "../BodyLapse/BodyLapse.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction

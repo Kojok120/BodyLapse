@@ -24,7 +24,7 @@ class SubscriptionManagerService: ObservableObject {
     
     // MARK: - Initialization
     private init() {
-        print("[SubscriptionManager] Initializing SubscriptionManagerService...")
+        // Initializing SubscriptionManagerService...
         // Initial setup
         Task {
             await initializeSubscriptionStatus()
@@ -42,12 +42,9 @@ class SubscriptionManagerService: ObservableObject {
     
     /// Load products from App Store
     func loadProducts() async {
-        print("[SubscriptionManager] Loading products...")
+        // Loading products...
         await storeManager.loadProducts()
-        print("[SubscriptionManager] Products loaded: \(storeManager.products.count) products available")
-        for product in storeManager.products {
-            print("[SubscriptionManager] Available product: \(product.id) - \(product.displayName)")
-        }
+        // Products loaded
     }
     
     /// Purchase a subscription product
@@ -123,12 +120,12 @@ class SubscriptionManagerService: ObservableObject {
     // MARK: - Private Methods
     
     private func initializeSubscriptionStatus() async {
-        print("[SubscriptionManager] Initializing subscription status...")
+        // Initializing subscription status...
         isLoadingSubscriptionStatus = true
         await loadProducts()
         await updateSubscriptionStatus()
         isLoadingSubscriptionStatus = false
-        print("[SubscriptionManager] Initialization complete - isPremium: \(isPremium)")
+        // Initialization complete
     }
     
     private func observeStoreManagerChanges() {
@@ -143,7 +140,7 @@ class SubscriptionManagerService: ObservableObject {
     }
     
     private func updateSubscriptionStatus() async {
-        print("[SubscriptionManager] Updating subscription status...")
+        // Updating subscription status...
         // Get current transaction status
         var hasActiveSubscription = false
         var latestTransaction: Transaction?
@@ -153,31 +150,31 @@ class SubscriptionManagerService: ObservableObject {
         for await result in Transaction.currentEntitlements {
             transactionCount += 1
             guard case .verified(let transaction) = result else { 
-                print("[SubscriptionManager] Unverified transaction found")
+                // Unverified transaction found
                 continue 
             }
             
-            print("[SubscriptionManager] Checking transaction: \(transaction.productID)")
+            // Checking transaction
             // Check if this is a subscription product
             if transaction.productID == StoreProducts.premiumMonthly {
-                print("[SubscriptionManager] Found premium monthly subscription")
+                // Found premium monthly subscription
                 
                 // Check if subscription is not revoked
                 if transaction.revocationDate == nil {
                     hasActiveSubscription = true
                     subscriptionID = transaction.productID
-                    print("[SubscriptionManager] Active subscription found: \(transaction.productID)")
+                    // Active subscription found
                     
                     // Keep the latest transaction
                     if latestTransaction == nil || transaction.purchaseDate > latestTransaction!.purchaseDate {
                         latestTransaction = transaction
                     }
                 } else {
-                    print("[SubscriptionManager] Subscription revoked: \(transaction.productID)")
+                    // Subscription revoked
                 }
             }
         }
-        print("[SubscriptionManager] Total transactions checked: \(transactionCount)")
+        // Total transactions checked: \(transactionCount)
         
         // Update properties on main thread
         await MainActor.run {
@@ -202,14 +199,6 @@ class SubscriptionManagerService: ObservableObject {
     }
     
     // MARK: - Debug Support
-    
-    #if DEBUG
-    /// Force set premium status for testing (debug builds only)
-    func setDebugPremiumStatus(_ isPremium: Bool) {
-        self.isPremium = isPremium
-        NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
-    }
-    #endif
 }
 
 // MARK: - Convenience Methods

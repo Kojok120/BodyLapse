@@ -21,22 +21,22 @@ class PhotoStorageService {
     private(set) var photos: [Photo] = []
     
     func initialize() {
-        print("[PhotoStorage] Initializing...")
+        // Initializing...
         createPhotosDirectoryIfNeeded()
         loadPhotosMetadata()
-        print("[PhotoStorage] Initialized with \(photos.count) photos")
+        // Initialized with photos
     }
     
     private func createPhotosDirectoryIfNeeded() {
         guard let photosDirectory = photosDirectory else {
-            print("[PhotoStorage] Error: Could not access photos directory")
+            // Error: Could not access photos directory
             return
         }
         
         do {
             try FileManager.default.createDirectory(at: photosDirectory, withIntermediateDirectories: true)
         } catch {
-            print("[PhotoStorage] Error creating photos directory: \(error)")
+            // Error creating photos directory
         }
     }
     
@@ -66,14 +66,14 @@ class PhotoStorageService {
             bodyFatPercentage: bodyFatPercentage
         )
         
-        print("[PhotoStorage] Created photo - weight: \(weight ?? -1), bodyFat: \(bodyFatPercentage ?? -1)")
+        // Created photo with metadata
         
         photos.append(photo)
         photos.sort { $0.captureDate > $1.captureDate }
         
         savePhotosMetadata()
         
-        print("[PhotoStorage] Photo saved to metadata - total photos: \(photos.count)")
+        // Photo saved to metadata
         
         return photo
     }
@@ -97,20 +97,20 @@ class PhotoStorageService {
     }
     
     func replacePhoto(for date: Date, with image: UIImage, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
-        print("[PhotoStorage] Replacing photo for date: \(date)")
+        // Replacing photo for date
         if let existingPhoto = getPhotoForDate(date) {
-            print("[PhotoStorage] Found existing photo for date, deleting: \(existingPhoto.captureDate)")
+            // Found existing photo for date, deleting
             try deletePhoto(existingPhoto)
         }
         
         let newPhoto = try savePhoto(image, captureDate: date, isFaceBlurred: isFaceBlurred, bodyDetectionConfidence: bodyDetectionConfidence, weight: weight, bodyFatPercentage: bodyFatPercentage)
-        print("[PhotoStorage] New photo saved with date: \(newPhoto.captureDate)")
+        // New photo saved
         return newPhoto
     }
     
     func updatePhotoMetadata(_ photo: Photo, weight: Double?, bodyFatPercentage: Double?) {
         guard let index = photos.firstIndex(where: { $0.id == photo.id }) else {
-            print("[PhotoStorage] updatePhotoMetadata - Photo not found for id: \(photo.id)")
+            // Photo not found for update
             return
         }
         
@@ -118,12 +118,12 @@ class PhotoStorageService {
         updatedPhoto.weight = weight
         updatedPhoto.bodyFatPercentage = bodyFatPercentage
         
-        print("[PhotoStorage] updatePhotoMetadata - Updating photo date: \(photo.captureDate), weight: \(weight ?? -1) -> \(updatedPhoto.weight ?? -1), bodyFat: \(bodyFatPercentage ?? -1) -> \(updatedPhoto.bodyFatPercentage ?? -1)")
+        // Updating photo metadata
         
         photos[index] = updatedPhoto
         savePhotosMetadata()
         
-        print("[PhotoStorage] updatePhotoMetadata - Successfully updated and saved metadata")
+        // Successfully updated metadata
     }
     
     func deletePhoto(_ photo: Photo) throws {
@@ -140,7 +140,7 @@ class PhotoStorageService {
     
     func loadImage(for photo: Photo) -> UIImage? {
         guard let photosDirectory = photosDirectory else {
-            print("[PhotoStorage] Error: Could not access photos directory")
+            // Error: Could not access photos directory
             return nil
         }
         
@@ -150,21 +150,21 @@ class PhotoStorageService {
     }
     
     func reloadPhotosFromDisk() {
-        print("[PhotoStorage] Reloading photos metadata from disk")
+        // Reloading photos metadata from disk
         loadPhotosMetadata()
     }
     
     private func loadPhotosMetadata() {
         guard let metadataURL = metadataURL else {
-            print("[PhotoStorage] Error: Could not access metadata URL")
+            // Error: Could not access metadata URL
             photos = []
             return
         }
         
-        print("[PhotoStorage] Loading metadata from: \(metadataURL.path)")
+        // Loading metadata from disk
         
         guard let data = try? Data(contentsOf: metadataURL) else {
-            print("[PhotoStorage] No metadata file found")
+            // No metadata file found
             photos = []
             return
         }
@@ -172,30 +172,30 @@ class PhotoStorageService {
         do {
             let decoded = try JSONDecoder().decode([Photo].self, from: data)
             photos = decoded.sorted { $0.captureDate > $1.captureDate }
-            print("[PhotoStorage] Loaded \(photos.count) photos from metadata")
+            // Loaded photos from metadata
             
             // Debug: Print first few photos with weight data
             for (index, photo) in photos.prefix(3).enumerated() {
-                print("[PhotoStorage] Photo \(index): date=\(photo.captureDate), weight=\(photo.weight ?? -1), bodyFat=\(photo.bodyFatPercentage ?? -1)")
+                // Photo loaded from metadata
             }
         } catch {
-            print("[PhotoStorage] Failed to decode metadata: \(error)")
+            // Failed to decode metadata
             photos = []
         }
     }
     
     private func savePhotosMetadata() {
         guard let metadataURL = metadataURL else {
-            print("[PhotoStorage] Error: Could not access metadata URL")
+            // Error: Could not access metadata URL
             return
         }
         
         do {
             let encoded = try JSONEncoder().encode(photos)
             try encoded.write(to: metadataURL)
-            print("[PhotoStorage] Saved metadata for \(photos.count) photos")
+            // Saved metadata
         } catch {
-            print("[PhotoStorage] Failed to save metadata: \(error)")
+            // Failed to save metadata
         }
     }
     

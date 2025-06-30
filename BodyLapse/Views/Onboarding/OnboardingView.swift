@@ -732,20 +732,20 @@ struct OnboardingView: View {
         let context = LAContext()
         var error: NSError?
         
-        print("Checking biometric availability...")
+        // Checking biometric availability...
         
         if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            print("Biometric available, type: \(context.biometryType.rawValue)")
+            // Biometric available
             
             // Request authentication to ensure user grants permission
             context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "onboarding.enable_biometric".localized) { success, authError in
                 DispatchQueue.main.async {
                     if success {
-                        print("Biometric authentication successful")
+                        // Biometric authentication successful
                         selectedLockMethod = .biometric
                         saveSettings(enableLock: true)
                     } else {
-                        print("Biometric authentication failed: \(authError?.localizedDescription ?? "Unknown error")")
+                        // Biometric authentication failed
                         if let error = authError as NSError? {
                             if error.code == LAError.userCancel.rawValue {
                                 // User cancelled, don't show error
@@ -758,14 +758,14 @@ struct OnboardingView: View {
                 }
             }
         } else {
-            print("Biometric not available: \(error?.localizedDescription ?? "Unknown error")")
+            // Biometric not available
             passcodeErrorMessage = "onboarding.enable_biometric".localized
             showingPasscodeError = true
         }
     }
     
     private func saveSettings(enableLock: Bool) {
-        print("Saving settings - enableLock: \(enableLock)")
+        // Saving settings
         
         userSettings.settings.isAppLockEnabled = enableLock
         
@@ -776,7 +776,7 @@ struct OnboardingView: View {
             }
         }
         
-        print("Setting hasCompletedOnboarding = true")
+        // Setting hasCompletedOnboarding = true
         userSettings.settings.hasCompletedOnboarding = true
         
         // Force save to UserDefaults
@@ -785,7 +785,7 @@ struct OnboardingView: View {
             UserDefaults.standard.synchronize()
         }
         
-        print("Onboarding complete")
+        // Onboarding complete
         // The view will automatically change due to hasCompletedOnboarding = true
     }
 }
@@ -907,13 +907,13 @@ struct BaselinePhotoCaptureView: View {
                 
                 switch result {
                 case .success(let contour):
-                    print("BaselinePhotoCaptureView: Detected \(contour.count) contour points")
+                    // Detected contour points
                     self.detectedContour = contour
                     self.isProcessing = false
                     self.showingContourConfirmation = true
                     
                 case .failure(let error):
-                    print("Failed to detect body contour: \(error)")
+                    // Failed to detect body contour
                     self.contourError = error.localizedDescription
                     self.isProcessing = false
                     // Still show confirmation without contour to let user proceed
@@ -975,7 +975,7 @@ struct BaselinePhotoCaptureView: View {
                     self.onPhotoCapture(photo)
                 }
             } catch {
-                print("Failed to save baseline photo: \(error)")
+                // Failed to save baseline photo
                 DispatchQueue.main.async { [self] in
                     self.isProcessing = false
                 }

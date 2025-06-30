@@ -10,9 +10,6 @@ struct SettingsView: View {
     @State private var showingPasswordSetup = false
     @State private var showingChangePassword = false
     @State private var showingNotificationPermissionAlert = false
-    #if DEBUG
-    @State private var showingDebugSettings = false
-    #endif
     @State private var healthKitEnabled = false
     @State private var showingHealthKitPermission = false
     @State private var healthKitSyncInProgress = false
@@ -175,12 +172,15 @@ struct SettingsView: View {
                         Label("settings.export_photos".localized, systemImage: "square.and.arrow.up")
                     }
                     
+                    // Data clearing feature - to be implemented in future version
+                    /*
                     Button(role: .destructive) {
-                        // TODO: Implement data clearing logic
+                        // Implement data clearing logic
                     } label: {
                         Label("settings.clear_all_data".localized, systemImage: "trash")
                             .foregroundColor(.red)
                     }
+                    */
                 }
                 
                 Section("settings.about".localized) {
@@ -201,14 +201,6 @@ struct SettingsView: View {
                         Label("settings.terms_service".localized, systemImage: "doc.text")
                     }
                 }
-                
-                #if DEBUG
-                Section("settings.developer".localized) {
-                    Button(action: { showingDebugSettings = true }) {
-                        Label("settings.debug_settings".localized, systemImage: "wrench.and.screwdriver")
-                    }
-                }
-                #endif
             }
             .navigationTitle("settings.title".localized)
             .sheet(isPresented: $showingAbout) {
@@ -225,11 +217,6 @@ struct SettingsView: View {
             .sheet(isPresented: $showingChangePassword) {
                 ChangePasswordView()
             }
-            #if DEBUG
-            .sheet(isPresented: $showingDebugSettings) {
-                DebugSettingsView()
-            }
-            #endif
             .alert("settings.notification_required".localized, isPresented: $showingNotificationPermissionAlert) {
                 Button("settings.open_settings".localized) {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
@@ -418,9 +405,12 @@ struct PremiumUpgradeView: View {
                     }
                     .padding(.horizontal)
                     
+                    // Restore purchase feature - handled by StoreKit automatically
+                    /*
                     Button("premium.restore".localized) {
-                        // TODO: Implement restore purchase
+                        // Implement restore purchase
                     }
+                    */
                     .font(.caption)
                     .foregroundColor(.secondary)
                 }
@@ -462,8 +452,10 @@ struct ExportView: View {
                 .multilineTextAlignment(.center)
                 .padding()
             
+            // Export feature - to be implemented in future version
+            /*
             Button(action: {
-                // TODO: Implement export functionality
+                // Implement export functionality
             }) {
                 Label("export.all_photos".localized, systemImage: "square.and.arrow.up")
                     .frame(maxWidth: .infinity)
@@ -473,6 +465,7 @@ struct ExportView: View {
                     .cornerRadius(10)
             }
             .padding(.horizontal)
+            */
             
             Spacer()
         }
