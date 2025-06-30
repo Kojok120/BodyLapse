@@ -114,6 +114,7 @@
 "settings.reminder_time" = "Reminder Time";
 "settings.premium_features" = "Premium Features";
 "settings.premium_active" = "Premium Active";
+"settings.manage_subscription" = "Manage Subscription";
 "settings.sync_health" = "Sync with Health";
 "settings.auto_import" = "Auto-import weight & body fat";
 "settings.sync_now" = "Sync Now";

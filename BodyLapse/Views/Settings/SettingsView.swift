@@ -109,6 +109,24 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                         
+                        // Manage Subscription Button
+                        Button(action: {
+                            if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "creditcard")
+                                    .foregroundColor(.blue)
+                                Text("settings.manage_subscription".localized)
+                                Spacer()
+                                Image(systemName: "arrow.up.forward")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .foregroundColor(.primary)
+                        
                         // HealthKit Integration
                         Toggle(isOn: $healthKitEnabled) {
                             HStack {

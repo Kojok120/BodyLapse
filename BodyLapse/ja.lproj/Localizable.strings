@@ -114,6 +114,7 @@
 "settings.reminder_time" = "リマインダー時刻";
 "settings.premium_features" = "プレミアム機能";
 "settings.premium_active" = "プレミアムアクティブ";
+"settings.manage_subscription" = "サブスクリプションを管理";
 "settings.sync_health" = "ヘルスと同期";
 "settings.auto_import" = "体重と体脂肪を自動インポート";
 "settings.sync_now" = "今すぐ同期";

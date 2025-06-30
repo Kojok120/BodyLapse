@@ -114,6 +114,7 @@
 "settings.reminder_time" = "알림 시간";
 "settings.premium_features" = "프리미엄 기능";
 "settings.premium_active" = "프리미엄 활성화";
+"settings.manage_subscription" = "구독 관리";
 "settings.sync_health" = "건강 앱과 동기화";
 "settings.auto_import" = "체중 및 체지방 자동 가져오기";
 "settings.sync_now" = "지금 동기화";

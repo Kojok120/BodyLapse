@@ -114,6 +114,7 @@
 "settings.reminder_time" = "Hora del Recordatorio";
 "settings.premium_features" = "Funciones Premium";
 "settings.premium_active" = "Premium Activo";
+"settings.manage_subscription" = "Gestionar Suscripción";
 "settings.sync_health" = "Sincronizar con Salud";
 "settings.auto_import" = "Importar peso y grasa corporal automáticamente";
 "settings.sync_now" = "Sincronizar Ahora";
