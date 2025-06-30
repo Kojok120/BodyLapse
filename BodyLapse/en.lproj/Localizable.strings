@@ -182,7 +182,7 @@
 "onboarding.timelapse.subtitle" = "Watch your journey unfold\nwith stunning time-lapse videos";
 "onboarding.timelapse.description" = "Customize video speed and quality\nto create the perfect transformation montage";
 "onboarding.privacy.title" = "Privacy Protection";
-"onboarding.privacy.subtitle" = "Keep your identity private with\nautomatic face blurring technology";
+"onboarding.privacy.subtitle" = "Keep your identity private with\nautomatic face blurring";
 "onboarding.privacy.description" = "All processing happens on your device\nYour photos never leave your phone";
 "onboarding.metrics.title" = "Track Your Metrics";
 "onboarding.metrics.subtitle" = "Log weight and body fat percentage\nto visualize your progress over time";

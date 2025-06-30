@@ -82,17 +82,20 @@ struct OnboardingView: View {
                         ProgressView("Loading...")
                             .padding()
                     } else if let product = premiumViewModel.products.first {
-                        VStack(spacing: 30) {
+                        VStack(spacing: 20) {
                             // Header
-                            VStack(spacing: 15) {
+                            VStack(spacing: 10) {
                                 Image(systemName: "star.circle.fill")
                                     .font(.system(size: 60))
                                     .foregroundColor(.yellow)
-                                    .padding(.top, 20)
+                                    .padding(.top, 15)
                                 
                                 Text("onboarding.premium.title".localized)
-                                    .font(.largeTitle)
+                                    .font(.title)
                                     .fontWeight(.bold)
+                                    .multilineTextAlignment(.center)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.horizontal, 10)
                                 
                                 Text(product.displayName)
                                     .font(.headline)
@@ -100,18 +103,18 @@ struct OnboardingView: View {
                             }
                             
                             // Price
-                            VStack(spacing: 10) {
+                            VStack(spacing: 8) {
                                 Text(product.displayPrice + " / " + "date.month".localized)
-                                    .font(.title)
+                                    .font(.title2)
                                     .fontWeight(.semibold)
                                 
                                 Text("onboarding.premium.trial".localized)
-                                    .font(.subheadline)
+                                    .font(.caption)
                                     .fontWeight(.medium)
                                     .foregroundColor(.green)
                                 
                                 Text("onboarding.premium.cancel_anytime".localized)
-                                    .font(.caption)
+                                    .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
                             .padding(.vertical, 20)
@@ -321,14 +324,14 @@ struct OnboardingView: View {
                 .fontWeight(.bold)
             
             Text(description)
-                .font(.body)
+                .font(.headline)
                 .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
                 .padding(.horizontal, 30)
             
             Text(subDescription)
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(2)
@@ -342,113 +345,116 @@ struct OnboardingView: View {
     }
     
     private var premiumFeaturesView: some View {
-        ScrollView {
-            VStack(spacing: 30) {
-                Image(systemName: "star.circle.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.yellow)
-                    .padding(.bottom, 10)
-                    .padding(.top, 40)
-                
-                Text("onboarding.premium.title".localized)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
-                Text("onboarding.premium.subtitle".localized)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .padding(.horizontal, 30)
-                
-                VStack(spacing: 20) {
-                    premiumFeatureItem(
-                        icon: "chart.line.uptrend.xyaxis",
-                        title: "onboarding.premium.metrics.title".localized,
-                        description: "onboarding.premium.metrics.description".localized
-                    )
-                    
-                    premiumFeatureItem(
-                        icon: "video.badge.checkmark",
-                        title: "onboarding.premium.nowatermark.title".localized,
-                        description: "onboarding.premium.nowatermark.description".localized
-                    )
-                    
-                    premiumFeatureItem(
-                        icon: "eye.slash",
-                        title: "onboarding.premium.noads.title".localized,
-                        description: "onboarding.premium.noads.description".localized
-                    )
-                    
-                }
+        VStack(spacing: 12) {
+            Image(systemName: "star.circle.fill")
+                .font(.system(size: 60))
+                .foregroundColor(.yellow)
+                .padding(.top, 5)
+            
+            Text("onboarding.premium.title".localized)
+                .font(.title)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 20)
-                .padding(.top, 10)
+
+            Text("onboarding.premium.subtitle".localized)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .lineSpacing(2)
+                .padding(.horizontal, 20)
+                .padding(.top, 2)
+            
+            VStack(spacing: 12) {
+                premiumFeatureItem(
+                    icon: "chart.line.uptrend.xyaxis",
+                    title: "onboarding.premium.metrics.title".localized,
+                    description: "onboarding.premium.metrics.description".localized
+                )
                 
-                VStack(spacing: 10) {
-                    Text("onboarding.premium.price".localized)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                    
-                    if let product = SubscriptionManagerService.shared.products.first {
-                        VStack(spacing: 5) {
-                            Text(product.displayPrice + " / " + "date.month".localized)
-                                .font(.headline)
-                                .foregroundColor(.accentColor)
-                            
-                            Text("onboarding.premium.trial".localized)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.green)
-                            
-                            Text("onboarding.premium.cancel_anytime".localized)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    } else {
-                        VStack(spacing: 5) {
-                            Text("onboarding.premium.price.fallback".localized)
-                                .font(.headline)
-                                .foregroundColor(.accentColor)
-                            
-                            Text("onboarding.premium.trial".localized)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.green)
-                            
-                            Text("onboarding.premium.cancel_anytime".localized)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                premiumFeatureItem(
+                    icon: "video.badge.checkmark",
+                    title: "onboarding.premium.nowatermark.title".localized,
+                    description: "onboarding.premium.nowatermark.description".localized
+                )
+                
+                premiumFeatureItem(
+                    icon: "eye.slash",
+                    title: "onboarding.premium.noads.title".localized,
+                    description: "onboarding.premium.noads.description".localized
+                )
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 5)
+            
+            Spacer(minLength: 10)
+            
+            VStack(spacing: 6) {
+                Text("onboarding.premium.price".localized)
+                    .font(.callout)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                
+                if let product = SubscriptionManagerService.shared.products.first {
+                    VStack(spacing: 4) {
+                        Text(product.displayPrice + " / " + "date.month".localized)
+                            .font(.subheadline)
+                            .foregroundColor(.accentColor)
+                        
+                        Text("onboarding.premium.trial".localized)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.green)
+                        
+                        Text("onboarding.premium.cancel_anytime".localized)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    VStack(spacing: 4) {
+                        Text("onboarding.premium.price.fallback".localized)
+                            .font(.subheadline)
+                            .foregroundColor(.accentColor)
+                        
+                        Text("onboarding.premium.trial".localized)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.green)
+                        
+                        Text("onboarding.premium.cancel_anytime".localized)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
                     }
                 }
-                .padding(.top, 20)
-                .padding(.bottom, 40)
             }
+            .padding(.bottom, 5)
         }
     }
     
     private func premiumFeatureItem(icon: String, title: String, description: String) -> some View {
-        HStack(alignment: .top, spacing: 15) {
+        HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 24))
+                .font(.system(size: 35))
                 .foregroundColor(.accentColor)
-                .frame(width: 30)
+                .frame(width: 40)
             
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.headline)
+                    .fontWeight(.semibold)
                     .foregroundColor(.primary)
                 
                 Text(description)
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             
             Spacer()
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 15)
     }
     
     private var baselinePhotoStep: some View {
@@ -564,7 +570,7 @@ struct OnboardingView: View {
                 .padding()
             } else {
                 // Step 5 - Premium features screen
-                VStack(spacing: 12) {
+                VStack(spacing: 4) {
                     Button(action: {
                         hideKeyboard()
                         // Show Apple's subscription sheet
@@ -573,7 +579,7 @@ struct OnboardingView: View {
                         Text("common.continue".localized)
                             .frame(minWidth: 80)
                             .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, 8)
                             .background(Color.accentColor)
                             .foregroundColor(.white)
                             .cornerRadius(10)
@@ -591,12 +597,15 @@ struct OnboardingView: View {
                         Text("Maybe Later")
                             .foregroundColor(.secondary)
                             .fontWeight(.medium)
+                            .font(.callout)
                     }
                 }
-                .padding()
+                .padding(.vertical, 2)
+                .padding(.horizontal)
             }
         }
         .padding(.horizontal)
+        .padding(.bottom, -5)
     }
     
     private var onboardingNavigationButtons: some View {

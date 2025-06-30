@@ -193,11 +193,11 @@ struct SettingsView: View {
                         }
                     }
                     
-                    Link(destination: URL(string: "https://example.com/privacy")!) {
+                    Link(destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!) {
                         Label("settings.privacy_policy".localized, systemImage: "hand.raised")
                     }
                     
-                    Link(destination: URL(string: "https://example.com/terms")!) {
+                    Link(destination: URL(string: "https://kojok120.github.io/bodylapse-legal/terms_of_service.html")!) {
                         Label("settings.terms_service".localized, systemImage: "doc.text")
                     }
                 }

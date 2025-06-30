@@ -177,13 +177,13 @@
 "onboarding.setup_account" = "アカウントをセットアップ";
 "onboarding.daily_photos.title" = "毎日の進捗写真";
 "onboarding.daily_photos.subtitle" = "一貫した毎日の写真で\n変化を記録";
-"onboarding.daily_photos.description" = "ビジュアルガイドラインが同じポーズと\n位置を維持するのに役立ちます";
+"onboarding.daily_photos.description" = "ビジュアルガイドラインが同じポーズと\n位置をキープさせてくれます";
 "onboarding.timelapse.title" = "タイムラプス動画";
 "onboarding.timelapse.subtitle" = "素晴らしいタイムラプス動画で\nあなたの旅を振り返る";
 "onboarding.timelapse.description" = "動画の速度と品質をカスタマイズして\n完璧な変化の記録を作成";
 "onboarding.privacy.title" = "プライバシー保護";
-"onboarding.privacy.subtitle" = "自動顔ぼかし技術で\nあなたの身元を保護";
-"onboarding.privacy.description" = "すべての処理はデバイス上で行われます\nあなたの写真は電話から出ません";
+"onboarding.privacy.subtitle" = "自動顔ぼかしで\nあなたの身元を保護";
+"onboarding.privacy.description" = "すべての処理はデバイス上で行われます\nあなたの写真は端末から出ません";
 "onboarding.metrics.title" = "メトリクスを追跡";
 "onboarding.metrics.subtitle" = "体重と体脂肪率を記録して\n時間経過を視覚化";
 "onboarding.metrics.description" = "写真とデータインサイトを組み合わせて\n包括的な進捗追跡";
@@ -280,8 +280,8 @@
 "language.spanish" = "Español";
 
 /* Language Change */
-"settings.language_changed" = "言語が変更されました。変更を適用するためにアプリが更新されます。";
+"settings.language_changed" = "言語が変更されました。アプリを更新します。";
 
 /* Reset Guideline */
-"reset_guideline.instruction" = "新しい写真を撮って体の輪郭を更新してください";
-"reset_guideline.success_message" = "ボディガイドラインが正常に更新されました！";
+"reset_guideline.instruction" = "新しい写真を撮ってビジュアルガイドラインを更新してください";
+"reset_guideline.success_message" = "ビジュアルガイドラインが正常に更新されました！";

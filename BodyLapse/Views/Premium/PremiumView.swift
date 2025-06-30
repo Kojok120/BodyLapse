@@ -164,8 +164,8 @@ struct PremiumView: View {
                                 .multilineTextAlignment(.center)
                             
                             HStack(spacing: 20) {
-                                Link("premium.terms".localized, destination: URL(string: "https://example.com/terms")!)
-                                Link("premium.privacy".localized, destination: URL(string: "https://example.com/privacy")!)
+                                Link("premium.terms".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/terms_of_service.html")!)
+                                Link("premium.privacy".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!)
                             }
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.8))
