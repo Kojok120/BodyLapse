@@ -4,7 +4,9 @@ import SwiftUI
 struct DebugSettingsView: View {
     @StateObject private var userSettings = UserSettingsManager.shared
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
+    @StateObject private var storeManager = StoreManager.shared
     @Environment(\.dismiss) private var dismiss
+    @State private var isLoadingProducts = false
     
     var body: some View {
         NavigationView {
@@ -23,6 +25,63 @@ struct DebugSettingsView: View {
                     )
                 } header: {
                     Text("Current Status")
+                }
+                
+                Section {
+                    StatusRow(
+                        title: "Bundle ID",
+                        value: Bundle.main.bundleIdentifier ?? "Unknown",
+                        color: .blue
+                    )
+                    
+                    StatusRow(
+                        title: "Products Loaded",
+                        value: "\(storeManager.products.count)",
+                        color: storeManager.products.isEmpty ? .red : .green
+                    )
+                    
+                    if isLoadingProducts {
+                        HStack {
+                            Text("Loading Products...")
+                            Spacer()
+                            ProgressView()
+                        }
+                    }
+                    
+                    if let error = storeManager.purchaseError {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                    
+                    ForEach(storeManager.products, id: \.id) { product in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(product.displayName)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                            Text(product.id)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Text(product.displayPrice)
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                        .padding(.vertical, 2)
+                    }
+                    
+                    Button("Reload Products") {
+                        Task {
+                            isLoadingProducts = true
+                            await storeManager.loadProducts()
+                            isLoadingProducts = false
+                        }
+                    }
+                    .foregroundColor(.blue)
+                } header: {
+                    Text("StoreKit Diagnostics")
+                } footer: {
+                    Text("Shows StoreKit configuration status and loaded products")
+                        .font(.caption)
                 }
                 
                 Section {

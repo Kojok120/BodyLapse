@@ -25,9 +25,12 @@ struct BodyLapseApp: App {
                 .environmentObject(languageManager)
                 .tint(.bodyLapseTurquoise)
                 .task {
+                    print("[BodyLapseApp] App launched - initializing StoreKit...")
                     // Initialize StoreKit and subscription status on app launch
                     await subscriptionManager.loadProducts()
+                    print("[BodyLapseApp] Products loaded - refreshing subscription status...")
                     await subscriptionManager.refreshSubscriptionStatus()
+                    print("[BodyLapseApp] Subscription status refreshed - isPremium: \(subscriptionManager.isPremium)")
                 }
                 .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCamera"))) { _ in
                     // Handle navigation to camera when notification is tapped

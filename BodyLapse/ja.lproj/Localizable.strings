@@ -119,7 +119,7 @@
 "settings.sync_now" = "今すぐ同期";
 "settings.upgrade_premium" = "プレミアムにアップグレード";
 "settings.premium_description" = "広告とウォーターマークを削除し、体重を追跡";
-"settings.premium_price" = "¥650/月";
+"settings.premium_price" = "¥600/月";
 "settings.data" = "データ";
 "settings.export_photos" = "写真をエクスポート";
 "settings.clear_all_data" = "すべてのデータを消去";
@@ -215,10 +215,11 @@
 "onboarding.premium.nowatermark.description" = "ウォーターマークなしでプロフェッショナルなタイムラプス動画を作成";
 "onboarding.premium.noads.title" = "広告なしの体験";
 "onboarding.premium.noads.description" = "中断なく進捗に集中";
-"onboarding.premium.daterange.title" = "全期間アクセス";
-"onboarding.premium.daterange.description" = "フィットネスジャーニーのタイムライン全体を表示・分析";
-"onboarding.premium.price" = "月額¥650";
+"onboarding.premium.price" = "プレミアムプラン";
 "onboarding.premium.price.detail" = "いつでもキャンセル可能 • 無料トライアルあり";
+"onboarding.premium.price.fallback" = "¥600 / 月";
+"onboarding.premium.trial" = "7日間無料トライアル";
+"onboarding.premium.cancel_anytime" = "いつでもキャンセル可能";
 
 /* Authentication */
 "auth.app_name" = "BodyLapse";
@@ -247,9 +248,10 @@
 "premium.terms" = "利用規約";
 "premium.privacy" = "プライバシーポリシー";
 "premium.purchase_error" = "購入エラー";
-"premium.save_percent" = "17%お得";
 "premium.per" = "毎";
 "premium.subscribe" = "今すぐ登録";
+"premium.price.fallback" = "¥600";
+"premium.price.period" = "/月";
 
 /* Weight Input */
 "weight.title" = "体重入力";

@@ -4,7 +4,6 @@ import StoreKit
 // MARK: - Product Identifiers
 enum StoreProducts {
     static let premiumMonthly = "com.J.BodyLapse.premium.monthly"
-    static let premiumYearly = "com.J.BodyLapse.premium.yearly"
 }
 
 // MARK: - Store Manager
@@ -26,6 +25,7 @@ class StoreManager: ObservableObject {
     private var updates: Task<Void, Never>? = nil
     
     init() {
+        print("[StoreKit] StoreManager initialized")
         // Start transaction listener
         updates = observeTransactionUpdates()
     }
@@ -36,22 +36,50 @@ class StoreManager: ObservableObject {
     
     // MARK: - Load Products
     func loadProducts() async {
+        print("[StoreKit] Starting to load products...")
+        print("[StoreKit] Bundle ID: \(Bundle.main.bundleIdentifier ?? "Unknown")")
+        print("[StoreKit] StoreKit Configuration: \(ProcessInfo.processInfo.arguments.contains("STOREKIT_ENABLED") ? "Enabled" : "Not detected")")
+        
         isLoadingProducts = true
         purchaseError = nil
         
         do {
+            print("[StoreKit] Requesting products with IDs: [\(StoreProducts.premiumMonthly)]")
             let products = try await Product.products(for: [
-                StoreProducts.premiumMonthly,
-                StoreProducts.premiumYearly
+                StoreProducts.premiumMonthly
             ])
             
+            print("[StoreKit] Successfully loaded \(products.count) products")
+            if products.isEmpty {
+                print("[StoreKit] WARNING: No products returned from App Store")
+                print("[StoreKit] This could mean:")
+                print("[StoreKit] 1. StoreKit configuration file is not properly set up")
+                print("[StoreKit] 2. Product IDs don't match between code and App Store Connect")
+                print("[StoreKit] 3. Products are not approved in App Store Connect")
+                print("[StoreKit] 4. Running in simulator without StoreKit configuration")
+            }
+            
+            for product in products {
+                print("[StoreKit] Product loaded: \(product.id) - \(product.displayName) - \(product.displayPrice)")
+            }
+            
             await MainActor.run {
-                self.products = products.sorted { $0.price < $1.price }
+                self.products = products
                 self.isLoadingProducts = false
             }
             
             await updatePurchasedProducts()
         } catch {
+            print("[StoreKit] Error loading products: \(error)")
+            print("[StoreKit] Error type: \(type(of: error))")
+            print("[StoreKit] Error details: \(error.localizedDescription)")
+            
+            if let nsError = error as NSError? {
+                print("[StoreKit] Error domain: \(nsError.domain)")
+                print("[StoreKit] Error code: \(nsError.code)")
+                print("[StoreKit] Error userInfo: \(nsError.userInfo)")
+            }
+            
             await MainActor.run {
                 self.purchaseError = "Failed to load products: \(error.localizedDescription)"
                 self.isLoadingProducts = false
@@ -112,17 +140,23 @@ class StoreManager: ObservableObject {
     }
     
     private func updatePurchasedProducts() async {
+        print("[StoreKit] Updating purchased products...")
         var purchasedProducts: Set<String> = []
         
         for await result in Transaction.currentEntitlements {
             guard case .verified(let transaction) = result else {
+                print("[StoreKit] Transaction verification failed")
                 continue
             }
             
+            print("[StoreKit] Found transaction: \(transaction.productID) - Revoked: \(transaction.revocationDate != nil)")
             if transaction.revocationDate == nil {
                 purchasedProducts.insert(transaction.productID)
+                print("[StoreKit] Added active subscription: \(transaction.productID)")
             }
         }
+        
+        print("[StoreKit] Total active subscriptions: \(purchasedProducts.count)")
         
         await MainActor.run {
             let previousProducts = self.purchasedProductIDs
@@ -130,6 +164,7 @@ class StoreManager: ObservableObject {
             
             // Send notification if premium status changed
             if previousProducts != purchasedProducts {
+                print("[StoreKit] Premium status changed - sending notification")
                 NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
             }
         }

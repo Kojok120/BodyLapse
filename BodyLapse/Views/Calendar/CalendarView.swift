@@ -906,6 +906,7 @@ struct VideoGenerationView: View {
     let onGenerate: (VideoGenerationService.VideoGenerationOptions) -> Void
     
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var selectedSpeed: VideoSpeed = .normal
     @State private var selectedQuality: VideoQuality = .high
     @State private var enableFaceBlur = false

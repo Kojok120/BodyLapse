@@ -34,7 +34,12 @@ class PremiumViewModel: ObservableObject {
     }
     
     func loadProducts() async {
+        print("[PremiumViewModel] Loading products...")
         await subscriptionManager.loadProducts()
+        print("[PremiumViewModel] Products loaded: \(products.count) products")
+        for product in products {
+            print("[PremiumViewModel] Product: \(product.id) - \(product.displayName) - \(product.displayPrice)")
+        }
     }
     
     func purchase(_ product: Product) async {

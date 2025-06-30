@@ -24,6 +24,7 @@ class SubscriptionManagerService: ObservableObject {
     
     // MARK: - Initialization
     private init() {
+        print("[SubscriptionManager] Initializing SubscriptionManagerService...")
         // Initial setup
         Task {
             await initializeSubscriptionStatus()
@@ -41,7 +42,12 @@ class SubscriptionManagerService: ObservableObject {
     
     /// Load products from App Store
     func loadProducts() async {
+        print("[SubscriptionManager] Loading products...")
         await storeManager.loadProducts()
+        print("[SubscriptionManager] Products loaded: \(storeManager.products.count) products available")
+        for product in storeManager.products {
+            print("[SubscriptionManager] Available product: \(product.id) - \(product.displayName)")
+        }
     }
     
     /// Purchase a subscription product
@@ -117,10 +123,12 @@ class SubscriptionManagerService: ObservableObject {
     // MARK: - Private Methods
     
     private func initializeSubscriptionStatus() async {
+        print("[SubscriptionManager] Initializing subscription status...")
         isLoadingSubscriptionStatus = true
         await loadProducts()
         await updateSubscriptionStatus()
         isLoadingSubscriptionStatus = false
+        print("[SubscriptionManager] Initialization complete - isPremium: \(isPremium)")
     }
     
     private func observeStoreManagerChanges() {
@@ -135,30 +143,41 @@ class SubscriptionManagerService: ObservableObject {
     }
     
     private func updateSubscriptionStatus() async {
+        print("[SubscriptionManager] Updating subscription status...")
         // Get current transaction status
         var hasActiveSubscription = false
         var latestTransaction: Transaction?
         var subscriptionID: String?
         
+        var transactionCount = 0
         for await result in Transaction.currentEntitlements {
-            guard case .verified(let transaction) = result else { continue }
+            transactionCount += 1
+            guard case .verified(let transaction) = result else { 
+                print("[SubscriptionManager] Unverified transaction found")
+                continue 
+            }
             
+            print("[SubscriptionManager] Checking transaction: \(transaction.productID)")
             // Check if this is a subscription product
-            if transaction.productID == StoreProducts.premiumMonthly ||
-               transaction.productID == StoreProducts.premiumYearly {
+            if transaction.productID == StoreProducts.premiumMonthly {
+                print("[SubscriptionManager] Found premium monthly subscription")
                 
                 // Check if subscription is not revoked
                 if transaction.revocationDate == nil {
                     hasActiveSubscription = true
                     subscriptionID = transaction.productID
+                    print("[SubscriptionManager] Active subscription found: \(transaction.productID)")
                     
                     // Keep the latest transaction
                     if latestTransaction == nil || transaction.purchaseDate > latestTransaction!.purchaseDate {
                         latestTransaction = transaction
                     }
+                } else {
+                    print("[SubscriptionManager] Subscription revoked: \(transaction.productID)")
                 }
             }
         }
+        print("[SubscriptionManager] Total transactions checked: \(transactionCount)")
         
         // Update properties on main thread
         await MainActor.run {
@@ -200,12 +219,9 @@ extension SubscriptionManagerService {
         guard isPremium else { return "Free" }
         
         if let subscriptionID = activeSubscriptionID {
-            switch subscriptionID {
-            case StoreProducts.premiumMonthly:
+            if subscriptionID == StoreProducts.premiumMonthly {
                 return "Premium Monthly"
-            case StoreProducts.premiumYearly:
-                return "Premium Yearly"
-            default:
+            } else {
                 return "Premium"
             }
         }

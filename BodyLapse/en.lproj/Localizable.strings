@@ -119,7 +119,7 @@
 "settings.sync_now" = "Sync Now";
 "settings.upgrade_premium" = "Upgrade to Premium";
 "settings.premium_description" = "Remove ads, watermark & track weight";
-"settings.premium_price" = "$4.99/mo";
+"settings.premium_price" = "$4.99(USD)/month";
 "settings.data" = "Data";
 "settings.export_photos" = "Export Photos";
 "settings.clear_all_data" = "Clear All Data";
@@ -215,10 +215,11 @@
 "onboarding.premium.nowatermark.description" = "Create professional time-lapse videos without watermarks";
 "onboarding.premium.noads.title" = "Ad-Free Experience";
 "onboarding.premium.noads.description" = "Focus on your progress without interruptions";
-"onboarding.premium.daterange.title" = "Full Date Range Access";
-"onboarding.premium.daterange.description" = "View and analyze your entire fitness journey timeline";
-"onboarding.premium.price" = "$4.99/month";
+"onboarding.premium.price" = "Premium Plan";
 "onboarding.premium.price.detail" = "Cancel anytime • Free trial available";
+"onboarding.premium.price.fallback" = "$4.99(USD) / month";
+"onboarding.premium.trial" = "7-day free trial";
+"onboarding.premium.cancel_anytime" = "Cancel anytime";
 
 /* Authentication */
 "auth.app_name" = "BodyLapse";
@@ -247,9 +248,10 @@
 "premium.terms" = "Terms of Service";
 "premium.privacy" = "Privacy Policy";
 "premium.purchase_error" = "Purchase Error";
-"premium.save_percent" = "Save 17%";
 "premium.per" = "per";
 "premium.subscribe" = "Subscribe Now";
+"premium.price.fallback" = "$4.99(USD)";
+"premium.price.period" = "per month";
 
 /* Weight Input */
 "weight.title" = "Weight Input";
@@ -283,3 +285,14 @@
 /* Reset Guideline */
 "reset_guideline.instruction" = "Take a new photo to update your body outline";
 "reset_guideline.success_message" = "Your body guideline has been updated successfully!";
+
+/* Premium Offer - Onboarding */
+"onboarding.premium_offer.title" = "Start Your Premium Journey";
+"onboarding.premium_offer.subtitle" = "Unlock all features and take your fitness tracking to the next level";
+"onboarding.premium_offer.special" = "Special New User Offer";
+"onboarding.premium_offer.benefit1" = "Track weight & body fat percentage";
+"onboarding.premium_offer.benefit2" = "No ads, ever";
+"onboarding.premium_offer.benefit3" = "No watermark on videos";
+"onboarding.premium_offer.start_trial" = "Start Free Trial";
+"onboarding.premium_offer.maybe_later" = "Maybe Later";
+"onboarding.premium_offer.terms" = "Cancel anytime. Subscription auto-renews unless cancelled.";

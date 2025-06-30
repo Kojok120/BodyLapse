@@ -119,7 +119,7 @@
 "settings.sync_now" = "Sincronizar Ahora";
 "settings.upgrade_premium" = "Actualizar a Premium";
 "settings.premium_description" = "Elimina anuncios, marca de agua y rastrea peso";
-"settings.premium_price" = "$4.99/mes";
+"settings.premium_price" = "$4.99 al mes";
 "settings.data" = "Datos";
 "settings.export_photos" = "Exportar Fotos";
 "settings.clear_all_data" = "Borrar Todos los Datos";
@@ -215,10 +215,11 @@
 "onboarding.premium.nowatermark.description" = "Crea videos time-lapse profesionales sin marcas de agua";
 "onboarding.premium.noads.title" = "Experiencia Sin Anuncios";
 "onboarding.premium.noads.description" = "Concéntrate en tu progreso sin interrupciones";
-"onboarding.premium.daterange.title" = "Acceso Completo al Rango de Fechas";
-"onboarding.premium.daterange.description" = "Ve y analiza toda tu línea de tiempo de fitness";
-"onboarding.premium.price" = "$4.99/mes";
+"onboarding.premium.price" = "Plan Premium";
 "onboarding.premium.price.detail" = "Cancela cuando quieras • Prueba gratuita disponible";
+"onboarding.premium.price.fallback" = "$4.99 / mes";
+"onboarding.premium.trial" = "Prueba gratuita de 7 días";
+"onboarding.premium.cancel_anytime" = "Cancela cuando quieras";
 
 /* Authentication */
 "auth.app_name" = "BodyLapse";
@@ -247,9 +248,10 @@
 "premium.terms" = "Términos de Servicio";
 "premium.privacy" = "Política de Privacidad";
 "premium.purchase_error" = "Error de Compra";
-"premium.save_percent" = "Ahorra 17%";
 "premium.per" = "por";
 "premium.subscribe" = "Suscribirse Ahora";
+"premium.price.fallback" = "$4.99";
+"premium.price.period" = "al mes";
 
 /* Weight Input */
 "weight.title" = "Entrada de Peso";

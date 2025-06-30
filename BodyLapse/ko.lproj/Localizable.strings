@@ -119,7 +119,7 @@
 "settings.sync_now" = "지금 동기화";
 "settings.upgrade_premium" = "프리미엄으로 업그레이드";
 "settings.premium_description" = "광고 및 워터마크 제거, 체중 추적";
-"settings.premium_price" = "₩6,500/월";
+"settings.premium_price" = "₩6,600/월";
 "settings.data" = "데이터";
 "settings.export_photos" = "사진 내보내기";
 "settings.clear_all_data" = "모든 데이터 삭제";
@@ -215,10 +215,11 @@
 "onboarding.premium.nowatermark.description" = "워터마크 없이 전문적인 타임랩스 비디오 제작";
 "onboarding.premium.noads.title" = "광고 없는 경험";
 "onboarding.premium.noads.description" = "방해받지 않고 진행 상황에 집중";
-"onboarding.premium.daterange.title" = "전체 날짜 범위 접근";
-"onboarding.premium.daterange.description" = "전체 피트니스 여정 타임라인 보기 및 분석";
-"onboarding.premium.price" = "월 ₩6,500";
+"onboarding.premium.price" = "프리미엄 플랜";
 "onboarding.premium.price.detail" = "언제든지 취소 가능 • 무료 체험 제공";
+"onboarding.premium.price.fallback" = "₩6,600 / 월";
+"onboarding.premium.trial" = "7일 무료 체험";
+"onboarding.premium.cancel_anytime" = "언제든지 취소 가능";
 
 /* Authentication */
 "auth.app_name" = "BodyLapse";
@@ -247,9 +248,10 @@
 "premium.terms" = "이용 약관";
 "premium.privacy" = "개인정보 처리방침";
 "premium.purchase_error" = "구매 오류";
-"premium.save_percent" = "17% 할인";
 "premium.per" = "당";
 "premium.subscribe" = "지금 구독";
+"premium.price.fallback" = "₩6,600";
+"premium.price.period" = "/월";
 
 /* Weight Input */
 "weight.title" = "체중 입력";

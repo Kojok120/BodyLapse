@@ -32,6 +32,35 @@ struct PremiumView: View {
                             Text("premium.subtitle".localized)
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
+                            
+                            // Display price prominently with fallback
+                            VStack(spacing: 5) {
+                                if let product = viewModel.products.first {
+                                    Text(product.displayPrice)
+                                        .font(.system(size: 36, weight: .bold))
+                                        .foregroundColor(.white)
+                                    
+                                    if let period = product.subscription?.subscriptionPeriod {
+                                        Text("\("premium.per".localized) \(period.unit.localizedDescription)")
+                                            .font(.body)
+                                            .foregroundColor(.white.opacity(0.9))
+                                    }
+                                } else {
+                                    // Fallback price display based on locale
+                                    Text("premium.price.fallback".localized)
+                                        .font(.system(size: 36, weight: .bold))
+                                        .foregroundColor(.white)
+                                    
+                                    Text("premium.price.period".localized)
+                                        .font(.body)
+                                        .foregroundColor(.white.opacity(0.9))
+                                }
+                            }
+                            .padding(.top, 10)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Color.white.opacity(0.15))
+                            .cornerRadius(15)
                         }
                         .padding(.top, 40)
                         
@@ -54,27 +83,54 @@ struct PremiumView: View {
                                 title: "premium.feature.no_watermark".localized,
                                 description: "premium.feature.no_watermark_desc".localized
                             )
-                            
-                            PremiumFeatureRowView(
-                                icon: "bell.badge.fill",
-                                title: "premium.feature.reminders".localized,
-                                description: "premium.feature.reminders_desc".localized
-                            )
                         }
                         .padding(.horizontal)
                         
-                        // Subscription options
-                        if viewModel.isLoadingProducts {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(1.5)
-                                .padding()
-                        } else {
+                        // Main Subscribe Button
+                        Button(action: {
+                            Task {
+                                if let product = viewModel.products.first {
+                                    await viewModel.purchase(product)
+                                } else {
+                                    await viewModel.loadProducts()
+                                }
+                            }
+                        }) {
+                            HStack {
+                                if viewModel.isLoadingProducts {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Text("premium.subscribe".localized)
+                                        .font(.headline)
+                                        .fontWeight(.bold)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.yellow, Color.orange]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .foregroundColor(.white)
+                            .cornerRadius(15)
+                            .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                        }
+                        .padding(.horizontal)
+                        .disabled(viewModel.isPurchasing || viewModel.isLoadingProducts)
+                        .scaleEffect(viewModel.isPurchasing ? 0.95 : 1.0)
+                        .animation(.easeInOut(duration: 0.1), value: viewModel.isPurchasing)
+                        
+                        // Subscription details (if products loaded)
+                        if !viewModel.products.isEmpty && !viewModel.isLoadingProducts {
                             VStack(spacing: 15) {
                                 ForEach(viewModel.products, id: \.id) { product in
-                                    SubscriptionOptionView(
+                                    SubscriptionDetailsView(
                                         product: product,
-                                        isSelected: false,
                                         action: {
                                             Task {
                                                 await viewModel.purchase(product)
@@ -87,14 +143,15 @@ struct PremiumView: View {
                             .padding(.horizontal)
                         }
                         
-                        // Restore purchases button
+                        // Restore purchases link (smaller, less prominent)
                         Button(action: {
                             Task {
                                 await viewModel.restorePurchases()
                             }
                         }) {
                             Text("premium.restore".localized)
-                                .foregroundColor(.white.opacity(0.8))
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.7))
                                 .underline()
                         }
                         .disabled(viewModel.isPurchasing)
@@ -184,70 +241,49 @@ struct PremiumFeatureRowView: View {
     }
 }
 
-// MARK: - Subscription Option View
-struct SubscriptionOptionView: View {
+// MARK: - Subscription Details View
+struct SubscriptionDetailsView: View {
     let product: Product
-    let isSelected: Bool
     let action: () -> Void
     
-    private var savings: String? {
-        if product.id.contains("yearly") {
-            return "premium.save_percent".localized
-        }
-        return nil
-    }
-    
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 10) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(product.displayName)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        Text(product.description)
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.8))
-                    }
+        VStack(spacing: 10) {
+            HStack {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(product.displayName)
+                        .font(.subheadline)
+                        .foregroundColor(.white)
                     
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 5) {
-                        Text(product.displayPrice)
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        if let period = product.subscription?.subscriptionPeriod {
-                            Text("\("premium.per".localized) \(period.unit.localizedDescription)")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.8))
-                        }
-                    }
+                    Text(product.description)
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.8))
                 }
                 
-                if let savings = savings {
-                    Text(savings)
-                        .font(.caption)
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 5) {
+                    Text(product.displayPrice)
+                        .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(.green)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.green.opacity(0.2))
-                        .cornerRadius(10)
+                        .foregroundColor(.white)
+                    
+                    if let period = product.subscription?.subscriptionPeriod {
+                        Text("\("premium.per".localized) \(period.unit.localizedDescription)")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.9))
+                    }
                 }
             }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 15)
-                    .fill(Color.white.opacity(0.2))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(isSelected ? Color.yellow : Color.clear, lineWidth: 2)
-                    )
-            )
         }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.15))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                )
+        )
     }
 }
 

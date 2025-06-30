@@ -158,8 +158,13 @@ struct SettingsView: View {
                                         .foregroundColor(.secondary)
                                 }
                                 Spacer()
-                                Text("settings.premium_price".localized)
-                                    .fontWeight(.semibold)
+                                if let product = subscriptionManager.products.first {
+                                    Text(product.displayPrice)
+                                        .fontWeight(.semibold)
+                                } else {
+                                    Text("settings.premium_price".localized)
+                                        .fontWeight(.semibold)
+                                }
                             }
                         }
                     }
