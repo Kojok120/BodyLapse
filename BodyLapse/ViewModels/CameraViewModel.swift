@@ -416,6 +416,12 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         objectWillChange.send()
     }
     
+    func reloadCategories() {
+        Task { @MainActor in
+            loadCategories()
+        }
+    }
+    
     func hasPhotoForSelectedCategory() -> Bool {
         return PhotoStorageService.shared.hasPhotoForToday(categoryId: selectedCategory.id)
     }

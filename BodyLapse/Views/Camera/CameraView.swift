@@ -7,6 +7,8 @@ struct CameraView: View {
     @ObservedObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var showingPhotoReview = false
     @State private var activeSheet: ActiveSheet?
+    @State private var showingAddCategory = false
+    @State private var newCategoryToSetup: PhotoCategory?
     
     enum ActiveSheet: Identifiable {
         case photoReview
@@ -41,7 +43,7 @@ struct CameraView: View {
                 
                 VStack {
                     // Category selection - Premium feature
-                    if subscriptionManager.isPremium && viewModel.availableCategories.count > 1 {
+                    if subscriptionManager.isPremium && (viewModel.availableCategories.count > 1 || CategoryStorageService.shared.canAddMoreCategories()) {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
                                 ForEach(viewModel.availableCategories) { category in
@@ -51,6 +53,29 @@ struct CameraView: View {
                                         hasPhoto: PhotoStorageService.shared.hasPhotoForToday(categoryId: category.id)
                                     ) {
                                         viewModel.selectCategory(category)
+                                    }
+                                }
+                                
+                                // Add category button
+                                if CategoryStorageService.shared.canAddMoreCategories() {
+                                    Button(action: {
+                                        showingAddCategory = true
+                                    }) {
+                                        VStack(spacing: 4) {
+                                            Image(systemName: "plus.circle.fill")
+                                                .font(.caption.weight(.semibold))
+                                                .foregroundColor(.white.opacity(0.8))
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 20)
+                                                .fill(Color.black.opacity(0.4))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 20)
+                                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                                )
+                                        )
                                     }
                                 }
                             }
@@ -210,6 +235,24 @@ struct CameraView: View {
                     }
                 )
             }
+        }
+        .sheet(isPresented: $showingAddCategory) {
+            AddCategorySheet { newCategory in
+                if CategoryStorageService.shared.addCategory(newCategory) {
+                    // Set the new category for guideline setup
+                    newCategoryToSetup = newCategory
+                } else {
+                    // Handle error - category couldn't be added
+                }
+            }
+        }
+        .fullScreenCover(item: $newCategoryToSetup) { category in
+            CategoryGuidelineSetupView(category: category)
+                .onDisappear {
+                    // Reload categories and select the new one
+                    viewModel.reloadCategories()
+                    viewModel.selectCategory(category)
+                }
         }
     }
 }
@@ -427,6 +470,51 @@ struct CategoryTabView: View {
                 RoundedRectangle(cornerRadius: 20)
                     .fill(isSelected ? Color.bodyLapseTurquoise : Color.black.opacity(0.4))
             )
+        }
+    }
+}
+
+struct AddCategorySheet: View {
+    @Environment(\.dismiss) var dismiss
+    @State private var categoryName = ""
+    let onAdd: (PhotoCategory) -> Void
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section {
+                    TextField("category.management.category_name".localized, text: $categoryName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                } header: {
+                    Text("category.management.new_category".localized)
+                } footer: {
+                    Text("category.management.example".localized)
+                        .font(.caption)
+                }
+            }
+            .navigationTitle("category.management.add_category".localized)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("common.cancel".localized) {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("category.management.add".localized) {
+                        let categories = CategoryStorageService.shared.getActiveCategories()
+                        let maxOrder = categories.map { $0.order }.max() ?? 0
+                        let newCategory = PhotoCategory.createCustomCategory(
+                            name: categoryName.trimmingCharacters(in: .whitespacesAndNewlines),
+                            order: maxOrder + 1
+                        )
+                        onAdd(newCategory)
+                        dismiss()
+                    }
+                    .disabled(categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
         }
     }
 }
