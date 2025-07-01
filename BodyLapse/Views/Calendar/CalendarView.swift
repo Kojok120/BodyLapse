@@ -12,7 +12,6 @@ struct CalendarView: View {
     @State private var selectedPeriod = TimePeriod.week
     @State private var showingWeightInput = false
     @State private var currentPhoto: Photo?
-    @State private var dragOffset: CGFloat = 0
     @State private var selectedIndex: Int = 0
     @State private var showingVideoGeneration = false
     @State private var isGeneratingVideo = false
@@ -513,7 +512,6 @@ struct CalendarView: View {
                     .padding(.top, 8)
             }
             
-            
             // Memo display - always show section
             HStack {
                 Image(systemName: currentMemo.isEmpty ? "note.text.badge.plus" : "note.text")
@@ -542,43 +540,10 @@ struct CalendarView: View {
                 showingMemoEditor = true
             }
             
-            GeometryReader { geometry in
-                if let photo = currentPhoto,
-                   let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
-                    VStack {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: geometry.size.width)
-                            .cornerRadius(12)
-                    }
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .offset(x: dragOffset)
-                    .gesture(
-                        categoriesForSelectedDate.count > 1 ? 
-                        DragGesture()
-                            .onChanged { value in
-                                dragOffset = value.translation.width
-                            }
-                            .onEnded { value in
-                                let threshold: CGFloat = 50
-                                
-                                withAnimation(.spring()) {
-                                    if value.translation.width > threshold && currentCategoryIndex > 0 {
-                                        // Swipe right - previous category
-                                        currentCategoryIndex -= 1
-                                        switchToCategory(at: currentCategoryIndex)
-                                    } else if value.translation.width < -threshold && currentCategoryIndex < categoriesForSelectedDate.count - 1 {
-                                        // Swipe left - next category
-                                        currentCategoryIndex += 1
-                                        switchToCategory(at: currentCategoryIndex)
-                                    }
-                                    dragOffset = 0
-                                }
-                            }
-                        : nil
-                    )
-                } else {
+            // Photo viewer with TabView for smooth swiping
+            if photosForSelectedDate.isEmpty {
+                // No photo placeholder
+                GeometryReader { geometry in
                     VStack(spacing: 20) {
                         Image(systemName: "photo")
                             .font(.system(size: 60))
@@ -589,8 +554,76 @@ struct CalendarView: View {
                     }
                     .frame(width: geometry.size.width, height: geometry.size.height)
                 }
+                .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
+            } else if categoriesForSelectedDate.count > 1 {
+                // Multiple categories - use TabView for smooth swiping
+                TabView(selection: $currentCategoryIndex) {
+                    ForEach(0..<categoriesForSelectedDate.count, id: \.self) { index in
+                        GeometryReader { geometry in
+                            let categoryId = categoriesForSelectedDate[index].id
+                            if let photo = photosForSelectedDate.first(where: { $0.categoryId == categoryId }),
+                               let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                                    .tag(index)
+                            } else {
+                                // Show placeholder for categories without photos
+                                VStack(spacing: 20) {
+                                    Image(systemName: "photo")
+                                        .font(.system(size: 60))
+                                        .foregroundColor(.gray)
+                                    Text("calendar.no_photo".localized)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                                .tag(index)
+                            }
+                        }
+                    }
+                }
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
+                .background(Color.black)
+                .cornerRadius(12)
+                .onChange(of: currentCategoryIndex) { _, newIndex in
+                    // Haptic feedback when page changes
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                    impactFeedback.impactOccurred()
+                    
+                    // Update the current photo
+                    if newIndex < categoriesForSelectedDate.count {
+                        switchToCategory(at: newIndex)
+                    }
+                }
+            } else {
+                // Single category - simple image display
+                GeometryReader { geometry in
+                    if let photo = currentPhoto,
+                       let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                    } else {
+                        // Show placeholder when no photo for current category
+                        VStack(spacing: 20) {
+                            Image(systemName: "photo")
+                                .font(.system(size: 60))
+                                .foregroundColor(.gray)
+                            Text("calendar.no_photo".localized)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                    }
+                }
+                .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
+                .background(Color.black)
+                .cornerRadius(12)
             }
-            .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
         }
         .padding(.horizontal)
     }
@@ -776,31 +809,29 @@ struct CalendarView: View {
         // Get all photos for selected date
         photosForSelectedDate = viewModel.allPhotosForDate(selectedDate)
         
-        // Get categories for these photos
-        let photoCategories = photosForSelectedDate.map { $0.categoryId }
-        categoriesForSelectedDate = viewModel.availableCategories.filter { category in
-            photoCategories.contains(category.id)
-        }
-        
-        // If we have photos for the selected date
+        // Keep the selected category consistent
         if !photosForSelectedDate.isEmpty {
+            // Get categories for these photos
+            let photoCategories = photosForSelectedDate.map { $0.categoryId }
+            categoriesForSelectedDate = viewModel.availableCategories.filter { category in
+                photoCategories.contains(category.id)
+            }
+            
             // Find the index of the currently selected category
             if let index = categoriesForSelectedDate.firstIndex(where: { $0.id == viewModel.selectedCategory.id }) {
                 currentCategoryIndex = index
                 currentPhoto = photosForSelectedDate.first { $0.categoryId == categoriesForSelectedDate[index].id }
             } else {
-                // If current category has no photo, show the first available
-                currentCategoryIndex = 0
-                if !categoriesForSelectedDate.isEmpty {
-                    currentPhoto = photosForSelectedDate.first { $0.categoryId == categoriesForSelectedDate[0].id }
-                    // Update selected category in viewModel
-                    viewModel.selectCategory(categoriesForSelectedDate[0])
-                }
+                // Current category has no photo, but don't switch categories automatically
+                // Keep the same category selection but show no photo
+                currentPhoto = nil
+                // Keep categoriesForSelectedDate with available photos for swiping
             }
         } else {
-            // No photos for this date
+            // No photos for this date - keep showing placeholder
             currentPhoto = nil
-            currentCategoryIndex = 0
+            // Don't reset categoriesForSelectedDate or currentCategoryIndex
+            // This preserves the user's category selection
             categoriesForSelectedDate = []
         }
         

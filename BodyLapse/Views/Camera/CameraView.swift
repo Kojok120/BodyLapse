@@ -202,7 +202,24 @@ struct CameraView: View {
             Button("common.replace".localized, role: .destructive) {
                 if let image = viewModel.capturedImage {
                     if subscriptionManager.isPremium == true {
-                        viewModel.showingWeightInput = true
+                        Task {
+                            do {
+                                // Check if weight data already exists for today
+                                let hasWeightToday = try await WeightStorageService.shared.getEntry(for: Date()) != nil
+                                if hasWeightToday {
+                                    // Weight already recorded for today, skip input screen
+                                    viewModel.savePhoto(image)
+                                    viewModel.capturedImage = nil
+                                } else {
+                                    // No weight data for today, show input screen
+                                    viewModel.showingWeightInput = true
+                                }
+                            } catch {
+                                // If there's an error checking, just save the photo without weight input
+                                viewModel.savePhoto(image)
+                                viewModel.capturedImage = nil
+                            }
+                        }
                     } else {
                         viewModel.savePhoto(image)
                         viewModel.capturedImage = nil
