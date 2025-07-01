@@ -69,9 +69,18 @@ struct CategoryManagementView: View {
         .onAppear {
             loadCategories()
         }
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { notification in
             // Reload categories when guideline is updated
+            print("CategoryManagementView: Received GuidelineUpdated notification")
+            if let categoryId = notification.userInfo?["categoryId"] as? String {
+                print("CategoryManagementView: Updated category ID: \(categoryId)")
+            }
             loadCategories()
+            print("CategoryManagementView: Categories reloaded, count: \(categories.count)")
+            // Print guideline status for each category
+            for category in categories {
+                print("CategoryManagementView: Category \(category.name) - has guideline: \(category.guideline != nil)")
+            }
         }
         .sheet(isPresented: $showingAddCategory) {
             AddCategoryView { newCategory in
@@ -153,7 +162,17 @@ struct CategoryManagementView: View {
     }
     
     private func loadCategories() {
-        categories = CategoryStorageService.shared.getActiveCategories()
+        print("CategoryManagementView: loadCategories() called")
+        let newCategories = CategoryStorageService.shared.getActiveCategories()
+        print("CategoryManagementView: Loaded \(newCategories.count) categories")
+        for category in newCategories {
+            print("CategoryManagementView: - \(category.name) (ID: \(category.id)), guideline: \(category.guideline != nil)")
+        }
+        // Force a state update by clearing and resetting
+        categories = []
+        DispatchQueue.main.async {
+            self.categories = newCategories
+        }
     }
     
     private func moveCategories(from source: IndexSet, to destination: Int) {
@@ -179,6 +198,7 @@ struct CategoryRowView: View {
     let onDelete: () -> Void
     let onResetGuideline: () -> Void
     @State private var showingGuidelineSetup = false
+    @State private var hasGuideline: Bool = false
     
     var body: some View {
         HStack {
@@ -193,7 +213,7 @@ struct CategoryRowView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    if category.guideline != nil {
+                    if hasGuideline {
                         Label("category.management.guideline_set".localized, systemImage: "person.crop.rectangle")
                             .font(.caption)
                             .foregroundColor(.bodyLapseTurquoise)
@@ -241,6 +261,19 @@ struct CategoryRowView: View {
             }
             .hidden()
         )
+        .onAppear {
+            hasGuideline = category.guideline != nil
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { notification in
+            if let categoryId = notification.userInfo?["categoryId"] as? String,
+               categoryId == category.id {
+                // Reload this specific category's guideline status
+                if let updatedCategory = CategoryStorageService.shared.getCategoryById(categoryId) {
+                    hasGuideline = updatedCategory.guideline != nil
+                    print("CategoryRowView: Updated guideline status for \(category.name): \(hasGuideline)")
+                }
+            }
+        }
     }
 }
 

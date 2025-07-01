@@ -45,6 +45,8 @@
 "calendar.body_detected" = "Body detected";
 "calendar.align_body" = "Align your body";
 "calendar.no_photo" = "No photo";
+"calendar.confirm_delete_photo" = "Delete Photo";
+"calendar.delete_photo_message" = "Are you sure you want to delete this photo? This action cannot be undone.";
 "calendar.select_time_period" = "Select Time Period";
 "calendar.video_generation" = "Video Generation";
 "calendar.update_measurements" = "Update Measurements";

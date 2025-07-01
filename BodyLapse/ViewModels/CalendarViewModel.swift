@@ -24,6 +24,26 @@ class CalendarViewModel: ObservableObject {
                 self?.loadDailyNotes()
             }
             .store(in: &cancellables)
+        
+        // Listen for category updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleCategoriesUpdated),
+            name: Notification.Name("CategoriesUpdated"),
+            object: nil
+        )
+        
+        // Listen for guideline updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleGuidelineUpdated),
+            name: Notification.Name("GuidelineUpdated"),
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     func loadPhotos() {
@@ -140,6 +160,34 @@ class CalendarViewModel: ObservableObject {
             } catch {
                 print("Failed to delete daily note: \(error)")
             }
+        }
+    }
+    
+    // MARK: - Notification Handlers
+    
+    @objc private func handleCategoriesUpdated() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            print("CalendarViewModel: Received CategoriesUpdated notification")
+            
+            // Reload categories
+            self.loadCategories()
+            
+            // Force UI update
+            self.objectWillChange.send()
+        }
+    }
+    
+    @objc private func handleGuidelineUpdated(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            print("CalendarViewModel: Received GuidelineUpdated notification")
+            
+            // Reload categories in case guidelines affect category state
+            self.loadCategories()
+            
+            // Force UI update
+            self.objectWillChange.send()
         }
     }
 }

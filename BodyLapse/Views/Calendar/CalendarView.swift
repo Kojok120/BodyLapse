@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import Photos
 
 struct CalendarView: View {
     @StateObject private var viewModel = CalendarViewModel()
@@ -24,6 +25,12 @@ struct CalendarView: View {
     @State private var currentCategoryIndex: Int = 0
     @State private var photosForSelectedDate: [Photo] = []
     @State private var categoriesForSelectedDate: [PhotoCategory] = []
+    @State private var showingDeleteAlert = false
+    @State private var photoToDelete: Photo?
+    @State private var showingShareSheet = false
+    @State private var itemToShare: [Any] = []
+    @State private var showingSaveSuccess = false
+    @State private var saveSuccessMessage = ""
     
     enum TimePeriod: String, CaseIterable {
         case week = "7 Days"
@@ -135,12 +142,34 @@ struct CalendarView: View {
         } message: {
             Text(videoAlertMessage)
         }
+        .alert("calendar.confirm_delete_photo".localized, isPresented: $showingDeleteAlert) {
+            Button("common.cancel".localized, role: .cancel) { }
+            Button("common.delete".localized, role: .destructive) {
+                if let photo = photoToDelete {
+                    deletePhoto(photo)
+                }
+            }
+        } message: {
+            Text("calendar.delete_photo_message".localized)
+        }
         .overlay(
             Group {
                 if isGeneratingVideo {
                     VideoGenerationProgressView(progress: videoGenerationProgress)
                 }
             }
+        )
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(activityItems: itemToShare)
+        }
+        .overlay(
+            Group {
+                if showingSaveSuccess {
+                    saveSuccessToast
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            },
+            alignment: .top
         )
     }
     
@@ -603,6 +632,34 @@ struct CalendarView: View {
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: geometry.size.width, height: geometry.size.height)
                                     .tag(index)
+                                    .contextMenu {
+                                        Button {
+                                            copyPhoto(photo)
+                                        } label: {
+                                            Label("Copy", systemImage: "doc.on.doc")
+                                        }
+                                        
+                                        Button {
+                                            sharePhoto(photo)
+                                        } label: {
+                                            Label("common.share".localized, systemImage: "square.and.arrow.up")
+                                        }
+                                        
+                                        Button {
+                                            savePhoto(photo)
+                                        } label: {
+                                            Label("gallery.save_to_photos".localized, systemImage: "square.and.arrow.down")
+                                        }
+                                        
+                                        Divider()
+                                        
+                                        Button(role: .destructive) {
+                                            photoToDelete = photo
+                                            showingDeleteAlert = true
+                                        } label: {
+                                            Label("common.delete".localized, systemImage: "trash")
+                                        }
+                                    }
                             } else {
                                 // Show placeholder for categories without photos
                                 VStack(spacing: 20) {
@@ -642,6 +699,34 @@ struct CalendarView: View {
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(width: geometry.size.width, height: geometry.size.height)
+                            .contextMenu {
+                                Button {
+                                    copyPhoto(photo)
+                                } label: {
+                                    Label("Copy", systemImage: "doc.on.doc")
+                                }
+                                
+                                Button {
+                                    sharePhoto(photo)
+                                } label: {
+                                    Label("common.share".localized, systemImage: "square.and.arrow.up")
+                                }
+                                
+                                Button {
+                                    savePhoto(photo)
+                                } label: {
+                                    Label("gallery.save_to_photos".localized, systemImage: "square.and.arrow.down")
+                                }
+                                
+                                Divider()
+                                
+                                Button(role: .destructive) {
+                                    photoToDelete = photo
+                                    showingDeleteAlert = true
+                                } label: {
+                                    Label("common.delete".localized, systemImage: "trash")
+                                }
+                            }
                     } else {
                         // Show placeholder when no photo for current category
                         VStack(spacing: 20) {
@@ -812,9 +897,9 @@ struct CalendarView: View {
         // Check current language and set appropriate format
         let currentLanguage = LanguageManager.shared.currentLanguage
         switch currentLanguage {
-        case .japanese:
+        case "ja":
             formatter.dateFormat = "yyyy/MM/dd"
-        case .korean:
+        case "ko":
             formatter.dateFormat = "yyyy.MM.dd"
         default:
             formatter.dateFormat = "MMM d, yyyy"
@@ -909,6 +994,129 @@ struct CalendarView: View {
                 }
             }
         )
+    }
+    
+    private func deletePhoto(_ photo: Photo) {
+        do {
+            try PhotoStorageService.shared.deletePhoto(photo)
+            
+            // Reload photos
+            viewModel.loadPhotos()
+            viewModel.loadCategories()
+            updateCurrentPhoto()
+            
+            // Also update weight tracking if this photo had weight data
+            if photo.weight != nil || photo.bodyFatPercentage != nil {
+                Task {
+                    // If there's a weight entry for this date and no other photos exist for this date,
+                    // we should consider deleting the weight entry
+                    let remainingPhotosForDate = PhotoStorageService.shared.getPhotosForDate(photo.captureDate)
+                    
+                    if remainingPhotosForDate.isEmpty {
+                        // No more photos for this date, delete the weight entry
+                        if let existingEntry = try await WeightStorageService.shared.getEntry(for: photo.captureDate) {
+                            try await WeightStorageService.shared.deleteEntry(existingEntry)
+                        }
+                    }
+                    
+                    await MainActor.run {
+                        weightViewModel.loadEntries()
+                    }
+                }
+            }
+            
+            // Post notification that photos have been updated
+            NotificationCenter.default.post(name: Notification.Name("PhotosUpdated"), object: nil)
+            
+        } catch {
+            print("Failed to delete photo: \(error)")
+            // Optionally show error alert
+            videoAlertMessage = "Failed to delete photo: \(error.localizedDescription)"
+            showingVideoAlert = true
+        }
+    }
+    
+    private func copyPhoto(_ photo: Photo) {
+        guard let image = PhotoStorageService.shared.loadImage(for: photo) else { return }
+        UIPasteboard.general.image = image
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+    }
+    
+    private func sharePhoto(_ photo: Photo) {
+        guard let image = PhotoStorageService.shared.loadImage(for: photo) else { return }
+        itemToShare = [image]
+        showingShareSheet = true
+    }
+    
+    private func savePhoto(_ photo: Photo) {
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+        
+        PHPhotoLibrary.requestAuthorization { status in
+            guard status == .authorized else {
+                DispatchQueue.main.async {
+                    self.videoAlertMessage = "gallery.photo_library_access_denied".localized
+                    self.showingVideoAlert = true
+                }
+                return
+            }
+            
+            guard let image = PhotoStorageService.shared.loadImage(for: photo) else {
+                DispatchQueue.main.async {
+                    self.videoAlertMessage = "Failed to load image"
+                    self.showingVideoAlert = true
+                }
+                return
+            }
+            
+            PHPhotoLibrary.shared().performChanges({
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }) { success, error in
+                DispatchQueue.main.async {
+                    if success {
+                        self.showSaveSuccess(message: "gallery.photo_saved".localized)
+                    } else {
+                        self.videoAlertMessage = error?.localizedDescription ?? "Failed to save photo"
+                        self.showingVideoAlert = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private func showSaveSuccess(message: String) {
+        saveSuccessMessage = message
+        withAnimation {
+            showingSaveSuccess = true
+        }
+    }
+    
+    private var saveSuccessToast: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+                .font(.title2)
+            
+            Text(saveSuccessMessage)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            Capsule()
+                .fill(Color(UIColor.systemBackground))
+                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+        )
+        .padding(.top, 50)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                withAnimation {
+                    showingSaveSuccess = false
+                }
+            }
+        }
     }
 }
 
@@ -1089,9 +1297,9 @@ struct WeightInputView: View {
         // Check current language and set appropriate format
         let currentLanguage = LanguageManager.shared.currentLanguage
         switch currentLanguage {
-        case .japanese:
+        case "ja":
             formatter.dateFormat = "yyyy/MM/dd"
-        case .korean:
+        case "ko":
             formatter.dateFormat = "yyyy.MM.dd"
         default:
             formatter.dateFormat = "MMM d, yyyy"

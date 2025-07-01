@@ -45,6 +45,8 @@
 "calendar.body_detected" = "Cuerpo detectado";
 "calendar.align_body" = "Alinea tu cuerpo";
 "calendar.no_photo" = "Sin foto";
+"calendar.confirm_delete_photo" = "Eliminar Foto";
+"calendar.delete_photo_message" = "¿Estás seguro de que quieres eliminar esta foto? Esta acción no se puede deshacer.";
 "calendar.select_time_period" = "Seleccionar Período";
 "calendar.video_generation" = "Generación de Video";
 "calendar.update_measurements" = "Actualizar Medidas";

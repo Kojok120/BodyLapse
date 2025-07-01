@@ -50,7 +50,14 @@ struct PhotoCategory: Codable, Identifiable, Equatable {
     }
     
     static func == (lhs: PhotoCategory, rhs: PhotoCategory) -> Bool {
-        return lhs.id == rhs.id
+        return lhs.id == rhs.id && 
+               lhs.name == rhs.name && 
+               lhs.order == rhs.order && 
+               lhs.isDefault == rhs.isDefault && 
+               lhs.isActive == rhs.isActive &&
+               lhs.createdDate == rhs.createdDate &&
+               // Compare guideline existence
+               (lhs.guideline != nil) == (rhs.guideline != nil)
     }
 }
 

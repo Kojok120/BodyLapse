@@ -45,6 +45,8 @@
 "calendar.body_detected" = "体を検出しました";
 "calendar.align_body" = "体を合わせてください";
 "calendar.no_photo" = "写真なし";
+"calendar.confirm_delete_photo" = "写真を削除";
+"calendar.delete_photo_message" = "この写真を削除してもよろしいですか？この操作は取り消せません。";
 "calendar.select_time_period" = "期間を選択";
 "calendar.video_generation" = "動画生成";
 "calendar.update_measurements" = "測定値を更新";

@@ -45,6 +45,8 @@
 "calendar.body_detected" = "신체 감지됨";
 "calendar.align_body" = "몸을 맞춰주세요";
 "calendar.no_photo" = "사진 없음";
+"calendar.confirm_delete_photo" = "사진 삭제";
+"calendar.delete_photo_message" = "이 사진을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.";
 "calendar.select_time_period" = "기간 선택";
 "calendar.video_generation" = "비디오 생성";
 "calendar.update_measurements" = "측정값 업데이트";

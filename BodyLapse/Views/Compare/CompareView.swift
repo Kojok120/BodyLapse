@@ -176,6 +176,40 @@ struct CompareView: View {
                 secondPhoto = viewModel.photos.first { $0.id == second.id }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("CategoriesUpdated"))) { _ in
+            print("CompareView: Received CategoriesUpdated notification")
+            
+            // Reload available categories
+            let isPremium = subscriptionManager.isPremium
+            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+            
+            // Check if selected categories are still available
+            if !availableCategories.contains(where: { $0.id == firstCategory.id }) {
+                firstCategory = availableCategories.first ?? PhotoCategory.defaultCategory
+                firstPhoto = nil
+                firstSelectedDate = nil
+            }
+            
+            if !availableCategories.contains(where: { $0.id == secondCategory.id }) {
+                secondCategory = availableCategories.first ?? PhotoCategory.defaultCategory
+                secondPhoto = nil
+                secondSelectedDate = nil
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { _ in
+            print("CompareView: Received GuidelineUpdated notification")
+            
+            // Reload photos in case guidelines affect them
+            viewModel.loadPhotos()
+            
+            // Update selected photos with fresh data if they exist
+            if let first = firstPhoto {
+                firstPhoto = viewModel.photos.first { $0.id == first.id }
+            }
+            if let second = secondPhoto {
+                secondPhoto = viewModel.photos.first { $0.id == second.id }
+            }
+        }
     }
     
     private var comparisonView: some View {

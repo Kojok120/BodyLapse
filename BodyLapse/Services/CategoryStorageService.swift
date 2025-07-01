@@ -215,11 +215,22 @@ class CategoryStorageService {
     }
     
     func saveGuideline(for categoryId: String, guideline: BodyGuideline) {
+        print("CategoryStorageService: saveGuideline called for category: \(categoryId)")
         var categories = loadAllCategories()
         
         if let index = categories.firstIndex(where: { $0.id == categoryId }) {
+            print("CategoryStorageService: Found category at index \(index)")
             categories[index].guideline = guideline
             saveCategories(categories)
+            print("CategoryStorageService: Guideline saved successfully")
+            
+            // Verify it was saved
+            let verifyCategories = loadAllCategories()
+            if let savedCategory = verifyCategories.first(where: { $0.id == categoryId }) {
+                print("CategoryStorageService: Verification - Category \(savedCategory.name) has guideline: \(savedCategory.guideline != nil)")
+            }
+        } else {
+            print("CategoryStorageService: ERROR - Category not found with ID: \(categoryId)")
         }
     }
     

@@ -52,6 +52,18 @@ class GalleryViewModel: ObservableObject {
             gridColumns = savedColumns
         }
         loadData()
+        
+        // Listen for category updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleCategoriesUpdated),
+            name: Notification.Name("CategoriesUpdated"),
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     func loadData() {
@@ -374,5 +386,24 @@ class GalleryViewModel: ObservableObject {
     func getSelectedVideosForSharing() -> [URL] {
         let selectedVideos = videos.filter { selectedVideoIds.contains($0.id.uuidString) }
         return selectedVideos.map { $0.fileURL }
+    }
+    
+    // MARK: - Notification Handlers
+    
+    @objc private func handleCategoriesUpdated() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            print("GalleryViewModel: Received CategoriesUpdated notification")
+            
+            // Reload photos as categories might have changed
+            self.loadPhotos()
+            
+            // Clear category filters if any selected categories are no longer available
+            let availableIds = self.availableCategories.map { $0.id }
+            self.selectedCategories = self.selectedCategories.filter { availableIds.contains($0) }
+            
+            // Force UI update
+            self.objectWillChange.send()
+        }
     }
 }
