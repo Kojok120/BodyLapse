@@ -314,7 +314,7 @@ struct SettingsView: View {
                 Text("settings.reset_guideline_confirm".localized)
             }
             .fullScreenCover(isPresented: $showingResetGuideline) {
-                ResetGuidelineView()
+                ResetGuidelineView(categoryId: PhotoCategory.defaultCategory.id, categoryName: PhotoCategory.defaultCategory.name)
             }
             .alert("common.done".localized, isPresented: $showingLanguageChangeAlert) {
                 Button("common.ok".localized) {

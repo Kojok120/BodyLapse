@@ -28,7 +28,7 @@ struct CameraView: View {
                 
                 // Overlay the saved guideline if available
                 if let guideline = viewModel.savedGuideline,
-                   viewModel.userSettings?.settings.showBodyGuidelines == true {
+                   userSettings.settings.showBodyGuidelines == true {
                     GeometryReader { geometry in
                         GuidelineOverlayView(
                             guideline: guideline,
@@ -78,7 +78,7 @@ struct CameraView: View {
                     }
                     .padding(.top, (subscriptionManager.isPremium && viewModel.availableCategories.count > 1) ? 0 : 60)
                     
-                    if viewModel.userSettings?.settings.showBodyGuidelines == true {
+                    if userSettings.settings.showBodyGuidelines == true {
                         BodyGuidelineView(isBodyDetected: viewModel.bodyDetected)
                     }
                     
@@ -127,6 +127,20 @@ struct CameraView: View {
         .onDisappear {
             viewModel.stopSession()
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            // Stop session when app goes to background
+            viewModel.stopSession()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            // Restart session when app becomes active
+            if viewModel.isAuthorized {
+                viewModel.restartSession()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { notification in
+            // Force refresh when guideline is updated
+            viewModel.objectWillChange.send()
+        }
         .alert("common.error".localized, isPresented: $viewModel.showingAlert) {
             Button("common.ok".localized, role: .cancel) { }
         } message: {
@@ -145,7 +159,7 @@ struct CameraView: View {
         .alert("camera.one_photo_per_day".localized, isPresented: $viewModel.showingReplaceAlert) {
             Button("common.replace".localized, role: .destructive) {
                 if let image = viewModel.capturedImage {
-                    if viewModel.subscriptionManager?.isPremium == true {
+                    if subscriptionManager.isPremium == true {
                         viewModel.showingWeightInput = true
                     } else {
                         viewModel.savePhoto(image)

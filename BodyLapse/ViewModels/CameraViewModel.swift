@@ -25,8 +25,7 @@ class CameraViewModel: NSObject, ObservableObject {
     private var bodyDetectionRequest: VNDetectHumanBodyPoseRequest?
     @Published var currentCameraPosition: AVCaptureDevice.Position = .back
     private var currentInput: AVCaptureDeviceInput?
-    var userSettings: UserSettingsManager?
-    var subscriptionManager: SubscriptionManagerService?
+    private var initializationTask: Task<Void, Never>?
     
     override init() {
         super.init()
@@ -35,28 +34,25 @@ class CameraViewModel: NSObject, ObservableObject {
         // Load saved guideline for default category
         loadGuidelineForCurrentCategory()
         
-        // Initialize UserSettingsManager and SubscriptionManagerService on main queue
-        Task { @MainActor in
-            self.userSettings = UserSettingsManager()
-            self.subscriptionManager = SubscriptionManagerService.shared
-            
-            // Load available categories after subscription manager is initialized
+        // Always use Task for initialization to ensure proper actor isolation
+        initializationTask = Task { @MainActor in
+            guard !Task.isCancelled else { return }
             self.loadCategories()
         }
         
         // Listen for guideline updates
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(reloadGuideline),
+            selector: #selector(reloadGuideline(_:)),
             name: Notification.Name("GuidelineUpdated"),
             object: nil
         )
     }
     
     deinit {
+        initializationTask?.cancel()
         stopSession()
-        previewLayer?.removeFromSuperlayer()
-        previewLayer = nil
+        cleanupPreviewLayer()
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -83,9 +79,39 @@ class CameraViewModel: NSObject, ObservableObject {
         }
     }
     
-    @objc private func reloadGuideline() {
+    @objc private func reloadGuideline(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-            self?.loadGuidelineForCurrentCategory()
+            guard let self = self else { return }
+            print("CameraViewModel: Received GuidelineUpdated notification")
+            
+            // Check if the notification is for a specific category
+            if let userInfo = notification.userInfo,
+               let categoryId = userInfo["categoryId"] as? String {
+                print("CameraViewModel: Guideline updated for category: \(categoryId)")
+                
+                // Reload categories in case a new guideline was set
+                self.loadCategories()
+                
+                // If the updated category is the current one, reload the guideline
+                if categoryId == self.selectedCategory.id {
+                    print("CameraViewModel: Current category matches, reloading guideline")
+                    self.savedGuideline = nil
+                    self.loadGuidelineForCurrentCategory()
+                }
+            } else {
+                // No specific category, reload for current category
+                print("CameraViewModel: No category specified, reloading for current category")
+                self.savedGuideline = nil
+                self.loadGuidelineForCurrentCategory()
+            }
+            
+            print("CameraViewModel: Guideline reloaded: \(self.savedGuideline != nil)")
+            if let guideline = self.savedGuideline {
+                print("CameraViewModel: Guideline has \(guideline.points.count) points")
+            }
+            
+            // Force UI update
+            self.objectWillChange.send()
         }
     }
     
@@ -173,7 +199,7 @@ class CameraViewModel: NSObject, ObservableObject {
             }
         } else {
             Task { @MainActor [weak self] in
-                if self?.subscriptionManager?.isPremium == true {
+                if SubscriptionManagerService.shared.isPremium == true {
                     self?.showingWeightInput = true
                 } else {
                     self?.savePhoto(image)
@@ -190,9 +216,8 @@ class CameraViewModel: NSObject, ObservableObject {
     
     private func saveProcessedPhoto(_ image: UIImage, wasBlurred: Bool) {
         do {
-            let photo: Photo
             if hasPhotoForSelectedCategory() {
-                photo = try PhotoStorageService.shared.replacePhoto(
+                _ = try PhotoStorageService.shared.replacePhoto(
                     for: Date(),
                     categoryId: selectedCategory.id,
                     with: image,
@@ -202,7 +227,7 @@ class CameraViewModel: NSObject, ObservableObject {
                     bodyFatPercentage: tempBodyFat
                 )
             } else {
-                photo = try PhotoStorageService.shared.savePhoto(
+                _ = try PhotoStorageService.shared.savePhoto(
                     image,
                     categoryId: selectedCategory.id,
                     isFaceBlurred: wasBlurred,
@@ -338,6 +363,9 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
     }
     
     func cleanup() {
+        initializationTask?.cancel()
+        initializationTask = nil
+        
         stopSession()
         cleanupPreviewLayer()
         
@@ -359,20 +387,33 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
     
     @MainActor
     private func loadCategories() {
-        let isPremium = subscriptionManager?.isPremium ?? false
+        let isPremium = SubscriptionManagerService.shared.isPremium
         availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
-        if !availableCategories.contains(where: { $0.id == selectedCategory.id }) {
+        
+        // Update the selected category with fresh data from storage
+        if let updatedCategory = availableCategories.first(where: { $0.id == selectedCategory.id }) {
+            selectedCategory = updatedCategory
+            print("CameraViewModel: Updated selected category with fresh data")
+        } else {
             selectedCategory = availableCategories.first ?? PhotoCategory.defaultCategory
         }
     }
     
     private func loadGuidelineForCurrentCategory() {
+        print("CameraViewModel: Loading guideline for category: \(selectedCategory.id)")
         savedGuideline = GuidelineStorageService.shared.loadGuideline(for: selectedCategory.id)
+        print("CameraViewModel: Loaded guideline: \(savedGuideline != nil)")
+        if let guideline = savedGuideline {
+            print("CameraViewModel: Guideline details - points: \(guideline.points.count), imageSize: \(guideline.imageSize)")
+        }
     }
     
     func selectCategory(_ category: PhotoCategory) {
+        print("CameraViewModel: Selecting category: \(category.name) (ID: \(category.id))")
         selectedCategory = category
         loadGuidelineForCurrentCategory()
+        // Force UI update
+        objectWillChange.send()
     }
     
     func hasPhotoForSelectedCategory() -> Bool {

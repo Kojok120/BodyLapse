@@ -204,7 +204,9 @@ struct ResetGuidelineView: View {
                 
                 // Notify that guideline has been updated
                 DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: Notification.Name("GuidelineUpdated"), object: nil)
+                    let userInfo: [String: Any] = ["categoryId": self.categoryId ?? PhotoCategory.defaultCategory.id]
+                    NotificationCenter.default.post(name: Notification.Name("GuidelineUpdated"), object: nil, userInfo: userInfo)
+                    print("ResetGuidelineView: Posted GuidelineUpdated notification for category: \(self.categoryId ?? PhotoCategory.defaultCategory.id)")
                 }
             }
             
