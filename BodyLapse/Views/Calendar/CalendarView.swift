@@ -758,68 +758,40 @@ struct CalendarView: View {
     
     private var dataGraphSection: some View {
         VStack(spacing: 6) {
-            if !weightViewModel.weightEntries.isEmpty {
-                if #available(iOS 16.0, *) {
-                    let filteredEntries = weightViewModel.filteredEntries(for: getWeightTimeRange())
-                    if !filteredEntries.isEmpty {
-                        let fullRange: ClosedRange<Date> = {
-                            if let first = dateRange.first, let last = dateRange.last {
-                                return first...last
-                            } else {
-                                return Date()...Date()
-                            }
-                        }()
-                        InteractiveWeightChartView(
-                            entries: filteredEntries,
-                            selectedDate: $selectedChartDate,
-                            currentPhoto: currentPhoto,
-                            onEditWeight: {
-                                showingWeightInput = true
-                            },
-                            fullDateRange: fullRange
-                        )
-                        .padding(.horizontal)
-                        .onChange(of: selectedPeriod) { _, _ in
-                            // Reset chart selection when period changes
-                            selectedChartDate = nil
-                        }
+            if #available(iOS 16.0, *) {
+                let filteredEntries = weightViewModel.filteredEntries(for: getWeightTimeRange())
+                let fullRange: ClosedRange<Date> = {
+                    if let first = dateRange.first, let last = dateRange.last {
+                        return first...last
                     } else {
-                        Text("calendar.no_data_period".localized)
-                            .foregroundColor(.secondary)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color(UIColor.secondarySystemGroupedBackground))
-                            .cornerRadius(15)
+                        return Date()...Date()
                     }
-                } else {
-                    Text("calendar.ios16_required".localized)
-                        .foregroundColor(.secondary)
-                        .padding()
+                }()
+                
+                // Always show the weight chart view for premium users
+                // InteractiveWeightChartView handles empty data internally
+                InteractiveWeightChartView(
+                    entries: filteredEntries,
+                    selectedDate: $selectedChartDate,
+                    currentPhoto: currentPhoto,
+                    onEditWeight: {
+                        showingWeightInput = true
+                    },
+                    fullDateRange: fullRange
+                )
+                .padding(.horizontal)
+                .onChange(of: selectedPeriod) { _, _ in
+                    // Reset chart selection when period changes
+                    selectedChartDate = nil
                 }
             } else {
-                VStack(spacing: 10) {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.system(size: 40))
-                        .foregroundColor(.gray.opacity(0.3))
-                    Text("calendar.no_weight_data".localized)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    Text("calendar.add_weight_hint".localized)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Button("calendar.reload_data".localized) {
-                        weightViewModel.loadEntries()
-                    }
-                    .font(.caption)
-                    .foregroundColor(.blue)
-                }
-                .padding()
-                .frame(minHeight: 200)
-                .frame(maxWidth: .infinity)
-                .background(Color(UIColor.secondarySystemGroupedBackground))
-                .cornerRadius(15)
-                .padding(.horizontal)
+                Text("calendar.ios16_required".localized)
+                    .foregroundColor(.secondary)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color(UIColor.secondarySystemGroupedBackground))
+                    .cornerRadius(15)
+                    .padding(.horizontal)
             }
         }
     }

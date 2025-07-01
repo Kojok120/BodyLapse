@@ -268,6 +268,10 @@
 "premium.subscribe" = "Suscribirse Ahora";
 "premium.price.fallback" = "$4.99";
 "premium.price.period" = "al mes";
+"premium.first_month_free" = "¡Primer Mes GRATIS!";
+"premium.after_trial" = "Después del período de prueba:";
+"premium.start_free_trial" = "Comenzar Prueba Gratuita";
+"premium.then_per_month" = "luego precio regular";
 
 /* Weight Input */
 "weight.title" = "Entrada de Peso";

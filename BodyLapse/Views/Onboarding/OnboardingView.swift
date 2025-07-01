@@ -348,97 +348,95 @@ struct OnboardingView: View {
     }
     
     private var premiumFeaturesView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
+            // Free Trial Badge - PROMINENT
+            HStack {
+                Image(systemName: "gift.fill")
+                    .font(.title3)
+                Text("premium.first_month_free".localized)
+                    .font(.title3.bold())
+            }
+            .foregroundColor(.black)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            .background(
+                Capsule()
+                    .fill(Color.yellow)
+                    .shadow(color: .yellow.opacity(0.3), radius: 8, x: 0, y: 4)
+            )
+            .padding(.top, 10)
+            
             Image(systemName: "star.circle.fill")
-                .font(.system(size: 60))
+                .font(.system(size: 45))
                 .foregroundColor(.yellow)
                 .padding(.top, 5)
             
             Text("onboarding.premium.title".localized)
-                .font(.title)
-                .fontWeight(.bold)
+                .font(.title2.bold())
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 20)
 
             Text("onboarding.premium.subtitle".localized)
-                .font(.subheadline)
-                .foregroundColor(.primary)
+                .font(.caption)
+                .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-                .lineSpacing(2)
+                .lineSpacing(1)
                 .padding(.horizontal, 20)
-                .padding(.top, 2)
             
-            VStack(spacing: 12) {
-                premiumFeatureItem(
+            // Compact features list
+            VStack(spacing: 10) {
+                compactPremiumFeatureItem(
                     icon: "chart.line.uptrend.xyaxis",
                     title: "onboarding.premium.metrics.title".localized,
                     description: "onboarding.premium.metrics.description".localized
                 )
                 
-                premiumFeatureItem(
+                compactPremiumFeatureItem(
                     icon: "photo.stack",
                     title: "onboarding.premium.advanced_tracking.title".localized,
                     description: "onboarding.premium.advanced_tracking.description".localized
                 )
                 
-                premiumFeatureItem(
+                compactPremiumFeatureItem(
                     icon: "video.badge.checkmark",
                     title: "onboarding.premium.nowatermark.title".localized,
                     description: "onboarding.premium.nowatermark.description".localized
                 )
                 
-                premiumFeatureItem(
+                compactPremiumFeatureItem(
                     icon: "eye.slash",
                     title: "onboarding.premium.noads.title".localized,
                     description: "onboarding.premium.noads.description".localized
                 )
             }
-            .padding(.horizontal, 10)
-            .padding(.top, 5)
+            .padding(.horizontal, 15)
+            .padding(.top, 8)
             
-            Spacer(minLength: 10)
+            Spacer(minLength: 5)
             
-            VStack(spacing: 6) {
-                Text("onboarding.premium.price".localized)
-                    .font(.callout)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
+            // Price with trial emphasis
+            HStack(spacing: 8) {
+                Text("premium.after_trial".localized)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
                 
                 if let product = SubscriptionManagerService.shared.products.first {
-                    VStack(spacing: 4) {
-                        Text(product.displayPrice + " / " + "date.month".localized)
-                            .font(.subheadline)
-                            .foregroundColor(.accentColor)
-                        
-                        Text("onboarding.premium.trial".localized)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(.green)
-                        
-                        Text("onboarding.premium.cancel_anytime".localized)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
+                    Text(product.displayPrice + "/" + "date.month".localized)
+                        .font(.headline.bold())
+                        .foregroundColor(.primary)
                 } else {
-                    VStack(spacing: 4) {
-                        Text("onboarding.premium.price.fallback".localized)
-                            .font(.subheadline)
-                            .foregroundColor(.accentColor)
-                        
-                        Text("onboarding.premium.trial".localized)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(.green)
-                        
-                        Text("onboarding.premium.cancel_anytime".localized)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
+                    Text("onboarding.premium.price.fallback".localized)
+                        .font(.headline.bold())
+                        .foregroundColor(.primary)
                 }
             }
-            .padding(.bottom, 5)
+            
+            Text("onboarding.premium.cancel_anytime".localized)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .padding(.bottom, 10)
         }
     }
     
@@ -464,6 +462,31 @@ struct OnboardingView: View {
             Spacer()
         }
         .padding(.horizontal, 15)
+    }
+    
+    private func compactPremiumFeatureItem(icon: String, title: String, description: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 28))
+                .foregroundColor(.accentColor)
+                .frame(width: 32)
+            
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, 12)
     }
     
     private var baselinePhotoStep: some View {

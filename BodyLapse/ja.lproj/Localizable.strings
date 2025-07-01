@@ -266,6 +266,10 @@
 "premium.subscribe" = "今すぐ登録";
 "premium.price.fallback" = "¥600";
 "premium.price.period" = "/月";
+"premium.first_month_free" = "初月無料！";
+"premium.after_trial" = "無料期間後：";
+"premium.start_free_trial" = "無料トライアルを開始";
+"premium.then_per_month" = "その後は通常料金";
 
 /* Weight Input */
 "weight.title" = "体重入力";
