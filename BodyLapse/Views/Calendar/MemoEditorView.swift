@@ -44,8 +44,13 @@ struct MemoEditorView: View {
                         .cornerRadius(10)
                         .padding(.horizontal)
                         .focused($isTextFieldFocused)
+                        .onChange(of: memoText) { _, newValue in
+                            if newValue.count > 100 {
+                                memoText = String(newValue.prefix(100))
+                            }
+                        }
                     
-                    Text("\(memoText.count)/500")
+                    Text("\(memoText.count)/100")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
@@ -66,7 +71,7 @@ struct MemoEditorView: View {
                             .background(Color.accentColor)
                             .cornerRadius(12)
                     }
-                    .disabled(memoText.isEmpty || memoText.count > 500)
+                    .disabled(memoText.isEmpty || memoText.count > 100)
                     
                     if !initialContent.isEmpty {
                         Button(action: delete) {

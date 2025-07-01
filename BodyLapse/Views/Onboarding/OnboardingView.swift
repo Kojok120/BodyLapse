@@ -62,6 +62,9 @@ struct OnboardingView: View {
                             
                             appLockStep
                                 .tag(3)
+                            
+                            notificationPermissionStep
+                                .tag(4)
                         }
                         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                         .animation(.easeInOut, value: currentStep)
@@ -235,7 +238,7 @@ struct OnboardingView: View {
     
     private var onboardingProgressIndicator: some View {
         HStack(spacing: 8) {
-            ForEach(1...3, id: \.self) { step in
+            ForEach(1...4, id: \.self) { step in
                 Circle()
                     .fill(step <= currentStep ? Color.accentColor : Color.gray.opacity(0.3))
                     .frame(width: 8, height: 8)
@@ -522,7 +525,7 @@ struct OnboardingView: View {
                 passcode: $passcode,
                 confirmPasscode: $confirmPasscode,
                 onComplete: {
-                    saveSettings(enableLock: true)
+                    saveAppLockSettings(enableLock: true)
                 }
             )
         }
@@ -531,6 +534,59 @@ struct OnboardingView: View {
         } message: {
             Text(passcodeErrorMessage)
         }
+    }
+    
+    private var notificationPermissionStep: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "bell.badge")
+                .font(.system(size: 60))
+                .foregroundColor(.accentColor)
+                .padding(.bottom, 20)
+            
+            Text("onboarding.notification.title".localized)
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            
+            Text("onboarding.notification.subtitle".localized)
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            VStack(spacing: 10) {
+                Text("onboarding.notification.description".localized)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                
+                Text("• " + "onboarding.notification.daily_reminder".localized)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 40)
+            }
+            .padding(.top, 10)
+            
+            Button(action: {
+                requestNotificationPermission()
+            }) {
+                HStack {
+                    Image(systemName: "bell.fill")
+                    Text("onboarding.enable_notifications".localized)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.accentColor)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            }
+            .padding(.horizontal, 40)
+            .padding(.top, 20)
+            
+            Spacer()
+        }
+        .padding()
     }
     
     private var explanationNavigationButtons: some View {
@@ -646,7 +702,18 @@ struct OnboardingView: View {
             } else if currentStep == 3 {
                 Button(action: {
                     hideKeyboard()
-                    saveSettings(enableLock: false)
+                    saveAppLockSettings(enableLock: false)
+                    currentStep = 4
+                }) {
+                    Text("common.skip".localized)
+                        .foregroundColor(.secondary)
+                        .fontWeight(.medium)
+                }
+                .padding()
+            } else if currentStep == 4 {
+                Button(action: {
+                    hideKeyboard()
+                    completeOnboarding()
                 }) {
                     Text("common.skip".localized)
                         .foregroundColor(.secondary)
@@ -656,7 +723,7 @@ struct OnboardingView: View {
                 
                 Button(action: {
                     hideKeyboard()
-                    saveSettings(enableLock: false)
+                    completeOnboarding()
                 }) {
                     Text("common.finish".localized)
                         .frame(minWidth: 80)
@@ -743,7 +810,8 @@ struct OnboardingView: View {
                     if success {
                         // Biometric authentication successful
                         selectedLockMethod = .biometric
-                        saveSettings(enableLock: true)
+                        saveAppLockSettings(enableLock: true)
+                        currentStep = 4
                     } else {
                         // Biometric authentication failed
                         if let error = authError as NSError? {
@@ -764,8 +832,8 @@ struct OnboardingView: View {
         }
     }
     
-    private func saveSettings(enableLock: Bool) {
-        // Saving settings
+    private func saveAppLockSettings(enableLock: Bool) {
+        // Saving app lock settings
         
         userSettings.settings.isAppLockEnabled = enableLock
         
@@ -776,6 +844,25 @@ struct OnboardingView: View {
             }
         }
         
+        // Save to UserDefaults but don't complete onboarding yet
+        if let encoded = try? JSONEncoder().encode(userSettings.settings) {
+            UserDefaults.standard.set(encoded, forKey: "BodyLapseUserSettings")
+            UserDefaults.standard.synchronize()
+        }
+    }
+    
+    private func requestNotificationPermission() {
+        NotificationService.shared.requestNotificationPermission { authorized in
+            if authorized {
+                // Set up daily photo check after permission is granted
+                NotificationService.shared.setupDailyPhotoCheck()
+            }
+            // Continue to next step regardless of permission result
+            completeOnboarding()
+        }
+    }
+    
+    private func completeOnboarding() {
         // Setting hasCompletedOnboarding = true
         userSettings.settings.hasCompletedOnboarding = true
         

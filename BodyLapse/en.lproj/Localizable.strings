@@ -32,6 +32,7 @@
 "common.retake" = "Retake";
 "common.use_photo" = "Use Photo";
 "common.save_photo" = "Save Photo";
+"common.enable" = "Enable";
 
 /* Calendar View */
 "calendar.title" = "Calendar";
@@ -145,6 +146,9 @@
 "settings.face_id" = "Face ID";
 "settings.touch_id" = "Touch ID";
 "settings.biometric" = "Biometric";
+
+/* Write a Review */
+"settings.write_review" = "Write a Review";
 
 /* About Section */
 "about.bodylapse" = "BodyLapse";
@@ -380,3 +384,10 @@
 "guideline.setup.description" = "This guideline will help you maintain consistent positioning for photos in this category";
 "guideline.setup.start" = "Start Setup";
 "guideline.setup.nav_title" = "Body Guideline Setup";
+
+/* Notification Onboarding */
+"onboarding.notification.title" = "Stay on Track";
+"onboarding.notification.subtitle" = "Never miss a day of progress";
+"onboarding.notification.description" = "BodyLapse will remind you if you haven't taken a photo by 7 PM";
+"onboarding.notification.daily_reminder" = "Daily reminder at 7 PM if no photo taken";
+"onboarding.enable_notifications" = "Enable Notifications";

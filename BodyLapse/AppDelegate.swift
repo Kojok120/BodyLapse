@@ -26,14 +26,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             }
         }
         
-        // Setup notification based on current settings
-        let settings = UserSettingsManager.shared.settings
-        if settings.reminderEnabled {
-            NotificationService.shared.scheduleOrUpdateDailyReminder(
-                at: settings.reminderTime,
-                enabled: true
-            )
-        }
+        // Notification setup is now handled in BodyLapseApp init
         
         return true
     }
@@ -48,6 +41,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             }
         }
         NotificationService.shared.clearDeliveredNotifications()
+    }
+    
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        // Handle notification received while app is in background
+        if let isPhotoCheck = userInfo["isPhotoCheck"] as? Bool, isPhotoCheck {
+            NotificationService.shared.checkAndSendPhotoReminder()
+        }
+        completionHandler(.newData)
     }
     
     // Force portrait orientation

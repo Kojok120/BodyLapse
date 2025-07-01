@@ -16,6 +16,10 @@ struct SettingsView: View {
     @State private var showingResetGuidelineConfirmation = false
     @State private var showingResetGuideline = false
     @State private var showingLanguageChangeAlert = false
+    @State private var isNotificationEnabled = false
+    
+    // App Store ID - replace with actual ID when app is published
+    private let appStoreID = "YOUR_APP_STORE_ID"
     
     var body: some View {
         NavigationView {
@@ -110,24 +114,18 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section("settings.reminders".localized) {
-                    Toggle("settings.daily_reminder".localized, isOn: $userSettings.settings.reminderEnabled)
-                        .onChange(of: userSettings.settings.reminderEnabled) {  _, newValue in
-                            if newValue {
-                                // Request permission when enabling reminders
-                                NotificationService.shared.requestNotificationPermission { granted in
-                                    if !granted {
-                                        userSettings.settings.reminderEnabled = false
-                                        showingNotificationPermissionAlert = true
-                                    }
-                                }
+                if !isNotificationEnabled {
+                    Section("settings.reminders".localized) {
+                        HStack {
+                            Image(systemName: "bell.fill")
+                                .foregroundColor(.blue)
+                            Text("settings.daily_reminder".localized)
+                            Spacer()
+                            Button("common.enable".localized) {
+                                requestNotificationPermission()
                             }
+                            .foregroundColor(.blue)
                         }
-                    
-                    if userSettings.settings.reminderEnabled {
-                        DatePicker("settings.reminder_time".localized,
-                                   selection: $userSettings.settings.reminderTime,
-                                   displayedComponents: .hourAndMinute)
                     }
                 }
                 
@@ -251,6 +249,17 @@ struct SettingsView: View {
                     }
                 }
                 
+                Section {
+                    Button(action: {
+                        if let url = URL(string: "https://apps.apple.com/app/id\(appStoreID)?action=write-review") {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
+                        Label("settings.write_review".localized, systemImage: "star.fill")
+                            .foregroundColor(.primary)
+                    }
+                }
+                
                 #if DEBUG
                 Section(header: Text("Debug Options")) {
                     Toggle("Premium Mode", isOn: Binding(
@@ -336,6 +345,7 @@ struct SettingsView: View {
             }
             .onAppear {
                 healthKitEnabled = userSettings.settings.healthKitEnabled
+                checkNotificationStatus()
             }
         }
     }
@@ -365,6 +375,25 @@ struct SettingsView: View {
             if success {
                 // Reload weight data in the app
                 NotificationCenter.default.post(name: Notification.Name("HealthKitDataSynced"), object: nil)
+            }
+        }
+    }
+    
+    private func checkNotificationStatus() {
+        NotificationService.shared.checkNotificationPermission { authorized in
+            isNotificationEnabled = authorized
+        }
+    }
+    
+    private func requestNotificationPermission() {
+        NotificationService.shared.requestNotificationPermission { authorized in
+            if authorized {
+                isNotificationEnabled = true
+                // Set up daily photo check after permission is granted
+                NotificationService.shared.setupDailyPhotoCheck()
+            } else {
+                // Permission denied - show alert to open settings
+                showingNotificationPermissionAlert = true
             }
         }
     }

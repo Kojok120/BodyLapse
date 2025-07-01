@@ -428,6 +428,17 @@ struct PhotoGridItem: View {
                 
                 VStack {
                     HStack {
+                        // Date label in top-left corner
+                        Text(formatDate(photo.captureDate))
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Color.black.opacity(0.7))
+                            .cornerRadius(4)
+                            .padding(8)
+                        
                         Spacer()
                         Menu {
                             Button {
@@ -480,6 +491,12 @@ struct PhotoGridItem: View {
             }
         }
     }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        return formatter.string(from: date)
+    }
 }
 
 struct VideoGridItem: View {
@@ -511,6 +528,17 @@ struct VideoGridItem: View {
                 
                 VStack {
                     HStack {
+                        // Date label in top-left corner
+                        Text(formatDate(video.createdDate))
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Color.black.opacity(0.7))
+                            .cornerRadius(4)
+                            .padding(8)
+                        
                         Spacer()
                         Menu {
                             Button {
@@ -581,6 +609,12 @@ struct VideoGridItem: View {
                 self.thumbnail = loadedThumbnail
             }
         }
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        return formatter.string(from: date)
     }
 }
 

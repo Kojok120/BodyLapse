@@ -145,6 +145,9 @@
 "settings.touch_id" = "Touch ID";
 "settings.biometric" = "생체 인증";
 
+/* Write a Review */
+"settings.write_review" = "리뷰 작성하기";
+
 /* About Section */
 "about.bodylapse" = "BodyLapse";
 "about.tagline" = "피트니스 여정을 추적하세요";

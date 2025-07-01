@@ -145,6 +145,9 @@
 "settings.touch_id" = "Touch ID";
 "settings.biometric" = "Biométrico";
 
+/* Write a Review */
+"settings.write_review" = "Escribir una reseña";
+
 /* About Section */
 "about.bodylapse" = "BodyLapse";
 "about.tagline" = "Sigue tu viaje fitness";

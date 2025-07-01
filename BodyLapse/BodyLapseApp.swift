@@ -23,6 +23,9 @@ struct BodyLapseApp: App {
         
         // Initialize PhotoStorageService on app launch
         PhotoStorageService.shared.initialize()
+        
+        // Set up daily photo reminder check
+        NotificationService.shared.setupDailyPhotoCheck()
     }
     
     var body: some Scene {

@@ -22,6 +22,9 @@ struct CalendarView: View {
     @State private var selectedChartDate: Date? = nil
     @State private var showingMemoEditor = false
     @State private var currentMemo: String = ""
+    @State private var currentCategoryIndex: Int = 0
+    @State private var photosForSelectedDate: [Photo] = []
+    @State private var categoriesForSelectedDate: [PhotoCategory] = []
     
     enum TimePeriod: String, CaseIterable {
         case week = "7 Days"
@@ -112,9 +115,13 @@ struct CalendarView: View {
                 initialContent: currentMemo,
                 onSave: { content in
                     viewModel.saveNote(content: content, for: selectedDate)
+                    // Update currentMemo immediately after saving
+                    currentMemo = content
                 },
                 onDelete: {
                     viewModel.deleteNote(for: selectedDate)
+                    // Update currentMemo immediately after deletion
+                    currentMemo = ""
                 }
             )
         }
@@ -506,6 +513,7 @@ struct CalendarView: View {
                     .padding(.top, 8)
             }
             
+            
             // Memo display - always show section
             HStack {
                 Image(systemName: currentMemo.isEmpty ? "note.text.badge.plus" : "note.text")
@@ -545,6 +553,31 @@ struct CalendarView: View {
                             .cornerRadius(12)
                     }
                     .frame(width: geometry.size.width, height: geometry.size.height)
+                    .offset(x: dragOffset)
+                    .gesture(
+                        categoriesForSelectedDate.count > 1 ? 
+                        DragGesture()
+                            .onChanged { value in
+                                dragOffset = value.translation.width
+                            }
+                            .onEnded { value in
+                                let threshold: CGFloat = 50
+                                
+                                withAnimation(.spring()) {
+                                    if value.translation.width > threshold && currentCategoryIndex > 0 {
+                                        // Swipe right - previous category
+                                        currentCategoryIndex -= 1
+                                        switchToCategory(at: currentCategoryIndex)
+                                    } else if value.translation.width < -threshold && currentCategoryIndex < categoriesForSelectedDate.count - 1 {
+                                        // Swipe left - next category
+                                        currentCategoryIndex += 1
+                                        switchToCategory(at: currentCategoryIndex)
+                                    }
+                                    dragOffset = 0
+                                }
+                            }
+                        : nil
+                    )
                 } else {
                     VStack(spacing: 20) {
                         Image(systemName: "photo")
@@ -651,10 +684,6 @@ struct CalendarView: View {
             }
             .frame(height: 80)
             .padding(.horizontal)
-            
-            Text(formatDateRange())
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
         .padding(.vertical)
     }
@@ -743,19 +772,55 @@ struct CalendarView: View {
         return formatter.string(from: date)
     }
     
-    private func formatDateRange() -> String {
-        guard let firstDate = dateRange.first,
-              let lastDate = dateRange.last else { return "" }
+    private func updateCurrentPhoto() {
+        // Get all photos for selected date
+        photosForSelectedDate = viewModel.allPhotosForDate(selectedDate)
         
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
+        // Get categories for these photos
+        let photoCategories = photosForSelectedDate.map { $0.categoryId }
+        categoriesForSelectedDate = viewModel.availableCategories.filter { category in
+            photoCategories.contains(category.id)
+        }
         
-        return "\(formatter.string(from: firstDate)) - \(formatter.string(from: lastDate))"
+        // If we have photos for the selected date
+        if !photosForSelectedDate.isEmpty {
+            // Find the index of the currently selected category
+            if let index = categoriesForSelectedDate.firstIndex(where: { $0.id == viewModel.selectedCategory.id }) {
+                currentCategoryIndex = index
+                currentPhoto = photosForSelectedDate.first { $0.categoryId == categoriesForSelectedDate[index].id }
+            } else {
+                // If current category has no photo, show the first available
+                currentCategoryIndex = 0
+                if !categoriesForSelectedDate.isEmpty {
+                    currentPhoto = photosForSelectedDate.first { $0.categoryId == categoriesForSelectedDate[0].id }
+                    // Update selected category in viewModel
+                    viewModel.selectCategory(categoriesForSelectedDate[0])
+                }
+            }
+        } else {
+            // No photos for this date
+            currentPhoto = nil
+            currentCategoryIndex = 0
+            categoriesForSelectedDate = []
+        }
+        
+        currentMemo = viewModel.note(for: selectedDate)?.content ?? ""
     }
     
-    private func updateCurrentPhoto() {
-        currentPhoto = viewModel.photo(for: selectedDate)
-        currentMemo = viewModel.note(for: selectedDate)?.content ?? ""
+    private func switchToCategory(at index: Int) {
+        guard index >= 0 && index < categoriesForSelectedDate.count else { return }
+        
+        let category = categoriesForSelectedDate[index]
+        currentPhoto = photosForSelectedDate.first { $0.categoryId == category.id }
+        
+        // Update selected category in viewModel
+        viewModel.selectCategory(category)
+        
+        // Update weight input if premium
+        if subscriptionManager.isPremium {
+            // Trigger weight data reload for new category
+            weightViewModel.loadEntries()
+        }
     }
     
     private func generateVideo(with options: VideoGenerationService.VideoGenerationOptions) {

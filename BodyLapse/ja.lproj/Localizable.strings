@@ -32,6 +32,7 @@
 "common.retake" = "撮り直す";
 "common.use_photo" = "写真を使用";
 "common.save_photo" = "写真を保存";
+"common.enable" = "有効にする";
 
 /* Calendar View */
 "calendar.title" = "カレンダー";
@@ -145,6 +146,7 @@
 "settings.face_id" = "Face ID";
 "settings.touch_id" = "Touch ID";
 "settings.biometric" = "生体認証";
+"settings.write_review" = "レビューを書く";
 
 /* About Section */
 "about.bodylapse" = "BodyLapse";
@@ -363,3 +365,16 @@
 "import_export.select_all" = "すべて選択";
 "import_export.single_category" = "カテゴリは1つのみです";
 "import_export.export_options" = "エクスポートオプション";
+
+/* Guideline Setup */
+"guideline.setup.title" = "ボディガイドラインを設定";
+"guideline.setup.description" = "このガイドラインは、このカテゴリの写真で一貫したポジショニングを維持するのに役立ちます";
+"guideline.setup.start" = "設定を開始";
+"guideline.setup.nav_title" = "ボディガイドライン設定";
+
+/* Notification Onboarding */
+"onboarding.notification.title" = "進捗をキープ";
+"onboarding.notification.subtitle" = "毎日の進捗を逃さない";
+"onboarding.notification.description" = "19時までに写真が撮影されていない場合、BodyLapseがお知らせします";
+"onboarding.notification.daily_reminder" = "写真未撮影時は19時にリマインダー";
+"onboarding.enable_notifications" = "通知を有効にする";
