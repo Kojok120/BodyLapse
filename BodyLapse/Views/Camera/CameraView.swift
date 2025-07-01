@@ -3,6 +3,8 @@ import AVFoundation
 
 struct CameraView: View {
     @StateObject private var viewModel = CameraViewModel()
+    @ObservedObject private var userSettings = UserSettingsManager.shared
+    @ObservedObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var showingPhotoReview = false
     @State private var activeSheet: ActiveSheet?
     
@@ -38,6 +40,26 @@ struct CameraView: View {
                 }
                 
                 VStack {
+                    // Category selection - Premium feature
+                    if subscriptionManager.isPremium && viewModel.availableCategories.count > 1 {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 15) {
+                                ForEach(viewModel.availableCategories) { category in
+                                    CategoryTabView(
+                                        category: category,
+                                        isSelected: viewModel.selectedCategory.id == category.id,
+                                        hasPhoto: PhotoStorageService.shared.hasPhotoForToday(categoryId: category.id)
+                                    ) {
+                                        viewModel.selectCategory(category)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        .padding(.top, 60)
+                        .padding(.bottom, 10)
+                    }
+                    
                     HStack {
                         Spacer()
                         
@@ -54,7 +76,7 @@ struct CameraView: View {
                         }
                         .padding(.trailing, 20)
                     }
-                    .padding(.top, 60)
+                    .padding(.top, (subscriptionManager.isPremium && viewModel.availableCategories.count > 1) ? 0 : 60)
                     
                     if viewModel.userSettings?.settings.showBodyGuidelines == true {
                         BodyGuidelineView(isBodyDetected: viewModel.bodyDetected)
@@ -365,3 +387,36 @@ struct GuidelineOverlayView: View {
     }
 }
 
+struct CategoryTabView: View {
+    let category: PhotoCategory
+    let isSelected: Bool
+    let hasPhoto: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Text(category.name)
+                    .font(.caption)
+                    .fontWeight(isSelected ? .semibold : .regular)
+                    .foregroundColor(isSelected ? .white : .white.opacity(0.8))
+                
+                if hasPhoto {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 4, height: 4)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(isSelected ? Color.bodyLapseTurquoise : Color.black.opacity(0.4))
+            )
+        }
+    }
+}
+
+#Preview {
+    CameraView()
+}

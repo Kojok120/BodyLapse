@@ -103,6 +103,7 @@
 /* Settings View */
 "settings.title" = "Settings";
 "settings.photo_settings" = "Photo Settings";
+"settings.category_management" = "Category Management";
 "settings.show_guidelines" = "Show Body Guidelines";
 "settings.reset_guideline" = "Reset Body Guideline";
 "settings.set_guideline" = "Set Body Guideline";
@@ -297,4 +298,77 @@
 "onboarding.premium_offer.benefit3" = "No watermark on videos";
 "onboarding.premium_offer.start_trial" = "Start Free Trial";
 "onboarding.premium_offer.maybe_later" = "Maybe Later";
+
+/* Category Management */
+"category.management.title" = "Category Management";
+"category.management.list_header" = "Categories";
+"category.management.list_footer" = "Up to %d categories allowed (Front + %d custom)";
+"category.management.add_category" = "Add Category";
+"category.management.new_category" = "New Category";
+"category.management.add" = "Add";
+"category.management.edit" = "Edit Category";
+"category.management.edit_name" = "Edit Category Name";
+"category.management.category_name" = "Category Name";
+"category.management.example" = "Example: Side, Back, Muscles, etc.";
+"category.management.delete_title" = "Delete Category";
+"category.management.delete_message" = "Delete category \"%@\"?\nPhotos in this category will not be deleted.";
+"category.management.delete" = "Delete";
+"category.management.add_failed" = "Failed to add category";
+"category.management.default" = "Default";
+"category.management.guideline_set" = "Guideline Set";
+"category.management.edit_name_action" = "Edit Name";
+"category.management.set_guideline" = "Set Guideline";
+
+/* Premium Category Feature */
+"category.premium.title" = "Multiple Categories";
+"category.premium.description" = "Create up to 4 categories to organize and\nmanage your photos with Premium";
+"category.premium.feature1" = "Manage multiple angles simultaneously";
+"category.premium.feature2" = "Category-specific guidelines";
+"category.premium.feature3" = "Side-by-side video generation";
+"category.premium.feature4" = "Category filtering";
+"category.premium.upgrade" = "Upgrade to Premium";
+
+/* Video Generation */
+"video.layout" = "Layout";
+"video.layout.single" = "Single";
+"video.layout.sidebyside" = "Side by Side";
+"video.category.select" = "Select Categories (Max 4)";
+
+/* Gallery Filter */
+"gallery.filter" = "Filter";
+"gallery.filter.category" = "Category";
+"gallery.filter.sort" = "Sort";
+"gallery.filter.newest" = "Newest First";
+"gallery.filter.oldest" = "Oldest First";
+"gallery.filter.all_categories" = "All Categories";
+"gallery.filter.reset" = "Reset Filters";
+"gallery.photos_count" = "%d photos";
 "onboarding.premium_offer.terms" = "Cancel anytime. Subscription auto-renews unless cancelled.";
+
+/* Import/Export */
+"import_export.title" = "Import/Export Data";
+"import_export.export" = "Export";
+"import_export.import" = "Import";
+"import_export.export_data" = "Export Data";
+"import_export.export_description" = "Backup photos, videos, and settings";
+"import_export.import_data" = "Import Data";
+"import_export.import_description" = "Restore data from backup";
+"import_export.import_footer" = "Only BodyLapse export files (.bodylapse) can be imported";
+"import_export.export_completed" = "Export Complete";
+"import_export.export_completed_message" = "Data export completed successfully";
+"import_export.import_completed" = "Import Complete";
+"import_export.import_summary" = "Import completed:\n\nPhotos: %d\nVideos: %d\nCategories: %d\nWeight data: %d\nNotes: %d";
+"import_export.data_types" = "Data Types";
+"import_export.photos" = "Photos";
+"import_export.videos" = "Videos";
+"import_export.weight_data" = "Weight & Body Fat Data";
+"import_export.notes" = "Notes";
+"import_export.settings" = "Settings";
+"import_export.period" = "Period";
+"import_export.specify_period" = "Specify Period";
+"import_export.start_date" = "Start Date";
+"import_export.end_date" = "End Date";
+"import_export.categories" = "Categories";
+"import_export.select_all" = "Select All";
+"import_export.single_category" = "Only one category";
+"import_export.export_options" = "Export Options";

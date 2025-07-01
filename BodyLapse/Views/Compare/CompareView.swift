@@ -8,6 +8,9 @@ struct CompareView: View {
     @State private var secondPhoto: Photo?
     @State private var showingFirstCalendar = false
     @State private var showingSecondCalendar = false
+    @State private var availableCategories: [PhotoCategory] = []
+    @State private var firstCategory: PhotoCategory = PhotoCategory.defaultCategory
+    @State private var secondCategory: PhotoCategory = PhotoCategory.defaultCategory
     
     var body: some View {
         NavigationView {
@@ -57,9 +60,18 @@ struct CompareView: View {
                         
                         // Wait a bit for weight sync to complete
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            firstPhoto = viewModel.photos.first { photo in
+                            // Get all photos for this date
+                            let photosForDate = viewModel.photos.filter { photo in
                                 Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
                             }
+                            
+                            // If only one photo, select it. Otherwise, prefer default category
+                            if photosForDate.count == 1 {
+                                firstPhoto = photosForDate.first
+                            } else {
+                                firstPhoto = photosForDate.first { $0.categoryId == PhotoCategory.defaultCategory.id } ?? photosForDate.first
+                            }
+                            
                             if let selected = firstPhoto {
                                 print("[CompareView] Selected first photo - id: \(selected.id), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
                             } else {
@@ -69,7 +81,8 @@ struct CompareView: View {
                         showingFirstCalendar = false
                     },
                     minDate: nil,
-                    maxDate: secondPhoto?.captureDate
+                    maxDate: secondPhoto?.captureDate,
+                    categoryId: subscriptionManager.isPremium ? nil : PhotoCategory.defaultCategory.id  // Premium users can see all categories
                 )
             }
             .sheet(isPresented: $showingSecondCalendar) {
@@ -86,9 +99,18 @@ struct CompareView: View {
                         
                         // Wait a bit for weight sync to complete
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            secondPhoto = viewModel.photos.first { photo in
+                            // Get all photos for this date
+                            let photosForDate = viewModel.photos.filter { photo in
                                 Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
                             }
+                            
+                            // If only one photo, select it. Otherwise, prefer default category
+                            if photosForDate.count == 1 {
+                                secondPhoto = photosForDate.first
+                            } else {
+                                secondPhoto = photosForDate.first { $0.categoryId == PhotoCategory.defaultCategory.id } ?? photosForDate.first
+                            }
+                            
                             if let selected = secondPhoto {
                                 print("[CompareView] Selected second photo - id: \(selected.id), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
                             } else {
@@ -98,16 +120,23 @@ struct CompareView: View {
                         showingSecondCalendar = false
                     },
                     minDate: firstPhoto?.captureDate,
-                    maxDate: nil
+                    maxDate: nil,
+                    categoryId: subscriptionManager.isPremium ? nil : PhotoCategory.defaultCategory.id  // Premium users can see all categories
                 )
             }
         }
         .onAppear {
             print("[ComparisonView] View appeared")
             viewModel.loadPhotos()
-            // Load any photos with today's date
+            
+            // Load available categories
+            let isPremium = subscriptionManager.isPremium
+            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+            
+            // Load any photos with today's date from default category
             let today = Date()
             secondPhoto = viewModel.photos.first { photo in
+                photo.categoryId == PhotoCategory.defaultCategory.id &&
                 Calendar.current.isDate(photo.captureDate, inSameDayAs: today)
             }
         }
@@ -449,9 +478,17 @@ struct CompareView: View {
                     .font(.headline)
                     
                     if let photo = firstPhoto {
-                        Text(formatDate(photo.captureDate))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        VStack(spacing: 2) {
+                            Text(formatDate(photo.captureDate))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            if subscriptionManager.isPremium && availableCategories.count > 1,
+                               let category = availableCategories.first(where: { $0.id == photo.categoryId }) {
+                                Text(category.name)
+                                    .font(.caption2)
+                                    .foregroundColor(.bodyLapseTurquoise)
+                            }
+                        }
                     } else {
                         Text("compare.select_date".localized)
                             .font(.caption)
@@ -475,9 +512,17 @@ struct CompareView: View {
                     .font(.headline)
                     
                     if let photo = secondPhoto {
-                        Text(formatDate(photo.captureDate))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        VStack(spacing: 2) {
+                            Text(formatDate(photo.captureDate))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            if subscriptionManager.isPremium && availableCategories.count > 1,
+                               let category = availableCategories.first(where: { $0.id == photo.categoryId }) {
+                                Text(category.name)
+                                    .font(.caption2)
+                                    .foregroundColor(.bodyLapseTurquoise)
+                            }
+                        }
                     } else {
                         Text("compare.select_date".localized)
                             .font(.caption)

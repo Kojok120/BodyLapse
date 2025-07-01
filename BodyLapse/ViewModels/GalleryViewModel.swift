@@ -2,14 +2,30 @@ import Foundation
 import SwiftUI
 import Photos
 
+@MainActor
 class GalleryViewModel: ObservableObject {
     @Published var photos: [Photo] = []
     @Published var videos: [Video] = []
     @Published var selectedSection: GallerySection = .videos
+    @Published var selectedCategories: Set<String> = []
+    @Published var sortOrder: SortOrder = .newest
+    @Published var showingFilterOptions = false
     
     enum GallerySection: String, CaseIterable {
         case videos = "Videos"
         case photos = "Photos"
+    }
+    
+    enum SortOrder: String, CaseIterable {
+        case newest = "newest"
+        case oldest = "oldest"
+        
+        var localizedString: String {
+            switch self {
+            case .newest: return "gallery.filter.newest".localized
+            case .oldest: return "gallery.filter.oldest".localized
+            }
+        }
     }
     
     init() {
@@ -87,8 +103,32 @@ class GalleryViewModel: ObservableObject {
         }
     }
     
+    var filteredPhotos: [Photo] {
+        var result = photos
+        
+        // Apply category filter
+        if !selectedCategories.isEmpty {
+            result = result.filter { selectedCategories.contains($0.categoryId) }
+        }
+        
+        // Apply sort order
+        switch sortOrder {
+        case .newest:
+            result.sort { $0.captureDate > $1.captureDate }
+        case .oldest:
+            result.sort { $0.captureDate < $1.captureDate }
+        }
+        
+        return result
+    }
+    
+    var availableCategories: [PhotoCategory] {
+        let isPremium = SubscriptionManagerService.shared.isPremium
+        return CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+    }
+    
     func photosGroupedByMonth() -> [(String, [Photo])] {
-        let grouped = Dictionary(grouping: photos) { photo in
+        let grouped = Dictionary(grouping: filteredPhotos) { photo in
             formatMonthYear(from: photo.captureDate)
         }
         
@@ -97,8 +137,28 @@ class GalleryViewModel: ObservableObject {
                   let rhsDate = dateFromMonthYear(rhs.key) else {
                 return false
             }
-            return lhsDate > rhsDate
+            
+            // Sort months based on the current sort order
+            switch sortOrder {
+            case .newest:
+                return lhsDate > rhsDate
+            case .oldest:
+                return lhsDate < rhsDate
+            }
         }
+    }
+    
+    func toggleCategory(_ categoryId: String) {
+        if selectedCategories.contains(categoryId) {
+            selectedCategories.remove(categoryId)
+        } else {
+            selectedCategories.insert(categoryId)
+        }
+    }
+    
+    func clearFilters() {
+        selectedCategories.removeAll()
+        sortOrder = .newest
     }
     
     func videosGroupedByMonth() -> [(String, [Video])] {

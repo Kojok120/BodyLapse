@@ -17,6 +17,8 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var shouldBlurFace = true
     @Published var capturedPhoto: Photo?
     @Published var savedGuideline: BodyGuideline?
+    @Published var selectedCategory: PhotoCategory = PhotoCategory.defaultCategory
+    @Published var availableCategories: [PhotoCategory] = []
     
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
@@ -30,13 +32,16 @@ class CameraViewModel: NSObject, ObservableObject {
         super.init()
         setupBodyDetection()
         
-        // Load saved guideline
-        savedGuideline = GuidelineStorageService.shared.loadGuideline()
+        // Load saved guideline for default category
+        loadGuidelineForCurrentCategory()
         
         // Initialize UserSettingsManager and SubscriptionManagerService on main queue
         Task { @MainActor in
             self.userSettings = UserSettingsManager()
             self.subscriptionManager = SubscriptionManagerService.shared
+            
+            // Load available categories after subscription manager is initialized
+            self.loadCategories()
         }
         
         // Listen for guideline updates
@@ -80,7 +85,7 @@ class CameraViewModel: NSObject, ObservableObject {
     
     @objc private func reloadGuideline() {
         DispatchQueue.main.async { [weak self] in
-            self?.savedGuideline = GuidelineStorageService.shared.loadGuideline()
+            self?.loadGuidelineForCurrentCategory()
         }
     }
     
@@ -162,7 +167,7 @@ class CameraViewModel: NSObject, ObservableObject {
     }
     
     func checkAndSavePhoto(_ image: UIImage) {
-        if PhotoStorageService.shared.hasPhotoForToday() {
+        if hasPhotoForSelectedCategory() {
             DispatchQueue.main.async { [weak self] in
                 self?.showingReplaceAlert = true
             }
@@ -186,9 +191,10 @@ class CameraViewModel: NSObject, ObservableObject {
     private func saveProcessedPhoto(_ image: UIImage, wasBlurred: Bool) {
         do {
             let photo: Photo
-            if PhotoStorageService.shared.hasPhotoForToday() {
+            if hasPhotoForSelectedCategory() {
                 photo = try PhotoStorageService.shared.replacePhoto(
                     for: Date(),
+                    categoryId: selectedCategory.id,
                     with: image,
                     isFaceBlurred: wasBlurred,
                     bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil,
@@ -198,6 +204,7 @@ class CameraViewModel: NSObject, ObservableObject {
             } else {
                 photo = try PhotoStorageService.shared.savePhoto(
                     image,
+                    categoryId: selectedCategory.id,
                     isFaceBlurred: wasBlurred,
                     bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil,
                     weight: tempWeight,
@@ -346,5 +353,29 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         
         // Clear the current input reference
         currentInput = nil
+    }
+    
+    // MARK: - Category Support
+    
+    @MainActor
+    private func loadCategories() {
+        let isPremium = subscriptionManager?.isPremium ?? false
+        availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+        if !availableCategories.contains(where: { $0.id == selectedCategory.id }) {
+            selectedCategory = availableCategories.first ?? PhotoCategory.defaultCategory
+        }
+    }
+    
+    private func loadGuidelineForCurrentCategory() {
+        savedGuideline = GuidelineStorageService.shared.loadGuideline(for: selectedCategory.id)
+    }
+    
+    func selectCategory(_ category: PhotoCategory) {
+        selectedCategory = category
+        loadGuidelineForCurrentCategory()
+    }
+    
+    func hasPhotoForSelectedCategory() -> Bool {
+        return PhotoStorageService.shared.hasPhotoForToday(categoryId: selectedCategory.id)
     }
 }

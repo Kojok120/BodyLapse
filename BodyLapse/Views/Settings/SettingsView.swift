@@ -21,6 +21,23 @@ struct SettingsView: View {
         NavigationView {
             Form {
                 Section("settings.photo_settings".localized) {
+                    if subscriptionManager.isPremium {
+                        NavigationLink(destination: CategoryManagementView()) {
+                            Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
+                        }
+                    } else {
+                        Button(action: { showingPremiumUpgrade = true }) {
+                            HStack {
+                                Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
+                                Spacer()
+                                Image(systemName: "lock.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .foregroundColor(.primary)
+                    }
+                    
                     Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
                     
                     Button(action: {
@@ -194,8 +211,8 @@ struct SettingsView: View {
                 }
                 
                 Section(header: Text("settings.data".localized)) {
-                    NavigationLink(destination: ExportView()) {
-                        Label("settings.export_photos".localized, systemImage: "square.and.arrow.up")
+                    NavigationLink(destination: ImportExportView()) {
+                        Label("データのインポート/エクスポート", systemImage: "arrow.up.arrow.down.square")
                     }
                     
                     // Data clearing feature - to be implemented in future version
@@ -227,6 +244,33 @@ struct SettingsView: View {
                         Label("settings.terms_service".localized, systemImage: "doc.text")
                     }
                 }
+                
+                #if DEBUG
+                Section(header: Text("Debug Options")) {
+                    Toggle("Premium Mode", isOn: Binding(
+                        get: { subscriptionManager.isPremium },
+                        set: { _ in subscriptionManager.toggleDebugPremium() }
+                    ))
+                    
+                    HStack {
+                        Text("Subscription Status")
+                        Spacer()
+                        Text(subscriptionManager.subscriptionStatusDescription)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if subscriptionManager.isPremium {
+                        HStack {
+                            Text("Expiration Date")
+                            Spacer()
+                            if let date = subscriptionManager.expirationDate {
+                                Text(date, style: .date)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                #endif
             }
             .navigationTitle("settings.title".localized)
             .sheet(isPresented: $showingAbout) {

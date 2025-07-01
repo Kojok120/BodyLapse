@@ -104,39 +104,51 @@ struct GalleryView: View {
     }
     
     private var photosSection: some View {
-        ScrollView {
-            if viewModel.photos.isEmpty {
-                emptyStateView(message: "gallery.no_photos".localized, icon: "photo")
-            } else {
-                LazyVStack(pinnedViews: .sectionHeaders) {
-                    ForEach(viewModel.photosGroupedByMonth(), id: \.0) { month, photos in
-                        Section(header: sectionHeader(title: month)) {
-                            LazyVGrid(columns: columns, spacing: 2) {
-                                ForEach(photos) { photo in
-                                    PhotoGridItem(photo: photo) {
-                                        selectedPhoto = photo
-                                    } onDelete: {
-                                        itemToDelete = photo
-                                        showingDeleteAlert = true
-                                    } onSave: {
-                                        savePhoto(photo)
-                                    } onShare: {
-                                        sharePhoto(photo)
+        VStack(spacing: 0) {
+            // Filter toolbar
+            if !viewModel.photos.isEmpty {
+                filterToolbar
+            }
+            
+            ScrollView {
+                if viewModel.photos.isEmpty {
+                    emptyStateView(message: "gallery.no_photos".localized, icon: "photo")
+                } else if viewModel.filteredPhotos.isEmpty {
+                    emptyStateView(message: "フィルター条件に一致する写真がありません", icon: "photo.on.rectangle.angled")
+                } else {
+                    LazyVStack(pinnedViews: .sectionHeaders) {
+                        ForEach(viewModel.photosGroupedByMonth(), id: \.0) { month, photos in
+                            Section(header: sectionHeader(title: month)) {
+                                LazyVGrid(columns: columns, spacing: 2) {
+                                    ForEach(photos) { photo in
+                                        PhotoGridItem(photo: photo) {
+                                            selectedPhoto = photo
+                                        } onDelete: {
+                                            itemToDelete = photo
+                                            showingDeleteAlert = true
+                                        } onSave: {
+                                            savePhoto(photo)
+                                        } onShare: {
+                                            sharePhoto(photo)
+                                        }
                                     }
                                 }
-                            }
-                            .padding(.horizontal, 2)
-                            
-                            // Add divider between month sections
-                            if viewModel.photosGroupedByMonth().last?.0 != month {
-                                Divider()
-                                    .background(Color.bodyLapseLightGray)
-                                    .padding(.vertical, 8)
+                                .padding(.horizontal, 2)
+                                
+                                // Add divider between month sections
+                                if viewModel.photosGroupedByMonth().last?.0 != month {
+                                    Divider()
+                                        .background(Color.bodyLapseLightGray)
+                                        .padding(.vertical, 8)
+                                }
                             }
                         }
                     }
                 }
             }
+        }
+        .sheet(isPresented: $viewModel.showingFilterOptions) {
+            FilterOptionsView(viewModel: viewModel)
         }
     }
     
@@ -274,6 +286,118 @@ struct GalleryView: View {
     private func shareVideo(_ video: Video) {
         itemToShare = [video.fileURL]
         showingShareSheet = true
+    }
+    
+    private var filterToolbar: some View {
+        HStack {
+            Button(action: {
+                viewModel.showingFilterOptions = true
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                    Text("gallery.filter".localized)
+                    if !viewModel.selectedCategories.isEmpty || viewModel.sortOrder != .newest {
+                        Text("(\(getActiveFilterCount()))")
+                            .font(.caption)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.bodyLapseTurquoise)
+                            .cornerRadius(10)
+                    }
+                }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.primary)
+            }
+            
+            Spacer()
+            
+            Text(String(format: "gallery.photos_count".localized, viewModel.filteredPhotos.count))
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color(UIColor.secondarySystemBackground))
+    }
+    
+    private func getActiveFilterCount() -> Int {
+        var count = 0
+        if !viewModel.selectedCategories.isEmpty {
+            count += 1
+        }
+        if viewModel.sortOrder != .newest {
+            count += 1
+        }
+        return count
+    }
+}
+
+struct FilterOptionsView: View {
+    @ObservedObject var viewModel: GalleryViewModel
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("gallery.filter.category".localized) {
+                    if viewModel.availableCategories.count > 1 && SubscriptionManagerService.shared.isPremium {
+                        ForEach(viewModel.availableCategories) { category in
+                            HStack {
+                                Text(category.name)
+                                Spacer()
+                                if viewModel.selectedCategories.contains(category.id) {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.bodyLapseTurquoise)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                viewModel.toggleCategory(category.id)
+                            }
+                        }
+                    } else {
+                        Text("gallery.filter.all_categories".localized)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Section("gallery.filter.sort".localized) {
+                    ForEach(GalleryViewModel.SortOrder.allCases, id: \.self) { order in
+                        HStack {
+                            Text(order.localizedString)
+                            Spacer()
+                            if viewModel.sortOrder == order {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.bodyLapseTurquoise)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            viewModel.sortOrder = order
+                        }
+                    }
+                }
+                
+                Section {
+                    Button(action: {
+                        viewModel.clearFilters()
+                    }) {
+                        Text("gallery.filter.reset".localized)
+                            .foregroundColor(.red)
+                    }
+                }
+            }
+            .navigationTitle("gallery.filter".localized)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("common.done".localized) {
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 

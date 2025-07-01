@@ -20,6 +20,8 @@ struct CalendarView: View {
     @State private var showingVideoAlert = false
     @State private var videoAlertMessage = ""
     @State private var selectedChartDate: Date? = nil
+    @State private var showingMemoEditor = false
+    @State private var currentMemo: String = ""
     
     enum TimePeriod: String, CaseIterable {
         case week = "7 Days"
@@ -103,6 +105,18 @@ struct CalendarView: View {
         }
         .sheet(isPresented: $showingDatePicker) {
             datePickerSheet
+        }
+        .sheet(isPresented: $showingMemoEditor) {
+            MemoEditorView(
+                date: selectedDate,
+                initialContent: currentMemo,
+                onSave: { content in
+                    viewModel.saveNote(content: content, for: selectedDate)
+                },
+                onDelete: {
+                    viewModel.deleteNote(for: selectedDate)
+                }
+            )
         }
         .alert("calendar.video_generation".localized, isPresented: $showingVideoAlert) {
             Button("common.ok".localized) { }
@@ -289,26 +303,33 @@ struct CalendarView: View {
                     .padding(.top, 20)
                 
                 // Legend
-                HStack(spacing: 20) {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(Color(red: 0, green: 0.7, blue: 0.8)) // Turquoise blue
-                            .frame(width: 8, height: 8)
-                        Text("calendar.has_photo".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    if subscriptionManager.isPremium {
+                VStack(spacing: 8) {
+                    HStack(spacing: 20) {
                         HStack(spacing: 4) {
                             Circle()
-                                .fill(Color.bodyLapseYellow)
+                                .fill(Color(red: 0, green: 0.7, blue: 0.8)) // Turquoise blue
                                 .frame(width: 8, height: 8)
-                            Text("calendar.has_data".localized)
+                            Text("calendar.has_photo".localized)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+                        
+                        if subscriptionManager.isPremium {
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(Color.bodyLapseYellow)
+                                    .frame(width: 8, height: 8)
+                                Text("データあり")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
+                    
+                    Text("※データには体重・体脂肪率・メモが含まれます")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .italic()
                 }
                 .padding(.horizontal)
                 
@@ -365,6 +386,7 @@ struct CalendarView: View {
         let calendar = Calendar.current
         var dataDates = Set<Date>()
         
+        // Weight and body fat entries
         for entry in weightViewModel.weightEntries {
             if entry.weight > 0 || entry.bodyFatPercentage != nil {
                 if let date = calendar.dateInterval(of: .day, for: entry.date)?.start {
@@ -373,72 +395,105 @@ struct CalendarView: View {
             }
         }
         
+        // Memo entries
+        for note in viewModel.dailyNotes.values {
+            if let date = calendar.dateInterval(of: .day, for: note.date)?.start {
+                dataDates.insert(date)
+            }
+        }
+        
         return dataDates
     }
     
     private var headerView: some View {
-        HStack {
-            HStack(spacing: 8) {
-                Button(action: {
-                    showingPeriodPicker = true
-                }) {
-                    HStack {
-                        Text(selectedPeriod.localizedString)
-                            .font(.system(size: 16, weight: .medium))
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 12))
+        VStack(spacing: 12) {
+            // Category selection (Premium feature)
+            if subscriptionManager.isPremium && viewModel.availableCategories.count > 1 {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(viewModel.availableCategories) { category in
+                            Button(action: {
+                                viewModel.selectCategory(category)
+                                updateCurrentPhoto()
+                            }) {
+                                Text(category.name)
+                                    .font(.system(size: 14, weight: viewModel.selectedCategory.id == category.id ? .semibold : .regular))
+                                    .foregroundColor(viewModel.selectedCategory.id == category.id ? .white : .primary)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .fill(viewModel.selectedCategory.id == category.id ? Color.bodyLapseTurquoise : Color(UIColor.secondarySystemBackground))
+                                    )
+                            }
+                        }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(8)
+                    .padding(.horizontal)
                 }
-                
-                Button(action: {
-                    showingDatePicker = true
-                }) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 18))
-                        .foregroundColor(.primary)
-                        .padding(8)
+            }
+            
+            HStack {
+                HStack(spacing: 8) {
+                    Button(action: {
+                        showingPeriodPicker = true
+                    }) {
+                        HStack {
+                            Text(selectedPeriod.localizedString)
+                                .font(.system(size: 16, weight: .medium))
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 12))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
                         .background(Color(UIColor.secondarySystemBackground))
                         .cornerRadius(8)
+                    }
+                    
+                    Button(action: {
+                        showingDatePicker = true
+                    }) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 18))
+                            .foregroundColor(.primary)
+                            .padding(8)
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(8)
+                    }
                 }
-            }
-            .actionSheet(isPresented: $showingPeriodPicker) {
-                ActionSheet(
-                    title: Text("calendar.select_time_period".localized),
-                    buttons: TimePeriod.allCases.map { period in
-                        .default(Text(period.localizedString)) {
-                            selectedPeriod = period
-                            selectedIndex = dateRange.count - 1
-                            selectedDate = dateRange[selectedIndex]
-                            selectedChartDate = dateRange[selectedIndex]  // Sync chart selection
-                        }
-                    } + [.cancel()]
-                )
-            }
-            
-            Spacer()
-            
-            Button(action: {
-                showingVideoGeneration = true
-            }) {
-                HStack {
-                    Image(systemName: "video.fill")
-                    Text("calendar.generate".localized)
+                .actionSheet(isPresented: $showingPeriodPicker) {
+                    ActionSheet(
+                        title: Text("calendar.select_time_period".localized),
+                        buttons: TimePeriod.allCases.map { period in
+                            .default(Text(period.localizedString)) {
+                                selectedPeriod = period
+                                selectedIndex = dateRange.count - 1
+                                selectedDate = dateRange[selectedIndex]
+                                selectedChartDate = dateRange[selectedIndex]  // Sync chart selection
+                            }
+                        } + [.cancel()]
+                    )
                 }
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.black)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.bodyLapseYellow)
-                .cornerRadius(20)
+                
+                Spacer()
+                
+                Button(action: {
+                    showingVideoGeneration = true
+                }) {
+                    HStack {
+                        Image(systemName: "video.fill")
+                        Text("calendar.generate".localized)
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.bodyLapseYellow)
+                    .cornerRadius(20)
+                }
+                .disabled(isGeneratingVideo)
             }
-            .disabled(isGeneratingVideo)
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
     }
     
     private var photoPreviewSection: some View {
@@ -451,27 +506,119 @@ struct CalendarView: View {
                     .padding(.top, 8)
             }
             
+            // Memo display if exists
+            if !currentMemo.isEmpty {
+                HStack {
+                    Image(systemName: "note.text")
+                        .font(.caption)
+                        .foregroundColor(.bodyLapseTurquoise)
+                    Text(currentMemo)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color(UIColor.secondarySystemBackground))
+                .cornerRadius(8)
+                .onTapGesture {
+                    showingMemoEditor = true
+                }
+            }
+            
             GeometryReader { geometry in
                 if let photo = currentPhoto,
                    let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
-                    VStack {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: geometry.size.width)
-                            .cornerRadius(12)
+                    ZStack {
+                        VStack {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: geometry.size.width)
+                                .cornerRadius(12)
+                        }
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        
+                        // Memo indicator and button
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                Button(action: {
+                                    showingMemoEditor = true
+                                }) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: currentMemo.isEmpty ? "note.text.badge.plus" : "note.text")
+                                            .font(.system(size: 16))
+                                        if !currentMemo.isEmpty {
+                                            Text("メモ")
+                                                .font(.caption)
+                                                .fontWeight(.medium)
+                                        }
+                                    }
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        Color.black.opacity(0.7)
+                                            .overlay(
+                                                currentMemo.isEmpty ? nil : Color.bodyLapseTurquoise.opacity(0.3)
+                                            )
+                                    )
+                                    .cornerRadius(20)
+                                }
+                                .padding(.trailing, 8)
+                                .padding(.bottom, 8)
+                            }
+                        }
                     }
-                    .frame(width: geometry.size.width, height: geometry.size.height)
                 } else {
-                    VStack(spacing: 20) {
-                        Image(systemName: "photo")
-                            .font(.system(size: 60))
-                            .foregroundColor(.gray)
-                        Text("calendar.no_photo".localized)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                    ZStack {
+                        VStack(spacing: 20) {
+                            Image(systemName: "photo")
+                                .font(.system(size: 60))
+                                .foregroundColor(.gray)
+                            Text("calendar.no_photo".localized)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        
+                        // Memo button even when no photo
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                Button(action: {
+                                    showingMemoEditor = true
+                                }) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: currentMemo.isEmpty ? "note.text.badge.plus" : "note.text")
+                                            .font(.system(size: 16))
+                                        if !currentMemo.isEmpty {
+                                            Text("メモ")
+                                                .font(.caption)
+                                                .fontWeight(.medium)
+                                        }
+                                    }
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        Color.black.opacity(0.7)
+                                            .overlay(
+                                                currentMemo.isEmpty ? nil : Color.bodyLapseTurquoise.opacity(0.3)
+                                            )
+                                    )
+                                    .cornerRadius(20)
+                                }
+                                .padding(.trailing, 8)
+                                .padding(.bottom, 8)
+                            }
+                        }
                     }
-                    .frame(width: geometry.size.width, height: geometry.size.height)
                 }
             }
             .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
@@ -497,6 +644,7 @@ struct CalendarView: View {
                             let hasPhoto = viewModel.photos.contains { photo in
                                 Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
                             }
+                            let hasNote = viewModel.note(for: date) != nil
                             
                             Rectangle()
                                 .fill(hasPhoto ? Color.accentColor : Color.clear)
@@ -504,6 +652,18 @@ struct CalendarView: View {
                                 .overlay(
                                     Rectangle()
                                         .stroke(Color(UIColor.systemGray4), lineWidth: 0.5)
+                                )
+                                .overlay(
+                                    // Memo indicator dot
+                                    VStack {
+                                        if hasNote {
+                                            Circle()
+                                                .fill(Color.bodyLapseTurquoise)
+                                                .frame(width: 4, height: 4)
+                                                .padding(.top, 4)
+                                        }
+                                        Spacer()
+                                    }
                                 )
                         }
                     }
@@ -658,9 +818,8 @@ struct CalendarView: View {
     }
     
     private func updateCurrentPhoto() {
-        currentPhoto = viewModel.photos.first { photo in
-            Calendar.current.isDate(photo.captureDate, inSameDayAs: selectedDate)
-        }
+        currentPhoto = viewModel.photo(for: selectedDate)
+        currentMemo = viewModel.note(for: selectedDate)?.content ?? ""
     }
     
     private func generateVideo(with options: VideoGenerationService.VideoGenerationOptions) {
@@ -916,6 +1075,9 @@ struct VideoGenerationView: View {
     @State private var selectedSpeed: VideoSpeed = .normal
     @State private var selectedQuality: VideoQuality = .high
     @State private var enableFaceBlur = false
+    @State private var videoLayout: VideoGenerationService.VideoGenerationOptions.VideoLayout = .single
+    @State private var selectedCategories: Set<String> = []
+    @State private var availableCategories: [PhotoCategory] = []
     
     enum VideoSpeed: String, CaseIterable {
         case slow = "Slow (0.5s/frame)"
@@ -1006,6 +1168,38 @@ struct VideoGenerationView: View {
                     }
                     
                     Toggle("calendar.blur_faces".localized, isOn: $enableFaceBlur)
+                    
+                    // Video layout selection - Premium feature
+                    if subscriptionManager.isPremium && availableCategories.count > 1 {
+                        Picker("video.layout".localized, selection: $videoLayout) {
+                            Text("video.layout.single".localized).tag(VideoGenerationService.VideoGenerationOptions.VideoLayout.single)
+                            Text("video.layout.sidebyside".localized).tag(VideoGenerationService.VideoGenerationOptions.VideoLayout.sideBySide)
+                        }
+                        
+                        // Category selection for side-by-side
+                        if videoLayout == .sideBySide {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("video.category.select".localized)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                ForEach(availableCategories) { category in
+                                    HStack {
+                                        Text(category.name)
+                                        Spacer()
+                                        if selectedCategories.contains(category.id) {
+                                            Image(systemName: "checkmark")
+                                                .foregroundColor(.bodyLapseTurquoise)
+                                        }
+                                    }
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        toggleCategory(category.id)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 if !subscriptionManager.isPremium {
@@ -1047,7 +1241,9 @@ struct VideoGenerationView: View {
                             videoSize: selectedQuality.videoSize,
                             addWatermark: !subscriptionManager.isPremium,
                             transitionStyle: .fade,
-                            blurFaces: enableFaceBlur
+                            blurFaces: enableFaceBlur,
+                            layout: videoLayout,
+                            selectedCategories: Array(selectedCategories)
                         )
                         
                         // Show interstitial ad for free users
@@ -1092,6 +1288,16 @@ struct VideoGenerationView: View {
                 }
             }
         }
+        .onAppear {
+            // Load available categories
+            let isPremium = subscriptionManager.isPremium
+            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+            
+            // Select default category for single layout
+            if let defaultCategory = availableCategories.first {
+                selectedCategories.insert(defaultCategory.id)
+            }
+        }
     }
     
     private func countPhotosInRange() -> Int {
@@ -1128,6 +1334,20 @@ struct VideoGenerationView: View {
         } else {
             formatter.dateFormat = "MMM d, yyyy"
             return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+        }
+    }
+    
+    private func toggleCategory(_ categoryId: String) {
+        if selectedCategories.contains(categoryId) {
+            // Don't allow removing if it's the only selected category
+            if selectedCategories.count > 1 {
+                selectedCategories.remove(categoryId)
+            }
+        } else {
+            // Limit to 4 categories
+            if selectedCategories.count < 4 {
+                selectedCategories.insert(categoryId)
+            }
         }
     }
 }

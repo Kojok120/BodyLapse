@@ -103,6 +103,7 @@
 /* Settings View */
 "settings.title" = "設定";
 "settings.photo_settings" = "写真設定";
+"settings.category_management" = "カテゴリ管理";
 "settings.show_guidelines" = "ボディガイドラインを表示";
 "settings.reset_guideline" = "ボディガイドラインをリセット";
 "settings.set_guideline" = "ボディガイドラインを設定";
@@ -287,3 +288,76 @@
 /* Reset Guideline */
 "reset_guideline.instruction" = "新しい写真を撮ってビジュアルガイドラインを更新してください";
 "reset_guideline.success_message" = "ビジュアルガイドラインが正常に更新されました！";
+
+/* Category Management */
+"category.management.title" = "カテゴリ管理";
+"category.management.list_header" = "カテゴリ一覧";
+"category.management.list_footer" = "最大%d個のカテゴリを登録できます（正面＋カスタム%d個）";
+"category.management.add_category" = "カテゴリを追加";
+"category.management.new_category" = "新しいカテゴリ";
+"category.management.add" = "追加";
+"category.management.edit" = "カテゴリを編集";
+"category.management.edit_name" = "カテゴリ名を編集";
+"category.management.category_name" = "カテゴリ名";
+"category.management.example" = "例：横向き、背面、筋肉など";
+"category.management.delete_title" = "カテゴリを削除";
+"category.management.delete_message" = "カテゴリ「%@」を削除しますか？\nこのカテゴリの写真は削除されません。";
+"category.management.delete" = "削除";
+"category.management.add_failed" = "カテゴリの追加に失敗しました";
+"category.management.default" = "デフォルト";
+"category.management.guideline_set" = "ガイドライン設定済み";
+"category.management.edit_name_action" = "名前を編集";
+"category.management.set_guideline" = "ガイドラインを設定";
+
+/* Premium Category Feature */
+"category.premium.title" = "複数カテゴリ機能";
+"category.premium.description" = "プレミアムプランで最大4つのカテゴリを作成し、\n写真を整理して管理できます";
+"category.premium.feature1" = "複数アングルの同時管理";
+"category.premium.feature2" = "カテゴリ別ガイドライン設定";
+"category.premium.feature3" = "サイドバイサイド動画生成";
+"category.premium.feature4" = "カテゴリ別フィルタリング";
+"category.premium.upgrade" = "プレミアムにアップグレード";
+
+/* Video Generation */
+"video.layout" = "レイアウト";
+"video.layout.single" = "シングル";
+"video.layout.sidebyside" = "サイドバイサイド";
+"video.category.select" = "カテゴリ選択（最大4つ）";
+
+/* Gallery Filter */
+"gallery.filter" = "フィルター";
+"gallery.filter.category" = "カテゴリ";
+"gallery.filter.sort" = "並び替え";
+"gallery.filter.newest" = "新しい順";
+"gallery.filter.oldest" = "古い順";
+"gallery.filter.all_categories" = "すべてのカテゴリ";
+"gallery.filter.reset" = "フィルターをリセット";
+"gallery.photos_count" = "%d枚";
+
+/* Import/Export */
+"import_export.title" = "データのインポート/エクスポート";
+"import_export.export" = "エクスポート";
+"import_export.import" = "インポート";
+"import_export.export_data" = "データをエクスポート";
+"import_export.export_description" = "写真、動画、設定をバックアップ";
+"import_export.import_data" = "データをインポート";
+"import_export.import_description" = "バックアップからデータを復元";
+"import_export.import_footer" = "BodyLapseエクスポートファイル（.bodylapse）のみインポート可能です";
+"import_export.export_completed" = "エクスポート完了";
+"import_export.export_completed_message" = "データのエクスポートが完了しました";
+"import_export.import_completed" = "インポート完了";
+"import_export.import_summary" = "インポートが完了しました：\n\n写真: %d枚\n動画: %d本\nカテゴリ: %d個\n体重データ: %d件\nメモ: %d件";
+"import_export.data_types" = "データタイプ";
+"import_export.photos" = "写真";
+"import_export.videos" = "動画";
+"import_export.weight_data" = "体重・体脂肪率データ";
+"import_export.notes" = "メモ";
+"import_export.settings" = "設定";
+"import_export.period" = "期間";
+"import_export.specify_period" = "期間を指定";
+"import_export.start_date" = "開始日";
+"import_export.end_date" = "終了日";
+"import_export.categories" = "カテゴリ";
+"import_export.select_all" = "すべて選択";
+"import_export.single_category" = "カテゴリは1つのみです";
+"import_export.export_options" = "エクスポートオプション";
