@@ -86,6 +86,18 @@ struct CameraView: View {
                     }
                     
                     HStack {
+                        // Debug date picker
+                        #if DEBUG
+                        if userSettings.settings.debugAllowPastDatePhotos {
+                            DatePicker("", selection: $viewModel.debugSelectedDate, displayedComponents: .date)
+                                .datePickerStyle(.compact)
+                                .labelsHidden()
+                                .background(Color.black.opacity(0.6))
+                                .cornerRadius(8)
+                                .padding(.leading, 20)
+                        }
+                        #endif
+                        
                         Spacer()
                         
                         // Camera switch button

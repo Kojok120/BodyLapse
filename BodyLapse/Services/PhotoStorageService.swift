@@ -111,6 +111,16 @@ class PhotoStorageService {
         }
     }
     
+    func hasPhotoForDate(_ date: Date, categoryId: String = PhotoCategory.defaultCategory.id) -> Bool {
+        let calendar = Calendar.current
+        let targetDay = calendar.startOfDay(for: date)
+        
+        return photos.contains { photo in
+            photo.categoryId == categoryId &&
+            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
+        }
+    }
+    
     func getPhotoForDate(_ date: Date, categoryId: String? = nil) -> Photo? {
         let calendar = Calendar.current
         let targetDay = calendar.startOfDay(for: date)

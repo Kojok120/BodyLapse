@@ -15,6 +15,11 @@ struct UserSettings: Codable {
     var appLockMethod: AppLockMethod = .biometric
     var appPasscode: String?
     
+    // Debug settings
+    #if DEBUG
+    var debugAllowPastDatePhotos: Bool = false
+    #endif
+    
     enum WeightUnit: String, Codable, CaseIterable {
         case kg = "Kilograms"
         case lbs = "Pounds"

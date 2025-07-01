@@ -20,6 +20,10 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var selectedCategory: PhotoCategory = PhotoCategory.defaultCategory
     @Published var availableCategories: [PhotoCategory] = []
     
+    #if DEBUG
+    @Published var debugSelectedDate: Date = Date()
+    #endif
+    
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
     private var bodyDetectionRequest: VNDetectHumanBodyPoseRequest?
@@ -200,6 +204,7 @@ class CameraViewModel: NSObject, ObservableObject {
         output.capturePhoto(with: settings, delegate: self)
     }
     
+    @MainActor
     func checkAndSavePhoto(_ image: UIImage) {
         if hasPhotoForSelectedCategory() {
             DispatchQueue.main.async { [weak self] in
@@ -217,16 +222,24 @@ class CameraViewModel: NSObject, ObservableObject {
         }
     }
     
+    @MainActor
     func savePhoto(_ image: UIImage) {
         // Always save without face blur - face blur is only for video generation
         saveProcessedPhoto(image, wasBlurred: false)
     }
     
+    @MainActor
     private func saveProcessedPhoto(_ image: UIImage, wasBlurred: Bool) {
         do {
+            #if DEBUG
+            let saveDate = UserSettingsManager.shared.settings.debugAllowPastDatePhotos ? debugSelectedDate : Date()
+            #else
+            let saveDate = Date()
+            #endif
+            
             if hasPhotoForSelectedCategory() {
                 _ = try PhotoStorageService.shared.replacePhoto(
-                    for: Date(),
+                    for: saveDate,
                     categoryId: selectedCategory.id,
                     with: image,
                     isFaceBlurred: wasBlurred,
@@ -237,6 +250,7 @@ class CameraViewModel: NSObject, ObservableObject {
             } else {
                 _ = try PhotoStorageService.shared.savePhoto(
                     image,
+                    captureDate: saveDate,
                     categoryId: selectedCategory.id,
                     isFaceBlurred: wasBlurred,
                     bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil,
@@ -435,7 +449,13 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         }
     }
     
+    @MainActor
     func hasPhotoForSelectedCategory() -> Bool {
+        #if DEBUG
+        if UserSettingsManager.shared.settings.debugAllowPastDatePhotos {
+            return PhotoStorageService.shared.hasPhotoForDate(debugSelectedDate, categoryId: selectedCategory.id)
+        }
+        #endif
         return PhotoStorageService.shared.hasPhotoForToday(categoryId: selectedCategory.id)
     }
 }

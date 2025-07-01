@@ -537,94 +537,24 @@ struct CalendarView: View {
             GeometryReader { geometry in
                 if let photo = currentPhoto,
                    let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
-                    ZStack {
-                        VStack {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: geometry.size.width)
-                                .cornerRadius(12)
-                        }
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                        
-                        // Memo indicator and button
-                        VStack {
-                            Spacer()
-                            HStack {
-                                Spacer()
-                                Button(action: {
-                                    showingMemoEditor = true
-                                }) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: currentMemo.isEmpty ? "note.text.badge.plus" : "note.text")
-                                            .font(.system(size: 16))
-                                        if !currentMemo.isEmpty {
-                                            Text("メモ")
-                                                .font(.caption)
-                                                .fontWeight(.medium)
-                                        }
-                                    }
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(
-                                        Color.black.opacity(0.7)
-                                            .overlay(
-                                                currentMemo.isEmpty ? nil : Color.bodyLapseTurquoise.opacity(0.3)
-                                            )
-                                    )
-                                    .cornerRadius(20)
-                                }
-                                .padding(.trailing, 8)
-                                .padding(.bottom, 8)
-                            }
-                        }
+                    VStack {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: geometry.size.width)
+                            .cornerRadius(12)
                     }
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                 } else {
-                    ZStack {
-                        VStack(spacing: 20) {
-                            Image(systemName: "photo")
-                                .font(.system(size: 60))
-                                .foregroundColor(.gray)
-                            Text("calendar.no_photo".localized)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                        
-                        // Memo button even when no photo
-                        VStack {
-                            Spacer()
-                            HStack {
-                                Spacer()
-                                Button(action: {
-                                    showingMemoEditor = true
-                                }) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: currentMemo.isEmpty ? "note.text.badge.plus" : "note.text")
-                                            .font(.system(size: 16))
-                                        if !currentMemo.isEmpty {
-                                            Text("メモ")
-                                                .font(.caption)
-                                                .fontWeight(.medium)
-                                        }
-                                    }
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(
-                                        Color.black.opacity(0.7)
-                                            .overlay(
-                                                currentMemo.isEmpty ? nil : Color.bodyLapseTurquoise.opacity(0.3)
-                                            )
-                                    )
-                                    .cornerRadius(20)
-                                }
-                                .padding(.trailing, 8)
-                                .padding(.bottom, 8)
-                            }
-                        }
+                    VStack(spacing: 20) {
+                        Image(systemName: "photo")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                        Text("calendar.no_photo".localized)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                 }
             }
             .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)

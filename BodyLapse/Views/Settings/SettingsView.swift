@@ -60,9 +60,12 @@ struct SettingsView: View {
                         }
                     }
                     
-                    Picker("settings.weight_unit".localized, selection: $userSettings.settings.weightUnit) {
-                        ForEach(UserSettings.WeightUnit.allCases, id: \.self) { unit in
-                            Text(unit.rawValue).tag(unit)
+                    // Weight Unit - only for premium users
+                    if subscriptionManager.isPremium {
+                        Picker("settings.weight_unit".localized, selection: $userSettings.settings.weightUnit) {
+                            ForEach(UserSettings.WeightUnit.allCases, id: \.self) { unit in
+                                Text(unit.rawValue).tag(unit)
+                            }
                         }
                     }
                     
@@ -254,6 +257,8 @@ struct SettingsView: View {
                         get: { subscriptionManager.isPremium },
                         set: { _ in subscriptionManager.toggleDebugPremium() }
                     ))
+                    
+                    Toggle("Allow Past Date Photos", isOn: $userSettings.settings.debugAllowPastDatePhotos)
                     
                     HStack {
                         Text("Subscription Status")
