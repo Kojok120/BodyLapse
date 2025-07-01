@@ -219,6 +219,8 @@
 "onboarding.premium.subtitle" = "Lleva tu viaje fitness al siguiente nivel con herramientas exclusivas";
 "onboarding.premium.metrics.title" = "Rastrea Tus Métricas";
 "onboarding.premium.metrics.description" = "Monitorea peso y porcentaje de grasa corporal con gráficos detallados";
+"onboarding.premium.advanced_tracking.title" = "Seguimiento Fotográfico Avanzado";
+"onboarding.premium.advanced_tracking.description" = "Captura múltiples fotos diarias en 4 ángulos diferentes";
 "onboarding.premium.nowatermark.title" = "Videos Sin Marca de Agua";
 "onboarding.premium.nowatermark.description" = "Crea videos time-lapse profesionales sin marcas de agua";
 "onboarding.premium.noads.title" = "Experiencia Sin Anuncios";
@@ -245,6 +247,8 @@
 "premium.subtitle" = "Desbloquea todas las funciones y rastrea tu viaje";
 "premium.feature.tracking" = "Seguimiento de Peso y Grasa Corporal";
 "premium.feature.tracking_desc" = "Rastrea tu progreso con gráficos detallados";
+"premium.feature.advanced_tracking" = "Seguimiento Fotográfico Avanzado";
+"premium.feature.advanced_tracking_desc" = "Rastrea 4 ángulos con múltiples fotos diarias";
 "premium.feature.no_ads" = "Sin Anuncios";
 "premium.feature.no_ads_desc" = "Disfruta de una experiencia sin anuncios";
 "premium.feature.no_watermark" = "Sin Marca de Agua";

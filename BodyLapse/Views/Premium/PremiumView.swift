@@ -73,6 +73,12 @@ struct PremiumView: View {
                             )
                             
                             PremiumFeatureRowView(
+                                icon: "photo.stack.badge.plus",
+                                title: "premium.feature.advanced_tracking".localized,
+                                description: "premium.feature.advanced_tracking_desc".localized
+                            )
+                            
+                            PremiumFeatureRowView(
                                 icon: "xmark.circle.fill",
                                 title: "premium.feature.no_ads".localized,
                                 description: "premium.feature.no_ads_desc".localized

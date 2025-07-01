@@ -219,6 +219,8 @@
 "onboarding.premium.subtitle" = "Take your fitness journey to the next level with exclusive tools";
 "onboarding.premium.metrics.title" = "Track Your Metrics";
 "onboarding.premium.metrics.description" = "Monitor weight and body fat percentage with detailed charts";
+"onboarding.premium.advanced_tracking.title" = "Advanced Photo Tracking";
+"onboarding.premium.advanced_tracking.description" = "Capture multiple photos daily across 4 different angles";
 "onboarding.premium.nowatermark.title" = "Watermark-Free Videos";
 "onboarding.premium.nowatermark.description" = "Create professional time-lapse videos without watermarks";
 "onboarding.premium.noads.title" = "Ad-Free Experience";
@@ -245,6 +247,8 @@
 "premium.subtitle" = "Unlock all features and track your journey";
 "premium.feature.tracking" = "Weight & Body Fat Tracking";
 "premium.feature.tracking_desc" = "Track your progress with detailed charts";
+"premium.feature.advanced_tracking" = "Advanced Photo Tracking";
+"premium.feature.advanced_tracking_desc" = "Track 4 angles with multiple photos daily";
 "premium.feature.no_ads" = "No Ads";
 "premium.feature.no_ads_desc" = "Enjoy an ad-free experience";
 "premium.feature.no_watermark" = "No Watermark";

@@ -217,6 +217,8 @@
 "onboarding.premium.subtitle" = "専用ツールでフィットネスの旅を次のレベルへ";
 "onboarding.premium.metrics.title" = "メトリクスを追跡";
 "onboarding.premium.metrics.description" = "詳細なチャートで体重と体脂肪率をモニター";
+"onboarding.premium.advanced_tracking.title" = "高度な写真追跡";
+"onboarding.premium.advanced_tracking.description" = "4つの異なるアングルで1日複数枚の写真を撮影";
 "onboarding.premium.nowatermark.title" = "ウォーターマークなしの動画";
 "onboarding.premium.nowatermark.description" = "ウォーターマークなしでプロフェッショナルなタイムラプス動画を作成";
 "onboarding.premium.noads.title" = "広告なしの体験";
@@ -243,6 +245,8 @@
 "premium.subtitle" = "すべての機能をアンロックして進捗を追跡";
 "premium.feature.tracking" = "体重&体脂肪追跡";
 "premium.feature.tracking_desc" = "詳細なチャートで進捗を追跡";
+"premium.feature.advanced_tracking" = "高度な写真追跡";
+"premium.feature.advanced_tracking_desc" = "4アングルで1日複数枚の写真を追跡";
 "premium.feature.no_ads" = "広告なし";
 "premium.feature.no_ads_desc" = "広告のない体験を楽しむ";
 "premium.feature.no_watermark" = "ウォーターマークなし";

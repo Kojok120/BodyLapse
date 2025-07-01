@@ -219,6 +219,8 @@
 "onboarding.premium.subtitle" = "독점 도구로 피트니스 여정을 한 단계 업그레이드하세요";
 "onboarding.premium.metrics.title" = "측정값 추적";
 "onboarding.premium.metrics.description" = "상세한 차트로 체중과 체지방률 모니터링";
+"onboarding.premium.advanced_tracking.title" = "고급 사진 추적";
+"onboarding.premium.advanced_tracking.description" = "4개의 다른 각도에서 일일 다중 사진 촬영";
 "onboarding.premium.nowatermark.title" = "워터마크 없는 비디오";
 "onboarding.premium.nowatermark.description" = "워터마크 없이 전문적인 타임랩스 비디오 제작";
 "onboarding.premium.noads.title" = "광고 없는 경험";
@@ -245,6 +247,8 @@
 "premium.subtitle" = "모든 기능을 잠금 해제하고 여정을 추적하세요";
 "premium.feature.tracking" = "체중 & 체지방 추적";
 "premium.feature.tracking_desc" = "상세한 차트로 진행 상황 추적";
+"premium.feature.advanced_tracking" = "고급 사진 추적";
+"premium.feature.advanced_tracking_desc" = "4개 각도에서 일일 다중 사진 추적";
 "premium.feature.no_ads" = "광고 없음";
 "premium.feature.no_ads_desc" = "광고 없는 경험을 즐기세요";
 "premium.feature.no_watermark" = "워터마크 없음";

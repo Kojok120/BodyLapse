@@ -378,6 +378,12 @@ struct OnboardingView: View {
                 )
                 
                 premiumFeatureItem(
+                    icon: "photo.stack.badge.plus",
+                    title: "onboarding.premium.advanced_tracking.title".localized,
+                    description: "onboarding.premium.advanced_tracking.description".localized
+                )
+                
+                premiumFeatureItem(
                     icon: "video.badge.checkmark",
                     title: "onboarding.premium.nowatermark.title".localized,
                     description: "onboarding.premium.nowatermark.description".localized
