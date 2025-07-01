@@ -71,20 +71,61 @@ class PhotoStorageService {
         
         try imageData.write(to: fileURL)
         
+        // If weight/bodyFat not provided, check if there's existing weight data for this date from other photos
+        var finalWeight = weight
+        var finalBodyFat = bodyFatPercentage
+        
+        if finalWeight == nil || finalBodyFat == nil {
+            // Check if any other photo on this date has weight data
+            let photosOnSameDate = photos.filter { photo in
+                Calendar.current.isDate(photo.captureDate, inSameDayAs: captureDate)
+            }
+            
+            for photo in photosOnSameDate {
+                if finalWeight == nil, let photoWeight = photo.weight {
+                    finalWeight = photoWeight
+                }
+                if finalBodyFat == nil, let photoBodyFat = photo.bodyFatPercentage {
+                    finalBodyFat = photoBodyFat
+                }
+                if finalWeight != nil && finalBodyFat != nil {
+                    break
+                }
+            }
+        }
+        
         let photo = Photo(
             captureDate: captureDate,
             fileName: fileName,
             categoryId: categoryId,
             isFaceBlurred: isFaceBlurred,
             bodyDetectionConfidence: bodyDetectionConfidence,
-            weight: weight,
-            bodyFatPercentage: bodyFatPercentage
+            weight: finalWeight,
+            bodyFatPercentage: finalBodyFat
         )
         
         // Created photo with metadata
         
         photos.append(photo)
         photos.sort { $0.captureDate > $1.captureDate }
+        
+        // If this photo has weight/body fat data, update all other photos on the same date
+        if finalWeight != nil || finalBodyFat != nil {
+            let photosOnSameDate = photos.enumerated().compactMap { (index, p) in
+                Calendar.current.isDate(p.captureDate, inSameDayAs: captureDate) && p.id != photo.id ? index : nil
+            }
+            
+            for photoIndex in photosOnSameDate {
+                var updatedPhoto = photos[photoIndex]
+                if let w = finalWeight {
+                    updatedPhoto.weight = w
+                }
+                if let bf = finalBodyFat {
+                    updatedPhoto.bodyFatPercentage = bf
+                }
+                photos[photoIndex] = updatedPhoto
+            }
+        }
         
         savePhotosMetadata()
         
@@ -146,12 +187,25 @@ class PhotoStorageService {
     
     func replacePhoto(for date: Date, categoryId: String = PhotoCategory.defaultCategory.id, with image: UIImage, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
         // Replacing photo for date and category
+        
+        // If weight/bodyFat not provided, check existing photo for this date/category
+        var finalWeight = weight
+        var finalBodyFat = bodyFatPercentage
+        
         if let existingPhoto = getPhotoForDate(date, categoryId: categoryId) {
+            // Use existing weight/body fat if not provided
+            if finalWeight == nil {
+                finalWeight = existingPhoto.weight
+            }
+            if finalBodyFat == nil {
+                finalBodyFat = existingPhoto.bodyFatPercentage
+            }
+            
             // Found existing photo for date and category, deleting
             try deletePhoto(existingPhoto)
         }
         
-        let newPhoto = try savePhoto(image, captureDate: date, categoryId: categoryId, isFaceBlurred: isFaceBlurred, bodyDetectionConfidence: bodyDetectionConfidence, weight: weight, bodyFatPercentage: bodyFatPercentage)
+        let newPhoto = try savePhoto(image, captureDate: date, categoryId: categoryId, isFaceBlurred: isFaceBlurred, bodyDetectionConfidence: bodyDetectionConfidence, weight: finalWeight, bodyFatPercentage: finalBodyFat)
         // New photo saved
         return newPhoto
     }
@@ -162,13 +216,26 @@ class PhotoStorageService {
             return
         }
         
-        var updatedPhoto = photo
+        var updatedPhoto = photos[index]  // Use the photo from the array, not the parameter
         updatedPhoto.weight = weight
         updatedPhoto.bodyFatPercentage = bodyFatPercentage
         
         // Updating photo metadata
         
         photos[index] = updatedPhoto
+        
+        // Also update all other photos on the same date with the same weight/body fat
+        let photosOnSameDate = photos.enumerated().compactMap { (idx, p) in
+            Calendar.current.isDate(p.captureDate, inSameDayAs: updatedPhoto.captureDate) && p.id != updatedPhoto.id ? idx : nil
+        }
+        
+        for photoIndex in photosOnSameDate {
+            var otherPhoto = photos[photoIndex]
+            otherPhoto.weight = weight
+            otherPhoto.bodyFatPercentage = bodyFatPercentage
+            photos[photoIndex] = otherPhoto
+        }
+        
         savePhotosMetadata()
         
         // Successfully updated metadata
@@ -235,6 +302,11 @@ class PhotoStorageService {
             // Debug: Print first few photos with weight data
             for (_, _) in photos.prefix(3).enumerated() {
                 // Photo loaded from metadata
+            }
+            
+            // Sync weight data from WeightStorageService
+            Task {
+                await syncWeightDataFromStorage()
             }
         } catch {
             // Failed to decode metadata
@@ -398,6 +470,58 @@ class PhotoStorageService {
                     userSettings.settings.hasRatedApp = true
                 }
             }
+        }
+    }
+    
+    // MARK: - Weight Data Sync
+    
+    func syncWeightData() async {
+        await syncWeightDataFromStorage()
+    }
+    
+    private func syncWeightDataFromStorage() async {
+        do {
+            let weightEntries = try await WeightStorageService.shared.loadEntries()
+            print("[PhotoStorage] Syncing weight data from \(weightEntries.count) weight entries")
+            
+            for entry in weightEntries {
+                // Find ALL photos for the same date (not just the first one)
+                let photosForDate = photos.enumerated().compactMap { (index, photo) in
+                    Calendar.current.isDate(photo.captureDate, inSameDayAs: entry.date) ? index : nil
+                }
+                
+                if photosForDate.isEmpty {
+                    continue
+                }
+                
+                // Update ALL photos for this date
+                for photoIndex in photosForDate {
+                    var updatedPhoto = photos[photoIndex]
+                    var needsUpdate = false
+                    
+                    // Always sync weight data from WeightEntry if it exists
+                    if entry.weight > 0 && updatedPhoto.weight != entry.weight {
+                        updatedPhoto.weight = entry.weight
+                        needsUpdate = true
+                    }
+                    
+                    // Always sync body fat data from WeightEntry if it exists
+                    if let bodyFat = entry.bodyFatPercentage, updatedPhoto.bodyFatPercentage != bodyFat {
+                        updatedPhoto.bodyFatPercentage = bodyFat
+                        needsUpdate = true
+                    }
+                    
+                    if needsUpdate {
+                        photos[photoIndex] = updatedPhoto
+                        print("[PhotoStorage] Synced weight=\(entry.weight), bodyFat=\(entry.bodyFatPercentage ?? -1) to photo id=\(updatedPhoto.id)")
+                    }
+                }
+            }
+            
+            // Save updated metadata
+            savePhotosMetadata()
+        } catch {
+            print("[PhotoStorage] Failed to sync weight data: \(error)")
         }
     }
 }

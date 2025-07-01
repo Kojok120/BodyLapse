@@ -56,10 +56,23 @@ struct CompareView: View {
                     onDateSelected: { date in
                         // Reload photos to get latest weight/body fat data
                         print("[CompareView] Selecting first photo for date: \(date)")
-                        viewModel.loadPhotos()
                         
-                        // Wait a bit for weight sync to complete
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        Task { @MainActor in
+                            // First, reload photos from disk
+                            viewModel.loadPhotos()
+                            
+                            // Also sync weight data directly from WeightStorageService for this specific date
+                            do {
+                                if let weightEntry = try await WeightStorageService.shared.getEntry(for: date) {
+                                    print("[CompareView] Found weight entry for date \(date): weight=\(weightEntry.weight), bodyFat=\(weightEntry.bodyFatPercentage ?? -1)")
+                                }
+                            } catch {
+                                print("[CompareView] Failed to get weight entry for date: \(error)")
+                            }
+                            
+                            // Wait for weight sync to complete
+                            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                            
                             // Get all photos for this date in the selected category
                             let photosForDate = viewModel.photos.filter { photo in
                                 Calendar.current.isDate(photo.captureDate, inSameDayAs: date) &&
@@ -91,10 +104,23 @@ struct CompareView: View {
                     onDateSelected: { date in
                         // Reload photos to get latest weight/body fat data
                         print("[CompareView] Selecting second photo for date: \(date)")
-                        viewModel.loadPhotos()
                         
-                        // Wait a bit for weight sync to complete
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        Task { @MainActor in
+                            // First, reload photos from disk
+                            viewModel.loadPhotos()
+                            
+                            // Also sync weight data directly from WeightStorageService for this specific date
+                            do {
+                                if let weightEntry = try await WeightStorageService.shared.getEntry(for: date) {
+                                    print("[CompareView] Found weight entry for date \(date): weight=\(weightEntry.weight), bodyFat=\(weightEntry.bodyFatPercentage ?? -1)")
+                                }
+                            } catch {
+                                print("[CompareView] Failed to get weight entry for date: \(error)")
+                            }
+                            
+                            // Wait for weight sync to complete
+                            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                            
                             // Get all photos for this date in the selected category
                             let photosForDate = viewModel.photos.filter { photo in
                                 Calendar.current.isDate(photo.captureDate, inSameDayAs: date) &&
