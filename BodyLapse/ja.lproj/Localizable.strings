@@ -78,6 +78,7 @@
 "calendar.no_weight_data" = "体重データがまだありません";
 "calendar.add_weight_hint" = "写真を保存する際に体重データを追加";
 "calendar.reload_data" = "データを再読み込み";
+"calendar.add_memo" = "メモを追加";
 
 /* Camera View */
 "camera.access_required" = "カメラアクセスが必要です";

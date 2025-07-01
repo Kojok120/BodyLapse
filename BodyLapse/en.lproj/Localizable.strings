@@ -78,6 +78,7 @@
 "calendar.no_weight_data" = "No weight data yet";
 "calendar.add_weight_hint" = "Add weight data when saving photos";
 "calendar.reload_data" = "Reload Data";
+"calendar.add_memo" = "Add memo";
 
 /* Camera View */
 "camera.access_required" = "Camera Access Required";

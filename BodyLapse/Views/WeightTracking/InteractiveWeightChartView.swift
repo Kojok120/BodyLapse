@@ -95,7 +95,7 @@ struct InteractiveWeightChartView: View {
             if let selectedDate = selectedDate {
                 HStack(spacing: 20) {
                     Text(selectedDate.formatted(date: .abbreviated, time: .omitted))
-                        .font(.headline)
+                        .font(.subheadline)
                     
                     Spacer()
                     

@@ -506,26 +506,32 @@ struct CalendarView: View {
                     .padding(.top, 8)
             }
             
-            // Memo display if exists
-            if !currentMemo.isEmpty {
-                HStack {
-                    Image(systemName: "note.text")
+            // Memo display - always show section
+            HStack {
+                Image(systemName: currentMemo.isEmpty ? "note.text.badge.plus" : "note.text")
+                    .font(.caption)
+                    .foregroundColor(currentMemo.isEmpty ? .secondary : .bodyLapseTurquoise)
+                
+                if currentMemo.isEmpty {
+                    Text("calendar.add_memo".localized)
                         .font(.caption)
-                        .foregroundColor(.bodyLapseTurquoise)
+                        .foregroundColor(.secondary)
+                } else {
                     Text(currentMemo)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
                         .truncationMode(.tail)
-                    Spacer()
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color(UIColor.secondarySystemBackground))
-                .cornerRadius(8)
-                .onTapGesture {
-                    showingMemoEditor = true
-                }
+                
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(8)
+            .onTapGesture {
+                showingMemoEditor = true
             }
             
             GeometryReader { geometry in

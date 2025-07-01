@@ -78,6 +78,7 @@
 "calendar.no_weight_data" = "Aún sin datos de peso";
 "calendar.add_weight_hint" = "Añade datos de peso al guardar fotos";
 "calendar.reload_data" = "Recargar Datos";
+"calendar.add_memo" = "Añadir nota";
 
 /* Camera View */
 "camera.access_required" = "Se Requiere Acceso a la Cámara";

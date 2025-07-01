@@ -83,6 +83,9 @@ class CategoryStorageService {
         
         createCategoryDirectory(for: category)
         
+        // Post notification for category change
+        NotificationCenter.default.post(name: Notification.Name("CategoriesUpdated"), object: nil)
+        
         return true
     }
     
@@ -107,6 +110,9 @@ class CategoryStorageService {
             
             // Remove guideline for this category
             removeGuideline(for: id)
+            
+            // Post notification for category change
+            NotificationCenter.default.post(name: Notification.Name("CategoriesUpdated"), object: nil)
         }
     }
     

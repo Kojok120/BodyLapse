@@ -78,6 +78,7 @@
 "calendar.no_weight_data" = "아직 체중 데이터가 없습니다";
 "calendar.add_weight_hint" = "사진 저장 시 체중 데이터 추가";
 "calendar.reload_data" = "데이터 새로고침";
+"calendar.add_memo" = "메모 추가";
 
 /* Camera View */
 "camera.access_required" = "카메라 접근 권한 필요";

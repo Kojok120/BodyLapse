@@ -47,6 +47,14 @@ class CameraViewModel: NSObject, ObservableObject {
             name: Notification.Name("GuidelineUpdated"),
             object: nil
         )
+        
+        // Listen for category updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reloadCategories),
+            name: Notification.Name("CategoriesUpdated"),
+            object: nil
+        )
     }
     
     deinit {
@@ -416,9 +424,14 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         objectWillChange.send()
     }
     
-    func reloadCategories() {
+    @objc func reloadCategories() {
         Task { @MainActor in
             loadCategories()
+            // If the selected category is no longer available, switch to default
+            if !availableCategories.contains(where: { $0.id == selectedCategory.id }) {
+                selectedCategory = availableCategories.first ?? PhotoCategory.defaultCategory
+                loadGuidelineForCurrentCategory()
+            }
         }
     }
     
