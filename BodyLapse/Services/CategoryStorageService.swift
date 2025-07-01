@@ -165,6 +165,33 @@ class CategoryStorageService {
         saveCategories(allCategories)
     }
     
+    func getNextUncapturedCategory(for date: Date, currentCategoryId: String, isPremium: Bool) -> PhotoCategory? {
+        let availableCategories = getActiveCategoriesForUser(isPremium: isPremium)
+        
+        // Find the current category's index
+        guard let currentIndex = availableCategories.firstIndex(where: { $0.id == currentCategoryId }) else {
+            return nil
+        }
+        
+        // Check categories after the current one
+        for i in (currentIndex + 1)..<availableCategories.count {
+            let category = availableCategories[i]
+            if !PhotoStorageService.shared.hasPhotoForDate(date, categoryId: category.id) {
+                return category
+            }
+        }
+        
+        // Check categories before the current one (wrap around)
+        for i in 0..<currentIndex {
+            let category = availableCategories[i]
+            if !PhotoStorageService.shared.hasPhotoForDate(date, categoryId: category.id) {
+                return category
+            }
+        }
+        
+        return nil
+    }
+    
     private func loadAllCategories() -> [PhotoCategory] {
         guard let url = categoriesFileURL,
               FileManager.default.fileExists(atPath: url.path),

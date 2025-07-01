@@ -88,6 +88,10 @@
 "camera.one_photo_per_day" = "1日1枚の写真のみ";
 "camera.replace_photo_message" = "1日に保存できる写真は1枚だけです。今日の写真を置き換えますか？";
 "camera.face_blurred" = "顔がぼかされています";
+"camera.photo_saved" = "写真を保存しました！";
+"camera.next_category" = "次のカテゴリ：";
+"camera.finish_session" = "終了";
+"camera.continue" = "続ける";
 
 /* Gallery View */
 "gallery.title" = "ギャラリー";

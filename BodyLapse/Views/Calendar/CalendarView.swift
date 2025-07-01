@@ -92,6 +92,12 @@ struct CalendarView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: handleOnAppear)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday")), perform: handleNavigateToToday)
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhotosUpdated"))) { _ in
+            // Reload data when photos are updated
+            viewModel.loadPhotos()
+            viewModel.loadCategories()
+            updateCurrentPhoto()
+        }
         .onChange(of: selectedDate) { _, newDate in
             updateCurrentPhoto()
             selectedChartDate = newDate  // Sync chart selection when date changes
@@ -176,9 +182,38 @@ struct CalendarView: View {
             selectedIndex = index
         }
         
-        // Reload photos to ensure we have the latest
+        // Force reload photos from disk to ensure we have the latest
+        PhotoStorageService.shared.reloadPhotosFromDisk()
+        
+        // Reload photos and categories in viewModel
         viewModel.loadPhotos()
+        viewModel.loadCategories()
+        
+        // Update current photo and category information
         updateCurrentPhoto()
+        
+        // If premium user with multiple categories, ensure categories are refreshed
+        if subscriptionManager.isPremium {
+            // Get all photos for today to check available categories
+            let todayPhotos = viewModel.allPhotosForDate(today)
+            if !todayPhotos.isEmpty {
+                // Update photosForSelectedDate immediately
+                photosForSelectedDate = todayPhotos
+                
+                // Get categories for these photos
+                let photoCategories = todayPhotos.map { $0.categoryId }
+                categoriesForSelectedDate = viewModel.availableCategories.filter { category in
+                    photoCategories.contains(category.id)
+                }
+                
+                // Select the first available category with a photo
+                if let firstCategory = categoriesForSelectedDate.first {
+                    currentCategoryIndex = 0
+                    currentPhoto = todayPhotos.first { $0.categoryId == firstCategory.id }
+                    viewModel.selectCategory(firstCategory)
+                }
+            }
+        }
     }
     
     private func handleChartDateChange(_ newDate: Date?) {

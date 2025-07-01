@@ -23,6 +23,11 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var countdownValue: Int = 0
     @Published var isCountingDown = false
     
+    // Multi-category flow
+    @Published var showingCategoryTransition = false
+    @Published var nextCategory: PhotoCategory?
+    @Published var shouldAutoTransition = true
+    
     #if DEBUG
     @Published var debugSelectedDate: Date = Date()
     #endif
@@ -318,16 +323,42 @@ class CameraViewModel: NSObject, ObservableObject {
             // Photo saved successfully
             
             DispatchQueue.main.async { [weak self] in
-                self?.tempWeight = nil
-                self?.tempBodyFat = nil
-                self?.capturedImage = nil // Clear the captured image to close the sheet
-                // Cleared captured image
+                guard let self = self else { return }
                 
-                // Navigate to Calendar with today's date
-                NotificationCenter.default.post(
-                    name: NSNotification.Name("NavigateToCalendarToday"),
-                    object: nil
-                )
+                self.tempWeight = nil
+                self.tempBodyFat = nil
+                self.capturedImage = nil // Clear the captured image to close the sheet
+                
+                // Check if user is premium and there are more categories to capture
+                let isPremium = SubscriptionManagerService.shared.isPremium
+                if isPremium, let nextCategory = CategoryStorageService.shared.getNextUncapturedCategory(
+                    for: saveDate,
+                    currentCategoryId: self.selectedCategory.id,
+                    isPremium: isPremium
+                ) {
+                    // Show transition to next category
+                    self.nextCategory = nextCategory
+                    self.showingCategoryTransition = true
+                    
+                    // Auto-transition after 2 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        if self.shouldAutoTransition && self.showingCategoryTransition {
+                            self.transitionToNextCategory()
+                        }
+                    }
+                } else {
+                    // No more categories or free user - navigate to Calendar
+                    // Force reload photos from disk before navigating
+                    PhotoStorageService.shared.reloadPhotosFromDisk()
+                    
+                    // Small delay to ensure data is fully loaded
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("NavigateToCalendarToday"),
+                            object: nil
+                        )
+                    }
+                }
             }
         } catch {
             // Failed to save photo
@@ -514,5 +545,27 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         }
         #endif
         return PhotoStorageService.shared.hasPhotoForToday(categoryId: selectedCategory.id)
+    }
+    
+    func transitionToNextCategory() {
+        guard let nextCategory = nextCategory else { return }
+        
+        showingCategoryTransition = false
+        selectedCategory = nextCategory
+        loadGuidelineForCurrentCategory()
+        self.nextCategory = nil
+        shouldAutoTransition = true // Reset for next time
+    }
+    
+    func skipCategoryTransition() {
+        showingCategoryTransition = false
+        nextCategory = nil
+        shouldAutoTransition = true // Reset for next time
+        
+        // Navigate to Calendar
+        NotificationCenter.default.post(
+            name: NSNotification.Name("NavigateToCalendarToday"),
+            object: nil
+        )
     }
 }

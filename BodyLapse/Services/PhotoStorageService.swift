@@ -131,6 +131,13 @@ class PhotoStorageService {
         
         // Photo saved to metadata
         
+        // Post notification that photos have been updated
+        NotificationCenter.default.post(
+            name: Notification.Name("PhotosUpdated"),
+            object: nil,
+            userInfo: ["photo": photo]
+        )
+        
         // Check if we should request app review
         checkAndRequestReviewIfNeeded()
         

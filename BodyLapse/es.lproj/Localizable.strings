@@ -88,6 +88,10 @@
 "camera.one_photo_per_day" = "Solo Una Foto Por Día";
 "camera.replace_photo_message" = "Solo puedes guardar una foto por día. ¿Quieres reemplazar la foto de hoy?";
 "camera.face_blurred" = "Cara difuminada";
+"camera.photo_saved" = "¡Foto guardada!";
+"camera.next_category" = "Siguiente categoría:";
+"camera.finish_session" = "Finalizar";
+"camera.continue" = "Continuar";
 
 /* Gallery View */
 "gallery.title" = "Galería";

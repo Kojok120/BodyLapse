@@ -88,6 +88,10 @@
 "camera.one_photo_per_day" = "Only One Photo Per Day";
 "camera.replace_photo_message" = "You can only save one photo per day. Do you want to replace today's photo?";
 "camera.face_blurred" = "Face blurred";
+"camera.photo_saved" = "Photo saved!";
+"camera.next_category" = "Next category:";
+"camera.finish_session" = "Finish";
+"camera.continue" = "Continue";
 
 /* Gallery View */
 "gallery.title" = "Gallery";

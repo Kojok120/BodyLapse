@@ -215,6 +215,20 @@ struct CameraView: View {
                 }
                 .padding()
             }
+            
+            // Category transition overlay
+            if viewModel.showingCategoryTransition, let nextCategory = viewModel.nextCategory {
+                CategoryTransitionOverlay(
+                    currentCategory: viewModel.selectedCategory,
+                    nextCategory: nextCategory,
+                    onContinue: {
+                        viewModel.transitionToNextCategory()
+                    },
+                    onSkip: {
+                        viewModel.skipCategoryTransition()
+                    }
+                )
+            }
         }
         .onAppear {
             if viewModel.isAuthorized {
@@ -616,6 +630,93 @@ struct AddCategorySheet: View {
                     }
                     .disabled(categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+            }
+        }
+    }
+}
+
+struct CategoryTransitionOverlay: View {
+    let currentCategory: PhotoCategory
+    let nextCategory: PhotoCategory
+    let onContinue: () -> Void
+    let onSkip: () -> Void
+    
+    @State private var isVisible = false
+    
+    var body: some View {
+        ZStack {
+            // Background
+            Color.black.opacity(0.8)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 30) {
+                // Success icon
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 80))
+                    .foregroundColor(.green)
+                    .scaleEffect(isVisible ? 1 : 0.5)
+                    .opacity(isVisible ? 1 : 0)
+                
+                VStack(spacing: 10) {
+                    Text("camera.photo_saved".localized)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                    
+                    Text(currentCategory.displayName)
+                        .font(.headline)
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                
+                // Arrow
+                Image(systemName: "arrow.down")
+                    .font(.title)
+                    .foregroundColor(.white.opacity(0.6))
+                    .padding(.vertical, 10)
+                
+                // Next category
+                VStack(spacing: 10) {
+                    Text("camera.next_category".localized)
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.8))
+                    
+                    Text(nextCategory.displayName)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.bodyLapseYellow)
+                }
+                
+                // Buttons
+                HStack(spacing: 20) {
+                    Button(action: onSkip) {
+                        Text("camera.finish_session".localized)
+                            .font(.body)
+                            .foregroundColor(.white.opacity(0.8))
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(Color.gray.opacity(0.3))
+                            .cornerRadius(25)
+                    }
+                    
+                    Button(action: onContinue) {
+                        Text("camera.continue".localized)
+                            .font(.body.bold())
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 30)
+                            .padding(.vertical, 12)
+                            .background(Color.bodyLapseYellow)
+                            .cornerRadius(25)
+                    }
+                }
+                .padding(.top, 20)
+            }
+            .padding(40)
+            .scaleEffect(isVisible ? 1 : 0.9)
+            .opacity(isVisible ? 1 : 0)
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8, blendDuration: 0)) {
+                isVisible = true
             }
         }
     }

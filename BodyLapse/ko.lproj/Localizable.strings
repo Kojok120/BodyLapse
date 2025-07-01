@@ -88,6 +88,10 @@
 "camera.one_photo_per_day" = "하루에 한 장만";
 "camera.replace_photo_message" = "하루에 한 장의 사진만 저장할 수 있습니다. 오늘의 사진을 교체하시겠습니까?";
 "camera.face_blurred" = "얼굴이 흐려짐";
+"camera.photo_saved" = "사진이 저장되었습니다!";
+"camera.next_category" = "다음 카테고리:";
+"camera.finish_session" = "완료";
+"camera.continue" = "계속";
 
 /* Gallery View */
 "gallery.title" = "갤러리";
