@@ -60,29 +60,25 @@ struct CompareView: View {
                         
                         // Wait a bit for weight sync to complete
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            // Get all photos for this date
+                            // Get all photos for this date in the selected category
                             let photosForDate = viewModel.photos.filter { photo in
-                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date) &&
+                                photo.categoryId == firstCategory.id
                             }
                             
-                            // If only one photo, select it. Otherwise, prefer default category
-                            if photosForDate.count == 1 {
-                                firstPhoto = photosForDate.first
-                            } else {
-                                firstPhoto = photosForDate.first { $0.categoryId == PhotoCategory.defaultCategory.id } ?? photosForDate.first
-                            }
+                            firstPhoto = photosForDate.first
                             
                             if let selected = firstPhoto {
-                                print("[CompareView] Selected first photo - id: \(selected.id), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
+                                print("[CompareView] Selected first photo - id: \(selected.id), category: \(selected.categoryId), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
                             } else {
-                                print("[CompareView] No photo found for date: \(date)")
+                                print("[CompareView] No photo found for date: \(date) in category: \(firstCategory.id)")
                             }
                         }
                         showingFirstCalendar = false
                     },
                     minDate: nil,
                     maxDate: secondPhoto?.captureDate,
-                    categoryId: subscriptionManager.isPremium ? nil : PhotoCategory.defaultCategory.id  // Premium users can see all categories
+                    categoryId: firstCategory.id  // Filter by selected category
                 )
             }
             .sheet(isPresented: $showingSecondCalendar) {
@@ -99,29 +95,25 @@ struct CompareView: View {
                         
                         // Wait a bit for weight sync to complete
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            // Get all photos for this date
+                            // Get all photos for this date in the selected category
                             let photosForDate = viewModel.photos.filter { photo in
-                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date) &&
+                                photo.categoryId == secondCategory.id
                             }
                             
-                            // If only one photo, select it. Otherwise, prefer default category
-                            if photosForDate.count == 1 {
-                                secondPhoto = photosForDate.first
-                            } else {
-                                secondPhoto = photosForDate.first { $0.categoryId == PhotoCategory.defaultCategory.id } ?? photosForDate.first
-                            }
+                            secondPhoto = photosForDate.first
                             
                             if let selected = secondPhoto {
-                                print("[CompareView] Selected second photo - id: \(selected.id), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
+                                print("[CompareView] Selected second photo - id: \(selected.id), category: \(selected.categoryId), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
                             } else {
-                                print("[CompareView] No photo found for date: \(date)")
+                                print("[CompareView] No photo found for date: \(date) in category: \(secondCategory.id)")
                             }
                         }
                         showingSecondCalendar = false
                     },
                     minDate: firstPhoto?.captureDate,
                     maxDate: nil,
-                    categoryId: subscriptionManager.isPremium ? nil : PhotoCategory.defaultCategory.id  // Premium users can see all categories
+                    categoryId: secondCategory.id  // Filter by selected category
                 )
             }
         }
@@ -133,10 +125,10 @@ struct CompareView: View {
             let isPremium = subscriptionManager.isPremium
             availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
             
-            // Load any photos with today's date from default category
+            // Load any photos with today's date from selected category
             let today = Date()
             secondPhoto = viewModel.photos.first { photo in
-                photo.categoryId == PhotoCategory.defaultCategory.id &&
+                photo.categoryId == secondCategory.id &&
                 Calendar.current.isDate(photo.captureDate, inSameDayAs: today)
             }
         }
@@ -179,6 +171,12 @@ struct CompareView: View {
                                                             .fontWeight(.bold)
                                                         Text(formatDateShort(photo.captureDate))
                                                             .font(.caption2)
+                                                        if subscriptionManager.isPremium && availableCategories.count > 1,
+                                                           let category = availableCategories.first(where: { $0.id == photo.categoryId }) {
+                                                            Text(category.name)
+                                                                .font(.caption2)
+                                                                .foregroundColor(.bodyLapseTurquoise)
+                                                        }
                                                     }
                                                     .padding(6)
                                                     .background(Color.black.opacity(0.7))
@@ -286,6 +284,12 @@ struct CompareView: View {
                                                             .fontWeight(.bold)
                                                         Text(formatDateShort(photo.captureDate))
                                                             .font(.caption2)
+                                                        if subscriptionManager.isPremium && availableCategories.count > 1,
+                                                           let category = availableCategories.first(where: { $0.id == photo.categoryId }) {
+                                                            Text(category.name)
+                                                                .font(.caption2)
+                                                                .foregroundColor(.bodyLapseTurquoise)
+                                                        }
                                                     }
                                                     .padding(6)
                                                     .background(Color.black.opacity(0.7))
@@ -466,76 +470,137 @@ struct CompareView: View {
     }
     
     private var photoSelectionButtons: some View {
-        HStack(spacing: 20) {
-            Button(action: {
-                showingFirstCalendar = true
-            }) {
-                VStack(spacing: 8) {
-                    HStack {
-                        Image(systemName: "calendar")
+        VStack(spacing: 16) {
+            // Category selection for premium users
+            if subscriptionManager.isPremium && availableCategories.count > 1 {
+                HStack(spacing: 20) {
+                    // First category picker
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("compare.before".localized)
-                    }
-                    .font(.headline)
-                    
-                    if let photo = firstPhoto {
-                        VStack(spacing: 2) {
-                            Text(formatDate(photo.captureDate))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            if subscriptionManager.isPremium && availableCategories.count > 1,
-                               let category = availableCategories.first(where: { $0.id == photo.categoryId }) {
-                                Text(category.name)
-                                    .font(.caption2)
-                                    .foregroundColor(.bodyLapseTurquoise)
-                            }
-                        }
-                    } else {
-                        Text("compare.select_date".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
+                        Menu {
+                            ForEach(availableCategories) { category in
+                                Button(action: {
+                                    firstCategory = category
+                                    // Reset first photo if it's from a different category
+                                    if let photo = firstPhoto, photo.categoryId != category.id {
+                                        firstPhoto = nil
+                                    }
+                                }) {
+                                    Label(category.name, systemImage: firstCategory.id == category.id ? "checkmark" : "")
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Text(firstCategory.name)
+                                    .font(.subheadline)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Image(systemName: "chevron.down")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color(UIColor.tertiarySystemFill))
+                            .cornerRadius(8)
+                        }
+                    }
+                    
+                    // Second category picker
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("compare.after".localized)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Menu {
+                            ForEach(availableCategories) { category in
+                                Button(action: {
+                                    secondCategory = category
+                                    // Reset second photo if it's from a different category
+                                    if let photo = secondPhoto, photo.categoryId != category.id {
+                                        secondPhoto = nil
+                                    }
+                                }) {
+                                    Label(category.name, systemImage: secondCategory.id == category.id ? "checkmark" : "")
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Text(secondCategory.name)
+                                    .font(.subheadline)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Image(systemName: "chevron.down")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color(UIColor.tertiarySystemFill))
+                            .cornerRadius(8)
+                        }
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(UIColor.secondarySystemBackground))
-                .cornerRadius(10)
+                .padding(.horizontal)
             }
             
-            Button(action: {
-                showingSecondCalendar = true
-            }) {
-                VStack(spacing: 8) {
-                    HStack {
-                        Image(systemName: "calendar")
-                        Text("compare.after".localized)
-                    }
-                    .font(.headline)
-                    
-                    if let photo = secondPhoto {
-                        VStack(spacing: 2) {
+            // Date selection buttons
+            HStack(spacing: 20) {
+                Button(action: {
+                    showingFirstCalendar = true
+                }) {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Image(systemName: "calendar")
+                            Text("compare.before".localized)
+                        }
+                        .font(.headline)
+                        
+                        if let photo = firstPhoto {
                             Text(formatDate(photo.captureDate))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            if subscriptionManager.isPremium && availableCategories.count > 1,
-                               let category = availableCategories.first(where: { $0.id == photo.categoryId }) {
-                                Text(category.name)
-                                    .font(.caption2)
-                                    .foregroundColor(.bodyLapseTurquoise)
-                            }
+                        } else {
+                            Text("compare.select_date".localized)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
-                    } else {
-                        Text("compare.select_date".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(10)
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(UIColor.secondarySystemBackground))
-                .cornerRadius(10)
+                
+                Button(action: {
+                    showingSecondCalendar = true
+                }) {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Image(systemName: "calendar")
+                            Text("compare.after".localized)
+                        }
+                        .font(.headline)
+                        
+                        if let photo = secondPhoto {
+                            Text(formatDate(photo.captureDate))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("compare.select_date".localized)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(10)
+                }
             }
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
         .padding(.top)
     }
     
