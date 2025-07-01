@@ -6,6 +6,8 @@ struct CompareView: View {
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var firstPhoto: Photo?
     @State private var secondPhoto: Photo?
+    @State private var firstSelectedDate: Date?
+    @State private var secondSelectedDate: Date?
     @State private var showingFirstCalendar = false
     @State private var showingSecondCalendar = false
     @State private var availableCategories: [PhotoCategory] = []
@@ -80,6 +82,7 @@ struct CompareView: View {
                             }
                             
                             firstPhoto = photosForDate.first
+                            firstSelectedDate = date
                             
                             if let selected = firstPhoto {
                                 print("[CompareView] Selected first photo - id: \(selected.id), category: \(selected.categoryId), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
@@ -90,7 +93,7 @@ struct CompareView: View {
                         showingFirstCalendar = false
                     },
                     minDate: nil,
-                    maxDate: secondPhoto?.captureDate,
+                    maxDate: secondSelectedDate,
                     categoryId: firstCategory.id  // Filter by selected category
                 )
             }
@@ -128,6 +131,7 @@ struct CompareView: View {
                             }
                             
                             secondPhoto = photosForDate.first
+                            secondSelectedDate = date
                             
                             if let selected = secondPhoto {
                                 print("[CompareView] Selected second photo - id: \(selected.id), category: \(selected.categoryId), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
@@ -137,7 +141,7 @@ struct CompareView: View {
                         }
                         showingSecondCalendar = false
                     },
-                    minDate: firstPhoto?.captureDate,
+                    minDate: firstSelectedDate,
                     maxDate: nil,
                     categoryId: secondCategory.id  // Filter by selected category
                 )
@@ -156,6 +160,9 @@ struct CompareView: View {
             secondPhoto = viewModel.photos.first { photo in
                 photo.categoryId == secondCategory.id &&
                 Calendar.current.isDate(photo.captureDate, inSameDayAs: today)
+            }
+            if secondPhoto != nil {
+                secondSelectedDate = today
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
@@ -453,9 +460,12 @@ struct CompareView: View {
                             ForEach(availableCategories) { category in
                                 Button(action: {
                                     firstCategory = category
-                                    // Reset first photo if it's from a different category
-                                    if let photo = firstPhoto, photo.categoryId != category.id {
-                                        firstPhoto = nil
+                                    // Try to find a photo for the same date in the new category
+                                    if let selectedDate = firstSelectedDate {
+                                        firstPhoto = viewModel.photos.first { photo in
+                                            photo.categoryId == category.id &&
+                                            Calendar.current.isDate(photo.captureDate, inSameDayAs: selectedDate)
+                                        }
                                     }
                                 }) {
                                     Label(category.name, systemImage: firstCategory.id == category.id ? "checkmark" : "")
@@ -487,9 +497,12 @@ struct CompareView: View {
                             ForEach(availableCategories) { category in
                                 Button(action: {
                                     secondCategory = category
-                                    // Reset second photo if it's from a different category
-                                    if let photo = secondPhoto, photo.categoryId != category.id {
-                                        secondPhoto = nil
+                                    // Try to find a photo for the same date in the new category
+                                    if let selectedDate = secondSelectedDate {
+                                        secondPhoto = viewModel.photos.first { photo in
+                                            photo.categoryId == category.id &&
+                                            Calendar.current.isDate(photo.captureDate, inSameDayAs: selectedDate)
+                                        }
                                     }
                                 }) {
                                     Label(category.name, systemImage: secondCategory.id == category.id ? "checkmark" : "")
@@ -527,8 +540,8 @@ struct CompareView: View {
                         }
                         .font(.headline)
                         
-                        if let photo = firstPhoto {
-                            Text(formatDate(photo.captureDate))
+                        if let date = firstSelectedDate {
+                            Text(formatDate(date))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         } else {
@@ -553,8 +566,8 @@ struct CompareView: View {
                         }
                         .font(.headline)
                         
-                        if let photo = secondPhoto {
-                            Text(formatDate(photo.captureDate))
+                        if let date = secondSelectedDate {
+                            Text(formatDate(date))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         } else {
