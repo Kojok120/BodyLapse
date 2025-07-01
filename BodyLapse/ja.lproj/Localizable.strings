@@ -168,8 +168,8 @@
 
 /* Compare View */
 "compare.title" = "進捗を比較";
-"compare.before" = "ビフォー";
-"compare.after" = "アフター";
+"compare.before" = "Before";
+"compare.after" = "After";
 "compare.select_first" = "最初の写真を選択";
 "compare.select_second" = "2番目の写真を選択";
 "compare.no_weight" = "体重なし";
@@ -197,7 +197,7 @@
 "onboarding.metrics.title" = "メトリクスを追跡";
 "onboarding.metrics.subtitle" = "体重と体脂肪率を記録して\n時間経過を視覚化";
 "onboarding.metrics.description" = "写真とデータインサイトを組み合わせて\n包括的な進捗追跡";
-"onboarding.comparison.title" = "ビフォー&アフター比較";
+"onboarding.comparison.title" = "Before&After比較";
 "onboarding.comparison.subtitle" = "任意の2枚の写真を選択して\n変化を並べて確認";
 "onboarding.comparison.description" = "開始時点と現在の進捗を\n簡単に比較";
 "onboarding.start.title" = "始めましょう！";
