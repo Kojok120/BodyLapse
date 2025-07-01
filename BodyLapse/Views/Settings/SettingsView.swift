@@ -216,7 +216,7 @@ struct SettingsView: View {
                 
                 Section(header: Text("settings.data".localized)) {
                     NavigationLink(destination: ImportExportView()) {
-                        Label("データのインポート/エクスポート", systemImage: "arrow.up.arrow.down.square")
+                        Label("settings.import_export".localized, systemImage: "arrow.up.arrow.down.square")
                     }
                     
                     // Data clearing feature - to be implemented in future version
@@ -261,16 +261,16 @@ struct SettingsView: View {
                 }
                 
                 #if DEBUG
-                Section(header: Text("Debug Options")) {
-                    Toggle("Premium Mode", isOn: Binding(
+                Section(header: Text("settings.debug_options".localized)) {
+                    Toggle("settings.debug.premium_mode".localized, isOn: Binding(
                         get: { subscriptionManager.isPremium },
                         set: { _ in subscriptionManager.toggleDebugPremium() }
                     ))
                     
-                    Toggle("Allow Past Date Photos", isOn: $userSettings.settings.debugAllowPastDatePhotos)
+                    Toggle("settings.debug.past_photos".localized, isOn: $userSettings.settings.debugAllowPastDatePhotos)
                     
                     HStack {
-                        Text("Subscription Status")
+                        Text("settings.subscription_status".localized)
                         Spacer()
                         Text(subscriptionManager.subscriptionStatusDescription)
                             .foregroundColor(.secondary)
@@ -278,7 +278,7 @@ struct SettingsView: View {
                     
                     if subscriptionManager.isPremium {
                         HStack {
-                            Text("Expiration Date")
+                            Text("settings.expiration_date".localized)
                             Spacer()
                             if let date = subscriptionManager.expirationDate {
                                 Text(date, style: .date)

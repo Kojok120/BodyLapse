@@ -22,11 +22,11 @@ struct WeightInputSheet: View {
                         .font(.system(size: 50))
                         .foregroundColor(.accentColor)
                     
-                    Text("Track Your Progress")
+                    Text("weight.track_progress".localized)
                         .font(.title2)
                         .fontWeight(.bold)
                     
-                    Text("Add your current measurements")
+                    Text("weight.add_measurements".localized)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -38,7 +38,7 @@ struct WeightInputSheet: View {
                     // Weight input
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Label("Weight", systemImage: "scalemass")
+                            Label("weight.weight".localized, systemImage: "scalemass")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
@@ -51,7 +51,7 @@ struct WeightInputSheet: View {
                         }
                         
                         HStack {
-                            TextField("Enter weight", text: $weightText)
+                            TextField("weight.enter_weight".localized, text: $weightText)
                                 .keyboardType(.decimalPad)
                                 .textFieldStyle(.roundedBorder)
                                 .font(.title3)
@@ -64,12 +64,12 @@ struct WeightInputSheet: View {
                     
                     // Body fat input
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Body Fat % (Optional)", systemImage: "percent")
+                        Label("calendar.body_fat_optional".localized, systemImage: "percent")
                             .font(.headline)
                             .foregroundColor(.primary)
                         
                         HStack {
-                            TextField("Enter body fat", text: $bodyFatText)
+                            TextField("weight.enter_body_fat".localized, text: $bodyFatText)
                                 .keyboardType(.decimalPad)
                                 .textFieldStyle(.roundedBorder)
                                 .font(.title3)
@@ -87,7 +87,7 @@ struct WeightInputSheet: View {
                 // Action buttons
                 VStack(spacing: 15) {
                     Button(action: saveAndDismiss) {
-                        Text("Save Photo")
+                        Text("weight.save_photo".localized)
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -98,7 +98,7 @@ struct WeightInputSheet: View {
                     .disabled(weightText.isEmpty)
                     
                     Button(action: skipAndSave) {
-                        Text("Skip & Save Photo")
+                        Text("weight.skip_save".localized)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -109,7 +109,7 @@ struct WeightInputSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         onCancel()
                         dismiss()
                     }

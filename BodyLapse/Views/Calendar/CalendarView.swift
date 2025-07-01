@@ -325,14 +325,14 @@ struct CalendarView: View {
                                 Circle()
                                     .fill(Color.bodyLapseYellow)
                                     .frame(width: 8, height: 8)
-                                Text("データあり")
+                                Text("calendar.data_available".localized)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
                         }
                     }
                     
-                    Text("※データには体重・体脂肪率・メモが含まれます")
+                    Text("calendar.data_includes_note".localized)
                         .font(.caption2)
                         .foregroundColor(.secondary)
                         .italic()
@@ -967,7 +967,7 @@ struct WeightInputView: View {
                                 .textFieldStyle(.roundedBorder)
                                 .font(.title3)
                             
-                            Text("%")
+                            Text("unit.percent".localized)
                                 .font(.title3)
                                 .foregroundColor(.secondary)
                         }

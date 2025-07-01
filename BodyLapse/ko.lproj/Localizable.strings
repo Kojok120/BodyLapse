@@ -32,6 +32,7 @@
 "common.retake" = "다시 찍기";
 "common.use_photo" = "사진 사용";
 "common.save_photo" = "사진 저장";
+"common.enable" = "활성화";
 
 /* Calendar View */
 "calendar.title" = "달력";
@@ -104,6 +105,7 @@
 /* Settings View */
 "settings.title" = "설정";
 "settings.photo_settings" = "사진 설정";
+"settings.category_management" = "카테고리 관리";
 "settings.show_guidelines" = "바디 가이드라인 표시";
 "settings.reset_guideline" = "바디 가이드라인 재설정";
 "settings.set_guideline" = "바디 가이드라인 설정";
@@ -224,7 +226,7 @@
 "onboarding.premium.price" = "프리미엄 플랜";
 "onboarding.premium.price.detail" = "언제든지 취소 가능 • 무료 체험 제공";
 "onboarding.premium.price.fallback" = "₩6,600 / 월";
-"onboarding.premium.trial" = "7일 무료 체험";
+"onboarding.premium.trial" = "1개월 무료 체험";
 "onboarding.premium.cancel_anytime" = "언제든지 취소 가능";
 
 /* Authentication */
@@ -291,3 +293,205 @@
 /* Reset Guideline */
 "reset_guideline.instruction" = "새 사진을 찍어 체형 윤곽을 업데이트하세요";
 "reset_guideline.success_message" = "바디 가이드라인이 성공적으로 업데이트되었습니다!";
+
+/* Premium Offer - Onboarding */
+"onboarding.premium_offer.title" = "프리미엄 여정 시작하기";
+"onboarding.premium_offer.subtitle" = "모든 기능을 사용하고 피트니스 추적을 다음 단계로";
+"onboarding.premium_offer.special" = "특별 신규 사용자 혜택";
+"onboarding.premium_offer.benefit1" = "체중 및 체지방률 추적";
+"onboarding.premium_offer.benefit2" = "광고 없음";
+"onboarding.premium_offer.benefit3" = "비디오에 워터마크 없음";
+"onboarding.premium_offer.start_trial" = "무료 체험 시작";
+"onboarding.premium_offer.maybe_later" = "나중에";
+"onboarding.premium_offer.terms" = "언제든지 취소 가능. 취소하지 않으면 구독이 자동 갱신됩니다.";
+
+/* Category Names */
+"category.default.front" = "전면";
+
+/* Category Management */
+"category.management.title" = "카테고리 관리";
+"category.management.list_header" = "카테고리 목록";
+"category.management.list_footer" = "최대 %d개 카테고리 허용 (전면 + 사용자 정의 %d개)";
+"category.management.add_category" = "카테고리 추가";
+"category.management.new_category" = "새 카테고리";
+"category.management.add" = "추가";
+"category.management.edit" = "카테고리 편집";
+"category.management.edit_name" = "카테고리 이름 편집";
+"category.management.category_name" = "카테고리 이름";
+"category.management.example" = "예: 측면, 후면, 근육 등";
+"category.management.delete_title" = "카테고리 삭제";
+"category.management.delete_message" = "카테고리 \"%@\"을(를) 삭제하시겠습니까?\n이 카테고리의 사진은 삭제되지 않습니다.";
+"category.management.delete_warning" = "카테고리 \"%@\"을(를) 삭제하시겠습니까?\n\n경고: 이 카테고리와 관련된 모든 사진과 가이드라인이 영구적으로 삭제됩니다. 이 작업은 취소할 수 없습니다.";
+"category.management.delete" = "삭제";
+"category.management.add_failed" = "카테고리 추가 실패";
+"category.management.default" = "기본";
+"category.management.guideline_set" = "가이드라인 설정됨";
+"category.management.edit_name_action" = "이름 편집";
+"category.management.set_guideline" = "가이드라인 설정";
+
+/* Premium Category Feature */
+"category.premium.title" = "다중 카테고리 기능";
+"category.premium.description" = "프리미엄으로 최대 4개의 카테고리를 만들어\n사진을 조직하고 관리하세요";
+"category.premium.feature1" = "여러 각도 동시 관리";
+"category.premium.feature2" = "카테고리별 가이드라인";
+"category.premium.feature3" = "나란히 비디오 생성";
+"category.premium.feature4" = "카테고리 필터링";
+"category.premium.upgrade" = "프리미엄으로 업그레이드";
+
+/* Video Generation */
+"video.layout" = "레이아웃";
+"video.layout.single" = "단일";
+"video.layout.sidebyside" = "나란히";
+"video.category.select" = "카테고리 선택 (최대 4개)";
+
+/* Gallery Filter */
+"gallery.filter" = "필터";
+"gallery.filter.category" = "카테고리";
+"gallery.filter.sort" = "정렬";
+"gallery.filter.newest" = "최신 순";
+"gallery.filter.oldest" = "오래된 순";
+"gallery.filter.all_categories" = "모든 카테고리";
+"gallery.filter.reset" = "필터 초기화";
+"gallery.photos_count" = "%d개 사진";
+
+/* Import/Export */
+"import_export.title" = "데이터 가져오기/내보내기";
+"import_export.export" = "내보내기";
+"import_export.import" = "가져오기";
+"import_export.export_data" = "데이터 내보내기";
+"import_export.export_description" = "사진, 비디오 및 설정 백업";
+"import_export.import_data" = "데이터 가져오기";
+"import_export.import_description" = "백업에서 데이터 복원";
+"import_export.import_footer" = "BodyLapse 내보내기 파일(.bodylapse)만 가져올 수 있습니다";
+"import_export.export_completed" = "내보내기 완료";
+"import_export.export_completed_message" = "데이터 내보내기가 성공적으로 완료되었습니다";
+"import_export.import_completed" = "가져오기 완료";
+"import_export.import_summary" = "가져오기 완료:\n\n사진: %d\n비디오: %d\n카테고리: %d\n체중 데이터: %d\n메모: %d";
+"import_export.data_types" = "데이터 유형";
+"import_export.photos" = "사진";
+"import_export.videos" = "비디오";
+"import_export.weight_data" = "체중 및 체지방 데이터";
+"import_export.notes" = "메모";
+"import_export.settings" = "설정";
+"import_export.period" = "기간";
+"import_export.specify_period" = "기간 지정";
+"import_export.start_date" = "시작 날짜";
+"import_export.end_date" = "종료 날짜";
+"import_export.categories" = "카테고리";
+"import_export.select_all" = "모두 선택";
+"import_export.single_category" = "하나의 카테고리만";
+"import_export.export_options" = "내보내기 옵션";
+
+/* Guideline Setup */
+"guideline.setup.title" = "바디 가이드라인 설정";
+"guideline.setup.description" = "이 가이드라인은 이 카테고리의 사진에서 일관된 포지셔닝을 유지하는 데 도움이 됩니다";
+"guideline.setup.start" = "설정 시작";
+"guideline.setup.nav_title" = "바디 가이드라인 설정";
+
+/* Notification Onboarding */
+"onboarding.notification.title" = "꾸준히 기록하세요";
+"onboarding.notification.subtitle" = "하루도 놓치지 마세요";
+"onboarding.notification.description" = "오후 7시까지 사진을 찍지 않으면 BodyLapse가 알려드립니다";
+"onboarding.notification.daily_reminder" = "사진이 없으면 오후 7시에 일일 알림";
+"onboarding.enable_notifications" = "알림 활성화";
+
+/* Additional Strings */
+"settings.import_export" = "데이터 가져오기/내보내기";
+"settings.debug_options" = "디버그 옵션";
+"settings.premium_mode" = "프리미엄 모드";
+"settings.allow_past_photos" = "과거 날짜 사진 허용";
+"settings.subscription_status" = "구독 상태";
+"settings.expiration_date" = "만료 날짜";
+"calendar.photo_taken" = "사진 촬영됨";
+"calendar.selected" = "선택됨";
+"calendar.select_date_title" = "날짜 선택";
+"calendar.data_available" = "데이터 사용 가능";
+"calendar.data_includes_note" = "※ 데이터에는 체중, 체지방률 및 메모가 포함됩니다";
+"memo.add_memo" = "메모 추가";
+"memo.content" = "메모 내용";
+"memo.save" = "저장";
+"memo.delete" = "메모 삭제";
+"photo.captured_on" = "촬영 날짜";
+"photo.details" = "사진 상세정보";
+"photo.body_detected" = "신체 감지됨 (%d%% 신뢰도)";
+"photo.delete_title" = "사진 삭제";
+"photo.delete_message" = "이 사진을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.";
+"weight.track_progress" = "진행 상황 추적";
+"weight.add_measurements" = "현재 측정값 추가";
+"weight.save_photo" = "사진 저장";
+"weight.skip_save" = "건너뛰고 사진 저장";
+"gallery.section_videos" = "비디오";
+"gallery.section_photos" = "사진";
+"notification.no_photo_title" = "아직 오늘 사진을 찍지 않았습니다";
+"notification.no_photo_body" = "오늘의 진행 상황을 기록해보세요! 탭하여 촬영을 시작하세요";
+"import.preparing_export" = "내보내기 준비 중...";
+"import.preparing_import" = "가져오기 준비 중...";
+"import.preparing_photos" = "사진 준비 중...";
+"import.preparing_videos" = "비디오 준비 중...";
+"import.compressing_data" = "데이터 압축 중...";
+"import.completing_export" = "내보내기 완료 중...";
+"import.extracting_files" = "파일 추출 중...";
+"import.importing_photos" = "사진 가져오는 중...";
+"import.importing_videos" = "비디오 가져오는 중...";
+"import.completing_import" = "가져오기 완료 중...";
+"import.data_to_import" = "가져올 데이터";
+"import.duplicate_handling" = "중복 데이터 처리";
+"import.handling_method" = "처리 방법";
+"import.skip" = "건너뛰기";
+"import.replace" = "교체";
+"import.keep_both" = "둘 다 유지";
+"import.skip_description" = "기존 데이터는 보존되고 새 데이터만 추가됩니다";
+"import.replace_description" = "기존 데이터가 새 데이터로 덮어씁니다";
+"import.keep_both_description" = "두 데이터 모두 유지됩니다 (사진과 비디오는 다른 이름으로 저장)";
+"import.import_options" = "가져오기 옵션";
+"import.import_button" = "가져오기";
+
+/* Date Formats */
+"date.format.month_year" = "yyyy년 MM월";
+"date.format.medium" = "yyyy년 MM월 dd일";
+"date.format.short" = "M/d";
+"date.format.long" = "yyyy년 MM월 dd일";
+
+/* Debug Options */
+"settings.debug.premium_mode" = "프리미엄 모드";
+"settings.debug.past_photos" = "과거 날짜 사진 허용";
+
+/* Weight View */
+"weight.percentage_format" = "%.1f%%";
+
+/* Sync Status */
+"settings.sync.syncing" = "동기화 중...";
+"settings.sync.last_sync" = "마지막 동기화: %@";
+"settings.sync.never" = "없음";
+
+/* Photo Detail */
+"photo.confidence_level" = "신체 감지됨 (%d%% 신뢰도)";
+"photo.weight_format" = "체중: %.1f %@";
+"photo.body_fat_format" = "체지방률: %.1f%%";
+
+/* Memo */
+"memo.character_count" = "%d/100";
+"memo.edit" = "편집";
+
+/* Import Status */
+"import.file_count" = "%d개 파일";
+"import.success" = "성공";
+"import.failed" = "실패";
+
+/* Navigation Titles */
+"nav.select_date" = "날짜 선택";
+"nav.review_photo" = "사진 검토";
+"nav.premium_subscription" = "프리미엄 구독";
+"nav.photo_saved" = "사진 저장 완료!";
+"nav.weight_tracking" = "체중 추적";
+"nav.add_entry" = "항목 추가";
+
+/* Chart Labels */
+"chart.weight" = "체중";
+"chart.body_fat" = "체지방";
+"chart.no_data" = "데이터 없음";
+"chart.tap_to_add" = "탭하여 추가";
+
+/* Confirmation View */
+"confirm.retake" = "다시 찍기";
+"confirm.confirm" = "확인";

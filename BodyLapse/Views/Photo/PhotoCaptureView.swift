@@ -196,11 +196,11 @@ struct PhotoWeightInputView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Photo Saved!")
+            .navigationTitle("nav.photo_saved".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Skip") {
+                    Button("common.skip".localized) {
                         onSave(nil, nil)
                         dismiss()
                     }

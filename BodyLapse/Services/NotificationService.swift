@@ -91,8 +91,8 @@ class NotificationService: NSObject {
         
         // Send reminder notification
         let content = UNMutableNotificationContent()
-        content.title = "まだ今日の写真を撮っていません"
-        content.body = "今日の進捗を記録しましょう！タップして撮影を開始"
+        content.title = "notification.no_photo_title".localized
+        content.body = "notification.no_photo_body".localized
         content.sound = .default
         content.badge = 1
         content.userInfo = ["openCamera": true]

@@ -176,11 +176,11 @@ struct CalendarPopupView: View {
                 }
                 .padding(.bottom)
             }
-            .navigationTitle("Select Date")
+            .navigationTitle("nav.select_date".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("common.done".localized) {
                         dismiss()
                     }
                 }

@@ -92,7 +92,7 @@ struct WeightTrackingView: View {
                 }
             }
         }
-        .navigationTitle("Weight Tracking")
+        .navigationTitle("nav.weight_tracking".localized)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -368,7 +368,7 @@ struct AddWeightEntryView: View {
                     }
                 }
             }
-            .navigationTitle("Add Entry")
+            .navigationTitle("nav.add_entry".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

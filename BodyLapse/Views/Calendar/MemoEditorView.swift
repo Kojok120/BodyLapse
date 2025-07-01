@@ -19,7 +19,7 @@ struct MemoEditorView: View {
                         .font(.system(size: 50))
                         .foregroundColor(.accentColor)
                     
-                    Text("メモを追加")
+                    Text("memo.add_memo".localized)
                         .font(.title2)
                         .fontWeight(.bold)
                     
@@ -32,7 +32,7 @@ struct MemoEditorView: View {
                 
                 // Text editor
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("メモ内容")
+                    Text("memo.content".localized)
                         .font(.headline)
                         .foregroundColor(.primary)
                         .padding(.horizontal)
@@ -63,7 +63,7 @@ struct MemoEditorView: View {
                 // Action buttons
                 VStack(spacing: 15) {
                     Button(action: save) {
-                        Text("保存")
+                        Text("memo.save".localized)
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -75,7 +75,7 @@ struct MemoEditorView: View {
                     
                     if !initialContent.isEmpty {
                         Button(action: delete) {
-                            Text("メモを削除")
+                            Text("memo.delete".localized)
                                 .font(.subheadline)
                                 .foregroundColor(.red)
                         }
@@ -87,7 +87,7 @@ struct MemoEditorView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("キャンセル") {
+                    Button("common.cancel".localized) {
                         dismiss()
                     }
                 }
@@ -117,7 +117,8 @@ struct MemoEditorView: View {
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy年MM月dd日"
+        formatter.dateStyle = .long
+        formatter.timeStyle = .none
         return formatter.string(from: date)
     }
 }

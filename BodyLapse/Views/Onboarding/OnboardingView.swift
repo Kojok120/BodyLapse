@@ -180,7 +180,7 @@ struct OnboardingView: View {
                                         }
                                     }
                                 }) {
-                                    Text("premium.restore_purchases".localized)
+                                    Text("premium.restore".localized)
                                         .font(.caption)
                                         .foregroundColor(.accentColor)
                                 }
@@ -207,7 +207,7 @@ struct OnboardingView: View {
                         .padding()
                     }
                 }
-                .navigationTitle("Premium Subscription")
+                .navigationTitle("nav.premium_subscription".localized)
                 .navigationBarTitleDisplayMode(.inline)
                 .alert("premium.purchase_error".localized, isPresented: .constant(premiumViewModel.purchaseError != nil)) {
                     Button("common.ok".localized) {

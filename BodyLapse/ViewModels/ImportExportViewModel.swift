@@ -21,7 +21,7 @@ class ImportExportViewModel: ObservableObject {
         isExporting = true
         exportCompleted = false
         progress = 0
-        progressMessage = "エクスポートを準備中..."
+        progressMessage = "import.preparing_export".localized
         error = nil
         errorMessage = nil
         
@@ -61,7 +61,7 @@ class ImportExportViewModel: ObservableObject {
         isImporting = true
         importCompleted = false
         progress = 0
-        progressMessage = "インポートを準備中..."
+        progressMessage = "import.preparing_import".localized
         error = nil
         errorMessage = nil
         
@@ -102,23 +102,23 @@ class ImportExportViewModel: ObservableObject {
         
         if isExporting {
             if percentage < 30 {
-                progressMessage = "写真を準備中..."
+                progressMessage = "import.preparing_photos".localized
             } else if percentage < 60 {
-                progressMessage = "動画を準備中..."
+                progressMessage = "import.preparing_videos".localized
             } else if percentage < 90 {
-                progressMessage = "データを圧縮中..."
+                progressMessage = "import.compressing_data".localized
             } else {
-                progressMessage = "エクスポートを完了中..."
+                progressMessage = "import.completing_export".localized
             }
         } else {
             if percentage < 20 {
-                progressMessage = "ファイルを展開中..."
+                progressMessage = "import.extracting_files".localized
             } else if percentage < 50 {
-                progressMessage = "写真をインポート中..."
+                progressMessage = "import.importing_photos".localized
             } else if percentage < 80 {
-                progressMessage = "動画をインポート中..."
+                progressMessage = "import.importing_videos".localized
             } else {
-                progressMessage = "インポートを完了中..."
+                progressMessage = "import.completing_import".localized
             }
         }
     }
@@ -139,48 +139,48 @@ struct ImportOptionsSheet: View {
     var body: some View {
         NavigationView {
             Form {
-                Section("インポートするデータ") {
-                    Toggle("写真", isOn: $importPhotos)
-                    Toggle("動画", isOn: $importVideos)
-                    Toggle("体重・体脂肪率データ", isOn: $importWeightData)
-                    Toggle("メモ", isOn: $importNotes)
-                    Toggle("設定", isOn: $importSettings)
+                Section("import.data_to_import".localized) {
+                    Toggle("import_export.photos".localized, isOn: $importPhotos)
+                    Toggle("import_export.videos".localized, isOn: $importVideos)
+                    Toggle("import_export.weight_data".localized, isOn: $importWeightData)
+                    Toggle("import_export.notes".localized, isOn: $importNotes)
+                    Toggle("import_export.settings".localized, isOn: $importSettings)
                 }
                 
-                Section("重複データの処理") {
-                    Picker("処理方法", selection: $mergeStrategy) {
-                        Text("スキップ").tag(ImportExportService.ImportOptions.MergeStrategy.skip)
-                        Text("置き換え").tag(ImportExportService.ImportOptions.MergeStrategy.replace)
-                        Text("両方保持").tag(ImportExportService.ImportOptions.MergeStrategy.keepBoth)
+                Section("import.duplicate_handling".localized) {
+                    Picker("import.handling_method".localized, selection: $mergeStrategy) {
+                        Text("import.skip".localized).tag(ImportExportService.ImportOptions.MergeStrategy.skip)
+                        Text("import.replace".localized).tag(ImportExportService.ImportOptions.MergeStrategy.replace)
+                        Text("import.keep_both".localized).tag(ImportExportService.ImportOptions.MergeStrategy.keepBoth)
                     }
                     
                     switch mergeStrategy {
                     case .skip:
-                        Text("既存のデータはそのまま保持され、新しいデータのみ追加されます")
+                        Text("import.skip_description".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     case .replace:
-                        Text("既存のデータが新しいデータで上書きされます")
+                        Text("import.replace_description".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     case .keepBoth:
-                        Text("両方のデータが保持されます（写真・動画は別名で保存）")
+                        Text("import.keep_both_description".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
             }
-            .navigationTitle("インポートオプション")
+            .navigationTitle("import.import_options".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("キャンセル") {
+                    Button("common.cancel".localized) {
                         dismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("インポート") {
+                    Button("import.import_button".localized) {
                         startImport()
                     }
                     .fontWeight(.semibold)

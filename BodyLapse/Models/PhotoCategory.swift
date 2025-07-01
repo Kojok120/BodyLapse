@@ -18,7 +18,7 @@ struct PhotoCategory: Codable, Identifiable, Equatable {
     
     static let defaultCategory = PhotoCategory(
         id: "front",
-        name: "正面",
+        name: "category.default.front".localized,
         order: 0,
         isDefault: true,
         guideline: nil,

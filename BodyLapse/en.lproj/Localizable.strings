@@ -226,7 +226,7 @@
 "onboarding.premium.price" = "Premium Plan";
 "onboarding.premium.price.detail" = "Cancel anytime • Free trial available";
 "onboarding.premium.price.fallback" = "$4.99(USD) / month";
-"onboarding.premium.trial" = "7-day free trial";
+"onboarding.premium.trial" = "1-month free trial";
 "onboarding.premium.cancel_anytime" = "Cancel anytime";
 
 /* Authentication */
@@ -303,6 +303,9 @@
 "onboarding.premium_offer.benefit3" = "No watermark on videos";
 "onboarding.premium_offer.start_trial" = "Start Free Trial";
 "onboarding.premium_offer.maybe_later" = "Maybe Later";
+
+/* Category Names */
+"category.default.front" = "Front";
 
 /* Category Management */
 "category.management.title" = "Category Management";
@@ -391,3 +394,104 @@
 "onboarding.notification.description" = "BodyLapse will remind you if you haven't taken a photo by 7 PM";
 "onboarding.notification.daily_reminder" = "Daily reminder at 7 PM if no photo taken";
 "onboarding.enable_notifications" = "Enable Notifications";
+
+/* Additional Strings */
+"settings.import_export" = "Import/Export Data";
+"settings.debug_options" = "Debug Options";
+"settings.premium_mode" = "Premium Mode";
+"settings.allow_past_photos" = "Allow Past Date Photos";
+"settings.subscription_status" = "Subscription Status";
+"settings.expiration_date" = "Expiration Date";
+"calendar.photo_taken" = "Photo taken";
+"calendar.selected" = "Selected";
+"calendar.select_date_title" = "Select Date";
+"calendar.data_available" = "Data available";
+"calendar.data_includes_note" = "※ Data includes weight, body fat percentage, and memos";
+"memo.add_memo" = "Add Memo";
+"memo.content" = "Memo Content";
+"memo.save" = "Save";
+"memo.delete" = "Delete Memo";
+"photo.captured_on" = "Captured on";
+"photo.details" = "Photo Details";
+"photo.body_detected" = "Body detected (%d%% confidence)";
+"photo.delete_title" = "Delete Photo";
+"photo.delete_message" = "Are you sure you want to delete this photo? This action cannot be undone.";
+"weight.track_progress" = "Track Your Progress";
+"weight.add_measurements" = "Add your current measurements";
+"weight.save_photo" = "Save Photo";
+"weight.skip_save" = "Skip & Save Photo";
+"gallery.section_videos" = "Videos";
+"gallery.section_photos" = "Photos";
+"notification.no_photo_title" = "Haven't taken today's photo yet";
+"notification.no_photo_body" = "Let's record today's progress! Tap to start shooting";
+"import.preparing_export" = "Preparing export...";
+"import.preparing_import" = "Preparing import...";
+"import.preparing_photos" = "Preparing photos...";
+"import.preparing_videos" = "Preparing videos...";
+"import.compressing_data" = "Compressing data...";
+"import.completing_export" = "Completing export...";
+"import.extracting_files" = "Extracting files...";
+"import.importing_photos" = "Importing photos...";
+"import.importing_videos" = "Importing videos...";
+"import.completing_import" = "Completing import...";
+"import.data_to_import" = "Data to Import";
+"import.duplicate_handling" = "Duplicate Data Handling";
+"import.handling_method" = "Handling Method";
+"import.skip" = "Skip";
+"import.replace" = "Replace";
+"import.keep_both" = "Keep Both";
+"import.skip_description" = "Existing data will be preserved, only new data will be added";
+"import.replace_description" = "Existing data will be overwritten with new data";
+"import.keep_both_description" = "Both data will be kept (photos and videos saved with different names)";
+"import.import_options" = "Import Options";
+"import.import_button" = "Import";
+
+/* Date Formats */
+"date.format.month_year" = "MMMM yyyy";
+"date.format.medium" = "MMM d, yyyy";
+"date.format.short" = "M/d";
+"date.format.long" = "MMMM d, yyyy";
+
+/* Debug Options */
+"settings.debug.premium_mode" = "Premium Mode";
+"settings.debug.past_photos" = "Allow Past Date Photos";
+
+/* Weight View */
+"weight.percentage_format" = "%.1f%%";
+
+/* Sync Status */
+"settings.sync.syncing" = "Syncing...";
+"settings.sync.last_sync" = "Last sync: %@";
+"settings.sync.never" = "Never";
+
+/* Photo Detail */
+"photo.confidence_level" = "Body detected (%d%% confidence)";
+"photo.weight_format" = "Weight: %.1f %@";
+"photo.body_fat_format" = "Body Fat: %.1f%%";
+
+/* Memo */
+"memo.character_count" = "%d/100";
+"memo.edit" = "Edit";
+
+/* Import Status */
+"import.file_count" = "%d files";
+"import.success" = "Success";
+"import.failed" = "Failed";
+
+/* Navigation Titles */
+"nav.select_date" = "Select Date";
+"nav.review_photo" = "Review Photo";
+"nav.premium_subscription" = "Premium Subscription";
+"nav.photo_saved" = "Photo Saved!";
+"nav.weight_tracking" = "Weight Tracking";
+"nav.add_entry" = "Add Entry";
+
+/* Chart Labels */
+"chart.weight" = "Weight";
+"chart.body_fat" = "Body Fat";
+"chart.no_data" = "No data";
+"chart.tap_to_add" = "Tap + to add";
+
+/* Confirmation View */
+"confirm.retake" = "Retake";
+"confirm.confirm" = "Confirm";

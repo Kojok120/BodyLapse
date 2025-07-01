@@ -102,7 +102,7 @@ struct InteractiveWeightChartView: View {
                     HStack(spacing: 20) {
                         if let selectedEntry = selectedEntry {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Weight")
+                                Text("chart.weight".localized)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
@@ -115,7 +115,7 @@ struct InteractiveWeightChartView: View {
                             
                             if let bodyFat = selectedEntry.bodyFatPercentage {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("Body Fat")
+                                    Text("chart.body_fat".localized)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                     Text("\(bodyFat, specifier: "%.1f")%")
@@ -128,10 +128,10 @@ struct InteractiveWeightChartView: View {
                             }
                         } else {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("No data")
+                                Text("chart.no_data".localized)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                Text("Tap + to add")
+                                Text("chart.tap_to_add".localized)
                                     .font(.body)
                                     .foregroundColor(.secondary)
                             }
