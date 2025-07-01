@@ -13,6 +13,9 @@ struct UserSettings: Codable {
     var appLockMethod: AppLockMethod = .biometric
     var appPasscode: String?
     
+    // App Rating
+    var hasRatedApp: Bool = false
+    
     // Debug settings
     #if DEBUG
     var debugAllowPastDatePhotos: Bool = false

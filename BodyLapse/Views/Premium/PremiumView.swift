@@ -73,7 +73,7 @@ struct PremiumView: View {
                             )
                             
                             PremiumFeatureRowView(
-                                icon: "photo.stack.badge.plus",
+                                icon: "photo.stack",
                                 title: "premium.feature.advanced_tracking".localized,
                                 description: "premium.feature.advanced_tracking_desc".localized
                             )

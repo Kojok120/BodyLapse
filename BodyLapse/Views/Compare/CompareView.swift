@@ -156,39 +156,11 @@ struct CompareView: View {
                         Group {
                             if let photo = firstPhoto,
                                let image = PhotoStorageService.shared.loadImage(for: photo) {
-                                ZStack {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                        .clipped()
-                                        .overlay(
-                                            VStack {
-                                                HStack {
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("compare.before".localized)
-                                                            .font(.caption)
-                                                            .fontWeight(.bold)
-                                                        Text(formatDateShort(photo.captureDate))
-                                                            .font(.caption2)
-                                                        if subscriptionManager.isPremium && availableCategories.count > 1,
-                                                           let category = availableCategories.first(where: { $0.id == photo.categoryId }) {
-                                                            Text(category.name)
-                                                                .font(.caption2)
-                                                                .foregroundColor(.bodyLapseTurquoise)
-                                                        }
-                                                    }
-                                                    .padding(6)
-                                                    .background(Color.black.opacity(0.7))
-                                                    .foregroundColor(.white)
-                                                    .cornerRadius(4)
-                                                    .padding(8)
-                                                    Spacer()
-                                                }
-                                                Spacer()
-                                            }
-                                        )
-                                }
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                    .clipped()
                             } else {
                                 Rectangle()
                                     .fill(Color(UIColor.systemGray5))
@@ -269,39 +241,11 @@ struct CompareView: View {
                         Group {
                             if let photo = secondPhoto,
                                let image = PhotoStorageService.shared.loadImage(for: photo) {
-                                ZStack {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                        .clipped()
-                                        .overlay(
-                                            VStack {
-                                                HStack {
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("compare.after".localized)
-                                                            .font(.caption)
-                                                            .fontWeight(.bold)
-                                                        Text(formatDateShort(photo.captureDate))
-                                                            .font(.caption2)
-                                                        if subscriptionManager.isPremium && availableCategories.count > 1,
-                                                           let category = availableCategories.first(where: { $0.id == photo.categoryId }) {
-                                                            Text(category.name)
-                                                                .font(.caption2)
-                                                                .foregroundColor(.bodyLapseTurquoise)
-                                                        }
-                                                    }
-                                                    .padding(6)
-                                                    .background(Color.black.opacity(0.7))
-                                                    .foregroundColor(.white)
-                                                    .cornerRadius(4)
-                                                    .padding(8)
-                                                    Spacer()
-                                                }
-                                                Spacer()
-                                            }
-                                        )
-                                }
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                    .clipped()
                             } else {
                                 Rectangle()
                                     .fill(Color(UIColor.systemGray5))

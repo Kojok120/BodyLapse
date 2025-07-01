@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import StoreKit
 
 class PhotoStorageService {
     static let shared = PhotoStorageService()
@@ -88,6 +89,9 @@ class PhotoStorageService {
         savePhotosMetadata()
         
         // Photo saved to metadata
+        
+        // Check if we should request app review
+        checkAndRequestReviewIfNeeded()
         
         return photo
     }
@@ -360,6 +364,40 @@ class PhotoStorageService {
         
         if needsSave {
             savePhotosMetadata()
+        }
+    }
+    
+    // MARK: - App Rating Support
+    
+    func getCumulativePhotoDays() -> Int {
+        let calendar = Calendar.current
+        let uniqueDates = Set(photos.map { calendar.startOfDay(for: $0.captureDate) })
+        return uniqueDates.count
+    }
+    
+    func checkAndRequestReviewIfNeeded() {
+        Task { @MainActor in
+            let userSettings = UserSettingsManager.shared
+            
+            // Skip if user has already rated the app
+            if userSettings.settings.hasRatedApp {
+                return
+            }
+            
+            let cumulativeDays = getCumulativePhotoDays()
+            
+            // Check if cumulative days is a multiple of 30 (but not 0)
+            if cumulativeDays > 0 && cumulativeDays % 30 == 0 {
+                // Request review
+                if let windowScene = UIApplication.shared.connectedScenes
+                    .filter({ $0.activationState == .foregroundActive })
+                    .first as? UIWindowScene {
+                    SKStoreReviewController.requestReview(in: windowScene)
+                    
+                    // Mark as rated to avoid showing again
+                    userSettings.settings.hasRatedApp = true
+                }
+            }
         }
     }
 }

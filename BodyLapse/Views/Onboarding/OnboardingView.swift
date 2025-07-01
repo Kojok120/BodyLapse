@@ -378,7 +378,7 @@ struct OnboardingView: View {
                 )
                 
                 premiumFeatureItem(
-                    icon: "photo.stack.badge.plus",
+                    icon: "photo.stack",
                     title: "onboarding.premium.advanced_tracking.title".localized,
                     description: "onboarding.premium.advanced_tracking.description".localized
                 )
@@ -632,22 +632,7 @@ struct OnboardingView: View {
                 .padding()
             } else {
                 // Step 5 - Premium features screen
-                VStack(spacing: 4) {
-                    Button(action: {
-                        hideKeyboard()
-                        // Show Apple's subscription sheet
-                        showingSubscriptionSheet = true
-                    }) {
-                        Text("common.continue".localized)
-                            .frame(minWidth: 80)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 8)
-                            .background(Color.accentColor)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                            .fontWeight(.medium)
-                    }
-                    
+                HStack(spacing: 16) {
                     Button(action: {
                         hideKeyboard()
                         // Skip premium and continue to onboarding
@@ -656,13 +641,28 @@ struct OnboardingView: View {
                             currentStep = 1
                         }
                     }) {
-                        Text("Maybe Later")
+                        Text("onboarding.premium_offer.maybe_later".localized)
                             .foregroundColor(.secondary)
                             .fontWeight(.medium)
-                            .font(.callout)
+                            .font(.body)
+                    }
+                    
+                    Button(action: {
+                        hideKeyboard()
+                        // Show Apple's subscription sheet
+                        showingSubscriptionSheet = true
+                    }) {
+                        Text("common.continue".localized)
+                            .frame(minWidth: 120)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(Color.accentColor)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .fontWeight(.medium)
                     }
                 }
-                .padding(.vertical, 2)
+                .padding(.vertical, 8)
                 .padding(.horizontal)
             }
         }
