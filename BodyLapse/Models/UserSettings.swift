@@ -22,8 +22,8 @@ struct UserSettings: Codable {
     #endif
     
     enum WeightUnit: String, Codable, CaseIterable {
-        case kg = "Kilograms"
-        case lbs = "Pounds"
+        case kg = "kg"
+        case lbs = "lbs"
         
         var symbol: String {
             switch self {

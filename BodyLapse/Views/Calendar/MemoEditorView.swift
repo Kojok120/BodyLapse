@@ -12,78 +12,93 @@ struct MemoEditorView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                VStack(spacing: 10) {
-                    Image(systemName: "note.text")
-                        .font(.system(size: 50))
-                        .foregroundColor(.accentColor)
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Header
+                    VStack(spacing: 10) {
+                        Image(systemName: "note.text")
+                            .font(.system(size: 50))
+                            .foregroundColor(.accentColor)
+                        
+                        Text("memo.add_memo".localized)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text(formatDate(date))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 30)
+                    .padding(.bottom, 20)
                     
-                    Text("memo.add_memo".localized)
-                        .font(.title2)
-                        .fontWeight(.bold)
+                    // Text editor
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("memo.content".localized)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .padding(.horizontal)
+                        
+                        TextEditor(text: $memoText)
+                            .font(.body)
+                            .padding(8)
+                            .frame(height: 150)
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(10)
+                            .padding(.horizontal)
+                            .focused($isTextFieldFocused)
+                            .scrollContentBackground(.hidden)
+                            .onChange(of: memoText) { _, newValue in
+                                if newValue.count > 100 {
+                                    memoText = String(newValue.prefix(100))
+                                }
+                            }
+                            .toolbar {
+                                ToolbarItemGroup(placement: .keyboard) {
+                                    Spacer()
+                                    Button("common.done".localized) {
+                                        isTextFieldFocused = false
+                                    }
+                                }
+                            }
+                        
+                        Text("\(memoText.count)/100")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                            .padding(.top, 4)
+                    }
+                    .padding(.vertical)
                     
-                    Text(formatDate(date))
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.top, 30)
-                .padding(.bottom, 20)
-                
-                // Text editor
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("memo.content".localized)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .padding(.horizontal)
+                    // Add some spacing before buttons
+                    Spacer()
+                        .frame(minHeight: 20)
                     
-                    TextEditor(text: $memoText)
-                        .font(.body)
-                        .padding(8)
-                        .background(Color(UIColor.secondarySystemBackground))
-                        .cornerRadius(10)
-                        .padding(.horizontal)
-                        .focused($isTextFieldFocused)
-                        .onChange(of: memoText) { _, newValue in
-                            if newValue.count > 100 {
-                                memoText = String(newValue.prefix(100))
+                    // Action buttons
+                    VStack(spacing: 15) {
+                        Button(action: save) {
+                            Text("memo.save".localized)
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color.accentColor)
+                                .cornerRadius(12)
+                        }
+                        .disabled(memoText.isEmpty || memoText.count > 100)
+                        
+                        if !initialContent.isEmpty {
+                            Button(action: delete) {
+                                Text("memo.delete".localized)
+                                    .font(.subheadline)
+                                    .foregroundColor(.red)
                             }
                         }
-                    
-                    Text("\(memoText.count)/100")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal)
-                        .padding(.top, 4)
-                }
-                .padding(.vertical)
-                
-                Spacer()
-                
-                // Action buttons
-                VStack(spacing: 15) {
-                    Button(action: save) {
-                        Text("memo.save".localized)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.accentColor)
-                            .cornerRadius(12)
                     }
-                    .disabled(memoText.isEmpty || memoText.count > 100)
-                    
-                    if !initialContent.isEmpty {
-                        Button(action: delete) {
-                            Text("memo.delete".localized)
-                                .font(.subheadline)
-                                .foregroundColor(.red)
-                        }
-                    }
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 30)
                 }
-                .padding(.horizontal, 30)
-                .padding(.bottom, 30)
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -96,8 +111,10 @@ struct MemoEditorView: View {
         .onAppear {
             memoText = initialContent
             // Auto-focus the text field when view appears
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                isTextFieldFocused = true
+            if initialContent.isEmpty {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    isTextFieldFocused = true
+                }
             }
         }
     }
