@@ -37,7 +37,7 @@ struct CategoryManagementView: View {
                             }
                         },
                         onResetGuideline: {
-                            resetGuideline(for: category)
+                            // Navigation handled in CategoryRowView
                         }
                     )
                 }
@@ -93,7 +93,7 @@ struct CategoryManagementView: View {
                 }
             }
         } message: {
-            Text(String(format: "category.management.delete_message".localized, categoryToDelete?.name ?? ""))
+            Text(String(format: "category.management.delete_warning".localized, categoryToDelete?.name ?? ""))
         }
         .alert("common.error".localized, isPresented: $showingAlert) {
             Button("common.ok".localized) {}
@@ -167,11 +167,6 @@ struct CategoryManagementView: View {
         CategoryStorageService.shared.deleteCategory(id: category.id)
         loadCategories()
     }
-    
-    private func resetGuideline(for category: PhotoCategory) {
-        // Navigate to guideline reset view
-        // This will be handled by the parent view
-    }
 }
 
 struct CategoryRowView: View {
@@ -179,6 +174,7 @@ struct CategoryRowView: View {
     let onEdit: () -> Void
     let onDelete: () -> Void
     let onResetGuideline: () -> Void
+    @State private var showingGuidelineSetup = false
     
     var body: some View {
         HStack {
@@ -209,7 +205,9 @@ struct CategoryRowView: View {
                         Label("category.management.edit_name_action".localized, systemImage: "pencil")
                     }
                     
-                    Button(action: onResetGuideline) {
+                    Button(action: {
+                        showingGuidelineSetup = true
+                    }) {
                         Label("category.management.set_guideline".localized, systemImage: "person.crop.rectangle.badge.plus")
                     }
                     
@@ -223,14 +221,22 @@ struct CategoryRowView: View {
                         .foregroundColor(.secondary)
                 }
             } else {
-                Button(action: onResetGuideline) {
+                Button(action: {
+                    showingGuidelineSetup = true
+                }) {
                     Image(systemName: "person.crop.rectangle.badge.plus")
                         .foregroundColor(.bodyLapseTurquoise)
                 }
-                .buttonStyle(BorderlessButtonStyle())
+                .buttonStyle(PlainButtonStyle())
             }
         }
         .padding(.vertical, 4)
+        .background(
+            NavigationLink(destination: CategoryGuidelineSetupView(category: category), isActive: $showingGuidelineSetup) {
+                EmptyView()
+            }
+            .hidden()
+        )
     }
 }
 

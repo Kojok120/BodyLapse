@@ -302,6 +302,7 @@
 "category.management.example" = "例：横向き、背面、筋肉など";
 "category.management.delete_title" = "カテゴリを削除";
 "category.management.delete_message" = "カテゴリ「%@」を削除しますか？\nこのカテゴリの写真は削除されません。";
+"category.management.delete_warning" = "カテゴリ「%@」を削除してもよろしいですか？\n\n警告：このカテゴリに関連するすべての写真とガイドラインが完全に削除されます。この操作は取り消せません。";
 "category.management.delete" = "削除";
 "category.management.add_failed" = "カテゴリの追加に失敗しました";
 "category.management.default" = "デフォルト";

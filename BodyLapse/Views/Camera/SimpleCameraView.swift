@@ -11,10 +11,12 @@ struct SimpleCameraView: UIViewControllerRepresentable {
     }
     
     func makeUIViewController(context: Context) -> SimpleCameraViewController {
+        print("SimpleCameraView: makeUIViewController called")
         let controller = SimpleCameraViewController()
         controller.onCapture = onCapture
         // Delay onReady callback to avoid state modification during view update
         DispatchQueue.main.async {
+            print("SimpleCameraView: Calling onReady callback")
             onReady?(controller)
         }
         return controller
@@ -35,6 +37,7 @@ class SimpleCameraViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("SimpleCameraViewController: viewDidLoad called")
         view.backgroundColor = .black
         checkCameraAuthorization()
     }
@@ -80,11 +83,15 @@ class SimpleCameraViewController: UIViewController {
     }
     
     private func checkCameraAuthorization() {
+        print("SimpleCameraViewController: Checking camera authorization")
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
+            print("SimpleCameraViewController: Camera authorized, setting up")
             setupCamera()
         case .notDetermined:
+            print("SimpleCameraViewController: Camera not determined, requesting access")
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                print("SimpleCameraViewController: Camera access granted: \(granted)")
                 if granted {
                     DispatchQueue.main.async {
                         self?.setupCamera()
@@ -92,21 +99,26 @@ class SimpleCameraViewController: UIViewController {
                 }
             }
         default:
-            print("Camera access denied")
+            print("SimpleCameraViewController: Camera access denied")
         }
     }
     
     private func setupCamera() {
+        print("SimpleCameraViewController: Starting camera setup")
         captureSession = AVCaptureSession()
         captureSession?.sessionPreset = .photo
         
-        guard let captureSession = captureSession else { return }
+        guard let captureSession = captureSession else { 
+            print("SimpleCameraViewController: Failed to create capture session")
+            return 
+        }
         
         // Setup camera input
         guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: currentPosition) else {
-            print("Camera not available")
+            print("SimpleCameraViewController: Camera not available")
             return
         }
+        print("SimpleCameraViewController: Found camera device")
         
         do {
             let input = try AVCaptureDeviceInput(device: camera)
@@ -134,8 +146,12 @@ class SimpleCameraViewController: UIViewController {
         }
         
         // Start session
+        print("SimpleCameraViewController: Starting capture session")
         DispatchQueue.global(qos: .userInitiated).async {
             captureSession.startRunning()
+            DispatchQueue.main.async {
+                print("SimpleCameraViewController: Capture session started")
+            }
         }
     }
     

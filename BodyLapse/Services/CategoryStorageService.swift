@@ -101,6 +101,24 @@ class CategoryStorageService {
         if let index = categories.firstIndex(where: { $0.id == id && $0.isCustom }) {
             categories[index].isActive = false
             saveCategories(categories)
+            
+            // Delete all photos associated with this category
+            deletePhotosForCategory(id: id)
+            
+            // Remove guideline for this category
+            removeGuideline(for: id)
+        }
+    }
+    
+    private func deletePhotosForCategory(id: String) {
+        // Get the documents directory
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        
+        let categoryFolderPath = documentsPath.appendingPathComponent("Photos").appendingPathComponent(id)
+        
+        // Remove the entire category folder if it exists
+        if FileManager.default.fileExists(atPath: categoryFolderPath.path) {
+            try? FileManager.default.removeItem(at: categoryFolderPath)
         }
     }
     

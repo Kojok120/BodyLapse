@@ -40,20 +40,23 @@ struct SettingsView: View {
                     
                     Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
                     
-                    Button(action: {
-                        if GuidelineStorageService.shared.hasGuideline() {
-                            showingResetGuidelineConfirmation = true
-                        } else {
-                            // If no guideline exists, directly show the guideline setup
-                            showingResetGuideline = true
-                        }
-                    }) {
-                        if GuidelineStorageService.shared.hasGuideline() {
-                            Label("settings.reset_guideline".localized, systemImage: "arrow.uturn.backward")
-                                .foregroundColor(.red)
-                        } else {
-                            Label("settings.set_guideline".localized, systemImage: "person.fill.viewfinder")
-                                .foregroundColor(.blue)
+                    // Only show guideline button for free users
+                    if !subscriptionManager.isPremium {
+                        Button(action: {
+                            if GuidelineStorageService.shared.hasGuideline() {
+                                showingResetGuidelineConfirmation = true
+                            } else {
+                                // If no guideline exists, directly show the guideline setup
+                                showingResetGuideline = true
+                            }
+                        }) {
+                            if GuidelineStorageService.shared.hasGuideline() {
+                                Label("settings.reset_guideline".localized, systemImage: "arrow.uturn.backward")
+                                    .foregroundColor(.red)
+                            } else {
+                                Label("settings.set_guideline".localized, systemImage: "person.fill.viewfinder")
+                                    .foregroundColor(.blue)
+                            }
                         }
                     }
                     

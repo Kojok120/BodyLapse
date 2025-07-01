@@ -11,8 +11,20 @@ struct ResetGuidelineView: View {
     @State private var shouldShowCamera = true
     @State private var showingSuccessAlert = false
     
+    let categoryId: String?
+    let categoryName: String?
+    
+    init(categoryId: String? = nil, categoryName: String? = nil) {
+        self.categoryId = categoryId
+        self.categoryName = categoryName
+    }
+    
     var body: some View {
         ZStack {
+            // Black background
+            Color.black
+                .edgesIgnoringSafeArea(.all)
+            
             if shouldShowCamera && !showingContourConfirmation {
                 SimpleCameraView { image in
                     handlePhotoCapture(image)
@@ -74,6 +86,16 @@ struct ResetGuidelineView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .shadow(radius: 2)
+                        
+                        if let name = categoryName {
+                            Text(name)
+                                .font(.headline)
+                                .foregroundColor(.bodyLapseTurquoise)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.black.opacity(0.7))
+                                .cornerRadius(20)
+                        }
                         
                         Text("reset_guideline.instruction".localized)
                             .font(.body)
@@ -174,7 +196,11 @@ struct ResetGuidelineView: View {
                 }
                 
                 let guideline = BodyGuideline(points: finalContour, imageSize: image.size, isFrontCamera: isFrontCamera)
-                GuidelineStorageService.shared.saveGuideline(guideline)
+                if let categoryId = self.categoryId {
+                    GuidelineStorageService.shared.saveGuideline(guideline, for: categoryId)
+                } else {
+                    GuidelineStorageService.shared.saveGuideline(guideline)
+                }
                 
                 // Notify that guideline has been updated
                 DispatchQueue.main.async {

@@ -312,6 +312,7 @@
 "category.management.example" = "Example: Side, Back, Muscles, etc.";
 "category.management.delete_title" = "Delete Category";
 "category.management.delete_message" = "Delete category \"%@\"?\nPhotos in this category will not be deleted.";
+"category.management.delete_warning" = "Are you sure you want to delete the category \"%@\"?\n\nWARNING: All photos and guidelines associated with this category will be permanently deleted. This action cannot be undone.";
 "category.management.delete" = "Delete";
 "category.management.add_failed" = "Failed to add category";
 "category.management.default" = "Default";
@@ -372,3 +373,9 @@
 "import_export.select_all" = "Select All";
 "import_export.single_category" = "Only one category";
 "import_export.export_options" = "Export Options";
+
+/* Guideline Setup */
+"guideline.setup.title" = "Set Body Guideline";
+"guideline.setup.description" = "This guideline will help you maintain consistent positioning for photos in this category";
+"guideline.setup.start" = "Start Setup";
+"guideline.setup.nav_title" = "Body Guideline Setup";
