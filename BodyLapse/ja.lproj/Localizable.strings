@@ -493,3 +493,9 @@
 /* Confirmation View */
 "confirm.retake" = "撮り直す";
 "confirm.confirm" = "確認";
+
+/* Timer */
+"timer.off" = "オフ";
+"timer.3s" = "3秒";
+"timer.5s" = "5秒";
+"timer.10s" = "10秒";

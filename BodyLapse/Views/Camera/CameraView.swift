@@ -103,6 +103,36 @@ struct CameraView: View {
                         }
                         #endif
                         
+                        // Timer button
+                        Menu {
+                            Button(action: { viewModel.timerDuration = 0 }) {
+                                Label("timer.off".localized, systemImage: viewModel.timerDuration == 0 ? "checkmark" : "")
+                            }
+                            Button(action: { viewModel.timerDuration = 3 }) {
+                                Label("timer.3s".localized, systemImage: viewModel.timerDuration == 3 ? "checkmark" : "")
+                            }
+                            Button(action: { viewModel.timerDuration = 5 }) {
+                                Label("timer.5s".localized, systemImage: viewModel.timerDuration == 5 ? "checkmark" : "")
+                            }
+                            Button(action: { viewModel.timerDuration = 10 }) {
+                                Label("timer.10s".localized, systemImage: viewModel.timerDuration == 10 ? "checkmark" : "")
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "timer")
+                                    .font(.title3)
+                                if viewModel.timerDuration > 0 {
+                                    Text("\(viewModel.timerDuration)s")
+                                        .font(.caption)
+                                }
+                            }
+                            .foregroundColor(.white)
+                            .frame(width: 60, height: 50)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(RoundedRectangle(cornerRadius: 25))
+                        }
+                        .padding(.leading, 20)
+                        
                         Spacer()
                         
                         // Camera switch button
@@ -124,11 +154,39 @@ struct CameraView: View {
                         BodyGuidelineView(isBodyDetected: viewModel.bodyDetected)
                     }
                     
+                    // Countdown display
+                    if viewModel.isCountingDown {
+                        Text("\(viewModel.countdownValue)")
+                            .font(.system(size: 120, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5)
+                            .transition(.scale.combined(with: .opacity))
+                            .animation(.easeInOut(duration: 0.3), value: viewModel.countdownValue)
+                    }
+                    
                     Spacer()
                     
                     // Capture button above tab bar
-                    CaptureButton {
-                        viewModel.capturePhoto()
+                    VStack(spacing: 10) {
+                        if viewModel.isCountingDown {
+                            Button(action: {
+                                viewModel.cancelCountdown()
+                            }) {
+                                Text("common.cancel".localized)
+                                    .font(.body)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 10)
+                                    .background(Color.red.opacity(0.8))
+                                    .cornerRadius(20)
+                            }
+                        }
+                        
+                        CaptureButton {
+                            viewModel.capturePhoto()
+                        }
+                        .disabled(viewModel.isCountingDown)
+                        .opacity(viewModel.isCountingDown ? 0.5 : 1.0)
                     }
                     .padding(.bottom, 20)
                 }

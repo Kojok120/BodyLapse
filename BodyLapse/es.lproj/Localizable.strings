@@ -495,3 +495,9 @@
 /* Confirmation View */
 "confirm.retake" = "Retomar";
 "confirm.confirm" = "Confirmar";
+
+/* Timer */
+"timer.off" = "Apagado";
+"timer.3s" = "3 segundos";
+"timer.5s" = "5 segundos";
+"timer.10s" = "10 segundos";

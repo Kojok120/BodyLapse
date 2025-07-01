@@ -495,3 +495,9 @@
 /* Confirmation View */
 "confirm.retake" = "다시 찍기";
 "confirm.confirm" = "확인";
+
+/* Timer */
+"timer.off" = "끄기";
+"timer.3s" = "3초";
+"timer.5s" = "5초";
+"timer.10s" = "10초";

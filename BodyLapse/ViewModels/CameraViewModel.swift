@@ -19,6 +19,9 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var savedGuideline: BodyGuideline?
     @Published var selectedCategory: PhotoCategory = PhotoCategory.defaultCategory
     @Published var availableCategories: [PhotoCategory] = []
+    @Published var timerDuration: Int = 0 // 0 = off, 3, 5, 10 seconds
+    @Published var countdownValue: Int = 0
+    @Published var isCountingDown = false
     
     #if DEBUG
     @Published var debugSelectedDate: Date = Date()
@@ -200,6 +203,45 @@ class CameraViewModel: NSObject, ObservableObject {
     }
     
     func capturePhoto() {
+        // If timer is set, start countdown
+        if timerDuration > 0 {
+            startCountdown()
+        } else {
+            // Capture immediately
+            capturePhotoNow()
+        }
+    }
+    
+    private func startCountdown() {
+        isCountingDown = true
+        countdownValue = timerDuration
+        
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            
+            if self.countdownValue > 1 {
+                self.countdownValue -= 1
+                // Haptic feedback for each count
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+            } else {
+                timer.invalidate()
+                self.countdownValue = 0
+                self.isCountingDown = false
+                self.capturePhotoNow()
+            }
+        }
+    }
+    
+    func cancelCountdown() {
+        isCountingDown = false
+        countdownValue = 0
+    }
+    
+    private func capturePhotoNow() {
         let settings = AVCapturePhotoSettings()
         output.capturePhoto(with: settings, delegate: self)
     }

@@ -10,6 +10,9 @@ struct ResetGuidelineView: View {
     @State private var contourError: String?
     @State private var shouldShowCamera = true
     @State private var showingSuccessAlert = false
+    @State private var timerDuration: Int = 0 // 0 = off, 3, 5, 10 seconds
+    @State private var countdownValue: Int = 0
+    @State private var isCountingDown = false
     
     let categoryId: String?
     let categoryName: String?
@@ -30,6 +33,14 @@ struct ResetGuidelineView: View {
                     handlePhotoCapture(image)
                 } onReady: { controller in
                     cameraController = controller
+                    controller.timerDuration = timerDuration
+                    controller.onCountdownUpdate = { value in
+                        countdownValue = value
+                        isCountingDown = value > 0
+                    }
+                    controller.onCountdownComplete = {
+                        isCountingDown = false
+                    }
                 }
                 .edgesIgnoringSafeArea(.all)
             } else if let image = capturedImage, let contour = detectedContour {
@@ -62,6 +73,48 @@ struct ResetGuidelineView: View {
                         
                         Spacer()
                         
+                        // Timer button
+                        Menu {
+                            Button(action: { 
+                                timerDuration = 0
+                                cameraController?.timerDuration = 0
+                            }) {
+                                Label("timer.off".localized, systemImage: timerDuration == 0 ? "checkmark" : "")
+                            }
+                            Button(action: { 
+                                timerDuration = 3
+                                cameraController?.timerDuration = 3
+                            }) {
+                                Label("timer.3s".localized, systemImage: timerDuration == 3 ? "checkmark" : "")
+                            }
+                            Button(action: { 
+                                timerDuration = 5
+                                cameraController?.timerDuration = 5
+                            }) {
+                                Label("timer.5s".localized, systemImage: timerDuration == 5 ? "checkmark" : "")
+                            }
+                            Button(action: { 
+                                timerDuration = 10
+                                cameraController?.timerDuration = 10
+                            }) {
+                                Label("timer.10s".localized, systemImage: timerDuration == 10 ? "checkmark" : "")
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "timer")
+                                    .font(.system(size: 20))
+                                if timerDuration > 0 {
+                                    Text("\(timerDuration)s")
+                                        .font(.caption)
+                                }
+                            }
+                            .foregroundColor(.white)
+                            .padding(10)
+                            .background(Circle().fill(Color.black.opacity(0.5)))
+                        }
+                        .disabled(cameraController == nil)
+                        .opacity(cameraController == nil ? 0.5 : 1.0)
+                        
                         Button(action: {
                             guard let controller = cameraController else { return }
                             controller.switchCamera()
@@ -76,6 +129,16 @@ struct ResetGuidelineView: View {
                         .opacity(cameraController == nil ? 0.5 : 1.0)
                         .padding(.trailing, 20)
                         .padding(.top, 60)
+                    }
+                    
+                    // Countdown display
+                    if isCountingDown {
+                        Text("\(countdownValue)")
+                            .font(.system(size: 120, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5)
+                            .transition(.scale.combined(with: .opacity))
+                            .animation(.easeInOut(duration: 0.3), value: countdownValue)
                     }
                     
                     Spacer()
@@ -103,25 +166,40 @@ struct ResetGuidelineView: View {
                             .multilineTextAlignment(.center)
                             .shadow(radius: 2)
                         
-                        Button(action: {
-                            guard let controller = cameraController, !isProcessing else { return }
-                            controller.capturePhoto()
-                        }) {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 70, height: 70)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.white, lineWidth: 3)
-                                        .frame(width: 80, height: 80)
-                                )
+                        if isCountingDown {
+                            Button(action: {
+                                cameraController?.cancelCountdown()
+                                isCountingDown = false
+                                countdownValue = 0
+                            }) {
+                                Text("common.cancel".localized)
+                                    .font(.body)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 10)
+                                    .background(Color.red.opacity(0.8))
+                                    .cornerRadius(20)
+                            }
+                        } else {
+                            Button(action: {
+                                guard let controller = cameraController, !isProcessing else { return }
+                                controller.capturePhoto()
+                            }) {
+                                Circle()
+                                    .fill(Color.white)
+                                    .frame(width: 70, height: 70)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.white, lineWidth: 3)
+                                            .frame(width: 80, height: 80)
+                                    )
+                            }
+                            .disabled(isProcessing || cameraController == nil)
+                            .opacity(isProcessing || cameraController == nil ? 0.5 : 1.0)
                         }
-                        .disabled(isProcessing || cameraController == nil)
-                        .opacity(isProcessing || cameraController == nil ? 0.5 : 1.0)
-                        .animation(.easeInOut(duration: 0.2), value: cameraController == nil)
-                        .padding(.bottom, 40)
                     }
                     .padding()
+                    .padding(.bottom, 40)
                 }
             }
             

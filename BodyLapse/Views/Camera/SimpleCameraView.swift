@@ -35,6 +35,13 @@ class SimpleCameraViewController: UIViewController {
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private(set) var currentPosition: AVCaptureDevice.Position = .back
     
+    // Timer properties
+    var timerDuration: Int = 0 // 0 = off, 3, 5, 10 seconds
+    private var countdownTimer: Timer?
+    private var countdownValue: Int = 0
+    var onCountdownUpdate: ((Int) -> Void)?
+    var onCountdownComplete: (() -> Void)?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         print("SimpleCameraViewController: viewDidLoad called")
@@ -156,6 +163,51 @@ class SimpleCameraViewController: UIViewController {
     }
     
     func capturePhoto() {
+        guard let photoOutput = photoOutput else { return }
+        
+        // If timer is set, start countdown
+        if timerDuration > 0 {
+            startCountdown()
+        } else {
+            // Capture immediately
+            capturePhotoNow()
+        }
+    }
+    
+    private func startCountdown() {
+        countdownValue = timerDuration
+        onCountdownUpdate?(countdownValue)
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            
+            if self.countdownValue > 1 {
+                self.countdownValue -= 1
+                self.onCountdownUpdate?(self.countdownValue)
+                // Haptic feedback
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+            } else {
+                timer.invalidate()
+                self.countdownValue = 0
+                self.onCountdownUpdate?(0)
+                self.onCountdownComplete?()
+                self.capturePhotoNow()
+            }
+        }
+    }
+    
+    func cancelCountdown() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        countdownValue = 0
+        onCountdownUpdate?(0)
+    }
+    
+    private func capturePhotoNow() {
         guard let photoOutput = photoOutput else { return }
         
         let settings = AVCapturePhotoSettings()
