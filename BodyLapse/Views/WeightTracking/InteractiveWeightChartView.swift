@@ -94,7 +94,7 @@ struct InteractiveWeightChartView: View {
             // Selected data display
             if let selectedDate = selectedDate {
                 HStack(spacing: 20) {
-                    Text(selectedDate.formatted(date: .abbreviated, time: .omitted))
+                    Text(formatDate(selectedDate))
                         .font(.subheadline)
                     
                     Spacer()
@@ -396,6 +396,23 @@ struct InteractiveWeightChartView: View {
     
     private func convertedWeight(_ weight: Double) -> Double {
         userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        
+        // Check current language and set appropriate format
+        let currentLanguage = LanguageManager.shared.currentLanguage
+        switch currentLanguage {
+        case "ja":
+            formatter.dateFormat = "yyyy/MM/dd"
+        case "ko":
+            formatter.dateFormat = "yyyy.MM.dd"
+        default:
+            formatter.dateFormat = "MMM d, yyyy"
+        }
+        
+        return formatter.string(from: date)
     }
 }
 

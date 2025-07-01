@@ -808,7 +808,18 @@ struct CalendarView: View {
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
+        
+        // Check current language and set appropriate format
+        let currentLanguage = LanguageManager.shared.currentLanguage
+        switch currentLanguage {
+        case .japanese:
+            formatter.dateFormat = "yyyy/MM/dd"
+        case .korean:
+            formatter.dateFormat = "yyyy.MM.dd"
+        default:
+            formatter.dateFormat = "MMM d, yyyy"
+        }
+        
         return formatter.string(from: date)
     }
     
@@ -1074,7 +1085,18 @@ struct WeightInputView: View {
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
+        
+        // Check current language and set appropriate format
+        let currentLanguage = LanguageManager.shared.currentLanguage
+        switch currentLanguage {
+        case .japanese:
+            formatter.dateFormat = "yyyy/MM/dd"
+        case .korean:
+            formatter.dateFormat = "yyyy.MM.dd"
+        default:
+            formatter.dateFormat = "MMM d, yyyy"
+        }
+        
         return formatter.string(from: date)
     }
     

@@ -11,6 +11,23 @@ class GalleryViewModel: ObservableObject {
     @Published var sortOrder: SortOrder = .newest
     @Published var showingFilterOptions = false
     
+    // Selection mode properties
+    @Published var isSelectionMode = false
+    @Published var selectedPhotoIds: Set<String> = []
+    @Published var selectedVideoIds: Set<String> = []
+    
+    // Grid configuration
+    @Published var gridColumns: Int = 3 {
+        didSet {
+            // Save preference
+            UserDefaults.standard.set(gridColumns, forKey: "galleryGridColumns")
+        }
+    }
+    
+    // Date filtering
+    @Published var selectedDates: Set<Date> = []
+    @Published var showingDatePicker = false
+    
     enum GallerySection: String, CaseIterable {
         case videos = "Videos"
         case photos = "Photos"
@@ -29,6 +46,11 @@ class GalleryViewModel: ObservableObject {
     }
     
     init() {
+        // Load saved grid columns preference
+        let savedColumns = UserDefaults.standard.integer(forKey: "galleryGridColumns")
+        if savedColumns >= 2 && savedColumns <= 5 {
+            gridColumns = savedColumns
+        }
         loadData()
     }
     
@@ -111,6 +133,16 @@ class GalleryViewModel: ObservableObject {
             result = result.filter { selectedCategories.contains($0.categoryId) }
         }
         
+        // Apply date filter
+        if !selectedDates.isEmpty {
+            result = result.filter { photo in
+                let calendar = Calendar.current
+                return selectedDates.contains { date in
+                    calendar.isDate(photo.captureDate, inSameDayAs: date)
+                }
+            }
+        }
+        
         // Apply sort order
         switch sortOrder {
         case .newest:
@@ -158,7 +190,19 @@ class GalleryViewModel: ObservableObject {
     
     func clearFilters() {
         selectedCategories.removeAll()
+        selectedDates.removeAll()
         sortOrder = .newest
+    }
+    
+    func toggleDate(_ date: Date) {
+        let calendar = Calendar.current
+        let normalizedDate = calendar.startOfDay(for: date)
+        
+        if selectedDates.contains(where: { calendar.isDate($0, inSameDayAs: normalizedDate) }) {
+            selectedDates = selectedDates.filter { !calendar.isDate($0, inSameDayAs: normalizedDate) }
+        } else {
+            selectedDates.insert(normalizedDate)
+        }
     }
     
     func videosGroupedByMonth() -> [(String, [Video])] {
@@ -185,5 +229,150 @@ class GalleryViewModel: ObservableObject {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
         return formatter.date(from: monthYear)
+    }
+    
+    // MARK: - Selection Mode Methods
+    
+    func enterSelectionMode() {
+        isSelectionMode = true
+        selectedPhotoIds.removeAll()
+        selectedVideoIds.removeAll()
+    }
+    
+    func exitSelectionMode() {
+        isSelectionMode = false
+        selectedPhotoIds.removeAll()
+        selectedVideoIds.removeAll()
+    }
+    
+    func togglePhotoSelection(_ photoId: String) {
+        if selectedPhotoIds.contains(photoId) {
+            selectedPhotoIds.remove(photoId)
+        } else {
+            selectedPhotoIds.insert(photoId)
+        }
+    }
+    
+    func toggleVideoSelection(_ videoId: String) {
+        if selectedVideoIds.contains(videoId) {
+            selectedVideoIds.remove(videoId)
+        } else {
+            selectedVideoIds.insert(videoId)
+        }
+    }
+    
+    func selectAllPhotos() {
+        selectedPhotoIds = Set(filteredPhotos.map { $0.id.uuidString })
+    }
+    
+    func selectAllVideos() {
+        selectedVideoIds = Set(videos.map { $0.id.uuidString })
+    }
+    
+    func clearSelection() {
+        selectedPhotoIds.removeAll()
+        selectedVideoIds.removeAll()
+    }
+    
+    var hasSelection: Bool {
+        !selectedPhotoIds.isEmpty || !selectedVideoIds.isEmpty
+    }
+    
+    var selectionCount: Int {
+        selectedSection == .photos ? selectedPhotoIds.count : selectedVideoIds.count
+    }
+    
+    // MARK: - Bulk Operations
+    
+    func bulkDeletePhotos() {
+        let photosToDelete = photos.filter { selectedPhotoIds.contains($0.id.uuidString) }
+        for photo in photosToDelete {
+            deletePhoto(photo)
+        }
+        exitSelectionMode()
+    }
+    
+    func bulkDeleteVideos() {
+        let videosToDelete = videos.filter { selectedVideoIds.contains($0.id.uuidString) }
+        for video in videosToDelete {
+            deleteVideo(video)
+        }
+        exitSelectionMode()
+    }
+    
+    func bulkSavePhotosToLibrary(completion: @escaping (Bool, Error?) -> Void) {
+        let photosToSave = photos.filter { selectedPhotoIds.contains($0.id.uuidString) }
+        let group = DispatchGroup()
+        var hasError = false
+        var lastError: Error?
+        
+        PHPhotoLibrary.requestAuthorization { status in
+            guard status == .authorized else {
+                completion(false, NSError(domain: "GalleryViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Photo library access denied"]))
+                return
+            }
+            
+            PHPhotoLibrary.shared().performChanges({
+                for photo in photosToSave {
+                    group.enter()
+                    if let image = PhotoStorageService.shared.loadImage(for: photo) {
+                        PHAssetChangeRequest.creationRequestForAsset(from: image)
+                    }
+                    group.leave()
+                }
+            }) { success, error in
+                if !success {
+                    hasError = true
+                    lastError = error
+                }
+                
+                DispatchQueue.main.async {
+                    completion(!hasError, lastError)
+                    self.exitSelectionMode()
+                }
+            }
+        }
+    }
+    
+    func bulkSaveVideosToLibrary(completion: @escaping (Bool, Error?) -> Void) {
+        let videosToSave = videos.filter { selectedVideoIds.contains($0.id.uuidString) }
+        let group = DispatchGroup()
+        var hasError = false
+        var lastError: Error?
+        
+        PHPhotoLibrary.requestAuthorization { status in
+            guard status == .authorized else {
+                completion(false, NSError(domain: "GalleryViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Photo library access denied"]))
+                return
+            }
+            
+            PHPhotoLibrary.shared().performChanges({
+                for video in videosToSave {
+                    group.enter()
+                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: video.fileURL)
+                    group.leave()
+                }
+            }) { success, error in
+                if !success {
+                    hasError = true
+                    lastError = error
+                }
+                
+                DispatchQueue.main.async {
+                    completion(!hasError, lastError)
+                    self.exitSelectionMode()
+                }
+            }
+        }
+    }
+    
+    func getSelectedPhotosForSharing() -> [UIImage] {
+        let selectedPhotos = photos.filter { selectedPhotoIds.contains($0.id.uuidString) }
+        return selectedPhotos.compactMap { PhotoStorageService.shared.loadImage(for: $0) }
+    }
+    
+    func getSelectedVideosForSharing() -> [URL] {
+        let selectedVideos = videos.filter { selectedVideoIds.contains($0.id.uuidString) }
+        return selectedVideos.map { $0.fileURL }
     }
 }
