@@ -69,6 +69,10 @@ struct CategoryManagementView: View {
         .onAppear {
             loadCategories()
         }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { _ in
+            // Reload categories when guideline is updated
+            loadCategories()
+        }
         .sheet(isPresented: $showingAddCategory) {
             AddCategoryView { newCategory in
                 if CategoryStorageService.shared.addCategory(newCategory) {

@@ -66,7 +66,10 @@ struct CategoryGuidelineSetupView: View {
             Image(systemName: "xmark")
                 .foregroundColor(.secondary)
         })
-        .fullScreenCover(isPresented: $showingCamera) {
+        .fullScreenCover(isPresented: $showingCamera, onDismiss: {
+            // Auto-dismiss this view when ResetGuidelineView is closed
+            dismiss()
+        }) {
             ResetGuidelineView(categoryId: category.id, categoryName: category.name)
         }
     }

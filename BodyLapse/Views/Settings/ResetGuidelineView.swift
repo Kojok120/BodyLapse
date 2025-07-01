@@ -133,12 +133,13 @@ struct ResetGuidelineView: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
             }
         }
-        .alert("common.done".localized, isPresented: $showingSuccessAlert) {
-            Button("common.ok".localized) {
-                dismiss()
+        .onChange(of: showingSuccessAlert) { _, newValue in
+            if newValue {
+                // Auto-dismiss after successful save
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    dismiss()
+                }
             }
-        } message: {
-            Text("reset_guideline.success_message".localized)
         }
     }
     
