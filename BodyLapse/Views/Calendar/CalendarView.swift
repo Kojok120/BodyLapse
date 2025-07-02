@@ -1342,7 +1342,7 @@ struct VideoGenerationView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var selectedSpeed: VideoSpeed = .normal
-    @State private var selectedQuality: VideoQuality = .high
+    @State private var selectedQuality: VideoQuality = .standard
     @State private var enableFaceBlur = false
     @State private var videoLayout: VideoGenerationService.VideoGenerationOptions.VideoLayout = .single
     @State private var selectedCategories: Set<String> = []
@@ -1413,14 +1413,6 @@ struct VideoGenerationView: View {
                                 .font(.caption)
                         }
                     }
-                    
-                    let photoCount = countPhotosInRange()
-                    HStack {
-                        Text("calendar.photos".localized)
-                        Spacer()
-                        Text("\(photoCount)")
-                            .foregroundColor(.secondary)
-                    }
                 }
                 
                 Section(header: Text("calendar.video_settings".localized)) {
@@ -1440,11 +1432,7 @@ struct VideoGenerationView: View {
                     
                     // Video layout selection - Premium feature
                     if subscriptionManager.isPremium && availableCategories.count > 1 {
-                        Picker("video.layout".localized, selection: $videoLayout) {
-                            Text("video.layout.single".localized).tag(VideoGenerationService.VideoGenerationOptions.VideoLayout.single)
-                            Text("video.layout.sidebyside".localized).tag(VideoGenerationService.VideoGenerationOptions.VideoLayout.sideBySide)
-                        }
-                        
+                        // Always use side-by-side layout for multiple categories
                         // Category selection for side-by-side
                         if videoLayout == .sideBySide {
                             VStack(alignment: .leading, spacing: 8) {
@@ -1483,15 +1471,6 @@ struct VideoGenerationView: View {
                     }
                 }
                 
-                Section {
-                    let estimatedDuration = estimateDuration()
-                    HStack {
-                        Text("calendar.estimated_duration".localized)
-                        Spacer()
-                        Text(estimatedDuration)
-                            .foregroundColor(.secondary)
-                    }
-                }
             }
             .navigationTitle("calendar.generate_video".localized)
             .navigationBarTitleDisplayMode(.inline)
@@ -1562,9 +1541,18 @@ struct VideoGenerationView: View {
             let isPremium = subscriptionManager.isPremium
             availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
             
-            // Select default category for single layout
-            if let defaultCategory = availableCategories.first {
-                selectedCategories.insert(defaultCategory.id)
+            // Set layout based on available categories
+            if isPremium && availableCategories.count > 1 {
+                // Multiple categories: use side-by-side
+                videoLayout = .sideBySide
+                // Select all categories by default (up to 4)
+                selectedCategories = Set(availableCategories.prefix(4).map { $0.id })
+            } else {
+                // Single category: use single layout
+                videoLayout = .single
+                if let defaultCategory = availableCategories.first {
+                    selectedCategories.insert(defaultCategory.id)
+                }
             }
         }
     }
@@ -1579,17 +1567,6 @@ struct VideoGenerationView: View {
         }.count
     }
     
-    private func estimateDuration() -> String {
-        let photoCount = countPhotosInRange()
-        let frameDuration = selectedSpeed.frameDuration.seconds
-        let totalSeconds = Double(photoCount) * frameDuration
-        
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.minute, .second]
-        formatter.unitsStyle = .abbreviated
-        
-        return formatter.string(from: totalSeconds) ?? "0s"
-    }
     
     private func formatDateRange(from startDate: Date, to endDate: Date) -> String {
         let formatter = DateFormatter()

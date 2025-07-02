@@ -287,10 +287,20 @@ struct AddCategoryView: View {
             Form {
                 Section {
                     TextField("category.management.category_name".localized, text: $categoryName)
+                        .onChange(of: categoryName) { _, newValue in
+                            if newValue.count > 10 {
+                                categoryName = String(newValue.prefix(10))
+                            }
+                        }
                 } header: {
                     Text("category.management.new_category".localized)
                 } footer: {
-                    Text("category.management.example".localized)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("category.management.example".localized)
+                        Text("\(categoryName.count)/10")
+                            .font(.caption)
+                            .foregroundColor(categoryName.count == 10 ? .orange : .secondary)
+                    }
                 }
             }
             .navigationTitle("category.management.add_category".localized)
@@ -337,8 +347,17 @@ struct EditCategoryView: View {
             Form {
                 Section {
                     TextField("category.management.category_name".localized, text: $categoryName)
+                        .onChange(of: categoryName) { _, newValue in
+                            if newValue.count > 10 {
+                                categoryName = String(newValue.prefix(10))
+                            }
+                        }
                 } header: {
                     Text("category.management.edit_name".localized)
+                } footer: {
+                    Text("\(categoryName.count)/10")
+                        .font(.caption)
+                        .foregroundColor(categoryName.count == 10 ? .orange : .secondary)
                 }
             }
             .navigationTitle("category.management.edit".localized)

@@ -13,7 +13,6 @@ struct GalleryView: View {
     @State private var itemToShare: Any?
     @State private var showingShareSheet = false
     @State private var showingBulkDeleteAlert = false
-    @State private var lastScaleValue: CGFloat = 1.0
     @State private var currentGridColumns: Int = 3
     
     init(videoToPlay: Binding<UUID?> = .constant(nil)) {
@@ -38,15 +37,6 @@ struct GalleryView: View {
                             .tag(GalleryViewModel.GallerySection.photos)
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                    .simultaneousGesture(
-                        MagnificationGesture()
-                            .onChanged { scale in
-                                handlePinchGesture(scale: scale)
-                            }
-                            .onEnded { _ in
-                                lastScaleValue = 1.0
-                            }
-                    )
                 }
                 .withBannerAd()
                 .onAppear {
@@ -376,86 +366,74 @@ struct GalleryView: View {
     }
     
     private var filterChips: some View {
-        HStack(alignment: .top, spacing: 0) {
-            // Left side: Vertical filter chips
-            if !viewModel.isSelectionMode {
-                VStack(alignment: .leading, spacing: 8) {
-                    // Sort order chips
-                    HStack(spacing: 8) {
-                        ForEach(GalleryViewModel.SortOrder.allCases, id: \.self) { order in
-                            FilterChip(
-                                title: order.localizedString,
-                                isSelected: viewModel.sortOrder == order,
-                                action: {
-                                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                                    impactFeedback.impactOccurred()
-                                    viewModel.sortOrder = order
-                                }
-                            )
-                        }
-                        
-                        // Date picker button
-                        Button(action: {
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                            impactFeedback.impactOccurred()
-                            viewModel.showingDatePicker = true
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "calendar")
-                                if !viewModel.selectedDates.isEmpty {
-                                    Text("(\(viewModel.selectedDates.count))")
-                                        .font(.caption)
-                                }
-                            }
+        VStack(spacing: 12) {
+            // Top row: Sort toggle, Date picker, and Select button
+            HStack(spacing: 12) {
+                // Sort toggle
+                Button(action: {
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                    impactFeedback.impactOccurred()
+                    viewModel.sortOrder = viewModel.sortOrder == .newest ? .oldest : .newest
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: viewModel.sortOrder == .newest ? "arrow.down" : "arrow.up")
+                            .font(.system(size: 12))
+                        Text(viewModel.sortOrder == .newest ? "Newest" : "Oldest")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(viewModel.selectedDates.isEmpty ? .primary : .white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                viewModel.selectedDates.isEmpty ? Color(UIColor.tertiarySystemBackground) : Color.bodyLapseTurquoise
-                            )
-                            .cornerRadius(15)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(viewModel.selectedDates.isEmpty ? Color(UIColor.separator).opacity(0.5) : Color.clear, lineWidth: 1)
-                            )
+                    }
+                    .foregroundColor(.primary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color(UIColor.tertiarySystemBackground))
+                    .cornerRadius(20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color(UIColor.separator).opacity(0.3), lineWidth: 1)
+                    )
+                }
+                
+                // Date picker button
+                Button(action: {
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                    impactFeedback.impactOccurred()
+                    viewModel.showingDatePicker = true
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar")
+                        if !viewModel.selectedDates.isEmpty {
+                            Text("\(viewModel.selectedDates.count)")
+                                .font(.caption)
                         }
                     }
-                    
-                    // Category chips for premium users
-                    if viewModel.availableCategories.count > 1 && SubscriptionManagerService.shared.isPremium {
-                        HStack(spacing: 8) {
-                            // "All" chip to show all categories
-                            FilterChip(
-                                title: "All",
-                                isSelected: viewModel.selectedCategories.isEmpty,
-                                action: {
-                                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                                    impactFeedback.impactOccurred()
-                                    viewModel.selectedCategories.removeAll()
-                                }
-                            )
-                            
-                            ForEach(viewModel.availableCategories) { category in
-                                FilterChip(
-                                    title: category.name,
-                                    isSelected: viewModel.selectedCategories.contains(category.id),
-                                    action: {
-                                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                                        impactFeedback.impactOccurred()
-                                        viewModel.toggleCategory(category.id)
-                                    }
-                                )
-                            }
-                        }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(viewModel.selectedDates.isEmpty ? .primary : .white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(
+                        viewModel.selectedDates.isEmpty ? Color(UIColor.tertiarySystemBackground) : Color.bodyLapseTurquoise
+                    )
+                    .cornerRadius(20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(viewModel.selectedDates.isEmpty ? Color(UIColor.separator).opacity(0.3) : Color.clear, lineWidth: 1)
+                    )
+                }
+                
+                Spacer()
+                
+                // Clear filters button
+                if !viewModel.isSelectionMode && (!viewModel.selectedCategories.isEmpty || viewModel.sortOrder != .newest || !viewModel.selectedDates.isEmpty) {
+                    Button(action: {
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                        impactFeedback.impactOccurred()
+                        viewModel.clearFilters()
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.gray)
                     }
                 }
-            }
-            
-            Spacer()
-            
-            // Right side: Select button and Clear
-            VStack(alignment: .trailing, spacing: 8) {
+                
                 // Select button
                 Button(action: {
                     let impactFeedback = UIImpactFeedbackGenerator(style: .light)
@@ -466,43 +444,59 @@ struct GalleryView: View {
                         viewModel.enterSelectionMode()
                     }
                 }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: viewModel.isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
+                    HStack(spacing: 6) {
+                        Image(systemName: viewModel.isSelectionMode ? "xmark" : "checkmark.circle")
+                            .font(.system(size: 14))
                         Text(viewModel.isSelectionMode ? "Cancel" : "Select")
+                            .font(.system(size: 14, weight: .medium))
                     }
-                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(viewModel.isSelectionMode ? .white : .primary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
                     .background(
-                        viewModel.isSelectionMode ? Color.bodyLapseTurquoise : Color(UIColor.tertiarySystemBackground)
+                        viewModel.isSelectionMode ? Color.red : Color(UIColor.tertiarySystemBackground)
                     )
-                    .cornerRadius(15)
+                    .cornerRadius(20)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(viewModel.isSelectionMode ? Color.clear : Color(UIColor.separator).opacity(0.5), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(viewModel.isSelectionMode ? Color.clear : Color(UIColor.separator).opacity(0.3), lineWidth: 1)
                     )
                 }
-                
-                // Clear button
-                if !viewModel.isSelectionMode && (!viewModel.selectedCategories.isEmpty || viewModel.sortOrder != .newest || !viewModel.selectedDates.isEmpty) {
-                    Button(action: {
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                        impactFeedback.impactOccurred()
-                        viewModel.clearFilters()
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "xmark.circle.fill")
-                            Text("Clear")
+            }
+            
+            // Category chips for premium users (only show when not in selection mode)
+            if !viewModel.isSelectionMode && viewModel.availableCategories.count > 1 && SubscriptionManagerService.shared.isPremium {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        // "All" chip
+                        CategoryChip(
+                            title: "All",
+                            isSelected: viewModel.selectedCategories.isEmpty,
+                            action: {
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                impactFeedback.impactOccurred()
+                                viewModel.selectedCategories.removeAll()
+                            }
+                        )
+                        
+                        // Category chips
+                        ForEach(viewModel.availableCategories) { category in
+                            CategoryChip(
+                                title: category.name,
+                                isSelected: viewModel.selectedCategories.contains(category.id),
+                                action: {
+                                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                    impactFeedback.impactOccurred()
+                                    viewModel.toggleCategory(category.id)
+                                }
+                            )
                         }
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.bodyLapseTurquoise)
                     }
                 }
             }
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
         .background(Color(UIColor.secondarySystemBackground))
     }
     
@@ -616,33 +610,6 @@ struct GalleryView: View {
             viewModel.bulkDeletePhotos()
         } else {
             viewModel.bulkDeleteVideos()
-        }
-    }
-    
-    private func handlePinchGesture(scale: CGFloat) {
-        let deltaScale = scale / lastScaleValue
-        lastScaleValue = scale
-        
-        // Original thresholds
-        if deltaScale > 1.2 && currentGridColumns > 2 {
-            // Pinch out - decrease columns (make items bigger)
-            currentGridColumns -= 1
-            viewModel.gridColumns = currentGridColumns
-            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-            impactFeedback.impactOccurred()
-            lastScaleValue = 1.0 // Reset to prevent continuous changes
-        } else if deltaScale < 0.8 && currentGridColumns < 5 {
-            // Pinch in - increase columns (make items smaller)
-            currentGridColumns += 1
-            viewModel.gridColumns = currentGridColumns
-            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-            impactFeedback.impactOccurred()
-            lastScaleValue = 1.0 // Reset to prevent continuous changes
-        }
-        
-        // Reset scale when gesture ends
-        if scale == 1.0 {
-            lastScaleValue = 1.0
         }
     }
 }
@@ -1095,6 +1062,32 @@ struct FilterChip: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
                         .stroke(isSelected ? Color.clear : Color(UIColor.separator).opacity(0.5), lineWidth: 1)
+                )
+        }
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
+    }
+}
+
+struct CategoryChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(isSelected ? .white : .primary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .frame(minWidth: 60)
+                .background(
+                    isSelected ? Color.bodyLapseTurquoise : Color(UIColor.tertiarySystemBackground)
+                )
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(isSelected ? Color.clear : Color(UIColor.separator).opacity(0.3), lineWidth: 1)
                 )
         }
         .animation(.easeInOut(duration: 0.2), value: isSelected)

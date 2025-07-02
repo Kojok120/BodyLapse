@@ -150,9 +150,10 @@ class VideoGenerationService {
                     (categoryId == nil || photo.categoryId == categoryId)
                 }.sorted { $0.captureDate < $1.captureDate }
             } else {
-                // Side-by-side video - get all photos in date range
+                // Side-by-side video - filter by selected categories only
                 filteredPhotos = photos.filter { photo in
-                    dateRange.contains(photo.captureDate)
+                    dateRange.contains(photo.captureDate) &&
+                    options.selectedCategories.contains(photo.categoryId ?? "")
                 }.sorted { $0.captureDate < $1.captureDate }
             }
             
@@ -281,6 +282,7 @@ class VideoGenerationService {
             }
         } else {
             // Side-by-side video processing
+            // Photos are already filtered by selected categories
             let photosByDate = Dictionary(grouping: photos) { photo in
                 Calendar.current.startOfDay(for: photo.captureDate)
             }
