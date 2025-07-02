@@ -1,4 +1,10 @@
 CLAUDE.md
-build/
+
+# CocoaPods
 Pods/
-opencv-ios-framework.zip
+*.xcworkspace
+
+# Build
+build/
+DerivedData/
+*.xcuserstate

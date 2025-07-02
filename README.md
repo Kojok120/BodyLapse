@@ -1,340 +1,270 @@
-# BodyLapse - iOS Fitness Progress Tracking App
+# BodyLapse - Transform Your Fitness Journey
 
-## Project Overview
+<div align="center">
+  <img src="BodyLapse/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" width="200" height="200" alt="BodyLapse Icon">
+  
+  **Track your fitness transformation with daily progress photos**
+  
+  [![iOS](https://img.shields.io/badge/iOS-17.0+-000000.svg?style=flat&logo=apple)](https://www.apple.com/ios/)
+  [![Swift](https://img.shields.io/badge/Swift-5.9+-FA7343.svg?style=flat&logo=swift)](https://swift.org)
+  [![SwiftUI](https://img.shields.io/badge/SwiftUI-5.0+-0066FF.svg?style=flat)](https://developer.apple.com/xcode/swiftui/)
+  [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
+  
+  [Download on App Store](#) • [Privacy Policy](#privacy) • [Support](#support)
+</div>
 
-BodyLapse is an iOS app that helps users track their fitness progress by taking daily photos and creating time-lapse videos of their body transformation. The app operates completely offline, ensuring user privacy and data security.
+---
 
-## Core Features
+## 🎯 What is BodyLapse?
 
-### 1. Photo Capture & Storage
-- Daily photo capture with pose guidelines
-- Red outline overlay from initial setup to maintain consistent positioning
-- Photos stored locally in app's Documents directory
-- One-tap face blur functionality
+BodyLapse is a privacy-focused iOS app that helps you track your fitness journey through daily progress photos and time-lapse videos. Unlike other fitness apps, BodyLapse works completely offline - your photos never leave your device unless you explicitly share them.
 
-### 2. Time-lapse Video Generation
-- Select date range for video creation
-- Generate time-lapse videos on-device
-- Export and share functionality
+### 📱 Key Features
 
-### 3. Initial Setup
-- Goal setting screen on first launch
-- Pose guideline setup using body detection
-- Notification time preference
+- **📸 Daily Progress Photos** - Capture consistent photos with pose guidelines
+- **🎬 Time-lapse Videos** - Create stunning transformation videos
+- **🔒 Complete Privacy** - All data stays on your device
+- **📊 Weight Tracking** - Monitor weight and body fat percentage (Premium)
+- **📝 Daily Notes** - Add context to your journey
+- **🌍 Multi-language** - English, Japanese, Spanish, and Korean
 
-### 4. Comparison & Sharing
-- Before/after comparison view
-- Face blur options (none/light/heavy)
-- Direct social media sharing
+```
 
-### 5. Data Tracking (Premium)
-- Weight and body fat percentage logging
-- Daily data visualization with photos
+## 💎 Features Overview
 
-## Technical Architecture
+### Core Features (Free)
+
+#### 📸 Smart Photo Capture
+- **Body Detection Guidelines** - AI-powered pose detection ensures consistent photos
+- **Face Blur Privacy** - Automatically blur your face for privacy
+- **Timer Options** - 3, 5, or 10-second timer for hands-free capture
+- **Photo Import** - Import existing photos from your gallery
+- **Daily Reminders** - Get notified if you haven't taken your photo by 7 PM
+
+#### 📅 Progress Calendar
+- **Visual Timeline** - See your transformation at a glance
+- **Date Navigation** - Jump to any date to view photos
+- **Progress Indicators** - Visual markers for photos and weight data
+- **Time Period Views** - 7 days, 30 days, 3 months, 6 months, or 1 year
+- **Daily Memos** - Add notes (up to 100 characters) to remember context
+
+#### 🎬 Video Generation
+- **Time-lapse Creation** - Turn your photos into transformation videos
+- **Speed Control** - Slow, normal, or fast playback options
+- **Quality Settings** - Standard (720p), High (1080p), or Ultra (4K)
+- **Privacy Options** - Apply face blur to videos
+- **Smart Navigation** - Auto-plays video after generation
+
+#### 🖼️ Gallery Management
+- **Organized Views** - Separate tabs for Videos and Photos
+- **Bulk Operations** - Select multiple items to delete, save, or share
+- **Date Display** - See when each photo/video was created
+- **Easy Sharing** - Share directly to social media
+
+#### 🆚 Before/After Comparison
+- **Side-by-Side View** - Compare any two photos
+- **Date Selection** - Choose specific dates to compare
+- **Progress Metrics** - See weight/body fat changes (Premium)
+
+### Premium Features ($4.99/month)
+
+#### 📊 Advanced Tracking
+- **Weight & Body Fat** - Track detailed body metrics
+- **Interactive Charts** - Visualize progress over time
+- **HealthKit Sync** - Automatic data synchronization
+- **Unit Flexibility** - Switch between kg/lbs
+
+#### 🏷️ Multiple Categories
+- **4 Photo Categories** - Front, Back, Side, and Custom
+- **Category Guidelines** - Separate pose guides for each angle
+- **Filtered Videos** - Create category-specific time-lapses
+- **Side-by-Side Videos** - Compare multiple angles simultaneously
+
+#### 🎯 Premium Benefits
+- **No Advertisements** - Clean, distraction-free experience
+- **No Watermarks** - Professional-looking videos
+### 🔐 Security & Privacy
+- **Face ID/Touch ID** - Secure app access with biometrics
+- **PIN Protection** - 4-digit passcode option
+- **Local Storage** - Photos never leave your device
+- **No Cloud Sync** - Complete offline functionality
+- **Export Control** - You decide what to share and when
+
+### 🌐 Localization
+
+BodyLapse supports 4 languages:
+- 🇺🇸 English
+- 🇯🇵 Japanese (日本語)
+- 🇪🇸 Spanish (Español)  
+- 🇰🇷 Korean (한국어)
+
+## 📱 App Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="screenshots/calendar.png" width="250" alt="Calendar View">
+        <br><b>Calendar View</b>
+      </td>
+      <td align="center">
+        <img src="screenshots/camera.png" width="250" alt="Camera Capture">
+        <br><b>Camera with Guidelines</b>
+      </td>
+      <td align="center">
+        <img src="screenshots/gallery.png" width="250" alt="Gallery">
+        <br><b>Gallery</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="screenshots/comparison.png" width="250" alt="Comparison">
+        <br><b>Before/After</b>
+      </td>
+      <td align="center">
+        <img src="screenshots/weight-chart.png" width="250" alt="Weight Chart">
+        <br><b>Progress Charts</b>
+      </td>
+      <td align="center">
+        <img src="screenshots/settings.png" width="250" alt="Settings">
+        <br><b>Settings</b>
+      </td>
+    </tr>
+  </table>
+</div>
+
+## 📦 Data Export Format
+
+BodyLapse uses a custom `.bodylapse` file format for data export/import:
+
+### File Structure
+```
+export_2025_01_08.bodylapse (ZIP archive)
+├── metadata.json           # Export metadata
+├── photos/                 # Photo files
+│   ├── Front/             # Category folders
+│   ├── Back/
+│   └── Side/
+├── videos/                # Generated videos
+├── weight_data.json       # Weight/body fat entries
+├── notes.json             # Daily memos
+└── settings.json          # App preferences
+```
+
+### Metadata Format
+```json
+{
+  "version": "1.0",
+  "exportDate": "2025-01-08T10:30:00Z",
+  "photoCount": 150,
+  "videoCount": 5,
+  "categories": ["Front", "Back", "Side"],
+  "dateRange": {
+    "start": "2024-01-01",
+    "end": "2025-01-08"
+  }
+}
+```
+
+## 🔔 Notification System
+
+### Automatic Daily Check
+- **Check Time**: 7:00 PM (19:00) daily
+- **Condition**: Notification sent only if no photo taken that day
+- **Action**: Tap notification to open camera directly
+- **Setup**: Permission requested during onboarding
+
+### Notification Behavior
+```swift
+// Notification payload
+{
+  "title": "Time for your daily photo!",
+  "body": "Track your progress with today's photo",
+  "category": "DAILY_REMINDER",
+  "userInfo": {
+    "action": "open_camera"
+  }
+}
+```
+
+## 🏗️ Technical Architecture
 
 ### Technology Stack
-- **Language**: Swift 5.9+
-- **UI Framework**: SwiftUI
-- **Target iOS Version**: iOS 17.0 (for advanced Vision framework features)
-- **Architecture Pattern**: MVVM
-- **Data Storage**: Local file system + UserDefaults
-- **Image Processing**: Vision framework for body/face detection
-- **Video Generation**: AVFoundation
-- **Ads**: Google Mobile Ads SDK v12
-- **In-App Purchases**: StoreKit 2
-- **Health Data**: HealthKit integration for weight/body fat syncing
-- **Authentication**: LocalAuthentication for Face ID/Touch ID
 
-### Key Dependencies
-- Vision framework (body/face detection)
-- AVFoundation (video generation)
-- PhotosUI (image handling)
-- UserNotifications (daily reminders)
-- GoogleMobileAds (ad monetization)
-- StoreKit (in-app purchases)
-- Charts (weight tracking visualization)
-- HealthKit (weight and body fat percentage syncing)
-- LocalAuthentication (Face ID/Touch ID support)
+| Component | Technology |
+|-----------|------------|
+| Language | Swift 5.9+ |
+| UI Framework | SwiftUI |
+| Architecture | MVVM |
+| Minimum iOS | 17.0 |
+| Image Processing | Vision Framework |
+| Video Generation | AVFoundation |
+| Health Data | HealthKit |
+| Monetization | StoreKit 2 + AdMob |
+| Authentication | LocalAuthentication |
 
-## Project Structure
+### Project Structure
 
 ```
 BodyLapse/
-├── BodyLapseApp.swift
-├── AppDelegate.swift
-├── Models/
-│   ├── Photo.swift
-│   ├── Video.swift
-│   ├── UserSettings.swift
-│   ├── Guideline.swift
-│   ├── WeightEntry.swift
-│   └── PremiumFeature.swift
-├── Views/
-│   ├── Onboarding/
-│   │   ├── OnboardingView.swift
-│   │   └── ContourConfirmationView.swift
-│   ├── Authentication/
-│   │   ├── AuthenticationView.swift
-│   │   └── PasswordSetupView.swift
-│   ├── Calendar/
-│   │   ├── CalendarView.swift
-│   │   ├── CalendarPopupView.swift
-│   │   └── InteractiveWeightChartView.swift
-│   ├── Camera/
-│   │   ├── CameraView.swift
-│   │   └── CameraPreviewView.swift
-│   ├── Gallery/
-│   │   ├── GalleryView.swift
-│   │   ├── VideoDetailView.swift
-│   │   └── PhotoGridView.swift
-│   ├── Comparison/
-│   │   └── ComparisonView.swift
-│   ├── Settings/
-│   │   ├── SettingsView.swift
-│   │   ├── NotificationSettingsView.swift
-│   │   ├── PremiumView.swift
-│   │   └── ResetGuidelineView.swift
-│   ├── Components/
-│   │   ├── BannerAdView.swift
-│   │   ├── WeightTrackingView.swift
-│   │   └── ShareSheet.swift
-│   └── MainTabView.swift
-├── ViewModels/
-│   ├── CameraViewModel.swift
-│   ├── CalendarViewModel.swift
-│   ├── GalleryViewModel.swift
-│   ├── ComparisonViewModel.swift
-│   ├── WeightTrackingViewModel.swift
-│   └── PremiumViewModel.swift
-├── Services/
-│   ├── PhotoStorageService.swift
-│   ├── VideoGenerationService.swift
-│   ├── VideoStorageService.swift
-│   ├── BodyContourService.swift
-│   ├── FaceBlurService.swift
-│   ├── NotificationService.swift
-│   ├── AdMobService.swift
-│   ├── WeightStorageService.swift
-│   ├── GuidelineStorageService.swift
-│   ├── HealthKitService.swift
-│   ├── AuthenticationService.swift
-│   └── StoreManager.swift
-└── Resources/
-    ├── Assets.xcassets
-    ├── Info.plist
-    └── BodyLapse.entitlements
+├── 📱 App/
+│   ├── BodyLapseApp.swift      # App entry point
+│   └── AppDelegate.swift        # App lifecycle
+├── 📐 Models/
+│   ├── Photo.swift              # Photo data model
+│   ├── Video.swift              # Video data model
+│   ├── WeightEntry.swift        # Weight tracking
+│   └── PhotoCategory.swift      # Category management
+├── 🎨 Views/
+│   ├── Calendar/                # Progress tracking
+│   ├── Camera/                  # Photo capture
+│   ├── Gallery/                 # Media browser
+│   ├── Comparison/              # Before/after
+│   └── Settings/                # App configuration
+├── 🧠 ViewModels/
+│   └── [Feature]ViewModel.swift # Business logic
+├── ⚙️ Services/
+│   ├── PhotoStorageService.swift     # Photo management
+│   ├── VideoGenerationService.swift  # Video creation
+│   ├── BodyContourService.swift      # Pose detection
+│   └── HealthKitService.swift        # Health integration
+└── 🌍 Resources/
+    ├── Localizable.strings      # Translations
+    └── Assets.xcassets          # Images & colors
 ```
 
-## Implementation Status
+
+## 🚦 Current Status
 
 ### ✅ Completed Features
+- Core photo capture and storage system
+- Body detection and pose guidelines
+- Calendar view with progress tracking
+- Time-lapse video generation
+- Gallery with bulk operations
+- Weight and body fat tracking
+- Multiple photo categories
+- Import/Export functionality
+- Daily memo system
+- Complete localization (4 languages)
+- Premium subscription system
+- Ad integration (AdMob)
+- HealthKit integration
+- Face ID/Touch ID authentication
+- Comprehensive onboarding flow
 
-#### Phase 1: Foundation
-- Project setup with tab-based navigation
-- Camera integration with photo capture and camera switching
-- Local photo storage with metadata support
-- Calendar view with photo browsing and time period selection
 
-#### Phase 2: Core Features  
-- Body detection with pose guidelines (red overlay)
-- Camera overlay with guideline display
-- Face blur functionality (privacy feature)
-- Photo comparison view with date selection
 
-#### Phase 3: Video Generation
-- Time-lapse video generation with customizable speed/quality
-- Video export and sharing functionality  
-- Watermark overlay for free users
-- Auto-navigation to Gallery after generation
+## 🙏 Acknowledgments
 
-#### Phase 4: Premium Features
-- Weight/body fat tracking with data entry
-- Interactive weight charts with multiple time ranges
-- StoreKit integration for premium subscriptions
-- Google AdMob integration (banner and interstitial ads)
+- Vision Framework for body detection
+- SwiftUI for modern UI development
+- The fitness community for inspiration
 
-#### Phase 5: Polish & Enhancements
-- Daily reminder notifications
-- Photo import functionality
-- Swipe navigation in Gallery (Videos ↔ Photos)
-- Auto-navigation from Camera to Calendar
-- iPhone-only configuration
-- Settings for units, notifications, and debug options
+---
 
-#### Phase 6: Health & Security (December 2025)
-- HealthKit integration for automatic weight/body fat syncing
-- Face ID/Touch ID authentication support
-- Passcode authentication option
-- Complete 3-step onboarding flow (goals, baseline photo, security)
-- Fixed onboarding camera retake bug
-- Fixed weight/body fat display layout issues
-
-#### Phase 7: UI Enhancements & Features (December 27, 2025)
-- Body guideline reset feature in Settings
-- Enhanced CalendarView with improved layout and date selection
-- Increased face blur effect intensity
-- Camera improvements (default to back camera, save camera position with guidelines)
-- UI refinements for weight/body fat charts
-
-#### Phase 8: Calendar & Security Updates (December 29, 2025)
-- Custom date picker functionality in CalendarView
-- Visual indicators for photo and data entries in calendar
-- Enhanced snapping logic in InteractiveWeightChartView
-- FullDateRange parameter for better date range handling
-- Date display restriction for free users (premium feature)
-- Limited password input to 4 digits
-- Improved authentication settings persistence
-
-#### Phase 9: UX Improvements & Notification Overhaul (January 8, 2025)
-- **Gallery Enhancements**: Added date display (M/d format) on photo/video thumbnails
-- **Memo System**: Reduced character limit to 100, fixed immediate UI updates
-- **Notification System Redesign**: 
-  - Automatic daily check at 19:00 if no photo taken
-  - Removed manual time settings
-  - Added to onboarding flow
-- **Calendar View Major Update**:
-  - iPhone Photos app-style swipe gestures
-  - Native TabView implementation
-  - Fixed category auto-switching behavior
-  - Consistent placeholder display
-- **Premium Experience**: Weight input only shows once per day across all categories
-
-### 🚧 Pending Tasks
-- App Store submission preparation (icons, screenshots, descriptions)
-- Complete privacy policy and terms of service integration
-- Additional UI polish and animations
-- Performance optimization for large photo collections
-- Complete localization for all new features (currently supports English, Japanese, Spanish, and Korean)
-
-## UI/UX Design Principles
-
-### Design System
-- **Primary Color**: #007AFF (iOS Blue) or custom brand color
-- **Secondary Color**: #34C759 (Success Green)
-- **Background**: System backgrounds (adaptive dark/light)
-- **Typography**: SF Pro Display/Text
-- **Spacing**: 8pt grid system
-
-### Key Screens
-1. **Home Screen**: Clean grid of recent photos with prominent camera button
-2. **Camera Screen**: Full-screen camera with guideline overlay
-3. **Calendar View**: Month view with photo thumbnails
-4. **Comparison View**: Split-screen photo comparison
-5. **Settings**: Minimal options with clear sections
-
-## Data Models
-
-### Photo Model
-```swift
-struct Photo {
-    let id: UUID
-    let date: Date
-    let imagePath: String
-    let thumbnailPath: String
-    let weight: Double?
-    let bodyFat: Double?
-}
-```
-
-### Pose Guideline Model
-```swift
-struct PoseGuideline {
-    let points: [CGPoint]
-    let bodyRect: CGRect
-    let scale: CGFloat
-}
-```
-
-## Privacy & Security
-
-- All photos stored in app's private Documents directory
-- No network requests for core functionality
-- Face blur processing done on-device
-- Face ID/Touch ID authentication support
-- Passcode authentication option
-- HealthKit data stays on device unless user explicitly syncs
-- No user data leaves device without explicit user action
-
-## Monetization
-
-### Free Plan
-- Full photo tracking and video generation
-- Banner ads (Google AdMob v12)
-- Watermark on exported videos
-- Interstitial ads before video generation
-
-### Premium Plan ($4.99/month)
-- No ads
-- No watermark
-- Weight/body fat tracking with interactive charts
-- Body fat percentage tracking
-- HealthKit integration for automatic data syncing
-
-## Development Notes
-
-### Critical Implementation Details
-1. Use `UIImagePickerController` or `AVCaptureSession` for camera
-2. Store photos as JPEG with 80% quality for balance
-3. Generate thumbnails immediately after capture
-4. Use background queue for video generation
-5. Implement proper memory management for large photo sets
-
-### Performance Considerations
-- Lazy load images in calendar view
-- Cache thumbnails aggressively
-- Limit video generation to 365 photos maximum
-- Use metal shaders for video effects if needed
-
-## Testing Strategy
-
-1. Unit tests for data models and services
-2. UI tests for critical user flows
-3. Performance tests for video generation
-4. Manual testing on various iPhone models
-5. TestFlight beta with fitness enthusiasts
-
-## App Store Optimization
-
-### Keywords
-- fitness tracker, body transformation, progress photos, workout diary, muscle gain
-
-### Description Focus
-- Privacy-first approach
-- Offline functionality
-- Visual progress tracking
-- Simple daily habit
-
-## Recent Development Notes
-
-### Key Navigation Flows
-1. **Photo Capture → Calendar**: After taking a photo, automatically navigates to Calendar view showing today's date
-2. **Video Generation → Gallery**: After generating video, automatically navigates to Gallery and plays the new video
-3. **Gallery Navigation**: Swipe left/right between Videos and Photos sections
-4. **Calendar Category Navigation**: Swipe left/right to switch between photo categories (premium feature)
-5. **Notification → Camera**: Tapping reminder notification launches camera directly
-
-### Ad Implementation
-- **Banner Ads**: Display at bottom of Calendar, Compare, and Gallery screens for free users only
-- **Interstitial Ads**: Show before video generation starts for free users
-- **Premium Detection**: Uses UserSettingsManager.shared for consistent premium status checking
-
-### Device Support
-- **iPhone Only**: App is configured for iPhone-only usage (UIDeviceFamily = 1)
-- **Orientation**: Portrait only with UIRequiresFullScreen enabled
-- **Image Orientation**: Fixed orientation handling for proper video generation
-
-### Known Issues to Address
-1. Add all required app icon sizes for App Store submission
-2. Complete privacy policy and terms of service integration in app
-
-### Recent Bug Fixes
-1. **Onboarding Camera Retake** (December 2025): Fixed issue where capture button became unresponsive after pressing retake button
-   - Solution: Properly managed camera controller lifecycle with async state updates
-2. **Weight/Body Fat Display** (December 2025): Fixed layout issues causing text to wrap incorrectly
-   - Solution: Added minWidth constraints and line limits to ensure consistent layout
-3. **Memo Immediate Update** (January 2025): Fixed memos not updating immediately after save/delete
-   - Solution: Updated state management to refresh UI immediately
-4. **Category Auto-Switching** (January 2025): Fixed unwanted category changes when navigating dates
-   - Solution: Maintained consistent category selection with placeholder display
-
+<div align="center">
+  <b>Transform your body, one photo at a time.</b>
+  
+  Made with ❤️ for the fitness community
+</div>
