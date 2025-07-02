@@ -1,0 +1,43 @@
+BodyLapse is a fitness transformation tracker that helps you capture daily progress photos and create stunning time-lapse videos of your journey. BodyLapse works completely offline - your photos never leave your device unless you choose to share them.
+
+SMART PHOTO CAPTURE
+• AI-powered pose guidelines ensure consistent photos every time
+• Multiple angles: Front, Back, Side, and Custom views
+• Built-in timer (3, 5, or 10 seconds) for hands-free capture
+• Face blur option for complete privacy
+• Import existing photos from your gallery
+
+PROGRESS TRACKING
+• Visual calendar shows your transformation at a glance
+• Add daily notes (memos) to remember your journey's context
+• Interactive weight and body fat charts (Premium)
+• HealthKit integration for automatic data sync (Premium)
+• Smart reminders if you haven't taken today's photo by 7 PM
+
+VIDEO GENERATION
+• Create time-lapse videos with customizable speed and quality
+• Export in 720p, 1080p, or 4K resolution
+• Apply face blur to videos for privacy
+• Category-specific videos or combined multi-angle views (Premium)
+
+GALLERY & COMPARISON
+• Organized photo and video galleries with date display
+• Side-by-side before/after comparisons
+• Bulk selection for easy sharing or deletion
+• Export your entire journey as a backup file
+
+SECURITY & PRIVACY
+• Face ID/Touch ID app lock
+• 4-digit passcode option
+• All data stored locally on your device
+• No cloud sync or external servers
+• You control what to share and when
+
+PREMIUM FEATURES ($4.99/month, 1-month free trial)
+• No ads or watermarks
+• Track weight and body fat percentage
+• Interactive progress charts
+• Multiple photo categories
+• HealthKit sync
+
+Transform your body, one photo at a time. BodyLapse makes tracking your fitness journey simple, private, and motivating!

@@ -1,0 +1,37 @@
+Dear Apple Review Team,
+
+Thank you for taking the time to review my app.
+
+Subscription Overview:
+- Product Name: BodyLapse Premium Monthly
+- Price: $4.99/month (USD), with region-specific pricing
+- Free Trial: 1-month free trial available for new subscribers
+- Auto-renewal: Yes, managed via standard iOS subscription settings
+
+Premium Features:
+1. Weight & Body Fat Tracking — Allows users to log and monitor their weight and body fat percentage, with access to progress charts.
+2. Advanced Photo Tracking — Track 4 angles with multiple photos daily for comprehensive progress monitoring.
+3. Ad-Free Experience — All advertisements are removed for premium subscribers.
+4. No Watermark on Exports — Time-lapse videos can be exported without the BodyLapse watermark.
+
+User Flow:
+1. New Users: During onboarding (step 5 of 5), users are presented with premium features and can subscribe directly
+2. Existing Users:
+- Open the app → Tap "Settings" tab (gear icon)
+- Select "BodyLapse Premium" option
+- Premium subscription screen appears (as shown in screenshot)
+
+Testing Instructions:
+- The subscription can be tested in the sandbox environment.
+- All premium features become available immediately upon successful subscription.
+
+Privacy & Compliance:
+- No user data is collected or transmitted for subscription purposes; all processing occurs on-device.
+- Privacy Policy and Terms of Service are accessible within the app.
+- Restore Purchases functionality is provided in the Settings menu.
+- Pricing, free trial details, and subscription terms are clearly presented to users prior to purchase.
+
+Thank you again for your review. If you require any additional information or clarification, please do not hesitate to contact me.
+
+Best regards,
+Koji Okamoto
