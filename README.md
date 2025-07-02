@@ -28,8 +28,6 @@ BodyLapse is a privacy-focused iOS app that helps you track your fitness journey
 - **📝 Daily Notes** - Add context to your journey
 - **🌍 Multi-language** - English, Japanese, Spanish, and Korean
 
-```
-
 ## 💎 Features Overview
 
 ### Core Features (Free)
