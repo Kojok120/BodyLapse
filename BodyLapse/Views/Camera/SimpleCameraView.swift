@@ -11,10 +11,12 @@ struct SimpleCameraView: UIViewControllerRepresentable {
     }
     
     func makeUIViewController(context: Context) -> SimpleCameraViewController {
+        print("SimpleCameraView: makeUIViewController called")
         let controller = SimpleCameraViewController()
         controller.onCapture = onCapture
         // Delay onReady callback to avoid state modification during view update
         DispatchQueue.main.async {
+            print("SimpleCameraView: Calling onReady callback")
             onReady?(controller)
         }
         return controller
@@ -33,8 +35,16 @@ class SimpleCameraViewController: UIViewController {
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private(set) var currentPosition: AVCaptureDevice.Position = .back
     
+    // Timer properties
+    var timerDuration: Int = 0 // 0 = off, 3, 5, 10 seconds
+    private var countdownTimer: Timer?
+    private var countdownValue: Int = 0
+    var onCountdownUpdate: ((Int) -> Void)?
+    var onCountdownComplete: (() -> Void)?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("SimpleCameraViewController: viewDidLoad called")
         view.backgroundColor = .black
         checkCameraAuthorization()
     }
@@ -80,11 +90,15 @@ class SimpleCameraViewController: UIViewController {
     }
     
     private func checkCameraAuthorization() {
+        print("SimpleCameraViewController: Checking camera authorization")
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
+            print("SimpleCameraViewController: Camera authorized, setting up")
             setupCamera()
         case .notDetermined:
+            print("SimpleCameraViewController: Camera not determined, requesting access")
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                print("SimpleCameraViewController: Camera access granted: \(granted)")
                 if granted {
                     DispatchQueue.main.async {
                         self?.setupCamera()
@@ -92,21 +106,26 @@ class SimpleCameraViewController: UIViewController {
                 }
             }
         default:
-            print("Camera access denied")
+            print("SimpleCameraViewController: Camera access denied")
         }
     }
     
     private func setupCamera() {
+        print("SimpleCameraViewController: Starting camera setup")
         captureSession = AVCaptureSession()
         captureSession?.sessionPreset = .photo
         
-        guard let captureSession = captureSession else { return }
+        guard let captureSession = captureSession else { 
+            print("SimpleCameraViewController: Failed to create capture session")
+            return 
+        }
         
         // Setup camera input
         guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: currentPosition) else {
-            print("Camera not available")
+            print("SimpleCameraViewController: Camera not available")
             return
         }
+        print("SimpleCameraViewController: Found camera device")
         
         do {
             let input = try AVCaptureDeviceInput(device: camera)
@@ -134,12 +153,61 @@ class SimpleCameraViewController: UIViewController {
         }
         
         // Start session
+        print("SimpleCameraViewController: Starting capture session")
         DispatchQueue.global(qos: .userInitiated).async {
             captureSession.startRunning()
+            DispatchQueue.main.async {
+                print("SimpleCameraViewController: Capture session started")
+            }
         }
     }
     
     func capturePhoto() {
+        guard let photoOutput = photoOutput else { return }
+        
+        // If timer is set, start countdown
+        if timerDuration > 0 {
+            startCountdown()
+        } else {
+            // Capture immediately
+            capturePhotoNow()
+        }
+    }
+    
+    private func startCountdown() {
+        countdownValue = timerDuration
+        onCountdownUpdate?(countdownValue)
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            
+            if self.countdownValue > 1 {
+                self.countdownValue -= 1
+                self.onCountdownUpdate?(self.countdownValue)
+                // Haptic feedback
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+            } else {
+                timer.invalidate()
+                self.countdownValue = 0
+                self.onCountdownUpdate?(0)
+                self.onCountdownComplete?()
+                self.capturePhotoNow()
+            }
+        }
+    }
+    
+    func cancelCountdown() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        countdownValue = 0
+        onCountdownUpdate?(0)
+    }
+    
+    private func capturePhotoNow() {
         guard let photoOutput = photoOutput else { return }
         
         let settings = AVCapturePhotoSettings()

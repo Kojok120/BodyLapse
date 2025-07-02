@@ -32,6 +32,7 @@
 "common.retake" = "撮り直す";
 "common.use_photo" = "写真を使用";
 "common.save_photo" = "写真を保存";
+"common.enable" = "有効にする";
 
 /* Calendar View */
 "calendar.title" = "カレンダー";
@@ -44,6 +45,8 @@
 "calendar.body_detected" = "体を検出しました";
 "calendar.align_body" = "体を合わせてください";
 "calendar.no_photo" = "写真なし";
+"calendar.confirm_delete_photo" = "写真を削除";
+"calendar.delete_photo_message" = "この写真を削除してもよろしいですか？この操作は取り消せません。";
 "calendar.select_time_period" = "期間を選択";
 "calendar.video_generation" = "動画生成";
 "calendar.update_measurements" = "測定値を更新";
@@ -78,6 +81,7 @@
 "calendar.no_weight_data" = "体重データがまだありません";
 "calendar.add_weight_hint" = "写真を保存する際に体重データを追加";
 "calendar.reload_data" = "データを再読み込み";
+"calendar.add_memo" = "メモを追加";
 
 /* Camera View */
 "camera.access_required" = "カメラアクセスが必要です";
@@ -86,6 +90,10 @@
 "camera.one_photo_per_day" = "1日1枚の写真のみ";
 "camera.replace_photo_message" = "1日に保存できる写真は1枚だけです。今日の写真を置き換えますか？";
 "camera.face_blurred" = "顔がぼかされています";
+"camera.photo_saved" = "写真を保存しました！";
+"camera.next_category" = "次のカテゴリ：";
+"camera.finish_session" = "終了";
+"camera.continue" = "続ける";
 
 /* Gallery View */
 "gallery.title" = "ギャラリー";
@@ -103,6 +111,7 @@
 /* Settings View */
 "settings.title" = "設定";
 "settings.photo_settings" = "写真設定";
+"settings.category_management" = "カテゴリ管理";
 "settings.show_guidelines" = "ボディガイドラインを表示";
 "settings.reset_guideline" = "ボディガイドラインをリセット";
 "settings.set_guideline" = "ボディガイドラインを設定";
@@ -143,6 +152,7 @@
 "settings.face_id" = "Face ID";
 "settings.touch_id" = "Touch ID";
 "settings.biometric" = "生体認証";
+"settings.write_review" = "レビューを書く";
 
 /* About Section */
 "about.bodylapse" = "BodyLapse";
@@ -160,8 +170,8 @@
 
 /* Compare View */
 "compare.title" = "進捗を比較";
-"compare.before" = "ビフォー";
-"compare.after" = "アフター";
+"compare.before" = "Before";
+"compare.after" = "After";
 "compare.select_first" = "最初の写真を選択";
 "compare.select_second" = "2番目の写真を選択";
 "compare.no_weight" = "体重なし";
@@ -189,7 +199,7 @@
 "onboarding.metrics.title" = "メトリクスを追跡";
 "onboarding.metrics.subtitle" = "体重と体脂肪率を記録して\n時間経過を視覚化";
 "onboarding.metrics.description" = "写真とデータインサイトを組み合わせて\n包括的な進捗追跡";
-"onboarding.comparison.title" = "ビフォー&アフター比較";
+"onboarding.comparison.title" = "Before&After比較";
 "onboarding.comparison.subtitle" = "任意の2枚の写真を選択して\n変化を並べて確認";
 "onboarding.comparison.description" = "開始時点と現在の進捗を\n簡単に比較";
 "onboarding.start.title" = "始めましょう！";
@@ -213,6 +223,8 @@
 "onboarding.premium.subtitle" = "専用ツールでフィットネスの旅を次のレベルへ";
 "onboarding.premium.metrics.title" = "メトリクスを追跡";
 "onboarding.premium.metrics.description" = "詳細なチャートで体重と体脂肪率をモニター";
+"onboarding.premium.advanced_tracking.title" = "高度な写真追跡";
+"onboarding.premium.advanced_tracking.description" = "4つの異なるアングルで1日複数枚の写真を撮影";
 "onboarding.premium.nowatermark.title" = "ウォーターマークなしの動画";
 "onboarding.premium.nowatermark.description" = "ウォーターマークなしでプロフェッショナルなタイムラプス動画を作成";
 "onboarding.premium.noads.title" = "広告なしの体験";
@@ -220,7 +232,7 @@
 "onboarding.premium.price" = "プレミアムプラン";
 "onboarding.premium.price.detail" = "いつでもキャンセル可能 • 無料トライアルあり";
 "onboarding.premium.price.fallback" = "¥600 / 月";
-"onboarding.premium.trial" = "7日間無料トライアル";
+"onboarding.premium.trial" = "1ヶ月無料トライアル";
 "onboarding.premium.cancel_anytime" = "いつでもキャンセル可能";
 
 /* Authentication */
@@ -239,6 +251,8 @@
 "premium.subtitle" = "すべての機能をアンロックして進捗を追跡";
 "premium.feature.tracking" = "体重&体脂肪追跡";
 "premium.feature.tracking_desc" = "詳細なチャートで進捗を追跡";
+"premium.feature.advanced_tracking" = "高度な写真追跡";
+"premium.feature.advanced_tracking_desc" = "4アングルで1日複数枚の写真を追跡";
 "premium.feature.no_ads" = "広告なし";
 "premium.feature.no_ads_desc" = "広告のない体験を楽しむ";
 "premium.feature.no_watermark" = "ウォーターマークなし";
@@ -254,6 +268,10 @@
 "premium.subscribe" = "今すぐ登録";
 "premium.price.fallback" = "¥600";
 "premium.price.period" = "/月";
+"premium.first_month_free" = "初月無料！";
+"premium.after_trial" = "無料期間後：";
+"premium.start_free_trial" = "無料トライアルを開始";
+"premium.then_per_month" = "その後は通常料金";
 
 /* Weight Input */
 "weight.title" = "体重入力";
@@ -287,3 +305,211 @@
 /* Reset Guideline */
 "reset_guideline.instruction" = "新しい写真を撮ってビジュアルガイドラインを更新してください";
 "reset_guideline.success_message" = "ビジュアルガイドラインが正常に更新されました！";
+
+/* Premium Offer - Onboarding */
+"onboarding.premium_offer.title" = "プレミアムジャーニーを始めましょう";
+"onboarding.premium_offer.subtitle" = "すべての機能をアンロックして、フィットネス追跡を次のレベルへ";
+"onboarding.premium_offer.special" = "特別新規ユーザーオファー";
+"onboarding.premium_offer.benefit1" = "体重＆体脂肪率を追跡";
+"onboarding.premium_offer.benefit2" = "広告なし";
+"onboarding.premium_offer.benefit3" = "動画にウォーターマークなし";
+"onboarding.premium_offer.start_trial" = "無料トライアルを開始";
+"onboarding.premium_offer.maybe_later" = "後で検討";
+"onboarding.premium_offer.terms" = "いつでもキャンセル可能。キャンセルしない限りサブスクリプションは自動更新されます。";
+
+/* Category Names */
+"category.default.front" = "正面";
+
+/* Category Management */
+"category.management.title" = "カテゴリ管理";
+"category.management.list_header" = "カテゴリ一覧";
+"category.management.list_footer" = "最大%d個のカテゴリを登録できます（正面＋カスタム%d個）";
+"category.management.add_category" = "カテゴリを追加";
+"category.management.new_category" = "新しいカテゴリ";
+"category.management.add" = "追加";
+"category.management.edit" = "カテゴリを編集";
+"category.management.edit_name" = "カテゴリ名を編集";
+"category.management.category_name" = "カテゴリ名";
+"category.management.example" = "例：横向き、背面、筋肉など";
+"category.management.delete_title" = "カテゴリを削除";
+"category.management.delete_message" = "カテゴリ「%@」を削除しますか？\nこのカテゴリの写真は削除されません。";
+"category.management.delete_warning" = "カテゴリ「%@」を削除してもよろしいですか？\n\n警告：このカテゴリに関連するすべての写真とガイドラインが完全に削除されます。この操作は取り消せません。";
+"category.management.delete" = "削除";
+"category.management.add_failed" = "カテゴリの追加に失敗しました";
+"category.management.default" = "デフォルト";
+"category.management.guideline_set" = "ガイドライン設定済み";
+"category.management.edit_name_action" = "名前を編集";
+"category.management.set_guideline" = "ガイドラインを設定";
+
+/* Premium Category Feature */
+"category.premium.title" = "複数カテゴリ機能";
+"category.premium.description" = "プレミアムプランで最大4つのカテゴリを作成し、\n写真を整理して管理できます";
+"category.premium.feature1" = "複数アングルの同時管理";
+"category.premium.feature2" = "カテゴリ別ガイドライン設定";
+"category.premium.feature3" = "サイドバイサイド動画生成";
+"category.premium.feature4" = "カテゴリ別フィルタリング";
+"category.premium.upgrade" = "プレミアムにアップグレード";
+
+/* Video Generation */
+"video.layout" = "レイアウト";
+"video.layout.single" = "シングル";
+"video.layout.sidebyside" = "サイドバイサイド";
+"video.category.select" = "カテゴリ選択（最大4つ）";
+
+/* Gallery Filter */
+"gallery.filter" = "フィルター";
+"gallery.filter.category" = "カテゴリ";
+"gallery.filter.sort" = "並び替え";
+"gallery.filter.newest" = "新しい順";
+"gallery.filter.oldest" = "古い順";
+"gallery.filter.all_categories" = "すべてのカテゴリ";
+"gallery.filter.reset" = "フィルターをリセット";
+"gallery.photos_count" = "%d枚";
+
+/* Import/Export */
+"import_export.title" = "データのインポート/エクスポート";
+"import_export.export" = "エクスポート";
+"import_export.import" = "インポート";
+"import_export.export_data" = "データをエクスポート";
+"import_export.export_description" = "写真、動画、設定をバックアップ";
+"import_export.import_data" = "データをインポート";
+"import_export.import_description" = "バックアップからデータを復元";
+"import_export.import_footer" = "BodyLapseエクスポートファイル（.bodylapse）のみインポート可能です";
+"import_export.export_completed" = "エクスポート完了";
+"import_export.export_completed_message" = "データのエクスポートが完了しました";
+"import_export.import_completed" = "インポート完了";
+"import_export.import_summary" = "インポートが完了しました：\n\n写真: %d枚\n動画: %d本\nカテゴリ: %d個\n体重データ: %d件\nメモ: %d件";
+"import_export.data_types" = "データタイプ";
+"import_export.photos" = "写真";
+"import_export.videos" = "動画";
+"import_export.weight_data" = "体重・体脂肪率データ";
+"import_export.notes" = "メモ";
+"import_export.settings" = "設定";
+"import_export.period" = "期間";
+"import_export.specify_period" = "期間を指定";
+"import_export.start_date" = "開始日";
+"import_export.end_date" = "終了日";
+"import_export.categories" = "カテゴリ";
+"import_export.select_all" = "すべて選択";
+"import_export.single_category" = "カテゴリは1つのみです";
+"import_export.export_options" = "エクスポートオプション";
+
+/* Guideline Setup */
+"guideline.setup.title" = "ボディガイドラインを設定";
+"guideline.setup.description" = "このガイドラインは、このカテゴリの写真で一貫したポジショニングを維持するのに役立ちます";
+"guideline.setup.start" = "設定を開始";
+"guideline.setup.nav_title" = "ボディガイドライン設定";
+
+/* Notification Onboarding */
+"onboarding.notification.title" = "進捗をキープ";
+"onboarding.notification.subtitle" = "毎日の進捗を逃さない";
+"onboarding.notification.description" = "19時までに写真が撮影されていない場合、BodyLapseがお知らせします";
+"onboarding.notification.daily_reminder" = "写真未撮影時は19時にリマインダー";
+"onboarding.enable_notifications" = "通知を有効にする";
+
+/* Additional Strings */
+"settings.import_export" = "データのインポート/エクスポート";
+"settings.debug_options" = "デバッグオプション";
+"settings.premium_mode" = "プレミアムモード";
+"settings.allow_past_photos" = "過去の日付の写真を許可";
+"settings.subscription_status" = "サブスクリプションステータス";
+"settings.expiration_date" = "有効期限";
+"calendar.photo_taken" = "写真撮影済み";
+"calendar.selected" = "選択中";
+"calendar.select_date_title" = "日付を選択";
+"calendar.data_available" = "データあり";
+"calendar.data_includes_note" = "※データには体重・体脂肪率・メモが含まれます";
+"memo.add_memo" = "メモを追加";
+"memo.content" = "メモ内容";
+"memo.save" = "保存";
+"memo.delete" = "メモを削除";
+"photo.captured_on" = "撮影日";
+"photo.details" = "写真の詳細";
+"photo.body_detected" = "体を検出 (%d%% 信頼度)";
+"photo.delete_title" = "写真を削除";
+"photo.delete_message" = "この写真を削除してもよろしいですか？この操作は取り消せません。";
+"weight.track_progress" = "進捗を記録";
+"weight.add_measurements" = "現在の測定値を追加";
+"weight.save_photo" = "写真を保存";
+"weight.skip_save" = "スキップして保存";
+"gallery.section_videos" = "動画";
+"gallery.section_photos" = "写真";
+"notification.no_photo_title" = "まだ今日の写真を撮っていません";
+"notification.no_photo_body" = "今日の進捗を記録しましょう！タップして撮影を開始";
+"import.preparing_export" = "エクスポートを準備中...";
+"import.preparing_import" = "インポートを準備中...";
+"import.preparing_photos" = "写真を準備中...";
+"import.preparing_videos" = "動画を準備中...";
+"import.compressing_data" = "データを圧縮中...";
+"import.completing_export" = "エクスポートを完了中...";
+"import.extracting_files" = "ファイルを展開中...";
+"import.importing_photos" = "写真をインポート中...";
+"import.importing_videos" = "動画をインポート中...";
+"import.completing_import" = "インポートを完了中...";
+"import.data_to_import" = "インポートするデータ";
+"import.duplicate_handling" = "重複データの処理";
+"import.handling_method" = "処理方法";
+"import.skip" = "スキップ";
+"import.replace" = "置き換え";
+"import.keep_both" = "両方保持";
+"import.skip_description" = "既存のデータはそのまま保持され、新しいデータのみ追加されます";
+"import.replace_description" = "既存のデータが新しいデータで上書きされます";
+"import.keep_both_description" = "両方のデータが保持されます（写真・動画は別名で保存）";
+"import.import_options" = "インポートオプション";
+"import.import_button" = "インポート";
+
+/* Date Formats */
+"date.format.month_year" = "yyyy年MM月";
+"date.format.medium" = "yyyy年MM月dd日";
+"date.format.short" = "M/d";
+"date.format.long" = "yyyy年MM月dd日";
+
+/* Debug Options */
+"settings.debug.premium_mode" = "プレミアムモード";
+"settings.debug.past_photos" = "過去の日付の写真を許可";
+
+/* Weight View */
+"weight.percentage_format" = "%.1f%%";
+
+/* Sync Status */
+"settings.sync.syncing" = "同期中...";
+"settings.sync.last_sync" = "最終同期: %@";
+"settings.sync.never" = "なし";
+
+/* Photo Detail */
+"photo.confidence_level" = "体を検出 (%d%% 信頼度)";
+"photo.weight_format" = "体重: %.1f %@";
+"photo.body_fat_format" = "体脂肪率: %.1f%%";
+
+/* Memo */
+"memo.character_count" = "%d/100";
+"memo.edit" = "編集";
+
+/* Import Status */
+"import.file_count" = "%dファイル";
+"import.success" = "成功";
+"import.failed" = "失敗";
+
+/* Navigation Titles */
+"nav.select_date" = "日付を選択";
+"nav.review_photo" = "写真を確認";
+"nav.premium_subscription" = "プレミアムサブスクリプション";
+"nav.photo_saved" = "写真を保存しました！";
+"nav.weight_tracking" = "体重追跡";
+"nav.add_entry" = "エントリを追加";
+
+/* Chart Labels */
+"chart.weight" = "体重";
+"chart.body_fat" = "体脂肪率";
+"chart.no_data" = "データなし";
+"chart.tap_to_add" = "タップして追加";
+
+/* Confirmation View */
+"confirm.retake" = "撮り直す";
+"confirm.confirm" = "確認";
+
+/* Timer */
+"timer.off" = "オフ";
+"timer.3s" = "3秒";
+"timer.5s" = "5秒";
+"timer.10s" = "10秒";

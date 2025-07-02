@@ -3,6 +3,7 @@ import SwiftUI
 struct MainTabView: View {
     @State private var selectedTab = 0
     @State private var videoToPlay: UUID?
+    @State private var shouldLaunchCamera = false
     @StateObject private var userSettings = UserSettingsManager.shared
     
     var body: some View {
@@ -19,7 +20,7 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            CameraView()
+            CameraView(shouldLaunchCamera: $shouldLaunchCamera)
                 .tabItem {
                     Label("tab.photo".localized, systemImage: "camera.fill")
                 }
@@ -39,6 +40,10 @@ struct MainTabView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCamera"))) { _ in
             selectedTab = 2 // Camera tab
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCameraAndLaunch"))) { _ in
+            selectedTab = 2 // Camera tab
+            shouldLaunchCamera = true
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToGalleryAndPlayVideo"))) { notification in
             if let videoId = notification.userInfo?["videoId"] as? UUID {

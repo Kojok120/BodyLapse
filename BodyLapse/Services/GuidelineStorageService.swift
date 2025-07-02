@@ -9,25 +9,49 @@ class GuidelineStorageService {
     
     private init() {}
     
+    // MARK: - Legacy Support (Default Category)
+    // These methods now delegate to CategoryStorageService for the default category
+    
     func saveGuideline(_ guideline: BodyGuideline) {
-        if let encoded = try? JSONEncoder().encode(guideline) {
-            userDefaults.set(encoded, forKey: guidelineKey)
-        }
+        saveGuideline(guideline, for: PhotoCategory.defaultCategory.id)
     }
     
     func loadGuideline() -> BodyGuideline? {
-        guard let data = userDefaults.data(forKey: guidelineKey),
-              let guideline = try? JSONDecoder().decode(BodyGuideline.self, from: data) else {
-            return nil
-        }
-        return guideline
+        return loadGuideline(for: PhotoCategory.defaultCategory.id)
     }
     
     func deleteGuideline() {
-        userDefaults.removeObject(forKey: guidelineKey)
+        deleteGuideline(for: PhotoCategory.defaultCategory.id)
     }
     
     func hasGuideline() -> Bool {
-        return loadGuideline() != nil
+        return hasGuideline(for: PhotoCategory.defaultCategory.id)
+    }
+    
+    // MARK: - Category-based Methods
+    
+    func saveGuideline(_ guideline: BodyGuideline, for categoryId: String) {
+        CategoryStorageService.shared.saveGuideline(for: categoryId, guideline: guideline)
+    }
+    
+    func loadGuideline(for categoryId: String) -> BodyGuideline? {
+        return CategoryStorageService.shared.getCategoryById(categoryId)?.guideline
+    }
+    
+    func deleteGuideline(for categoryId: String) {
+        CategoryStorageService.shared.removeGuideline(for: categoryId)
+    }
+    
+    func hasGuideline(for categoryId: String) -> Bool {
+        return loadGuideline(for: categoryId) != nil
+    }
+    
+    func getAllGuidelines() -> [(categoryId: String, guideline: BodyGuideline)] {
+        let categories = CategoryStorageService.shared.getActiveCategories()
+        
+        return categories.compactMap { category in
+            guard let guideline = category.guideline else { return nil }
+            return (category.id, guideline)
+        }
     }
 }

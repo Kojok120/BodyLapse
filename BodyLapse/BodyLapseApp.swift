@@ -15,8 +15,17 @@ struct BodyLapseApp: App {
     @StateObject private var languageManager = LanguageManager.shared
     
     init() {
+        // Initialize CategoryStorageService first
+        _ = CategoryStorageService.shared
+        
+        // Perform data migration if needed
+        DataMigrationService.shared.performMigrationIfNeeded()
+        
         // Initialize PhotoStorageService on app launch
         PhotoStorageService.shared.initialize()
+        
+        // Set up daily photo reminder check
+        NotificationService.shared.setupDailyPhotoCheck()
     }
     
     var body: some Scene {

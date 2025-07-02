@@ -6,8 +6,13 @@ struct CompareView: View {
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var firstPhoto: Photo?
     @State private var secondPhoto: Photo?
+    @State private var firstSelectedDate: Date?
+    @State private var secondSelectedDate: Date?
     @State private var showingFirstCalendar = false
     @State private var showingSecondCalendar = false
+    @State private var availableCategories: [PhotoCategory] = []
+    @State private var firstCategory: PhotoCategory = PhotoCategory.defaultCategory
+    @State private var secondCategory: PhotoCategory = PhotoCategory.defaultCategory
     
     var body: some View {
         NavigationView {
@@ -53,23 +58,43 @@ struct CompareView: View {
                     onDateSelected: { date in
                         // Reload photos to get latest weight/body fat data
                         print("[CompareView] Selecting first photo for date: \(date)")
-                        viewModel.loadPhotos()
                         
-                        // Wait a bit for weight sync to complete
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            firstPhoto = viewModel.photos.first { photo in
-                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                        Task { @MainActor in
+                            // First, reload photos from disk
+                            viewModel.loadPhotos()
+                            
+                            // Also sync weight data directly from WeightStorageService for this specific date
+                            do {
+                                if let weightEntry = try await WeightStorageService.shared.getEntry(for: date) {
+                                    print("[CompareView] Found weight entry for date \(date): weight=\(weightEntry.weight), bodyFat=\(weightEntry.bodyFatPercentage ?? -1)")
+                                }
+                            } catch {
+                                print("[CompareView] Failed to get weight entry for date: \(error)")
                             }
+                            
+                            // Wait for weight sync to complete
+                            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                            
+                            // Get all photos for this date in the selected category
+                            let photosForDate = viewModel.photos.filter { photo in
+                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date) &&
+                                photo.categoryId == firstCategory.id
+                            }
+                            
+                            firstPhoto = photosForDate.first
+                            firstSelectedDate = date
+                            
                             if let selected = firstPhoto {
-                                print("[CompareView] Selected first photo - id: \(selected.id), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
+                                print("[CompareView] Selected first photo - id: \(selected.id), category: \(selected.categoryId), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
                             } else {
-                                print("[CompareView] No photo found for date: \(date)")
+                                print("[CompareView] No photo found for date: \(date) in category: \(firstCategory.id)")
                             }
                         }
                         showingFirstCalendar = false
                     },
                     minDate: nil,
-                    maxDate: secondPhoto?.captureDate
+                    maxDate: secondSelectedDate,
+                    categoryId: firstCategory.id  // Filter by selected category
                 )
             }
             .sheet(isPresented: $showingSecondCalendar) {
@@ -82,39 +107,102 @@ struct CompareView: View {
                     onDateSelected: { date in
                         // Reload photos to get latest weight/body fat data
                         print("[CompareView] Selecting second photo for date: \(date)")
-                        viewModel.loadPhotos()
                         
-                        // Wait a bit for weight sync to complete
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            secondPhoto = viewModel.photos.first { photo in
-                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
+                        Task { @MainActor in
+                            // First, reload photos from disk
+                            viewModel.loadPhotos()
+                            
+                            // Also sync weight data directly from WeightStorageService for this specific date
+                            do {
+                                if let weightEntry = try await WeightStorageService.shared.getEntry(for: date) {
+                                    print("[CompareView] Found weight entry for date \(date): weight=\(weightEntry.weight), bodyFat=\(weightEntry.bodyFatPercentage ?? -1)")
+                                }
+                            } catch {
+                                print("[CompareView] Failed to get weight entry for date: \(error)")
                             }
+                            
+                            // Wait for weight sync to complete
+                            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                            
+                            // Get all photos for this date in the selected category
+                            let photosForDate = viewModel.photos.filter { photo in
+                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date) &&
+                                photo.categoryId == secondCategory.id
+                            }
+                            
+                            secondPhoto = photosForDate.first
+                            secondSelectedDate = date
+                            
                             if let selected = secondPhoto {
-                                print("[CompareView] Selected second photo - id: \(selected.id), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
+                                print("[CompareView] Selected second photo - id: \(selected.id), category: \(selected.categoryId), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
                             } else {
-                                print("[CompareView] No photo found for date: \(date)")
+                                print("[CompareView] No photo found for date: \(date) in category: \(secondCategory.id)")
                             }
                         }
                         showingSecondCalendar = false
                     },
-                    minDate: firstPhoto?.captureDate,
-                    maxDate: nil
+                    minDate: firstSelectedDate,
+                    maxDate: nil,
+                    categoryId: secondCategory.id  // Filter by selected category
                 )
             }
         }
         .onAppear {
             print("[ComparisonView] View appeared")
             viewModel.loadPhotos()
-            // Load any photos with today's date
+            
+            // Load available categories
+            let isPremium = subscriptionManager.isPremium
+            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+            
+            // Load any photos with today's date from selected category
             let today = Date()
             secondPhoto = viewModel.photos.first { photo in
+                photo.categoryId == secondCategory.id &&
                 Calendar.current.isDate(photo.captureDate, inSameDayAs: today)
+            }
+            if secondPhoto != nil {
+                secondSelectedDate = today
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             // Reload photos when app comes to foreground to get latest data
             viewModel.loadPhotos()
             // Update selected photos with fresh data
+            if let first = firstPhoto {
+                firstPhoto = viewModel.photos.first { $0.id == first.id }
+            }
+            if let second = secondPhoto {
+                secondPhoto = viewModel.photos.first { $0.id == second.id }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("CategoriesUpdated"))) { _ in
+            print("CompareView: Received CategoriesUpdated notification")
+            
+            // Reload available categories
+            let isPremium = subscriptionManager.isPremium
+            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+            
+            // Check if selected categories are still available
+            if !availableCategories.contains(where: { $0.id == firstCategory.id }) {
+                firstCategory = availableCategories.first ?? PhotoCategory.defaultCategory
+                firstPhoto = nil
+                firstSelectedDate = nil
+            }
+            
+            if !availableCategories.contains(where: { $0.id == secondCategory.id }) {
+                secondCategory = availableCategories.first ?? PhotoCategory.defaultCategory
+                secondPhoto = nil
+                secondSelectedDate = nil
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { _ in
+            print("CompareView: Received GuidelineUpdated notification")
+            
+            // Reload photos in case guidelines affect them
+            viewModel.loadPhotos()
+            
+            // Update selected photos with fresh data if they exist
             if let first = firstPhoto {
                 firstPhoto = viewModel.photos.first { $0.id == first.id }
             }
@@ -135,33 +223,11 @@ struct CompareView: View {
                         Group {
                             if let photo = firstPhoto,
                                let image = PhotoStorageService.shared.loadImage(for: photo) {
-                                ZStack {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                        .clipped()
-                                        .overlay(
-                                            VStack {
-                                                HStack {
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("compare.before".localized)
-                                                            .font(.caption)
-                                                            .fontWeight(.bold)
-                                                        Text(formatDateShort(photo.captureDate))
-                                                            .font(.caption2)
-                                                    }
-                                                    .padding(6)
-                                                    .background(Color.black.opacity(0.7))
-                                                    .foregroundColor(.white)
-                                                    .cornerRadius(4)
-                                                    .padding(8)
-                                                    Spacer()
-                                                }
-                                                Spacer()
-                                            }
-                                        )
-                                }
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                    .clipped()
                             } else {
                                 Rectangle()
                                     .fill(Color(UIColor.systemGray5))
@@ -242,33 +308,11 @@ struct CompareView: View {
                         Group {
                             if let photo = secondPhoto,
                                let image = PhotoStorageService.shared.loadImage(for: photo) {
-                                ZStack {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                        .clipped()
-                                        .overlay(
-                                            VStack {
-                                                HStack {
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("compare.after".localized)
-                                                            .font(.caption)
-                                                            .fontWeight(.bold)
-                                                        Text(formatDateShort(photo.captureDate))
-                                                            .font(.caption2)
-                                                    }
-                                                    .padding(6)
-                                                    .background(Color.black.opacity(0.7))
-                                                    .foregroundColor(.white)
-                                                    .cornerRadius(4)
-                                                    .padding(8)
-                                                    Spacer()
-                                                }
-                                                Spacer()
-                                            }
-                                        )
-                                }
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                    .clipped()
                             } else {
                                 Rectangle()
                                     .fill(Color(UIColor.systemGray5))
@@ -437,60 +481,143 @@ struct CompareView: View {
     }
     
     private var photoSelectionButtons: some View {
-        HStack(spacing: 20) {
-            Button(action: {
-                showingFirstCalendar = true
-            }) {
-                VStack(spacing: 8) {
-                    HStack {
-                        Image(systemName: "calendar")
+        VStack(spacing: 16) {
+            // Category selection for premium users
+            if subscriptionManager.isPremium && availableCategories.count > 1 {
+                HStack(spacing: 20) {
+                    // First category picker
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("compare.before".localized)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Menu {
+                            ForEach(availableCategories) { category in
+                                Button(action: {
+                                    firstCategory = category
+                                    // Try to find a photo for the same date in the new category
+                                    if let selectedDate = firstSelectedDate {
+                                        firstPhoto = viewModel.photos.first { photo in
+                                            photo.categoryId == category.id &&
+                                            Calendar.current.isDate(photo.captureDate, inSameDayAs: selectedDate)
+                                        }
+                                    }
+                                }) {
+                                    Label(category.name, systemImage: firstCategory.id == category.id ? "checkmark" : "")
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Text(firstCategory.name)
+                                    .font(.subheadline)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Image(systemName: "chevron.down")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color(UIColor.tertiarySystemFill))
+                            .cornerRadius(8)
+                        }
                     }
-                    .font(.headline)
                     
-                    if let photo = firstPhoto {
-                        Text(formatDate(photo.captureDate))
+                    // Second category picker
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("compare.after".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
-                    } else {
-                        Text("compare.select_date".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Menu {
+                            ForEach(availableCategories) { category in
+                                Button(action: {
+                                    secondCategory = category
+                                    // Try to find a photo for the same date in the new category
+                                    if let selectedDate = secondSelectedDate {
+                                        secondPhoto = viewModel.photos.first { photo in
+                                            photo.categoryId == category.id &&
+                                            Calendar.current.isDate(photo.captureDate, inSameDayAs: selectedDate)
+                                        }
+                                    }
+                                }) {
+                                    Label(category.name, systemImage: secondCategory.id == category.id ? "checkmark" : "")
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Text(secondCategory.name)
+                                    .font(.subheadline)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Image(systemName: "chevron.down")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color(UIColor.tertiarySystemFill))
+                            .cornerRadius(8)
+                        }
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(UIColor.secondarySystemBackground))
-                .cornerRadius(10)
+                .padding(.horizontal)
             }
             
-            Button(action: {
-                showingSecondCalendar = true
-            }) {
-                VStack(spacing: 8) {
-                    HStack {
-                        Image(systemName: "calendar")
-                        Text("compare.after".localized)
+            // Date selection buttons
+            HStack(spacing: 20) {
+                Button(action: {
+                    showingFirstCalendar = true
+                }) {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Image(systemName: "calendar")
+                            Text("compare.before".localized)
+                        }
+                        .font(.headline)
+                        
+                        if let date = firstSelectedDate {
+                            Text(formatDate(date))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("compare.select_date".localized)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
-                    .font(.headline)
-                    
-                    if let photo = secondPhoto {
-                        Text(formatDate(photo.captureDate))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("compare.select_date".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(10)
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(UIColor.secondarySystemBackground))
-                .cornerRadius(10)
+                
+                Button(action: {
+                    showingSecondCalendar = true
+                }) {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Image(systemName: "calendar")
+                            Text("compare.after".localized)
+                        }
+                        .font(.headline)
+                        
+                        if let date = secondSelectedDate {
+                            Text(formatDate(date))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("compare.select_date".localized)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(10)
+                }
             }
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
         .padding(.top)
     }
     

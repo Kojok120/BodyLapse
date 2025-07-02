@@ -27,11 +27,11 @@ struct PhotoReviewView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Review Photo")
+            .navigationTitle("nav.review_photo".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("common.cancel".localized) {
                         onCancel()
                     }
                     .disabled(isProcessing)

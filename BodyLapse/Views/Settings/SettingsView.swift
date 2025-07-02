@@ -16,33 +16,60 @@ struct SettingsView: View {
     @State private var showingResetGuidelineConfirmation = false
     @State private var showingResetGuideline = false
     @State private var showingLanguageChangeAlert = false
+    @State private var isNotificationEnabled = false
+    
+    // App Store ID - replace with actual ID when app is published
+    private let appStoreID = "YOUR_APP_STORE_ID"
     
     var body: some View {
         NavigationView {
             Form {
                 Section("settings.photo_settings".localized) {
+                    if subscriptionManager.isPremium {
+                        NavigationLink(destination: CategoryManagementView()) {
+                            Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
+                        }
+                    } else {
+                        Button(action: { showingPremiumUpgrade = true }) {
+                            HStack {
+                                Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
+                                Spacer()
+                                Image(systemName: "lock.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .foregroundColor(.primary)
+                    }
+                    
                     Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
                     
-                    Button(action: {
-                        if GuidelineStorageService.shared.hasGuideline() {
-                            showingResetGuidelineConfirmation = true
-                        } else {
-                            // If no guideline exists, directly show the guideline setup
-                            showingResetGuideline = true
-                        }
-                    }) {
-                        if GuidelineStorageService.shared.hasGuideline() {
-                            Label("settings.reset_guideline".localized, systemImage: "arrow.uturn.backward")
-                                .foregroundColor(.red)
-                        } else {
-                            Label("settings.set_guideline".localized, systemImage: "person.fill.viewfinder")
-                                .foregroundColor(.blue)
+                    // Only show guideline button for free users
+                    if !subscriptionManager.isPremium {
+                        Button(action: {
+                            if GuidelineStorageService.shared.hasGuideline() {
+                                showingResetGuidelineConfirmation = true
+                            } else {
+                                // If no guideline exists, directly show the guideline setup
+                                showingResetGuideline = true
+                            }
+                        }) {
+                            if GuidelineStorageService.shared.hasGuideline() {
+                                Label("settings.reset_guideline".localized, systemImage: "arrow.uturn.backward")
+                                    .foregroundColor(.red)
+                            } else {
+                                Label("settings.set_guideline".localized, systemImage: "person.fill.viewfinder")
+                                    .foregroundColor(.blue)
+                            }
                         }
                     }
                     
-                    Picker("settings.weight_unit".localized, selection: $userSettings.settings.weightUnit) {
-                        ForEach(UserSettings.WeightUnit.allCases, id: \.self) { unit in
-                            Text(unit.rawValue).tag(unit)
+                    // Weight Unit - only for premium users
+                    if subscriptionManager.isPremium {
+                        Picker("settings.weight_unit".localized, selection: $userSettings.settings.weightUnit) {
+                            ForEach(UserSettings.WeightUnit.allCases, id: \.self) { unit in
+                                Text(unit.rawValue).tag(unit)
+                            }
                         }
                     }
                     
@@ -87,24 +114,18 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section("settings.reminders".localized) {
-                    Toggle("settings.daily_reminder".localized, isOn: $userSettings.settings.reminderEnabled)
-                        .onChange(of: userSettings.settings.reminderEnabled) {  _, newValue in
-                            if newValue {
-                                // Request permission when enabling reminders
-                                NotificationService.shared.requestNotificationPermission { granted in
-                                    if !granted {
-                                        userSettings.settings.reminderEnabled = false
-                                        showingNotificationPermissionAlert = true
-                                    }
-                                }
+                if !isNotificationEnabled {
+                    Section("settings.reminders".localized) {
+                        HStack {
+                            Image(systemName: "bell.fill")
+                                .foregroundColor(.blue)
+                            Text("settings.daily_reminder".localized)
+                            Spacer()
+                            Button("common.enable".localized) {
+                                requestNotificationPermission()
                             }
+                            .foregroundColor(.blue)
                         }
-                    
-                    if userSettings.settings.reminderEnabled {
-                        DatePicker("settings.reminder_time".localized,
-                                   selection: $userSettings.settings.reminderTime,
-                                   displayedComponents: .hourAndMinute)
                     }
                 }
                 
@@ -194,8 +215,8 @@ struct SettingsView: View {
                 }
                 
                 Section(header: Text("settings.data".localized)) {
-                    NavigationLink(destination: ExportView()) {
-                        Label("settings.export_photos".localized, systemImage: "square.and.arrow.up")
+                    NavigationLink(destination: ImportExportView()) {
+                        Label("settings.import_export".localized, systemImage: "arrow.up.arrow.down.square")
                     }
                     
                     // Data clearing feature - to be implemented in future version
@@ -227,6 +248,46 @@ struct SettingsView: View {
                         Label("settings.terms_service".localized, systemImage: "doc.text")
                     }
                 }
+                
+                Section {
+                    Button(action: {
+                        if let url = URL(string: "https://apps.apple.com/app/id\(appStoreID)?action=write-review") {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
+                        Label("settings.write_review".localized, systemImage: "star.fill")
+                            .foregroundColor(.primary)
+                    }
+                }
+                
+                #if DEBUG
+                Section(header: Text("settings.debug_options".localized)) {
+                    Toggle("settings.debug.premium_mode".localized, isOn: Binding(
+                        get: { subscriptionManager.isPremium },
+                        set: { _ in subscriptionManager.toggleDebugPremium() }
+                    ))
+                    
+                    Toggle("settings.debug.past_photos".localized, isOn: $userSettings.settings.debugAllowPastDatePhotos)
+                    
+                    HStack {
+                        Text("settings.subscription_status".localized)
+                        Spacer()
+                        Text(subscriptionManager.subscriptionStatusDescription)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if subscriptionManager.isPremium {
+                        HStack {
+                            Text("settings.expiration_date".localized)
+                            Spacer()
+                            if let date = subscriptionManager.expirationDate {
+                                Text(date, style: .date)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                #endif
             }
             .navigationTitle("settings.title".localized)
             .sheet(isPresented: $showingAbout) {
@@ -267,7 +328,7 @@ struct SettingsView: View {
                 Text("settings.reset_guideline_confirm".localized)
             }
             .fullScreenCover(isPresented: $showingResetGuideline) {
-                ResetGuidelineView()
+                ResetGuidelineView(categoryId: PhotoCategory.defaultCategory.id, categoryName: PhotoCategory.defaultCategory.name)
             }
             .alert("common.done".localized, isPresented: $showingLanguageChangeAlert) {
                 Button("common.ok".localized) {
@@ -284,6 +345,7 @@ struct SettingsView: View {
             }
             .onAppear {
                 healthKitEnabled = userSettings.settings.healthKitEnabled
+                checkNotificationStatus()
             }
         }
     }
@@ -313,6 +375,25 @@ struct SettingsView: View {
             if success {
                 // Reload weight data in the app
                 NotificationCenter.default.post(name: Notification.Name("HealthKitDataSynced"), object: nil)
+            }
+        }
+    }
+    
+    private func checkNotificationStatus() {
+        NotificationService.shared.checkNotificationPermission { authorized in
+            isNotificationEnabled = authorized
+        }
+    }
+    
+    private func requestNotificationPermission() {
+        NotificationService.shared.requestNotificationPermission { authorized in
+            if authorized {
+                isNotificationEnabled = true
+                // Set up daily photo check after permission is granted
+                NotificationService.shared.setupDailyPhotoCheck()
+            } else {
+                // Permission denied - show alert to open settings
+                showingNotificationPermissionAlert = true
             }
         }
     }

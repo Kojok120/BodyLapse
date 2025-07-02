@@ -94,15 +94,15 @@ struct InteractiveWeightChartView: View {
             // Selected data display
             if let selectedDate = selectedDate {
                 HStack(spacing: 20) {
-                    Text(selectedDate.formatted(date: .abbreviated, time: .omitted))
-                        .font(.headline)
+                    Text(formatDate(selectedDate))
+                        .font(.subheadline)
                     
                     Spacer()
                     
                     HStack(spacing: 20) {
                         if let selectedEntry = selectedEntry {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Weight")
+                                Text("chart.weight".localized)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
@@ -115,7 +115,7 @@ struct InteractiveWeightChartView: View {
                             
                             if let bodyFat = selectedEntry.bodyFatPercentage {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("Body Fat")
+                                    Text("chart.body_fat".localized)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                     Text("\(bodyFat, specifier: "%.1f")%")
@@ -128,10 +128,10 @@ struct InteractiveWeightChartView: View {
                             }
                         } else {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("No data")
+                                Text("chart.no_data".localized)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                Text("Tap + to add")
+                                Text("chart.tap_to_add".localized)
                                     .font(.body)
                                     .foregroundColor(.secondary)
                             }
@@ -396,6 +396,23 @@ struct InteractiveWeightChartView: View {
     
     private func convertedWeight(_ weight: Double) -> Double {
         userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        
+        // Check current language and set appropriate format
+        let currentLanguage = LanguageManager.shared.currentLanguage
+        switch currentLanguage {
+        case "ja":
+            formatter.dateFormat = "yyyy/MM/dd"
+        case "ko":
+            formatter.dateFormat = "yyyy.MM.dd"
+        default:
+            formatter.dateFormat = "MMM d, yyyy"
+        }
+        
+        return formatter.string(from: date)
     }
 }
 

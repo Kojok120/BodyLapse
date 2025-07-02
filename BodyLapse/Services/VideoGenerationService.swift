@@ -104,6 +104,8 @@ class VideoGenerationService {
         let addWatermark: Bool
         let transitionStyle: TransitionStyle
         let blurFaces: Bool
+        let layout: VideoLayout
+        let selectedCategories: [String]
         
         enum TransitionStyle {
             case none
@@ -111,12 +113,19 @@ class VideoGenerationService {
             case crossDissolve
         }
         
+        enum VideoLayout {
+            case single
+            case sideBySide
+        }
+        
         static let `default` = VideoGenerationOptions(
             frameDuration: CMTime(value: 1, timescale: 4), // 0.25 seconds per frame
             videoSize: CGSize(width: 1080, height: 1920), // Portrait HD
             addWatermark: true,
             transitionStyle: .fade,
-            blurFaces: false
+            blurFaces: false,
+            layout: .single,
+            selectedCategories: []
         )
     }
     
@@ -131,9 +140,22 @@ class VideoGenerationService {
             guard let self = self else { return }
             
             // Filter photos within date range
-            let filteredPhotos = photos.filter { photo in
-                dateRange.contains(photo.captureDate)
-            }.sorted { $0.captureDate < $1.captureDate }
+            let filteredPhotos: [Photo]
+            
+            if options.layout == .single || options.selectedCategories.isEmpty {
+                // Single category video - filter by first selected category or all photos
+                let categoryId = options.selectedCategories.first
+                filteredPhotos = photos.filter { photo in
+                    dateRange.contains(photo.captureDate) &&
+                    (categoryId == nil || photo.categoryId == categoryId)
+                }.sorted { $0.captureDate < $1.captureDate }
+            } else {
+                // Side-by-side video - filter by selected categories only
+                filteredPhotos = photos.filter { photo in
+                    dateRange.contains(photo.captureDate) &&
+                    options.selectedCategories.contains(photo.categoryId ?? "")
+                }.sorted { $0.captureDate < $1.captureDate }
+            }
             
             guard !filteredPhotos.isEmpty else {
                 DispatchQueue.main.async {
@@ -218,41 +240,100 @@ class VideoGenerationService {
         
         // Process photos
         var currentTime = CMTime.zero
-        let totalPhotos = photos.count
         
-        for (index, photo) in photos.enumerated() {
-            guard let image = PhotoStorageService.shared.loadImage(for: photo) else { continue }
+        if options.layout == .single || options.selectedCategories.count <= 1 {
+            // Single category video processing
+            let totalPhotos = photos.count
             
-            // Apply face blur if enabled
-            let imageToProcess: UIImage
-            if options.blurFaces {
-                imageToProcess = await FaceBlurService.shared.processImageAsync(image)
-            } else {
-                imageToProcess = image
-            }
-            
-            // Convert to pixel buffer
-            if let pixelBuffer = autoreleasepool(invoking: { () -> CVPixelBuffer? in
-                createPixelBuffer(
-                    from: imageToProcess,
-                    size: options.videoSize,
-                    addWatermark: options.addWatermark
-                )
-            }) {
-                // Wait for input to be ready using async
-                while !videoWriterInput.isReadyForMoreMediaData {
-                    try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            for (index, photo) in photos.enumerated() {
+                guard let image = PhotoStorageService.shared.loadImage(for: photo) else { continue }
+                
+                // Apply face blur if enabled
+                let imageToProcess: UIImage
+                if options.blurFaces {
+                    imageToProcess = await FaceBlurService.shared.processImageAsync(image)
+                } else {
+                    imageToProcess = image
                 }
                 
-                // Append pixel buffer
-                pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: currentTime)
-                currentTime = CMTimeAdd(currentTime, options.frameDuration)
+                // Convert to pixel buffer
+                if let pixelBuffer = autoreleasepool(invoking: { () -> CVPixelBuffer? in
+                    createPixelBuffer(
+                        from: imageToProcess,
+                        size: options.videoSize,
+                        addWatermark: options.addWatermark
+                    )
+                }) {
+                    // Wait for input to be ready using async
+                    while !videoWriterInput.isReadyForMoreMediaData {
+                        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                    }
+                    
+                    // Append pixel buffer
+                    pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: currentTime)
+                    currentTime = CMTimeAdd(currentTime, options.frameDuration)
+                }
+                
+                // Update progress
+                let progressValue = Float(index + 1) / Float(totalPhotos)
+                await MainActor.run {
+                    progress(progressValue)
+                }
+            }
+        } else {
+            // Side-by-side video processing
+            // Photos are already filtered by selected categories
+            let photosByDate = Dictionary(grouping: photos) { photo in
+                Calendar.current.startOfDay(for: photo.captureDate)
             }
             
-            // Update progress
-            let progressValue = Float(index + 1) / Float(totalPhotos)
-            await MainActor.run {
-                progress(progressValue)
+            let sortedDates = photosByDate.keys.sorted()
+            let totalFrames = sortedDates.count
+            
+            for (index, date) in sortedDates.enumerated() {
+                let photosForDate = photosByDate[date] ?? []
+                
+                // Get photos for each selected category
+                var categoryPhotos: [String: UIImage] = [:]
+                for categoryId in options.selectedCategories {
+                    if let photo = photosForDate.first(where: { $0.categoryId == categoryId }),
+                       let image = PhotoStorageService.shared.loadImage(for: photo) {
+                        // Apply face blur if enabled
+                        if options.blurFaces {
+                            categoryPhotos[categoryId] = await FaceBlurService.shared.processImageAsync(image)
+                        } else {
+                            categoryPhotos[categoryId] = image
+                        }
+                    }
+                }
+                
+                // Only create frame if we have at least one photo
+                if !categoryPhotos.isEmpty {
+                    // Convert to pixel buffer
+                    if let pixelBuffer = autoreleasepool(invoking: { () -> CVPixelBuffer? in
+                        createSideBySidePixelBuffer(
+                            from: categoryPhotos,
+                            categories: options.selectedCategories,
+                            size: options.videoSize,
+                            addWatermark: options.addWatermark
+                        )
+                    }) {
+                        // Wait for input to be ready using async
+                        while !videoWriterInput.isReadyForMoreMediaData {
+                            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                        }
+                        
+                        // Append pixel buffer
+                        pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: currentTime)
+                        currentTime = CMTimeAdd(currentTime, options.frameDuration)
+                    }
+                }
+                
+                // Update progress
+                let progressValue = Float(index + 1) / Float(totalFrames)
+                await MainActor.run {
+                    progress(progressValue)
+                }
             }
         }
         
@@ -403,6 +484,192 @@ class VideoGenerationService {
             height: textRect.height
         )
         watermarkText.draw(in: flippedRect, withAttributes: attributes)
+        UIGraphicsPopContext()
+        
+        // Restore context state
+        context.restoreGState()
+    }
+    
+    private func createSideBySidePixelBuffer(
+        from categoryPhotos: [String: UIImage],
+        categories: [String],
+        size: CGSize,
+        addWatermark: Bool
+    ) -> CVPixelBuffer? {
+        let options: [String: Any] = [
+            kCVPixelBufferCGImageCompatibilityKey as String: kCFBooleanTrue!,
+            kCVPixelBufferCGBitmapContextCompatibilityKey as String: kCFBooleanTrue!
+        ]
+        
+        var pixelBuffer: CVPixelBuffer?
+        let status = CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            Int(size.width),
+            Int(size.height),
+            kCVPixelFormatType_32ARGB,
+            options as CFDictionary,
+            &pixelBuffer
+        )
+        
+        guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
+            return nil
+        }
+        
+        CVPixelBufferLockBaseAddress(buffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
+        
+        let pixelData = CVPixelBufferGetBaseAddress(buffer)
+        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
+        
+        guard let context = CGContext(
+            data: pixelData,
+            width: Int(size.width),
+            height: Int(size.height),
+            bitsPerComponent: 8,
+            bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
+            space: rgbColorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        ) else {
+            return nil
+        }
+        
+        // Fill background with black
+        context.setFillColor(UIColor.black.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        
+        // Calculate layout
+        let categoriesWithPhotos = categories.filter { categoryPhotos[$0] != nil }
+        let photoCount = categoriesWithPhotos.count
+        
+        guard photoCount > 0 else { return buffer }
+        
+        // Calculate grid layout (max 2x2)
+        let columns = min(photoCount, 2)
+        let rows = (photoCount + 1) / 2
+        
+        let cellWidth = size.width / CGFloat(columns)
+        let cellHeight = size.height / CGFloat(rows)
+        
+        // Draw each photo
+        for (index, categoryId) in categoriesWithPhotos.enumerated() {
+            guard let image = categoryPhotos[categoryId] else { continue }
+            
+            let col = index % columns
+            let row = index / columns
+            
+            let cellRect = CGRect(
+                x: CGFloat(col) * cellWidth,
+                y: CGFloat(row) * cellHeight,
+                width: cellWidth,
+                height: cellHeight
+            )
+            
+            // Fix orientation
+            let orientedImage = image.fixedOrientation()
+            
+            // Calculate aspect fit rect within cell
+            let imageSize = orientedImage.size
+            let widthRatio = (cellWidth - 4) / imageSize.width  // 4pt padding
+            let heightRatio = (cellHeight - 4) / imageSize.height
+            let scale = min(widthRatio, heightRatio)
+            
+            let scaledSize = CGSize(
+                width: imageSize.width * scale,
+                height: imageSize.height * scale
+            )
+            
+            let drawRect = CGRect(
+                x: cellRect.origin.x + (cellRect.width - scaledSize.width) / 2,
+                y: cellRect.origin.y + (cellRect.height - scaledSize.height) / 2,
+                width: scaledSize.width,
+                height: scaledSize.height
+            )
+            
+            // Draw the image
+            if let cgImage = orientedImage.cgImage {
+                context.draw(cgImage, in: drawRect)
+            }
+            
+            // Draw category label
+            drawCategoryLabel(categoryId: categoryId, in: cellRect, context: context)
+        }
+        
+        // Add divider lines
+        context.setStrokeColor(UIColor.white.withAlphaComponent(0.3).cgColor)
+        context.setLineWidth(2)
+        
+        if columns > 1 {
+            // Vertical divider
+            context.move(to: CGPoint(x: cellWidth, y: 0))
+            context.addLine(to: CGPoint(x: cellWidth, y: size.height))
+            context.strokePath()
+        }
+        
+        if rows > 1 {
+            // Horizontal divider
+            context.move(to: CGPoint(x: 0, y: cellHeight))
+            context.addLine(to: CGPoint(x: size.width, y: cellHeight))
+            context.strokePath()
+        }
+        
+        // Add watermark if needed
+        if addWatermark {
+            drawWatermark(in: context, size: size)
+        }
+        
+        return buffer
+    }
+    
+    private func drawCategoryLabel(categoryId: String, in rect: CGRect, context: CGContext) {
+        // Get category name
+        let categoryName = CategoryStorageService.shared.getCategoryById(categoryId)?.name ?? "Unknown"
+        
+        let fontSize: CGFloat = min(rect.width, rect.height) * 0.06
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize, weight: .semibold),
+            .foregroundColor: UIColor.white,
+            .shadow: {
+                let shadow = NSShadow()
+                shadow.shadowColor = UIColor.black.withAlphaComponent(0.8)
+                shadow.shadowOffset = CGSize(width: 1, height: 1)
+                shadow.shadowBlurRadius = 3
+                return shadow
+            }()
+        ]
+        
+        let textSize = categoryName.size(withAttributes: attributes)
+        let padding: CGFloat = 8
+        let textRect = CGRect(
+            x: rect.origin.x + padding,
+            y: rect.origin.y + padding,
+            width: textSize.width,
+            height: textSize.height
+        )
+        
+        // Save context state
+        context.saveGState()
+        
+        // Draw semi-transparent background
+        let backgroundRect = textRect.insetBy(dx: -4, dy: -2)
+        context.setFillColor(UIColor.black.withAlphaComponent(0.5).cgColor)
+        let cornerRadius: CGFloat = 4
+        let path = UIBezierPath(roundedRect: backgroundRect, cornerRadius: cornerRadius)
+        context.addPath(path.cgPath)
+        context.fillPath()
+        
+        // Flip coordinate system for text drawing
+        context.translateBy(x: 0, y: rect.maxY * 2)
+        context.scaleBy(x: 1.0, y: -1.0)
+        
+        // Draw the text
+        UIGraphicsPushContext(context)
+        let flippedRect = CGRect(
+            x: textRect.origin.x,
+            y: rect.maxY * 2 - textRect.maxY,
+            width: textRect.width,
+            height: textRect.height
+        )
+        categoryName.draw(in: flippedRect, withAttributes: attributes)
         UIGraphicsPopContext()
         
         // Restore context state

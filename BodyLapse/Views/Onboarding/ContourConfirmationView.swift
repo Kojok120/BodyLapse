@@ -59,7 +59,7 @@ struct ContourConfirmationView: View {
                 // Action buttons
                 HStack(spacing: 20) {
                     Button(action: onRetry) {
-                        Text("Retake")
+                        Text("confirm.retake".localized)
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -69,7 +69,7 @@ struct ContourConfirmationView: View {
                     }
                     
                     Button(action: onConfirm) {
-                        Text("Confirm")
+                        Text("confirm.confirm".localized)
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()

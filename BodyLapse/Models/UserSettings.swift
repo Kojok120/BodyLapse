@@ -1,8 +1,6 @@
 import Foundation
 
 struct UserSettings: Codable {
-    var reminderEnabled: Bool = false
-    var reminderTime: Date = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
     var showBodyGuidelines: Bool = true
     var weightUnit: WeightUnit = .kg
     var healthKitEnabled: Bool = false
@@ -15,9 +13,17 @@ struct UserSettings: Codable {
     var appLockMethod: AppLockMethod = .biometric
     var appPasscode: String?
     
+    // App Rating
+    var hasRatedApp: Bool = false
+    
+    // Debug settings
+    #if DEBUG
+    var debugAllowPastDatePhotos: Bool = false
+    #endif
+    
     enum WeightUnit: String, Codable, CaseIterable {
-        case kg = "Kilograms"
-        case lbs = "Pounds"
+        case kg = "kg"
+        case lbs = "lbs"
         
         var symbol: String {
             switch self {
@@ -65,14 +71,7 @@ class UserSettingsManager: ObservableObject {
     }
     
     private func handleSettingsChange(oldValue: UserSettings) {
-        // Handle reminder settings change
-        if oldValue.reminderEnabled != settings.reminderEnabled ||
-           oldValue.reminderTime != settings.reminderTime {
-            NotificationService.shared.scheduleOrUpdateDailyReminder(
-                at: settings.reminderTime,
-                enabled: settings.reminderEnabled
-            )
-        }
+        // Handle settings changes if needed
     }
 }
 

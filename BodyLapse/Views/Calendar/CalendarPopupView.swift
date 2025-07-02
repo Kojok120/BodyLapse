@@ -6,6 +6,7 @@ struct CalendarPopupView: View {
     let onDateSelected: (Date) -> Void
     let minDate: Date?
     let maxDate: Date?
+    let categoryId: String?
     @Environment(\.dismiss) private var dismiss
     
     @State private var displayedMonth = Date()
@@ -48,7 +49,11 @@ struct CalendarPopupView: View {
     
     private func hasPhoto(for date: Date) -> Bool {
         photos.contains { photo in
-            calendar.isDate(photo.captureDate, inSameDayAs: date)
+            if let categoryId = categoryId {
+                return photo.categoryId == categoryId && calendar.isDate(photo.captureDate, inSameDayAs: date)
+            } else {
+                return calendar.isDate(photo.captureDate, inSameDayAs: date)
+            }
         }
     }
     
@@ -171,11 +176,11 @@ struct CalendarPopupView: View {
                 }
                 .padding(.bottom)
             }
-            .navigationTitle("Select Date")
+            .navigationTitle("nav.select_date".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("common.done".localized) {
                         dismiss()
                     }
                 }
@@ -194,7 +199,8 @@ struct CalendarPopupView_Previews: PreviewProvider {
             photos: [],
             onDateSelected: { _ in },
             minDate: nil,
-            maxDate: nil
+            maxDate: nil,
+            categoryId: nil
         )
     }
 }

@@ -38,45 +38,77 @@ class NotificationService: NSObject {
     
     // MARK: - Reminder Scheduling
     
-    func scheduleOrUpdateDailyReminder(at time: Date, enabled: Bool) {
-        // Cancel existing reminder first
+    func setupDailyPhotoCheck() {
+        // Cancel any existing reminders
         cancelDailyReminder()
         
-        guard enabled else { return }
-        
-        // Extract hour and minute components
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.hour, .minute], from: time)
-        
-        guard let hour = components.hour, let minute = components.minute else { return }
-        
-        // Create notification content
-        let content = UNMutableNotificationContent()
-        content.title = "Time for your daily photo!"
-        content.body = "Capture today's progress photo to track your transformation journey."
-        content.sound = .default
-        content.badge = 1
-        
-        // Create daily trigger
+        // Check permission status first
+        checkNotificationPermission { [weak self] authorized in
+            guard authorized else { return }
+            self?.scheduleDailyCheck()
+        }
+    }
+    
+    private func scheduleDailyCheck() {
+        // Schedule a daily check at 19:00
         var dateComponents = DateComponents()
-        dateComponents.hour = hour
-        dateComponents.minute = minute
+        dateComponents.hour = 19
+        dateComponents.minute = 0
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         
-        // Create request
+        // Create a special identifier for the check
+        let checkIdentifier = "daily-photo-check"
+        
+        // Use a minimal notification that will trigger our check
+        let content = UNMutableNotificationContent()
+        content.title = "" // Empty title to trigger check without showing
+        content.userInfo = ["isPhotoCheck": true]
+        
         let request = UNNotificationRequest(
-            identifier: reminderIdentifier,
+            identifier: checkIdentifier,
             content: content,
             trigger: trigger
         )
         
-        // Schedule notification
         notificationCenter.add(request) { error in
             if let error = error {
-                print("Error scheduling notification: \(error)")
+                print("Error scheduling daily check: \(error)")
             } else {
-                print("Daily reminder scheduled for \(hour):\(String(format: "%02d", minute))")
+                print("Daily photo check scheduled for 19:00")
+            }
+        }
+    }
+    
+    func checkAndSendPhotoReminder() {
+        // Check if any photo was taken today across all categories
+        let hasPhotoToday = PhotoStorageService.shared.hasAnyPhotoForToday()
+        
+        guard !hasPhotoToday else {
+            print("Photo already taken today, skipping reminder")
+            return
+        }
+        
+        // Send reminder notification
+        let content = UNMutableNotificationContent()
+        content.title = "notification.no_photo_title".localized
+        content.body = "notification.no_photo_body".localized
+        content.sound = .default
+        content.badge = 1
+        content.userInfo = ["openCamera": true]
+        
+        // Send immediately
+        let request = UNNotificationRequest(
+            identifier: reminderIdentifier,
+            content: content,
+            trigger: nil // nil trigger means send immediately
+        )
+        
+        notificationCenter.add(request) { error in
+            if let error = error {
+                print("Error sending photo reminder: \(error)")
+            } else {
+                print("Photo reminder sent")
             }
         }
     }
@@ -115,8 +147,15 @@ extension NotificationService: UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        // Show notification even when app is in foreground
-        completionHandler([.banner, .list, .sound, .badge])
+        // Check if this is a photo check notification
+        if let isPhotoCheck = notification.request.content.userInfo["isPhotoCheck"] as? Bool, isPhotoCheck {
+            // Don't show the check notification, just perform the check
+            checkAndSendPhotoReminder()
+            completionHandler([])
+        } else {
+            // Show other notifications normally
+            completionHandler([.banner, .list, .sound, .badge])
+        }
     }
     
     // Handle notification tap
@@ -128,10 +167,12 @@ extension NotificationService: UNUserNotificationCenterDelegate {
         // Clear badge when notification is tapped
         clearBadge()
         
-        // Post notification to navigate to camera tab
-        if response.notification.request.identifier == reminderIdentifier {
+        // Check if this is a photo reminder or has openCamera flag
+        if response.notification.request.identifier == reminderIdentifier ||
+           (response.notification.request.content.userInfo["openCamera"] as? Bool == true) {
+            // Post notification to navigate to camera tab with camera launch
             NotificationCenter.default.post(
-                name: Notification.Name("NavigateToCamera"),
+                name: Notification.Name("NavigateToCameraAndLaunch"),
                 object: nil
             )
         }

@@ -23,7 +23,7 @@ struct PhotoDetailView: View {
                 VStack(alignment: .leading, spacing: 15) {
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("Captured on")
+                            Text("photo.captured_on".localized)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Text(photo.formattedDate)
@@ -33,7 +33,7 @@ struct PhotoDetailView: View {
                         Spacer()
                         
                         if photo.isFaceBlurred {
-                            Label("Face Blurred", systemImage: "eye.slash.fill")
+                            Label("camera.face_blurred".localized, systemImage: "eye.slash.fill")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -43,7 +43,7 @@ struct PhotoDetailView: View {
                         HStack {
                             Image(systemName: "figure.stand")
                                 .foregroundColor(.green)
-                            Text("Body detected (\(Int(confidence * 100))% confidence)")
+                            Text(String(format: "photo.body_detected".localized, Int(confidence * 100)))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -54,11 +54,11 @@ struct PhotoDetailView: View {
                 .cornerRadius(15)
                 .padding()
             }
-            .navigationTitle("Photo Details")
+            .navigationTitle("photo.details".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") {
+                    Button("common.done".localized) {
                         dismiss()
                     }
                 }
@@ -66,11 +66,11 @@ struct PhotoDetailView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button(action: sharePhoto) {
-                            Label("Share", systemImage: "square.and.arrow.up")
+                            Label("common.share".localized, systemImage: "square.and.arrow.up")
                         }
                         
                         Button(role: .destructive, action: { showingDeleteAlert = true }) {
-                            Label("Delete", systemImage: "trash")
+                            Label("common.delete".localized, systemImage: "trash")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -81,13 +81,13 @@ struct PhotoDetailView: View {
         .onAppear {
             loadImage()
         }
-        .alert("Delete Photo", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
+        .alert("photo.delete_title".localized, isPresented: $showingDeleteAlert) {
+            Button("common.cancel".localized, role: .cancel) { }
+            Button("common.delete".localized, role: .destructive) {
                 deletePhoto()
             }
         } message: {
-            Text("Are you sure you want to delete this photo? This action cannot be undone.")
+            Text("photo.delete_message".localized)
         }
     }
     

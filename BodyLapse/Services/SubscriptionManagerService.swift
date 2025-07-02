@@ -10,7 +10,11 @@ class SubscriptionManagerService: ObservableObject {
     static let shared = SubscriptionManagerService()
     
     // MARK: - Published Properties
+    #if DEBUG
+    @Published var isPremium: Bool = false
+    #else
     @Published private(set) var isPremium: Bool = false
+    #endif
     @Published private(set) var isLoadingSubscriptionStatus: Bool = false
     @Published private(set) var activeSubscriptionID: String?
     @Published private(set) var expirationDate: Date?
@@ -25,6 +29,11 @@ class SubscriptionManagerService: ObservableObject {
     // MARK: - Initialization
     private init() {
         // Initializing SubscriptionManagerService...
+        #if DEBUG
+        // In debug mode, check if premium was manually enabled
+        self.isPremium = UserDefaults.standard.bool(forKey: "debug_isPremium")
+        #endif
+        
         // Initial setup
         Task {
             await initializeSubscriptionStatus()
@@ -140,6 +149,25 @@ class SubscriptionManagerService: ObservableObject {
     }
     
     private func updateSubscriptionStatus() async {
+        #if DEBUG
+        // In debug mode, check UserDefaults for manually set premium status
+        let debugPremium = UserDefaults.standard.bool(forKey: "debug_isPremium")
+        if debugPremium {
+            await MainActor.run {
+                let previousStatus = self.isPremium
+                self.isPremium = true
+                self.activeSubscriptionID = "debug.premium"
+                self.expirationDate = Date().addingTimeInterval(30 * 24 * 60 * 60) // 30 days from now
+                self.isInTrialPeriod = false
+                
+                if previousStatus != self.isPremium {
+                    NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+                }
+            }
+            return
+        }
+        #endif
+        
         // Updating subscription status...
         // Get current transaction status
         var hasActiveSubscription = false
@@ -199,6 +227,36 @@ class SubscriptionManagerService: ObservableObject {
     }
     
     // MARK: - Debug Support
+    
+    #if DEBUG
+    /// Toggle premium status for debugging
+    func toggleDebugPremium() {
+        let newStatus = !isPremium
+        UserDefaults.standard.set(newStatus, forKey: "debug_isPremium")
+        UserDefaults.standard.synchronize()
+        
+        isPremium = newStatus
+        if newStatus {
+            activeSubscriptionID = "debug.premium"
+            expirationDate = Date().addingTimeInterval(30 * 24 * 60 * 60) // 30 days from now
+        } else {
+            activeSubscriptionID = nil
+            expirationDate = nil
+        }
+        
+        NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+    }
+    
+    /// Reset debug premium status
+    func resetDebugPremium() {
+        UserDefaults.standard.removeObject(forKey: "debug_isPremium")
+        UserDefaults.standard.synchronize()
+        
+        Task {
+            await updateSubscriptionStatus()
+        }
+    }
+    #endif
 }
 
 // MARK: - Convenience Methods

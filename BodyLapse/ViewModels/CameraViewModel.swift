@@ -17,41 +17,62 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var shouldBlurFace = true
     @Published var capturedPhoto: Photo?
     @Published var savedGuideline: BodyGuideline?
+    @Published var selectedCategory: PhotoCategory = PhotoCategory.defaultCategory
+    @Published var availableCategories: [PhotoCategory] = []
+    @Published var timerDuration: Int = 0 // 0 = off, 3, 5, 10 seconds
+    @Published var countdownValue: Int = 0
+    @Published var isCountingDown = false
+    
+    // Multi-category flow
+    @Published var showingCategoryTransition = false
+    @Published var nextCategory: PhotoCategory?
+    @Published var shouldAutoTransition = true
+    
+    #if DEBUG
+    @Published var debugSelectedDate: Date = Date()
+    #endif
     
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
     private var bodyDetectionRequest: VNDetectHumanBodyPoseRequest?
     @Published var currentCameraPosition: AVCaptureDevice.Position = .back
     private var currentInput: AVCaptureDeviceInput?
-    var userSettings: UserSettingsManager?
-    var subscriptionManager: SubscriptionManagerService?
+    private var initializationTask: Task<Void, Never>?
     
     override init() {
         super.init()
         setupBodyDetection()
         
-        // Load saved guideline
-        savedGuideline = GuidelineStorageService.shared.loadGuideline()
+        // Load saved guideline for default category
+        loadGuidelineForCurrentCategory()
         
-        // Initialize UserSettingsManager and SubscriptionManagerService on main queue
-        Task { @MainActor in
-            self.userSettings = UserSettingsManager()
-            self.subscriptionManager = SubscriptionManagerService.shared
+        // Always use Task for initialization to ensure proper actor isolation
+        initializationTask = Task { @MainActor in
+            guard !Task.isCancelled else { return }
+            self.loadCategories()
         }
         
         // Listen for guideline updates
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(reloadGuideline),
+            selector: #selector(reloadGuideline(_:)),
             name: Notification.Name("GuidelineUpdated"),
+            object: nil
+        )
+        
+        // Listen for category updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reloadCategories),
+            name: Notification.Name("CategoriesUpdated"),
             object: nil
         )
     }
     
     deinit {
+        initializationTask?.cancel()
         stopSession()
-        previewLayer?.removeFromSuperlayer()
-        previewLayer = nil
+        cleanupPreviewLayer()
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -78,9 +99,39 @@ class CameraViewModel: NSObject, ObservableObject {
         }
     }
     
-    @objc private func reloadGuideline() {
+    @objc private func reloadGuideline(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-            self?.savedGuideline = GuidelineStorageService.shared.loadGuideline()
+            guard let self = self else { return }
+            print("CameraViewModel: Received GuidelineUpdated notification")
+            
+            // Check if the notification is for a specific category
+            if let userInfo = notification.userInfo,
+               let categoryId = userInfo["categoryId"] as? String {
+                print("CameraViewModel: Guideline updated for category: \(categoryId)")
+                
+                // Reload categories in case a new guideline was set
+                self.loadCategories()
+                
+                // If the updated category is the current one, reload the guideline
+                if categoryId == self.selectedCategory.id {
+                    print("CameraViewModel: Current category matches, reloading guideline")
+                    self.savedGuideline = nil
+                    self.loadGuidelineForCurrentCategory()
+                }
+            } else {
+                // No specific category, reload for current category
+                print("CameraViewModel: No category specified, reloading for current category")
+                self.savedGuideline = nil
+                self.loadGuidelineForCurrentCategory()
+            }
+            
+            print("CameraViewModel: Guideline reloaded: \(self.savedGuideline != nil)")
+            if let guideline = self.savedGuideline {
+                print("CameraViewModel: Guideline has \(guideline.points.count) points")
+            }
+            
+            // Force UI update
+            self.objectWillChange.send()
         }
     }
     
@@ -157,19 +208,74 @@ class CameraViewModel: NSObject, ObservableObject {
     }
     
     func capturePhoto() {
+        // If timer is set, start countdown
+        if timerDuration > 0 {
+            startCountdown()
+        } else {
+            // Capture immediately
+            capturePhotoNow()
+        }
+    }
+    
+    private func startCountdown() {
+        isCountingDown = true
+        countdownValue = timerDuration
+        
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            
+            if self.countdownValue > 1 {
+                self.countdownValue -= 1
+                // Haptic feedback for each count
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+            } else {
+                timer.invalidate()
+                self.countdownValue = 0
+                self.isCountingDown = false
+                self.capturePhotoNow()
+            }
+        }
+    }
+    
+    func cancelCountdown() {
+        isCountingDown = false
+        countdownValue = 0
+    }
+    
+    private func capturePhotoNow() {
         let settings = AVCapturePhotoSettings()
         output.capturePhoto(with: settings, delegate: self)
     }
     
+    @MainActor
     func checkAndSavePhoto(_ image: UIImage) {
-        if PhotoStorageService.shared.hasPhotoForToday() {
+        if hasPhotoForSelectedCategory() {
             DispatchQueue.main.async { [weak self] in
                 self?.showingReplaceAlert = true
             }
         } else {
             Task { @MainActor [weak self] in
-                if self?.subscriptionManager?.isPremium == true {
-                    self?.showingWeightInput = true
+                if SubscriptionManagerService.shared.isPremium == true {
+                    // Check if weight data already exists for today
+                    do {
+                        let hasWeightToday = try await WeightStorageService.shared.getEntry(for: Date()) != nil
+                        if hasWeightToday {
+                            // Weight already recorded for today, skip input screen
+                            self?.savePhoto(image)
+                            self?.capturedImage = nil
+                        } else {
+                            // No weight data for today, show input screen
+                            self?.showingWeightInput = true
+                        }
+                    } catch {
+                        // If there's an error checking, just save the photo without weight input
+                        self?.savePhoto(image)
+                        self?.capturedImage = nil
+                    }
                 } else {
                     self?.savePhoto(image)
                     self?.capturedImage = nil
@@ -178,17 +284,25 @@ class CameraViewModel: NSObject, ObservableObject {
         }
     }
     
+    @MainActor
     func savePhoto(_ image: UIImage) {
         // Always save without face blur - face blur is only for video generation
         saveProcessedPhoto(image, wasBlurred: false)
     }
     
+    @MainActor
     private func saveProcessedPhoto(_ image: UIImage, wasBlurred: Bool) {
         do {
-            let photo: Photo
-            if PhotoStorageService.shared.hasPhotoForToday() {
-                photo = try PhotoStorageService.shared.replacePhoto(
-                    for: Date(),
+            #if DEBUG
+            let saveDate = UserSettingsManager.shared.settings.debugAllowPastDatePhotos ? debugSelectedDate : Date()
+            #else
+            let saveDate = Date()
+            #endif
+            
+            if hasPhotoForSelectedCategory() {
+                _ = try PhotoStorageService.shared.replacePhoto(
+                    for: saveDate,
+                    categoryId: selectedCategory.id,
                     with: image,
                     isFaceBlurred: wasBlurred,
                     bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil,
@@ -196,8 +310,10 @@ class CameraViewModel: NSObject, ObservableObject {
                     bodyFatPercentage: tempBodyFat
                 )
             } else {
-                photo = try PhotoStorageService.shared.savePhoto(
+                _ = try PhotoStorageService.shared.savePhoto(
                     image,
+                    captureDate: saveDate,
+                    categoryId: selectedCategory.id,
                     isFaceBlurred: wasBlurred,
                     bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil,
                     weight: tempWeight,
@@ -207,16 +323,42 @@ class CameraViewModel: NSObject, ObservableObject {
             // Photo saved successfully
             
             DispatchQueue.main.async { [weak self] in
-                self?.tempWeight = nil
-                self?.tempBodyFat = nil
-                self?.capturedImage = nil // Clear the captured image to close the sheet
-                // Cleared captured image
+                guard let self = self else { return }
                 
-                // Navigate to Calendar with today's date
-                NotificationCenter.default.post(
-                    name: NSNotification.Name("NavigateToCalendarToday"),
-                    object: nil
-                )
+                self.tempWeight = nil
+                self.tempBodyFat = nil
+                self.capturedImage = nil // Clear the captured image to close the sheet
+                
+                // Check if user is premium and there are more categories to capture
+                let isPremium = SubscriptionManagerService.shared.isPremium
+                if isPremium, let nextCategory = CategoryStorageService.shared.getNextUncapturedCategory(
+                    for: saveDate,
+                    currentCategoryId: self.selectedCategory.id,
+                    isPremium: isPremium
+                ) {
+                    // Show transition to next category
+                    self.nextCategory = nextCategory
+                    self.showingCategoryTransition = true
+                    
+                    // Auto-transition after 2 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        if self.shouldAutoTransition && self.showingCategoryTransition {
+                            self.transitionToNextCategory()
+                        }
+                    }
+                } else {
+                    // No more categories or free user - navigate to Calendar
+                    // Force reload photos from disk before navigating
+                    PhotoStorageService.shared.reloadPhotosFromDisk()
+                    
+                    // Small delay to ensure data is fully loaded
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("NavigateToCalendarToday"),
+                            object: nil
+                        )
+                    }
+                }
             }
         } catch {
             // Failed to save photo
@@ -331,6 +473,9 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
     }
     
     func cleanup() {
+        initializationTask?.cancel()
+        initializationTask = nil
+        
         stopSession()
         cleanupPreviewLayer()
         
@@ -346,5 +491,81 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         
         // Clear the current input reference
         currentInput = nil
+    }
+    
+    // MARK: - Category Support
+    
+    @MainActor
+    private func loadCategories() {
+        let isPremium = SubscriptionManagerService.shared.isPremium
+        availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+        
+        // Update the selected category with fresh data from storage
+        if let updatedCategory = availableCategories.first(where: { $0.id == selectedCategory.id }) {
+            selectedCategory = updatedCategory
+            print("CameraViewModel: Updated selected category with fresh data")
+        } else {
+            selectedCategory = availableCategories.first ?? PhotoCategory.defaultCategory
+        }
+    }
+    
+    private func loadGuidelineForCurrentCategory() {
+        print("CameraViewModel: Loading guideline for category: \(selectedCategory.id)")
+        savedGuideline = GuidelineStorageService.shared.loadGuideline(for: selectedCategory.id)
+        print("CameraViewModel: Loaded guideline: \(savedGuideline != nil)")
+        if let guideline = savedGuideline {
+            print("CameraViewModel: Guideline details - points: \(guideline.points.count), imageSize: \(guideline.imageSize)")
+        }
+    }
+    
+    func selectCategory(_ category: PhotoCategory) {
+        print("CameraViewModel: Selecting category: \(category.name) (ID: \(category.id))")
+        selectedCategory = category
+        loadGuidelineForCurrentCategory()
+        // Force UI update
+        objectWillChange.send()
+    }
+    
+    @objc func reloadCategories() {
+        Task { @MainActor in
+            loadCategories()
+            // If the selected category is no longer available, switch to default
+            if !availableCategories.contains(where: { $0.id == selectedCategory.id }) {
+                selectedCategory = availableCategories.first ?? PhotoCategory.defaultCategory
+                loadGuidelineForCurrentCategory()
+            }
+        }
+    }
+    
+    @MainActor
+    func hasPhotoForSelectedCategory() -> Bool {
+        #if DEBUG
+        if UserSettingsManager.shared.settings.debugAllowPastDatePhotos {
+            return PhotoStorageService.shared.hasPhotoForDate(debugSelectedDate, categoryId: selectedCategory.id)
+        }
+        #endif
+        return PhotoStorageService.shared.hasPhotoForToday(categoryId: selectedCategory.id)
+    }
+    
+    func transitionToNextCategory() {
+        guard let nextCategory = nextCategory else { return }
+        
+        showingCategoryTransition = false
+        selectedCategory = nextCategory
+        loadGuidelineForCurrentCategory()
+        self.nextCategory = nil
+        shouldAutoTransition = true // Reset for next time
+    }
+    
+    func skipCategoryTransition() {
+        showingCategoryTransition = false
+        nextCategory = nil
+        shouldAutoTransition = true // Reset for next time
+        
+        // Navigate to Calendar
+        NotificationCenter.default.post(
+            name: NSNotification.Name("NavigateToCalendarToday"),
+            object: nil
+        )
     }
 }

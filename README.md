@@ -186,12 +186,26 @@ BodyLapse/
 - Limited password input to 4 digits
 - Improved authentication settings persistence
 
+#### Phase 9: UX Improvements & Notification Overhaul (January 8, 2025)
+- **Gallery Enhancements**: Added date display (M/d format) on photo/video thumbnails
+- **Memo System**: Reduced character limit to 100, fixed immediate UI updates
+- **Notification System Redesign**: 
+  - Automatic daily check at 19:00 if no photo taken
+  - Removed manual time settings
+  - Added to onboarding flow
+- **Calendar View Major Update**:
+  - iPhone Photos app-style swipe gestures
+  - Native TabView implementation
+  - Fixed category auto-switching behavior
+  - Consistent placeholder display
+- **Premium Experience**: Weight input only shows once per day across all categories
+
 ### 🚧 Pending Tasks
 - App Store submission preparation (icons, screenshots, descriptions)
-- Privacy policy and terms of service
+- Complete privacy policy and terms of service integration
 - Additional UI polish and animations
 - Performance optimization for large photo collections
-- Localization support
+- Complete localization for all new features (currently supports English, Japanese, Spanish, and Korean)
 
 ## UI/UX Design Principles
 
@@ -297,6 +311,8 @@ struct PoseGuideline {
 1. **Photo Capture → Calendar**: After taking a photo, automatically navigates to Calendar view showing today's date
 2. **Video Generation → Gallery**: After generating video, automatically navigates to Gallery and plays the new video
 3. **Gallery Navigation**: Swipe left/right between Videos and Photos sections
+4. **Calendar Category Navigation**: Swipe left/right to switch between photo categories (premium feature)
+5. **Notification → Camera**: Tapping reminder notification launches camera directly
 
 ### Ad Implementation
 - **Banner Ads**: Display at bottom of Calendar, Compare, and Gallery screens for free users only
@@ -310,11 +326,15 @@ struct PoseGuideline {
 
 ### Known Issues to Address
 1. Add all required app icon sizes for App Store submission
-2. Complete privacy policy and terms of service documents
+2. Complete privacy policy and terms of service integration in app
 
-### Recent Bug Fixes (December 2025)
-1. **Onboarding Camera Retake**: Fixed issue where capture button became unresponsive after pressing retake button
+### Recent Bug Fixes
+1. **Onboarding Camera Retake** (December 2025): Fixed issue where capture button became unresponsive after pressing retake button
    - Solution: Properly managed camera controller lifecycle with async state updates
-2. **Weight/Body Fat Display**: Fixed layout issues causing text to wrap incorrectly
+2. **Weight/Body Fat Display** (December 2025): Fixed layout issues causing text to wrap incorrectly
    - Solution: Added minWidth constraints and line limits to ensure consistent layout
+3. **Memo Immediate Update** (January 2025): Fixed memos not updating immediately after save/delete
+   - Solution: Updated state management to refresh UI immediately
+4. **Category Auto-Switching** (January 2025): Fixed unwanted category changes when navigating dates
+   - Solution: Maintained consistent category selection with placeholder display
 

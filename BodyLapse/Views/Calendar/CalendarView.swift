@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import Photos
 
 struct CalendarView: View {
     @StateObject private var viewModel = CalendarViewModel()
@@ -12,7 +13,6 @@ struct CalendarView: View {
     @State private var selectedPeriod = TimePeriod.week
     @State private var showingWeightInput = false
     @State private var currentPhoto: Photo?
-    @State private var dragOffset: CGFloat = 0
     @State private var selectedIndex: Int = 0
     @State private var showingVideoGeneration = false
     @State private var isGeneratingVideo = false
@@ -20,6 +20,17 @@ struct CalendarView: View {
     @State private var showingVideoAlert = false
     @State private var videoAlertMessage = ""
     @State private var selectedChartDate: Date? = nil
+    @State private var showingMemoEditor = false
+    @State private var currentMemo: String = ""
+    @State private var currentCategoryIndex: Int = 0
+    @State private var photosForSelectedDate: [Photo] = []
+    @State private var categoriesForSelectedDate: [PhotoCategory] = []
+    @State private var showingDeleteAlert = false
+    @State private var photoToDelete: Photo?
+    @State private var showingShareSheet = false
+    @State private var itemToShare: [Any] = []
+    @State private var showingSaveSuccess = false
+    @State private var saveSuccessMessage = ""
     
     enum TimePeriod: String, CaseIterable {
         case week = "7 Days"
@@ -88,6 +99,12 @@ struct CalendarView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: handleOnAppear)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday")), perform: handleNavigateToToday)
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhotosUpdated"))) { _ in
+            // Reload data when photos are updated
+            viewModel.loadPhotos()
+            viewModel.loadCategories()
+            updateCurrentPhoto()
+        }
         .onChange(of: selectedDate) { _, newDate in
             updateCurrentPhoto()
             selectedChartDate = newDate  // Sync chart selection when date changes
@@ -104,10 +121,36 @@ struct CalendarView: View {
         .sheet(isPresented: $showingDatePicker) {
             datePickerSheet
         }
+        .sheet(isPresented: $showingMemoEditor) {
+            MemoEditorView(
+                date: selectedDate,
+                initialContent: currentMemo,
+                onSave: { content in
+                    viewModel.saveNote(content: content, for: selectedDate)
+                    // Update currentMemo immediately after saving
+                    currentMemo = content
+                },
+                onDelete: {
+                    viewModel.deleteNote(for: selectedDate)
+                    // Update currentMemo immediately after deletion
+                    currentMemo = ""
+                }
+            )
+        }
         .alert("calendar.video_generation".localized, isPresented: $showingVideoAlert) {
             Button("common.ok".localized) { }
         } message: {
             Text(videoAlertMessage)
+        }
+        .alert("calendar.confirm_delete_photo".localized, isPresented: $showingDeleteAlert) {
+            Button("common.cancel".localized, role: .cancel) { }
+            Button("common.delete".localized, role: .destructive) {
+                if let photo = photoToDelete {
+                    deletePhoto(photo)
+                }
+            }
+        } message: {
+            Text("calendar.delete_photo_message".localized)
         }
         .overlay(
             Group {
@@ -115,6 +158,18 @@ struct CalendarView: View {
                     VideoGenerationProgressView(progress: videoGenerationProgress)
                 }
             }
+        )
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(activityItems: itemToShare)
+        }
+        .overlay(
+            Group {
+                if showingSaveSuccess {
+                    saveSuccessToast
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            },
+            alignment: .top
         )
     }
     
@@ -156,9 +211,38 @@ struct CalendarView: View {
             selectedIndex = index
         }
         
-        // Reload photos to ensure we have the latest
+        // Force reload photos from disk to ensure we have the latest
+        PhotoStorageService.shared.reloadPhotosFromDisk()
+        
+        // Reload photos and categories in viewModel
         viewModel.loadPhotos()
+        viewModel.loadCategories()
+        
+        // Update current photo and category information
         updateCurrentPhoto()
+        
+        // If premium user with multiple categories, ensure categories are refreshed
+        if subscriptionManager.isPremium {
+            // Get all photos for today to check available categories
+            let todayPhotos = viewModel.allPhotosForDate(today)
+            if !todayPhotos.isEmpty {
+                // Update photosForSelectedDate immediately
+                photosForSelectedDate = todayPhotos
+                
+                // Get categories for these photos
+                let photoCategories = todayPhotos.map { $0.categoryId }
+                categoriesForSelectedDate = viewModel.availableCategories.filter { category in
+                    photoCategories.contains(category.id)
+                }
+                
+                // Select the first available category with a photo
+                if let firstCategory = categoriesForSelectedDate.first {
+                    currentCategoryIndex = 0
+                    currentPhoto = todayPhotos.first { $0.categoryId == firstCategory.id }
+                    viewModel.selectCategory(firstCategory)
+                }
+            }
+        }
     }
     
     private func handleChartDateChange(_ newDate: Date?) {
@@ -289,26 +373,33 @@ struct CalendarView: View {
                     .padding(.top, 20)
                 
                 // Legend
-                HStack(spacing: 20) {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(Color(red: 0, green: 0.7, blue: 0.8)) // Turquoise blue
-                            .frame(width: 8, height: 8)
-                        Text("calendar.has_photo".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    if subscriptionManager.isPremium {
+                VStack(spacing: 8) {
+                    HStack(spacing: 20) {
                         HStack(spacing: 4) {
                             Circle()
-                                .fill(Color.bodyLapseYellow)
+                                .fill(Color(red: 0, green: 0.7, blue: 0.8)) // Turquoise blue
                                 .frame(width: 8, height: 8)
-                            Text("calendar.has_data".localized)
+                            Text("calendar.has_photo".localized)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+                        
+                        if subscriptionManager.isPremium {
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(Color.bodyLapseYellow)
+                                    .frame(width: 8, height: 8)
+                                Text("calendar.data_available".localized)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
+                    
+                    Text("calendar.data_includes_note".localized)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .italic()
                 }
                 .padding(.horizontal)
                 
@@ -365,6 +456,7 @@ struct CalendarView: View {
         let calendar = Calendar.current
         var dataDates = Set<Date>()
         
+        // Weight and body fat entries
         for entry in weightViewModel.weightEntries {
             if entry.weight > 0 || entry.bodyFatPercentage != nil {
                 if let date = calendar.dateInterval(of: .day, for: entry.date)?.start {
@@ -373,72 +465,105 @@ struct CalendarView: View {
             }
         }
         
+        // Memo entries
+        for note in viewModel.dailyNotes.values {
+            if let date = calendar.dateInterval(of: .day, for: note.date)?.start {
+                dataDates.insert(date)
+            }
+        }
+        
         return dataDates
     }
     
     private var headerView: some View {
-        HStack {
-            HStack(spacing: 8) {
-                Button(action: {
-                    showingPeriodPicker = true
-                }) {
-                    HStack {
-                        Text(selectedPeriod.localizedString)
-                            .font(.system(size: 16, weight: .medium))
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 12))
+        VStack(spacing: 12) {
+            // Category selection (Premium feature)
+            if subscriptionManager.isPremium && viewModel.availableCategories.count > 1 {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(viewModel.availableCategories) { category in
+                            Button(action: {
+                                viewModel.selectCategory(category)
+                                updateCurrentPhoto()
+                            }) {
+                                Text(category.name)
+                                    .font(.system(size: 14, weight: viewModel.selectedCategory.id == category.id ? .semibold : .regular))
+                                    .foregroundColor(viewModel.selectedCategory.id == category.id ? .white : .primary)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .fill(viewModel.selectedCategory.id == category.id ? Color.bodyLapseTurquoise : Color(UIColor.secondarySystemBackground))
+                                    )
+                            }
+                        }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(8)
+                    .padding(.horizontal)
                 }
-                
-                Button(action: {
-                    showingDatePicker = true
-                }) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 18))
-                        .foregroundColor(.primary)
-                        .padding(8)
+            }
+            
+            HStack {
+                HStack(spacing: 8) {
+                    Button(action: {
+                        showingPeriodPicker = true
+                    }) {
+                        HStack {
+                            Text(selectedPeriod.localizedString)
+                                .font(.system(size: 16, weight: .medium))
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 12))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
                         .background(Color(UIColor.secondarySystemBackground))
                         .cornerRadius(8)
+                    }
+                    
+                    Button(action: {
+                        showingDatePicker = true
+                    }) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 18))
+                            .foregroundColor(.primary)
+                            .padding(8)
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(8)
+                    }
                 }
-            }
-            .actionSheet(isPresented: $showingPeriodPicker) {
-                ActionSheet(
-                    title: Text("calendar.select_time_period".localized),
-                    buttons: TimePeriod.allCases.map { period in
-                        .default(Text(period.localizedString)) {
-                            selectedPeriod = period
-                            selectedIndex = dateRange.count - 1
-                            selectedDate = dateRange[selectedIndex]
-                            selectedChartDate = dateRange[selectedIndex]  // Sync chart selection
-                        }
-                    } + [.cancel()]
-                )
-            }
-            
-            Spacer()
-            
-            Button(action: {
-                showingVideoGeneration = true
-            }) {
-                HStack {
-                    Image(systemName: "video.fill")
-                    Text("calendar.generate".localized)
+                .actionSheet(isPresented: $showingPeriodPicker) {
+                    ActionSheet(
+                        title: Text("calendar.select_time_period".localized),
+                        buttons: TimePeriod.allCases.map { period in
+                            .default(Text(period.localizedString)) {
+                                selectedPeriod = period
+                                selectedIndex = dateRange.count - 1
+                                selectedDate = dateRange[selectedIndex]
+                                selectedChartDate = dateRange[selectedIndex]  // Sync chart selection
+                            }
+                        } + [.cancel()]
+                    )
                 }
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.black)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.bodyLapseYellow)
-                .cornerRadius(20)
+                
+                Spacer()
+                
+                Button(action: {
+                    showingVideoGeneration = true
+                }) {
+                    HStack {
+                        Image(systemName: "video.fill")
+                        Text("calendar.generate".localized)
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.bodyLapseYellow)
+                    .cornerRadius(20)
+                }
+                .disabled(isGeneratingVideo)
             }
-            .disabled(isGeneratingVideo)
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
     }
     
     private var photoPreviewSection: some View {
@@ -451,18 +576,38 @@ struct CalendarView: View {
                     .padding(.top, 8)
             }
             
-            GeometryReader { geometry in
-                if let photo = currentPhoto,
-                   let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
-                    VStack {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: geometry.size.width)
-                            .cornerRadius(12)
-                    }
-                    .frame(width: geometry.size.width, height: geometry.size.height)
+            // Memo display - always show section
+            HStack {
+                Image(systemName: currentMemo.isEmpty ? "note.text.badge.plus" : "note.text")
+                    .font(.caption)
+                    .foregroundColor(currentMemo.isEmpty ? .secondary : .bodyLapseTurquoise)
+                
+                if currentMemo.isEmpty {
+                    Text("calendar.add_memo".localized)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 } else {
+                    Text(currentMemo)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                }
+                
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(8)
+            .onTapGesture {
+                showingMemoEditor = true
+            }
+            
+            // Photo viewer with TabView for smooth swiping
+            if photosForSelectedDate.isEmpty {
+                // No photo placeholder
+                GeometryReader { geometry in
                     VStack(spacing: 20) {
                         Image(systemName: "photo")
                             .font(.system(size: 60))
@@ -473,8 +618,132 @@ struct CalendarView: View {
                     }
                     .frame(width: geometry.size.width, height: geometry.size.height)
                 }
+                .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
+            } else if categoriesForSelectedDate.count > 1 {
+                // Multiple categories - use TabView for smooth swiping
+                TabView(selection: $currentCategoryIndex) {
+                    ForEach(0..<categoriesForSelectedDate.count, id: \.self) { index in
+                        GeometryReader { geometry in
+                            let categoryId = categoriesForSelectedDate[index].id
+                            if let photo = photosForSelectedDate.first(where: { $0.categoryId == categoryId }),
+                               let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                                    .tag(index)
+                                    .contextMenu {
+                                        Button {
+                                            copyPhoto(photo)
+                                        } label: {
+                                            Label("Copy", systemImage: "doc.on.doc")
+                                        }
+                                        
+                                        Button {
+                                            sharePhoto(photo)
+                                        } label: {
+                                            Label("common.share".localized, systemImage: "square.and.arrow.up")
+                                        }
+                                        
+                                        Button {
+                                            savePhoto(photo)
+                                        } label: {
+                                            Label("gallery.save_to_photos".localized, systemImage: "square.and.arrow.down")
+                                        }
+                                        
+                                        Divider()
+                                        
+                                        Button(role: .destructive) {
+                                            photoToDelete = photo
+                                            showingDeleteAlert = true
+                                        } label: {
+                                            Label("common.delete".localized, systemImage: "trash")
+                                        }
+                                    }
+                            } else {
+                                // Show placeholder for categories without photos
+                                VStack(spacing: 20) {
+                                    Image(systemName: "photo")
+                                        .font(.system(size: 60))
+                                        .foregroundColor(.gray)
+                                    Text("calendar.no_photo".localized)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                                .tag(index)
+                            }
+                        }
+                    }
+                }
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
+                .background(Color.black)
+                .cornerRadius(12)
+                .onChange(of: currentCategoryIndex) { _, newIndex in
+                    // Haptic feedback when page changes
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                    impactFeedback.impactOccurred()
+                    
+                    // Update the current photo
+                    if newIndex < categoriesForSelectedDate.count {
+                        switchToCategory(at: newIndex)
+                    }
+                }
+            } else {
+                // Single category - simple image display
+                GeometryReader { geometry in
+                    if let photo = currentPhoto,
+                       let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .contextMenu {
+                                Button {
+                                    copyPhoto(photo)
+                                } label: {
+                                    Label("Copy", systemImage: "doc.on.doc")
+                                }
+                                
+                                Button {
+                                    sharePhoto(photo)
+                                } label: {
+                                    Label("common.share".localized, systemImage: "square.and.arrow.up")
+                                }
+                                
+                                Button {
+                                    savePhoto(photo)
+                                } label: {
+                                    Label("gallery.save_to_photos".localized, systemImage: "square.and.arrow.down")
+                                }
+                                
+                                Divider()
+                                
+                                Button(role: .destructive) {
+                                    photoToDelete = photo
+                                    showingDeleteAlert = true
+                                } label: {
+                                    Label("common.delete".localized, systemImage: "trash")
+                                }
+                            }
+                    } else {
+                        // Show placeholder when no photo for current category
+                        VStack(spacing: 20) {
+                            Image(systemName: "photo")
+                                .font(.system(size: 60))
+                                .foregroundColor(.gray)
+                            Text("calendar.no_photo".localized)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                    }
+                }
+                .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
+                .background(Color.black)
+                .cornerRadius(12)
             }
-            .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
         }
         .padding(.horizontal)
     }
@@ -497,6 +766,7 @@ struct CalendarView: View {
                             let hasPhoto = viewModel.photos.contains { photo in
                                 Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
                             }
+                            let hasNote = viewModel.note(for: date) != nil
                             
                             Rectangle()
                                 .fill(hasPhoto ? Color.accentColor : Color.clear)
@@ -504,6 +774,18 @@ struct CalendarView: View {
                                 .overlay(
                                     Rectangle()
                                         .stroke(Color(UIColor.systemGray4), lineWidth: 0.5)
+                                )
+                                .overlay(
+                                    // Memo indicator dot
+                                    VStack {
+                                        if hasNote {
+                                            Circle()
+                                                .fill(Color.bodyLapseTurquoise)
+                                                .frame(width: 4, height: 4)
+                                                .padding(.top, 4)
+                                        }
+                                        Spacer()
+                                    }
                                 )
                         }
                     }
@@ -555,78 +837,46 @@ struct CalendarView: View {
             }
             .frame(height: 80)
             .padding(.horizontal)
-            
-            Text(formatDateRange())
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
         .padding(.vertical)
     }
     
     private var dataGraphSection: some View {
         VStack(spacing: 6) {
-            if !weightViewModel.weightEntries.isEmpty {
-                if #available(iOS 16.0, *) {
-                    let filteredEntries = weightViewModel.filteredEntries(for: getWeightTimeRange())
-                    if !filteredEntries.isEmpty {
-                        let fullRange: ClosedRange<Date> = {
-                            if let first = dateRange.first, let last = dateRange.last {
-                                return first...last
-                            } else {
-                                return Date()...Date()
-                            }
-                        }()
-                        InteractiveWeightChartView(
-                            entries: filteredEntries,
-                            selectedDate: $selectedChartDate,
-                            currentPhoto: currentPhoto,
-                            onEditWeight: {
-                                showingWeightInput = true
-                            },
-                            fullDateRange: fullRange
-                        )
-                        .padding(.horizontal)
-                        .onChange(of: selectedPeriod) { _, _ in
-                            // Reset chart selection when period changes
-                            selectedChartDate = nil
-                        }
+            if #available(iOS 16.0, *) {
+                let filteredEntries = weightViewModel.filteredEntries(for: getWeightTimeRange())
+                let fullRange: ClosedRange<Date> = {
+                    if let first = dateRange.first, let last = dateRange.last {
+                        return first...last
                     } else {
-                        Text("calendar.no_data_period".localized)
-                            .foregroundColor(.secondary)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color(UIColor.secondarySystemGroupedBackground))
-                            .cornerRadius(15)
+                        return Date()...Date()
                     }
-                } else {
-                    Text("calendar.ios16_required".localized)
-                        .foregroundColor(.secondary)
-                        .padding()
+                }()
+                
+                // Always show the weight chart view for premium users
+                // InteractiveWeightChartView handles empty data internally
+                InteractiveWeightChartView(
+                    entries: filteredEntries,
+                    selectedDate: $selectedChartDate,
+                    currentPhoto: currentPhoto,
+                    onEditWeight: {
+                        showingWeightInput = true
+                    },
+                    fullDateRange: fullRange
+                )
+                .padding(.horizontal)
+                .onChange(of: selectedPeriod) { _, _ in
+                    // Reset chart selection when period changes
+                    selectedChartDate = nil
                 }
             } else {
-                VStack(spacing: 10) {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.system(size: 40))
-                        .foregroundColor(.gray.opacity(0.3))
-                    Text("calendar.no_weight_data".localized)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    Text("calendar.add_weight_hint".localized)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Button("calendar.reload_data".localized) {
-                        weightViewModel.loadEntries()
-                    }
-                    .font(.caption)
-                    .foregroundColor(.blue)
-                }
-                .padding()
-                .frame(minHeight: 200)
-                .frame(maxWidth: .infinity)
-                .background(Color(UIColor.secondarySystemGroupedBackground))
-                .cornerRadius(15)
-                .padding(.horizontal)
+                Text("calendar.ios16_required".localized)
+                    .foregroundColor(.secondary)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color(UIColor.secondarySystemGroupedBackground))
+                    .cornerRadius(15)
+                    .padding(.horizontal)
             }
         }
     }
@@ -643,23 +893,67 @@ struct CalendarView: View {
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
+        
+        // Check current language and set appropriate format
+        let currentLanguage = LanguageManager.shared.currentLanguage
+        switch currentLanguage {
+        case "ja":
+            formatter.dateFormat = "yyyy/MM/dd"
+        case "ko":
+            formatter.dateFormat = "yyyy.MM.dd"
+        default:
+            formatter.dateFormat = "MMM d, yyyy"
+        }
+        
         return formatter.string(from: date)
     }
     
-    private func formatDateRange() -> String {
-        guard let firstDate = dateRange.first,
-              let lastDate = dateRange.last else { return "" }
+    private func updateCurrentPhoto() {
+        // Get all photos for selected date
+        photosForSelectedDate = viewModel.allPhotosForDate(selectedDate)
         
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
+        // Keep the selected category consistent
+        if !photosForSelectedDate.isEmpty {
+            // Get categories for these photos
+            let photoCategories = photosForSelectedDate.map { $0.categoryId }
+            categoriesForSelectedDate = viewModel.availableCategories.filter { category in
+                photoCategories.contains(category.id)
+            }
+            
+            // Find the index of the currently selected category
+            if let index = categoriesForSelectedDate.firstIndex(where: { $0.id == viewModel.selectedCategory.id }) {
+                currentCategoryIndex = index
+                currentPhoto = photosForSelectedDate.first { $0.categoryId == categoriesForSelectedDate[index].id }
+            } else {
+                // Current category has no photo, but don't switch categories automatically
+                // Keep the same category selection but show no photo
+                currentPhoto = nil
+                // Keep categoriesForSelectedDate with available photos for swiping
+            }
+        } else {
+            // No photos for this date - keep showing placeholder
+            currentPhoto = nil
+            // Don't reset categoriesForSelectedDate or currentCategoryIndex
+            // This preserves the user's category selection
+            categoriesForSelectedDate = []
+        }
         
-        return "\(formatter.string(from: firstDate)) - \(formatter.string(from: lastDate))"
+        currentMemo = viewModel.note(for: selectedDate)?.content ?? ""
     }
     
-    private func updateCurrentPhoto() {
-        currentPhoto = viewModel.photos.first { photo in
-            Calendar.current.isDate(photo.captureDate, inSameDayAs: selectedDate)
+    private func switchToCategory(at index: Int) {
+        guard index >= 0 && index < categoriesForSelectedDate.count else { return }
+        
+        let category = categoriesForSelectedDate[index]
+        currentPhoto = photosForSelectedDate.first { $0.categoryId == category.id }
+        
+        // Update selected category in viewModel
+        viewModel.selectCategory(category)
+        
+        // Update weight input if premium
+        if subscriptionManager.isPremium {
+            // Trigger weight data reload for new category
+            weightViewModel.loadEntries()
         }
     }
     
@@ -700,6 +994,129 @@ struct CalendarView: View {
                 }
             }
         )
+    }
+    
+    private func deletePhoto(_ photo: Photo) {
+        do {
+            try PhotoStorageService.shared.deletePhoto(photo)
+            
+            // Reload photos
+            viewModel.loadPhotos()
+            viewModel.loadCategories()
+            updateCurrentPhoto()
+            
+            // Also update weight tracking if this photo had weight data
+            if photo.weight != nil || photo.bodyFatPercentage != nil {
+                Task {
+                    // If there's a weight entry for this date and no other photos exist for this date,
+                    // we should consider deleting the weight entry
+                    let remainingPhotosForDate = PhotoStorageService.shared.getPhotosForDate(photo.captureDate)
+                    
+                    if remainingPhotosForDate.isEmpty {
+                        // No more photos for this date, delete the weight entry
+                        if let existingEntry = try await WeightStorageService.shared.getEntry(for: photo.captureDate) {
+                            try await WeightStorageService.shared.deleteEntry(existingEntry)
+                        }
+                    }
+                    
+                    await MainActor.run {
+                        weightViewModel.loadEntries()
+                    }
+                }
+            }
+            
+            // Post notification that photos have been updated
+            NotificationCenter.default.post(name: Notification.Name("PhotosUpdated"), object: nil)
+            
+        } catch {
+            print("Failed to delete photo: \(error)")
+            // Optionally show error alert
+            videoAlertMessage = "Failed to delete photo: \(error.localizedDescription)"
+            showingVideoAlert = true
+        }
+    }
+    
+    private func copyPhoto(_ photo: Photo) {
+        guard let image = PhotoStorageService.shared.loadImage(for: photo) else { return }
+        UIPasteboard.general.image = image
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+    }
+    
+    private func sharePhoto(_ photo: Photo) {
+        guard let image = PhotoStorageService.shared.loadImage(for: photo) else { return }
+        itemToShare = [image]
+        showingShareSheet = true
+    }
+    
+    private func savePhoto(_ photo: Photo) {
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+        
+        PHPhotoLibrary.requestAuthorization { status in
+            guard status == .authorized else {
+                DispatchQueue.main.async {
+                    self.videoAlertMessage = "gallery.photo_library_access_denied".localized
+                    self.showingVideoAlert = true
+                }
+                return
+            }
+            
+            guard let image = PhotoStorageService.shared.loadImage(for: photo) else {
+                DispatchQueue.main.async {
+                    self.videoAlertMessage = "Failed to load image"
+                    self.showingVideoAlert = true
+                }
+                return
+            }
+            
+            PHPhotoLibrary.shared().performChanges({
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }) { success, error in
+                DispatchQueue.main.async {
+                    if success {
+                        self.showSaveSuccess(message: "gallery.photo_saved".localized)
+                    } else {
+                        self.videoAlertMessage = error?.localizedDescription ?? "Failed to save photo"
+                        self.showingVideoAlert = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private func showSaveSuccess(message: String) {
+        saveSuccessMessage = message
+        withAnimation {
+            showingSaveSuccess = true
+        }
+    }
+    
+    private var saveSuccessToast: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+                .font(.title2)
+            
+            Text(saveSuccessMessage)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            Capsule()
+                .fill(Color(UIColor.systemBackground))
+                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+        )
+        .padding(.top, 50)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                withAnimation {
+                    showingSaveSuccess = false
+                }
+            }
+        }
     }
 }
 
@@ -776,7 +1193,7 @@ struct WeightInputView: View {
                                 .textFieldStyle(.roundedBorder)
                                 .font(.title3)
                             
-                            Text("%")
+                            Text("unit.percent".localized)
                                 .font(.title3)
                                 .foregroundColor(.secondary)
                         }
@@ -876,7 +1293,18 @@ struct WeightInputView: View {
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
+        
+        // Check current language and set appropriate format
+        let currentLanguage = LanguageManager.shared.currentLanguage
+        switch currentLanguage {
+        case "ja":
+            formatter.dateFormat = "yyyy/MM/dd"
+        case "ko":
+            formatter.dateFormat = "yyyy.MM.dd"
+        default:
+            formatter.dateFormat = "MMM d, yyyy"
+        }
+        
         return formatter.string(from: date)
     }
     
@@ -914,8 +1342,11 @@ struct VideoGenerationView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var selectedSpeed: VideoSpeed = .normal
-    @State private var selectedQuality: VideoQuality = .high
+    @State private var selectedQuality: VideoQuality = .standard
     @State private var enableFaceBlur = false
+    @State private var videoLayout: VideoGenerationService.VideoGenerationOptions.VideoLayout = .single
+    @State private var selectedCategories: Set<String> = []
+    @State private var availableCategories: [PhotoCategory] = []
     
     enum VideoSpeed: String, CaseIterable {
         case slow = "Slow (0.5s/frame)"
@@ -982,14 +1413,6 @@ struct VideoGenerationView: View {
                                 .font(.caption)
                         }
                     }
-                    
-                    let photoCount = countPhotosInRange()
-                    HStack {
-                        Text("calendar.photos".localized)
-                        Spacer()
-                        Text("\(photoCount)")
-                            .foregroundColor(.secondary)
-                    }
                 }
                 
                 Section(header: Text("calendar.video_settings".localized)) {
@@ -1006,6 +1429,34 @@ struct VideoGenerationView: View {
                     }
                     
                     Toggle("calendar.blur_faces".localized, isOn: $enableFaceBlur)
+                    
+                    // Video layout selection - Premium feature
+                    if subscriptionManager.isPremium && availableCategories.count > 1 {
+                        // Always use side-by-side layout for multiple categories
+                        // Category selection for side-by-side
+                        if videoLayout == .sideBySide {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("video.category.select".localized)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                ForEach(availableCategories) { category in
+                                    HStack {
+                                        Text(category.name)
+                                        Spacer()
+                                        if selectedCategories.contains(category.id) {
+                                            Image(systemName: "checkmark")
+                                                .foregroundColor(.bodyLapseTurquoise)
+                                        }
+                                    }
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        toggleCategory(category.id)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 if !subscriptionManager.isPremium {
@@ -1020,15 +1471,6 @@ struct VideoGenerationView: View {
                     }
                 }
                 
-                Section {
-                    let estimatedDuration = estimateDuration()
-                    HStack {
-                        Text("calendar.estimated_duration".localized)
-                        Spacer()
-                        Text(estimatedDuration)
-                            .foregroundColor(.secondary)
-                    }
-                }
             }
             .navigationTitle("calendar.generate_video".localized)
             .navigationBarTitleDisplayMode(.inline)
@@ -1047,7 +1489,9 @@ struct VideoGenerationView: View {
                             videoSize: selectedQuality.videoSize,
                             addWatermark: !subscriptionManager.isPremium,
                             transitionStyle: .fade,
-                            blurFaces: enableFaceBlur
+                            blurFaces: enableFaceBlur,
+                            layout: videoLayout,
+                            selectedCategories: Array(selectedCategories)
                         )
                         
                         // Show interstitial ad for free users
@@ -1092,6 +1536,25 @@ struct VideoGenerationView: View {
                 }
             }
         }
+        .onAppear {
+            // Load available categories
+            let isPremium = subscriptionManager.isPremium
+            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+            
+            // Set layout based on available categories
+            if isPremium && availableCategories.count > 1 {
+                // Multiple categories: use side-by-side
+                videoLayout = .sideBySide
+                // Select all categories by default (up to 4)
+                selectedCategories = Set(availableCategories.prefix(4).map { $0.id })
+            } else {
+                // Single category: use single layout
+                videoLayout = .single
+                if let defaultCategory = availableCategories.first {
+                    selectedCategories.insert(defaultCategory.id)
+                }
+            }
+        }
     }
     
     private func countPhotosInRange() -> Int {
@@ -1104,17 +1567,6 @@ struct VideoGenerationView: View {
         }.count
     }
     
-    private func estimateDuration() -> String {
-        let photoCount = countPhotosInRange()
-        let frameDuration = selectedSpeed.frameDuration.seconds
-        let totalSeconds = Double(photoCount) * frameDuration
-        
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.minute, .second]
-        formatter.unitsStyle = .abbreviated
-        
-        return formatter.string(from: totalSeconds) ?? "0s"
-    }
     
     private func formatDateRange(from startDate: Date, to endDate: Date) -> String {
         let formatter = DateFormatter()
@@ -1128,6 +1580,20 @@ struct VideoGenerationView: View {
         } else {
             formatter.dateFormat = "MMM d, yyyy"
             return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+        }
+    }
+    
+    private func toggleCategory(_ categoryId: String) {
+        if selectedCategories.contains(categoryId) {
+            // Don't allow removing if it's the only selected category
+            if selectedCategories.count > 1 {
+                selectedCategories.remove(categoryId)
+            }
+        } else {
+            // Limit to 4 categories
+            if selectedCategories.count < 4 {
+                selectedCategories.insert(categoryId)
+            }
         }
     }
 }
