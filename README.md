@@ -1,7 +1,7 @@
 # BodyLapse - Transform Your Fitness Journey
 
 <div align="center">
-  <img src="BodyLapse/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" width="200" height="200" alt="BodyLapse Icon">
+  <img src="BodyLapse/Assets.xcassets/AppIcon.appiconset/1024.png" width="200" height="200" alt="BodyLapse Icon">
   
   **Track your fitness transformation with daily progress photos**
   
