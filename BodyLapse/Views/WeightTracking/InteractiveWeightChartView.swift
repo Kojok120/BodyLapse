@@ -179,7 +179,10 @@ struct InteractiveWeightChartView: View {
                     GeometryReader { geometry in
                         let chartWidth = geometry.size.width
                         let chartHeight = geometry.size.height
+                        let padding: CGFloat = 20 // Horizontal padding for dots
+                        let dotRadius: CGFloat = 3 // Half of dot size (6/2)
                         
+                        ZStack {
                         // Grid lines
                         Path { path in
                             // Horizontal grid lines
@@ -197,7 +200,7 @@ struct InteractiveWeightChartView: View {
                             if sortedEntries.count > 1 {
                                 Path { path in
                                     for (index, entry) in sortedEntries.enumerated() {
-                                        let x = xPosition(for: entry.date, in: chartWidth)
+                                        let x = padding + xPosition(for: entry.date, in: chartWidth - 2 * padding)
                                         let normalizedY = 1 - normalizeWeight(convertedWeight(entry.weight))
                                         let y = chartHeight * normalizedY
                                         
@@ -213,7 +216,7 @@ struct InteractiveWeightChartView: View {
                             
                             // Points
                             ForEach(sortedEntries) { entry in
-                                let x = xPosition(for: entry.date, in: chartWidth)
+                                let x = padding + xPosition(for: entry.date, in: chartWidth - 2 * padding)
                                 let normalizedY = 1 - normalizeWeight(convertedWeight(entry.weight))
                                 let y = chartHeight * normalizedY
                                 
@@ -232,7 +235,7 @@ struct InteractiveWeightChartView: View {
                                 Path { path in
                                     for (index, entry) in bodyFatEntries.enumerated() {
                                         if let bodyFat = entry.bodyFatPercentage {
-                                            let x = xPosition(for: entry.date, in: chartWidth)
+                                            let x = padding + xPosition(for: entry.date, in: chartWidth - 2 * padding)
                                             let normalizedY = 1 - normalizeBodyFat(bodyFat)
                                             let y = chartHeight * normalizedY
                                             
@@ -250,7 +253,7 @@ struct InteractiveWeightChartView: View {
                             // Points
                             ForEach(bodyFatEntries) { entry in
                                 if let bodyFat = entry.bodyFatPercentage {
-                                    let x = xPosition(for: entry.date, in: chartWidth)
+                                    let x = padding + xPosition(for: entry.date, in: chartWidth - 2 * padding)
                                     let normalizedY = 1 - normalizeBodyFat(bodyFat)
                                     let y = chartHeight * normalizedY
                                     
@@ -265,7 +268,7 @@ struct InteractiveWeightChartView: View {
                         
                         // Selection indicator
                         if let selectedDate = selectedDate {
-                            let x = xPosition(for: selectedDate, in: chartWidth)
+                            let x = padding + xPosition(for: selectedDate, in: chartWidth - 2 * padding)
                             
                             Rectangle()
                                 .fill(Color.primary.opacity(0.2))
@@ -288,18 +291,21 @@ struct InteractiveWeightChartView: View {
                         Color.clear
                             .contentShape(Rectangle())
                             .onTapGesture { location in
-                                updateSelection(at: location.x, width: chartWidth)
+                                let adjustedX = location.x - padding
+                                updateSelection(at: adjustedX, width: chartWidth - 2 * padding)
                             }
                             .gesture(
                                 DragGesture(minimumDistance: 0)
                                     .onChanged { value in
                                         isDragging = true
-                                        updateSelection(at: value.location.x, width: chartWidth)
+                                        let adjustedX = value.location.x - padding
+                                        updateSelection(at: adjustedX, width: chartWidth - 2 * padding)
                                     }
                                     .onEnded { _ in
                                         isDragging = false
                                     }
                             )
+                        }
                     }
                     .frame(height: 160)
                     .clipped()
@@ -340,6 +346,29 @@ struct InteractiveWeightChartView: View {
     }
     
     private func xPosition(for date: Date, in width: CGFloat) -> CGFloat {
+        // If we have a fullDateRange, use index-based positioning for even spacing
+        if let fullRange = fullDateRange {
+            let calendar = Calendar.current
+            let startDate = calendar.startOfDay(for: fullRange.lowerBound)
+            let targetDate = calendar.startOfDay(for: date)
+            let endDate = calendar.startOfDay(for: min(fullRange.upperBound, Date()))
+            
+            // Calculate total days in range
+            let totalDays = calendar.dateComponents([.day], from: startDate, to: endDate).day ?? 0
+            
+            // Calculate index of target date
+            let dayIndex = calendar.dateComponents([.day], from: startDate, to: targetDate).day ?? 0
+            
+            // Ensure we have at least 1 day range
+            let safeTotalDays = max(1, totalDays)
+            
+            // Calculate position with even spacing
+            let fraction = CGFloat(dayIndex) / CGFloat(safeTotalDays)
+            
+            return width * fraction
+        }
+        
+        // Fallback to time-based positioning
         let range = constrainedDateRange
         let totalInterval = range.upperBound.timeIntervalSince(range.lowerBound)
         
@@ -349,18 +378,39 @@ struct InteractiveWeightChartView: View {
         
         let dateInterval = date.timeIntervalSince(range.lowerBound)
         let fraction = dateInterval / totalInterval
+        let clampedFraction = max(0, min(1, fraction))
         
-        // Add small padding on sides (5%)
-        return width * 0.05 + (width * 0.9 * CGFloat(fraction))
+        return width * CGFloat(clampedFraction)
     }
     
     private func updateSelection(at x: CGFloat, width: CGFloat) {
-        let range = constrainedDateRange
-        
-        // Remove padding calculation
-        let fraction = (x - width * 0.05) / (width * 0.9)
+        // Calculate fraction directly
+        let fraction = x / width
         let clampedFraction = max(0, min(1, fraction))
         
+        // If we have a fullDateRange, use index-based selection for consistency
+        if let fullRange = fullDateRange {
+            let calendar = Calendar.current
+            let startDate = calendar.startOfDay(for: fullRange.lowerBound)
+            let endDate = calendar.startOfDay(for: min(fullRange.upperBound, Date()))
+            
+            // Calculate total days in range
+            let totalDays = calendar.dateComponents([.day], from: startDate, to: endDate).day ?? 0
+            let safeTotalDays = max(1, totalDays)
+            
+            // Calculate which day index was selected
+            let selectedDayIndex = Int(round(CGFloat(safeTotalDays) * clampedFraction))
+            let clampedIndex = min(selectedDayIndex, safeTotalDays)
+            
+            // Calculate the selected date
+            if let selectedDate = calendar.date(byAdding: .day, value: clampedIndex, to: startDate) {
+                self.selectedDate = min(selectedDate, Date())
+            }
+            return
+        }
+        
+        // Fallback to time-based selection
+        let range = constrainedDateRange
         let totalInterval = range.upperBound.timeIntervalSince(range.lowerBound)
         let selectedInterval = totalInterval * Double(clampedFraction)
         let selectedTime = range.lowerBound.addingTimeInterval(selectedInterval)
@@ -369,18 +419,11 @@ struct InteractiveWeightChartView: View {
         let today = Date()
         let constrainedTime = min(selectedTime, today)
         
-        // Snap to nearest data point if close
-        let snapThreshold = totalInterval * 0.03 // 3% of range
-        
+        // Snap to nearest data point
         if let closestEntry = sortedEntries.min(by: { entry1, entry2 in
             abs(entry1.date.timeIntervalSince(constrainedTime)) < abs(entry2.date.timeIntervalSince(constrainedTime))
         }) {
-            let distance = abs(closestEntry.date.timeIntervalSince(constrainedTime))
-            if distance <= snapThreshold {
-                selectedDate = closestEntry.date
-            } else {
-                selectedDate = constrainedTime
-            }
+            selectedDate = closestEntry.date
         } else {
             selectedDate = constrainedTime
         }
