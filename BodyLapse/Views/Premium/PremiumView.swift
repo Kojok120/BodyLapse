@@ -10,7 +10,7 @@ struct PremiumView: View {
             ZStack {
                 // Background gradient
                 LinearGradient(
-                    gradient: Gradient(colors: [Color.purple.opacity(0.8), Color.blue.opacity(0.8)]),
+                    gradient: Gradient(colors: [Color.bodyLapseTurquoise.opacity(0.9), Color.bodyLapseTurquoise.opacity(0.6)]),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
