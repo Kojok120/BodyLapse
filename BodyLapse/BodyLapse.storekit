@@ -72,6 +72,16 @@
           "description" : "BodyLapseのプレミアム機能",
           "displayName" : "BodyLapse プレミアム",
           "locale" : "ja"
+        },
+        {
+          "description" : "Funciones premium de BodyLapse",
+          "displayName" : "BodyLapse Premium",
+          "locale" : "es"
+        },
+        {
+          "description" : "BodyLapse 프리미엄 기능",
+          "displayName" : "BodyLapse 프리미엄",
+          "locale" : "ko"
         }
       ],
       "name" : "premium",
@@ -98,6 +108,16 @@
               "description" : "月額サブスクリプション（1ヶ月、自動更新）。すべてのプレミアム機能を利用可能：広告なし、動画の透かしなし、体重・体脂肪率トラッキングとチャート、最大4つの写真カテゴリ、高度なリマインダー。新規登録者は初月無料。",
               "displayName" : "BodyLapse プレミアム 月額",
               "locale" : "ja"
+            },
+            {
+              "description" : "Suscripción mensual (1 mes, renovación automática) con acceso completo a todas las funciones premium: sin anuncios, sin marca de agua en videos, seguimiento de peso y grasa corporal con gráficos, hasta 4 categorías de fotos y recordatorios avanzados. Primer mes gratis para nuevos suscriptores.",
+              "displayName" : "BodyLapse Premium Mensual",
+              "locale" : "es"
+            },
+            {
+              "description" : "월간 구독 (1개월, 자동 갱신). 모든 프리미엄 기능 이용 가능: 광고 없음, 동영상 워터마크 없음, 체중 및 체지방률 추적과 차트, 최대 4개의 사진 카테고리, 고급 알림. 신규 가입자 첫 달 무료.",
+              "displayName" : "BodyLapse 프리미엄 월간",
+              "locale" : "ko"
             }
           ],
           "productID" : "com.J.BodyLapse.premium.monthly",
