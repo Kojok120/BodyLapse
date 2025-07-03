@@ -46,6 +46,14 @@ struct PremiumView: View {
                             .font(.title.bold())
                             .foregroundColor(.white)
                         
+                        // Subscription title
+                        if let product = viewModel.products.first {
+                            Text(product.displayName)
+                                .font(.headline)
+                                .foregroundColor(.white.opacity(0.9))
+                                .padding(.top, 2)
+                        }
+                        
                         // Price display with trial emphasis
                         HStack(spacing: 8) {
                             Text("premium.after_trial".localized)
@@ -155,7 +163,7 @@ struct PremiumView: View {
                             .multilineTextAlignment(.center)
                         
                         HStack(spacing: 20) {
-                            Link("premium.terms".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/terms_of_service.html")!)
+                            Link("premium.terms".localized, destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
                             Link("premium.privacy".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!)
                         }
                         .font(.caption2)

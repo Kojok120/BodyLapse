@@ -139,6 +139,7 @@
 "settings.version" = "v1.0.0";
 "settings.privacy_policy" = "개인정보 처리방침";
 "settings.terms_service" = "이용 약관";
+"settings.terms_use" = "이용 약관";
 "settings.debug_settings" = "디버그 설정";
 "settings.notification_required" = "알림 권한 필요";
 "settings.notification_message" = "일일 사진 알림을 받으려면 설정에서 알림을 활성화하세요.";

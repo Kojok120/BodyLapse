@@ -234,9 +234,6 @@ struct SettingsView: View {
                     Button(action: { showingAbout = true }) {
                         HStack {
                             Text("settings.about_bodylapse".localized)
-                            Spacer()
-                            Text("settings.version".localized)
-                                .foregroundColor(.secondary)
                         }
                     }
                     
@@ -244,8 +241,8 @@ struct SettingsView: View {
                         Label("settings.privacy_policy".localized, systemImage: "hand.raised")
                     }
                     
-                    Link(destination: URL(string: "https://kojok120.github.io/bodylapse-legal/terms_of_service.html")!) {
-                        Label("settings.terms_service".localized, systemImage: "doc.text")
+                    Link(destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!) {
+                        Label("settings.terms_use".localized, systemImage: "doc.text")
                     }
                 }
                 

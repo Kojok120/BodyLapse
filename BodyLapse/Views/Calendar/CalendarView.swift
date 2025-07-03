@@ -31,6 +31,8 @@ struct CalendarView: View {
     @State private var itemToShare: [Any] = []
     @State private var showingSaveSuccess = false
     @State private var saveSuccessMessage = ""
+    @State private var showingAddCategory = false
+    @State private var newCategoryToSetup: PhotoCategory?
     
     enum TimePeriod: String, CaseIterable {
         case week = "7 Days"
@@ -161,6 +163,25 @@ struct CalendarView: View {
         )
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(activityItems: itemToShare)
+        }
+        .sheet(isPresented: $showingAddCategory) {
+            AddCategorySheet { newCategory in
+                if CategoryStorageService.shared.addCategory(newCategory) {
+                    // Set the new category for guideline setup
+                    newCategoryToSetup = newCategory
+                } else {
+                    // Handle error - category couldn't be added
+                }
+            }
+        }
+        .fullScreenCover(item: $newCategoryToSetup) { category in
+            CategoryGuidelineSetupView(category: category)
+                .onDisappear {
+                    // Reload categories
+                    viewModel.loadCategories()
+                    viewModel.selectCategory(category)
+                    updateCurrentPhoto()
+                }
         }
         .overlay(
             Group {
@@ -478,7 +499,7 @@ struct CalendarView: View {
     private var headerView: some View {
         VStack(spacing: 12) {
             // Category selection (Premium feature)
-            if subscriptionManager.isPremium && viewModel.availableCategories.count > 1 {
+            if subscriptionManager.isPremium {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(viewModel.availableCategories) { category in
@@ -494,6 +515,23 @@ struct CalendarView: View {
                                     .background(
                                         RoundedRectangle(cornerRadius: 20)
                                             .fill(viewModel.selectedCategory.id == category.id ? Color.bodyLapseTurquoise : Color(UIColor.secondarySystemBackground))
+                                    )
+                            }
+                        }
+                        
+                        // Add category button
+                        if CategoryStorageService.shared.canAddMoreCategories() {
+                            Button(action: {
+                                showingAddCategory = true
+                            }) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .fill(Color(UIColor.secondarySystemBackground))
                                     )
                             }
                         }

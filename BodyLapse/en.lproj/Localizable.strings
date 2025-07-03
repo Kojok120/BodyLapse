@@ -139,6 +139,7 @@
 "settings.version" = "v1.0.0";
 "settings.privacy_policy" = "Privacy Policy";
 "settings.terms_service" = "Terms of Service";
+"settings.terms_use" = "Terms of Use";
 "settings.debug_settings" = "Debug Settings";
 "settings.notification_required" = "Notification Permission Required";
 "settings.notification_message" = "Please enable notifications in Settings to receive daily photo reminders.";
@@ -263,7 +264,7 @@
 "premium.feature.reminders_desc" = "Customize notification times";
 "premium.restore" = "Restore Purchases";
 "premium.auto_renew" = "Subscriptions will automatically renew unless cancelled";
-"premium.terms" = "Terms of Service";
+"premium.terms" = "Terms of Use";
 "premium.privacy" = "Privacy Policy";
 "premium.purchase_error" = "Purchase Error";
 "premium.per" = "per";

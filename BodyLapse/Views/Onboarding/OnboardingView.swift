@@ -16,7 +16,6 @@ struct OnboardingView: View {
     @State private var passcodeErrorMessage = ""
     
     // Premium subscription
-    @State private var showingSubscriptionSheet = false
     @StateObject private var premiumViewModel = PremiumViewModel()
     
     var body: some View {
@@ -78,146 +77,12 @@ struct OnboardingView: View {
             .navigationBarHidden(isInOnboardingPhase && currentStep == 2) // Hide for camera step
         }
         .interactiveDismissDisabled()
-        .sheet(isPresented: $showingSubscriptionSheet) {
-            NavigationView {
-                VStack {
-                    if premiumViewModel.isLoadingProducts {
-                        ProgressView("Loading...")
-                            .padding()
-                    } else if let product = premiumViewModel.products.first {
-                        VStack(spacing: 20) {
-                            // Header
-                            VStack(spacing: 10) {
-                                Image(systemName: "star.circle.fill")
-                                    .font(.system(size: 60))
-                                    .foregroundColor(.yellow)
-                                    .padding(.top, 15)
-                                
-                                Text("onboarding.premium.title".localized)
-                                    .font(.title)
-                                    .fontWeight(.bold)
-                                    .multilineTextAlignment(.center)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .padding(.horizontal, 10)
-                                
-                                Text(product.displayName)
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            // Price
-                            VStack(spacing: 8) {
-                                Text(product.displayPrice + " / " + "date.month".localized)
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                
-                                Text("onboarding.premium.trial".localized)
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.green)
-                                
-                                Text("onboarding.premium.cancel_anytime".localized)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.vertical, 20)
-                            
-                            Spacer()
-                            
-                            // Buttons
-                            VStack(spacing: 15) {
-                                Button(action: {
-                                    Task {
-                                        await premiumViewModel.purchase(product)
-                                        // Check if purchase was successful after a short delay
-                                        try? await Task.sleep(nanoseconds: 500_000_000)
-                                        if premiumViewModel.isPremium {
-                                            showingSubscriptionSheet = false
-                                            withAnimation {
-                                                isInOnboardingPhase = true
-                                                currentStep = 1
-                                            }
-                                        }
-                                    }
-                                }) {
-                                    HStack {
-                                        if premiumViewModel.isPurchasing {
-                                            ProgressView()
-                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                                .scaleEffect(0.8)
-                                        } else {
-                                            Text("common.continue".localized)
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.accentColor)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(10)
-                                }
-                                .disabled(premiumViewModel.isPurchasing)
-                                
-                                Button(action: {
-                                    showingSubscriptionSheet = false
-                                    withAnimation {
-                                        isInOnboardingPhase = true
-                                        currentStep = 1
-                                    }
-                                }) {
-                                    Text("Maybe Later")
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Button(action: {
-                                    Task {
-                                        await premiumViewModel.restorePurchases()
-                                        if premiumViewModel.isPremium {
-                                            showingSubscriptionSheet = false
-                                            withAnimation {
-                                                isInOnboardingPhase = true
-                                                currentStep = 1
-                                            }
-                                        }
-                                    }
-                                }) {
-                                    Text("premium.restore".localized)
-                                        .font(.caption)
-                                        .foregroundColor(.accentColor)
-                                }
-                                .disabled(premiumViewModel.isPurchasing)
-                            }
-                            .padding(.horizontal, 40)
-                            .padding(.bottom, 30)
-                        }
-                        .padding()
-                    } else {
-                        VStack(spacing: 20) {
-                            Text("No products available")
-                                .font(.headline)
-                            
-                            Button("Maybe Later") {
-                                showingSubscriptionSheet = false
-                                withAnimation {
-                                    isInOnboardingPhase = true
-                                    currentStep = 1
-                                }
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                        .padding()
-                    }
-                }
-                .navigationTitle("nav.premium_subscription".localized)
-                .navigationBarTitleDisplayMode(.inline)
-                .alert("premium.purchase_error".localized, isPresented: .constant(premiumViewModel.purchaseError != nil)) {
-                    Button("common.ok".localized) {
-                        premiumViewModel.purchaseError = nil
-                    }
-                } message: {
-                    Text(premiumViewModel.purchaseError ?? "")
-                }
+        .alert("premium.purchase_error".localized, isPresented: .constant(premiumViewModel.purchaseError != nil)) {
+            Button("common.ok".localized) {
+                premiumViewModel.purchaseError = nil
             }
-            .interactiveDismissDisabled()
+        } message: {
+            Text(premiumViewModel.purchaseError ?? "")
         }
         .task {
             // Preload products when onboarding starts
@@ -416,6 +281,18 @@ struct OnboardingView: View {
             
             Spacer(minLength: 5)
             
+            // Legal links - centered between Ad-Free Experience and After trial
+            HStack(spacing: 20) {
+                Link("premium.terms".localized, destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+                    .font(.caption2)
+                    .foregroundColor(.accentColor)
+                
+                Link("premium.privacy".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!)
+                    .font(.caption2)
+                    .foregroundColor(.accentColor)
+            }
+            .padding(.vertical, 8)
+            
             // Price with trial emphasis
             HStack(spacing: 8) {
                 Text("premium.after_trial".localized)
@@ -436,7 +313,7 @@ struct OnboardingView: View {
             Text("onboarding.premium.cancel_anytime".localized)
                 .font(.caption2)
                 .foregroundColor(.secondary)
-                .padding(.bottom, 10)
+                .padding(.bottom, 5)
         }
     }
     
@@ -655,27 +532,50 @@ struct OnboardingView: View {
                 .padding()
             } else {
                 // Step 5 - Premium features screen
-                HStack(spacing: 16) {
-                    Button(action: {
-                        hideKeyboard()
-                        // Skip premium and continue to onboarding
-                        withAnimation {
-                            isInOnboardingPhase = true
-                            currentStep = 1
+                VStack(spacing: 12) {
+                    HStack(spacing: 16) {
+                        Button(action: {
+                            hideKeyboard()
+                            // Skip premium and continue to onboarding
+                            withAnimation {
+                                isInOnboardingPhase = true
+                                currentStep = 1
+                            }
+                        }) {
+                            Text("onboarding.premium_offer.maybe_later".localized)
+                                .foregroundColor(.secondary)
+                                .fontWeight(.medium)
+                                .font(.body)
                         }
-                    }) {
-                        Text("onboarding.premium_offer.maybe_later".localized)
-                            .foregroundColor(.secondary)
-                            .fontWeight(.medium)
-                            .font(.body)
-                    }
-                    
-                    Button(action: {
-                        hideKeyboard()
-                        // Show Apple's subscription sheet
-                        showingSubscriptionSheet = true
-                    }) {
-                        Text("common.continue".localized)
+                        
+                        Button(action: {
+                            hideKeyboard()
+                            // Directly handle purchase
+                            Task {
+                                if let product = premiumViewModel.products.first {
+                                    await premiumViewModel.purchase(product)
+                                    // Check if purchase was successful after a short delay
+                                    try? await Task.sleep(nanoseconds: 500_000_000)
+                                    if premiumViewModel.isPremium {
+                                        withAnimation {
+                                            isInOnboardingPhase = true
+                                            currentStep = 1
+                                        }
+                                    }
+                                } else {
+                                    await premiumViewModel.loadProducts()
+                                }
+                            }
+                        }) {
+                            HStack {
+                                if premiumViewModel.isPurchasing {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Text("common.continue".localized)
+                                }
+                            }
                             .frame(minWidth: 120)
                             .padding(.horizontal, 24)
                             .padding(.vertical, 12)
@@ -683,7 +583,27 @@ struct OnboardingView: View {
                             .foregroundColor(.white)
                             .cornerRadius(10)
                             .fontWeight(.medium)
+                        }
+                        .disabled(premiumViewModel.isPurchasing)
                     }
+                    
+                    // Restore Purchases button
+                    Button(action: {
+                        Task {
+                            await premiumViewModel.restorePurchases()
+                            if premiumViewModel.isPremium {
+                                withAnimation {
+                                    isInOnboardingPhase = true
+                                    currentStep = 1
+                                }
+                            }
+                        }
+                    }) {
+                        Text("premium.restore".localized)
+                            .font(.caption)
+                            .foregroundColor(.accentColor)
+                    }
+                    .disabled(premiumViewModel.isPurchasing)
                 }
                 .padding(.vertical, 8)
                 .padding(.horizontal)

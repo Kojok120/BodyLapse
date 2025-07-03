@@ -139,6 +139,7 @@
 "settings.version" = "v1.0.0";
 "settings.privacy_policy" = "プライバシーポリシー";
 "settings.terms_service" = "利用規約";
+"settings.terms_use" = "利用規約";
 "settings.debug_settings" = "デバッグ設定";
 "settings.notification_required" = "通知許可が必要です";
 "settings.notification_message" = "毎日の写真リマインダーを受信するには、設定で通知を有効にしてください。";

@@ -5,6 +5,8 @@ struct MainTabView: View {
     @State private var videoToPlay: UUID?
     @State private var shouldLaunchCamera = false
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
+    @State private var hasPerformedInitialSync = false
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -53,6 +55,39 @@ struct MainTabView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday"))) { _ in
             selectedTab = 0 // Calendar tab
+        }
+        .onAppear {
+            performInitialHealthKitSync()
+        }
+    }
+    
+    private func performInitialHealthKitSync() {
+        // Only sync if:
+        // 1. We haven't performed initial sync yet
+        // 2. User is premium
+        // 3. HealthKit is enabled
+        guard !hasPerformedInitialSync,
+              subscriptionManager.isPremium,
+              userSettings.settings.healthKitEnabled else {
+            return
+        }
+        
+        hasPerformedInitialSync = true
+        
+        // Check if HealthKit is authorized
+        if HealthKitService.shared.isAuthorized() {
+            // Perform sync in background
+            Task {
+                await MainActor.run {
+                    HealthKitService.shared.syncHealthDataToApp { success, error in
+                        if success {
+                            print("HealthKit data synced on app launch")
+                        } else if let error = error {
+                            print("Failed to sync HealthKit data on launch: \(error.localizedDescription)")
+                        }
+                    }
+                }
+            }
         }
     }
 }

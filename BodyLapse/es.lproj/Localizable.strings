@@ -139,6 +139,7 @@
 "settings.version" = "v1.0.0";
 "settings.privacy_policy" = "Política de Privacidad";
 "settings.terms_service" = "Términos de Servicio";
+"settings.terms_use" = "Términos de Uso";
 "settings.debug_settings" = "Configuración de Depuración";
 "settings.notification_required" = "Se Requiere Permiso de Notificación";
 "settings.notification_message" = "Por favor, habilite las notificaciones en Configuración para recibir recordatorios diarios de fotos.";
@@ -263,7 +264,7 @@
 "premium.feature.reminders_desc" = "Personaliza los horarios de notificación";
 "premium.restore" = "Restaurar Compras";
 "premium.auto_renew" = "Las suscripciones se renovarán automáticamente a menos que se cancelen";
-"premium.terms" = "Términos de Servicio";
+"premium.terms" = "Términos de Uso";
 "premium.privacy" = "Política de Privacidad";
 "premium.purchase_error" = "Error de Compra";
 "premium.per" = "por";
