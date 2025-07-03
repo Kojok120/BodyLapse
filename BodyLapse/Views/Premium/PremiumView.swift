@@ -16,65 +16,61 @@ struct PremiumView: View {
                 )
                 .ignoresSafeArea()
                 
-                VStack(spacing: 20) {
+                VStack(spacing: 12) {
                     // Header with Free Trial Badge
-                    VStack(spacing: 10) {
+                    VStack(spacing: 8) {
                         // Free Trial Badge - PROMINENT
                         HStack {
                             Image(systemName: "gift.fill")
                                 .font(.title2)
                             Text("premium.first_month_free".localized)
-                                .font(.title2.bold())
+                                .font(.title3.bold())
                         }
                         .foregroundColor(.black)
-                        .padding(.horizontal, 25)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
                         .background(
                             Capsule()
                                 .fill(Color.yellow)
                                 .shadow(color: .yellow.opacity(0.5), radius: 10, x: 0, y: 5)
                         )
-                        .scaleEffect(1.05)
-                        .padding(.top, 20)
+                        .padding(.top, 10)
                         
                         Image(systemName: "crown.fill")
-                            .font(.system(size: 50))
+                            .font(.system(size: 40))
                             .foregroundColor(.yellow)
-                            .padding(.top, 5)
                         
+                        // Subscription title (REQUIRED by App Store)
                         Text("premium.title".localized)
-                            .font(.title.bold())
+                            .font(.headline.bold())
                             .foregroundColor(.white)
                         
-                        // Subscription title
-                        if let product = viewModel.products.first {
-                            Text(product.displayName)
-                                .font(.headline)
-                                .foregroundColor(.white.opacity(0.9))
-                                .padding(.top, 2)
-                        }
-                        
-                        // Price display with trial emphasis
-                        HStack(spacing: 8) {
-                            Text("premium.after_trial".localized)
+                        // Subscription length and price (REQUIRED by App Store)
+                        VStack(spacing: 4) {
+                            Text("premium.subscription_length".localized)
                                 .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundColor(.white.opacity(0.9))
                             
-                            if let product = viewModel.products.first {
-                                Text(product.displayPrice + "/" + "date.month".localized)
-                                    .font(.headline.bold())
-                                    .foregroundColor(.white)
-                            } else {
-                                Text("premium.price.fallback".localized)
-                                    .font(.headline.bold())
-                                    .foregroundColor(.white)
+                            HStack(spacing: 6) {
+                                if let product = viewModel.products.first {
+                                    Text(product.displayPrice + "/" + "date.month".localized)
+                                        .font(.title3.bold())
+                                        .foregroundColor(.white)
+                                } else {
+                                    Text("premium.price.fallback".localized)
+                                        .font(.title3.bold())
+                                        .foregroundColor(.white)
+                                }
+                                
+                                Text("(" + "premium.after_trial".localized + ")")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.8))
                             }
                         }
                     }
-                    .padding(.top, 10)
                         
-                    // Features list - compact for no-scroll
-                    VStack(alignment: .leading, spacing: 15) {
+                    // Features list - balanced size
+                    VStack(alignment: .leading, spacing: 10) {
                         CompactPremiumFeatureRowView(
                             icon: "chart.line.uptrend.xyaxis",
                             title: "premium.feature.tracking".localized,
@@ -101,7 +97,7 @@ struct PremiumView: View {
                     }
                     .padding(.horizontal)
                         
-                    Spacer()
+                    Spacer(minLength: 10)
                     
                     // Main Subscribe Button with Free Trial emphasis
                     Button(action: {
@@ -113,7 +109,7 @@ struct PremiumView: View {
                             }
                         }
                     }) {
-                        VStack(spacing: 8) {
+                        VStack(spacing: 6) {
                             if viewModel.isLoadingProducts {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
@@ -127,7 +123,7 @@ struct PremiumView: View {
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .padding(.vertical, 14)
                         .background(
                             LinearGradient(
                                 gradient: Gradient(colors: [Color.yellow, Color.orange]),
@@ -135,7 +131,7 @@ struct PremiumView: View {
                                 endPoint: .trailing
                             )
                         )
-                        .cornerRadius(15)
+                        .cornerRadius(14)
                         .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
                     }
                     .padding(.horizontal)
@@ -143,8 +139,8 @@ struct PremiumView: View {
                     .scaleEffect(viewModel.isPurchasing ? 0.95 : 1.0)
                     .animation(.easeInOut(duration: 0.1), value: viewModel.isPurchasing)
                         
-                    // Bottom links - compact
-                    VStack(spacing: 10) {
+                    // Bottom links - compact but readable
+                    VStack(spacing: 6) {
                         Button(action: {
                             Task {
                                 await viewModel.restorePurchases()
@@ -161,15 +157,17 @@ struct PremiumView: View {
                             .font(.caption2)
                             .foregroundColor(.white.opacity(0.6))
                             .multilineTextAlignment(.center)
+                            .padding(.horizontal)
                         
+                        // Terms and Privacy (REQUIRED by App Store)
                         HStack(spacing: 20) {
                             Link("premium.terms".localized, destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
                             Link("premium.privacy".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!)
                         }
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundColor(.white.opacity(0.8))
                     }
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 10)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -214,29 +212,29 @@ struct CompactPremiumFeatureRowView: View {
     let description: String
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.title3)
+                .font(.body)
                 .foregroundColor(.white)
-                .frame(width: 25)
+                .frame(width: 24)
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(.subheadline.bold())
                     .foregroundColor(.white)
                 
                 Text(description)
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundColor(.white.opacity(0.8))
-                    .lineLimit(2)
+                    .lineLimit(1)
             }
             
             Spacer()
         }
-        .padding(.horizontal, 15)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(Color.white.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(10)
     }
 }
 

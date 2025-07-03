@@ -90,12 +90,12 @@
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Get unlimited access to all premium features including no ads, no watermark on videos, weight tracking, and advanced analytics.",
+              "description" : "Monthly subscription (1 month, auto-renewing) providing full access to all premium features: no ads, no watermark on videos, weight & body fat tracking with charts, up to 4 photo categories, and advanced reminders. First month free for new subscribers.",
               "displayName" : "BodyLapse Premium Monthly",
               "locale" : "en_US"
             },
             {
-              "description" : "広告なし、動画の透かしなし、体重トラッキング、詳細な分析を含むすべてのプレミアム機能への無制限アクセス。",
+              "description" : "月額サブスクリプション（1ヶ月、自動更新）。すべてのプレミアム機能を利用可能：広告なし、動画の透かしなし、体重・体脂肪率トラッキングとチャート、最大4つの写真カテゴリ、高度なリマインダー。新規登録者は初月無料。",
               "displayName" : "BodyLapse プレミアム 月額",
               "locale" : "ja"
             }

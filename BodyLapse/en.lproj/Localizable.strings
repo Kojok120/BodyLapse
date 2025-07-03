@@ -295,6 +295,9 @@
 "premium.after_trial" = "After trial:";
 "premium.start_free_trial" = "Start Free Trial";
 "premium.then_per_month" = "then regular price";
+"premium.subscription_length" = "Monthly Subscription (Auto-renewing)";
+"premium.subscription_details" = "1 month subscription with automatic renewal";
+"premium.includes_all_features" = "Includes all premium features for 1 month:";
 
 /* Weight Input */
 "weight.title" = "Weight Input";

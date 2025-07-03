@@ -295,6 +295,9 @@
 "premium.after_trial" = "Después del período de prueba:";
 "premium.start_free_trial" = "Comenzar Prueba Gratuita";
 "premium.then_per_month" = "luego precio regular";
+"premium.subscription_length" = "Suscripción Mensual (Renovación automática)";
+"premium.subscription_details" = "Suscripción de 1 mes con renovación automática";
+"premium.includes_all_features" = "Incluye todas las funciones premium durante 1 mes:";
 
 /* Weight Input */
 "weight.title" = "Entrada de Peso";

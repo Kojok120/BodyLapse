@@ -295,6 +295,9 @@
 "premium.after_trial" = "무료 체험 후:";
 "premium.start_free_trial" = "무료 체험 시작";
 "premium.then_per_month" = "이후 정상 가격";
+"premium.subscription_length" = "월간 구독 (자동 갱신)";
+"premium.subscription_details" = "1개월 구독 (자동 갱신)";
+"premium.includes_all_features" = "1개월간 모든 프리미엄 기능 포함:";
 
 /* Weight Input */
 "weight.title" = "체중 입력";

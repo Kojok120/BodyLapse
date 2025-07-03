@@ -293,6 +293,9 @@
 "premium.after_trial" = "無料期間後：";
 "premium.start_free_trial" = "無料トライアルを開始";
 "premium.then_per_month" = "その後は通常料金";
+"premium.subscription_length" = "月額サブスクリプション（自動更新）";
+"premium.subscription_details" = "1ヶ月間のサブスクリプション（自動更新）";
+"premium.includes_all_features" = "1ヶ月間すべてのプレミアム機能が利用可能：";
 
 /* Weight Input */
 "weight.title" = "体重入力";
