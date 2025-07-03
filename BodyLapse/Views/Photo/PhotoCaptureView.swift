@@ -32,17 +32,17 @@ struct PhotoCaptureView: View {
                 }
             }
             .navigationBarHidden(true)
-            .alert("Replace Today's Photo?", isPresented: $showingReplaceAlert) {
+            .alert("photo.replace_today_title".localized, isPresented: $showingReplaceAlert) {
                 Button("Cancel", role: .cancel) {
                     pendingPhoto = nil
                 }
-                Button("Replace") {
+                Button("common.replace".localized) {
                     if let image = pendingPhoto {
                         savePhoto(image, isReplacement: true)
                     }
                 }
             } message: {
-                Text("You can only save one photo per day. The existing photo will be replaced.")
+                Text("photo.replace_today_message".localized)
             }
             .sheet(isPresented: $showingWeightInput) {
                 if let photo = capturedPhoto {
@@ -72,7 +72,7 @@ struct PhotoCaptureView: View {
                         Image(systemName: showGuidelines ? "person.fill" : "person")
                             .font(.title2)
                             .foregroundColor(.white)
-                        Text("Guidelines")
+                        Text("photo.guidelines".localized)
                             .font(.caption)
                             .foregroundColor(.white)
                     }
@@ -86,7 +86,7 @@ struct PhotoCaptureView: View {
                         Image(systemName: "camera.rotate")
                             .font(.title2)
                             .foregroundColor(.white)
-                        Text("Switch")
+                        Text("photo.switch_camera".localized)
                             .font(.caption)
                             .foregroundColor(.white)
                     }
@@ -166,11 +166,11 @@ struct PhotoWeightInputView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Add Measurements (Optional)")) {
+                Section(header: Text("photo.add_measurements_optional".localized)) {
                     HStack {
-                        Text("Weight")
+                        Text("calendar.weight".localized)
                         Spacer()
-                        TextField("0.0", text: $weightText)
+                        TextField("photo.enter_value".localized, text: $weightText)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
@@ -179,9 +179,9 @@ struct PhotoWeightInputView: View {
                     }
                     
                     HStack {
-                        Text("Body Fat")
+                        Text("photo.body_fat".localized)
                         Spacer()
-                        TextField("0.0", text: $bodyFatText)
+                        TextField("photo.enter_value".localized, text: $bodyFatText)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
@@ -191,7 +191,7 @@ struct PhotoWeightInputView: View {
                 }
                 
                 Section {
-                    Text("You can always add or update these measurements later from the Calendar view.")
+                    Text("photo.measurements_note".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -207,7 +207,7 @@ struct PhotoWeightInputView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                    Button("common.save".localized) {
                         var weightInKg: Double? = nil
                         if let weight = Double(weightText) {
                             // Convert to kg if user is using lbs

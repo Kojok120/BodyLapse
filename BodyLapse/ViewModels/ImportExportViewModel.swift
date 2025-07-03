@@ -151,23 +151,32 @@ struct ImportOptionsSheet: View {
                     Picker("import.handling_method".localized, selection: $mergeStrategy) {
                         Text("import.skip".localized).tag(ImportExportService.ImportOptions.MergeStrategy.skip)
                         Text("import.replace".localized).tag(ImportExportService.ImportOptions.MergeStrategy.replace)
-                        Text("import.keep_both".localized).tag(ImportExportService.ImportOptions.MergeStrategy.keepBoth)
                     }
                     
-                    switch mergeStrategy {
-                    case .skip:
-                        Text("import.skip_description".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    case .replace:
-                        Text("import.replace_description".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    case .keepBoth:
-                        Text("import.keep_both_description".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 8) {
+                        switch mergeStrategy {
+                        case .skip:
+                            Label("import.skip_description".localized, systemImage: "arrow.right.circle")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text("import_export.help_merge_skip_description".localized)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 28)
+                            
+                        case .replace:
+                            Label("import.replace_description".localized, systemImage: "arrow.triangle.2.circlepath")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                            
+                            Text("import_export.help_merge_replace_description".localized)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 28)
+                        }
                     }
+                    .padding(.vertical, 4)
                 }
             }
             .navigationTitle("import.import_options".localized)

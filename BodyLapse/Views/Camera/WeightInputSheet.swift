@@ -74,7 +74,7 @@ struct WeightInputSheet: View {
                                 .textFieldStyle(.roundedBorder)
                                 .font(.title3)
                             
-                            Text("%")
+                            Text("unit.percent".localized)
                                 .font(.title3)
                                 .foregroundColor(.secondary)
                         }

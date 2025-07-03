@@ -38,7 +38,7 @@ struct PhotoReviewView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                    Button("common.save".localized) {
                         isProcessing = true
                         // Save the photo without delay
                         onSave(image)

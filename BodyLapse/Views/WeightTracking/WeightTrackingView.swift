@@ -27,17 +27,17 @@ struct WeightTrackingView: View {
                         .font(.system(size: 80))
                         .foregroundColor(.gray.opacity(0.3))
                     
-                    Text("No Weight Data Yet")
+                    Text(NSLocalizedString("weight.no_data_yet", comment: "No weight data message"))
                         .font(.title2)
                         .fontWeight(.semibold)
                     
-                    Text("Start tracking your weight to see your progress over time")
+                    Text(NSLocalizedString("weight.start_tracking_message", comment: "Start tracking message"))
                         .multilineTextAlignment(.center)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 40)
                     
                     Button(action: { showingAddEntry = true }) {
-                        Label("Add First Entry", systemImage: "plus.circle.fill")
+                        Label(NSLocalizedString("weight.add_first_entry", comment: "Add first entry button"), systemImage: "plus.circle.fill")
                             .font(.headline)
                             .foregroundColor(.white)
                             .padding(.horizontal, 20)
@@ -272,7 +272,7 @@ struct RecentEntriesView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            Text("Recent Entries")
+            Text(NSLocalizedString("weight.recent_entries", comment: "Recent entries header"))
                 .font(.headline)
             
             ForEach(viewModel.recentEntries.prefix(5)) { entry in
@@ -342,7 +342,7 @@ struct AddWeightEntryView: View {
             Form {
                 Section("Weight") {
                     HStack {
-                        TextField("Weight", text: $weight)
+                        TextField(NSLocalizedString("weight.weight", comment: "Weight placeholder"), text: $weight)
                             .keyboardType(.decimalPad)
                         Text(viewModel.weightUnit.symbol)
                             .foregroundColor(.secondary)
@@ -351,7 +351,7 @@ struct AddWeightEntryView: View {
                 
                 Section("Body Fat (Optional)") {
                     HStack {
-                        TextField("Body Fat", text: $bodyFat)
+                        TextField(NSLocalizedString("weight.body_fat", comment: "Body fat placeholder"), text: $bodyFat)
                             .keyboardType(.decimalPad)
                         Text("%")
                             .foregroundColor(.secondary)
@@ -372,14 +372,14 @@ struct AddWeightEntryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button(NSLocalizedString("common.cancel", comment: "Cancel button")) {
                         dismiss()
                         onDismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                    Button(NSLocalizedString("common.save", comment: "Save button")) {
                         saveEntry()
                     }
                     .disabled(weight.isEmpty)

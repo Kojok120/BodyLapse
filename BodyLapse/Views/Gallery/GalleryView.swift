@@ -50,7 +50,7 @@ struct GalleryView: View {
                         .animation(.spring(), value: viewModel.isSelectionMode)
                 }
             }
-            .navigationTitle(viewModel.isSelectionMode ? "\(viewModel.selectionCount) selected" : "gallery.title".localized)
+            .navigationTitle(viewModel.isSelectionMode ? String(format: "gallery.items_selected".localized, viewModel.selectionCount) : "gallery.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if viewModel.isSelectionMode {
@@ -61,7 +61,7 @@ struct GalleryView: View {
                     }
                     
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(viewModel.hasSelection ? "Deselect All" : "Select All") {
+                        Button(viewModel.hasSelection ? "gallery.deselect_all".localized : "gallery.select_all".localized) {
                             if viewModel.hasSelection {
                                 viewModel.clearSelection()
                             } else {
@@ -96,13 +96,13 @@ struct GalleryView: View {
             } message: {
                 Text("gallery.delete_confirm".localized)
             }
-            .alert("Delete \(viewModel.selectionCount) items?", isPresented: $showingBulkDeleteAlert) {
+            .alert(String(format: "gallery.delete_items_count".localized, viewModel.selectionCount), isPresented: $showingBulkDeleteAlert) {
                 Button("common.delete".localized, role: .destructive) {
                     bulkDelete()
                 }
                 Button("common.cancel".localized, role: .cancel) { }
             } message: {
-                Text("This action cannot be undone.")
+                Text("gallery.action_cannot_be_undone".localized)
             }
             .overlay(alignment: .top) {
                 if showingSaveSuccess {
@@ -158,7 +158,7 @@ struct GalleryView: View {
                 if viewModel.photos.isEmpty {
                     emptyStateView(message: "gallery.no_photos".localized, icon: "photo")
                 } else if viewModel.filteredPhotos.isEmpty {
-                    emptyStateView(message: "フィルター条件に一致する写真がありません", icon: "photo.on.rectangle.angled")
+                    emptyStateView(message: "gallery.no_photos_matching_filter".localized, icon: "photo.on.rectangle.angled")
                 } else {
                     LazyVStack(pinnedViews: .sectionHeaders) {
                         ForEach(viewModel.photosGroupedByMonth(), id: \.0) { month, photos in
@@ -378,7 +378,7 @@ struct GalleryView: View {
                     HStack(spacing: 6) {
                         Image(systemName: viewModel.sortOrder == .newest ? "arrow.down" : "arrow.up")
                             .font(.system(size: 12))
-                        Text(viewModel.sortOrder == .newest ? "Newest" : "Oldest")
+                        Text(viewModel.sortOrder == .newest ? "gallery.newest".localized : "gallery.oldest".localized)
                             .font(.system(size: 14, weight: .medium))
                     }
                     .foregroundColor(.primary)
@@ -447,7 +447,7 @@ struct GalleryView: View {
                     HStack(spacing: 6) {
                         Image(systemName: viewModel.isSelectionMode ? "xmark" : "checkmark.circle")
                             .font(.system(size: 14))
-                        Text(viewModel.isSelectionMode ? "Cancel" : "Select")
+                        Text(viewModel.isSelectionMode ? "common.cancel".localized : "gallery.select".localized)
                             .font(.system(size: 14, weight: .medium))
                     }
                     .foregroundColor(viewModel.isSelectionMode ? .white : .primary)
@@ -470,7 +470,7 @@ struct GalleryView: View {
                     HStack(spacing: 8) {
                         // "All" chip
                         CategoryChip(
-                            title: "All",
+                            title: "gallery.all".localized,
                             isSelected: viewModel.selectedCategories.isEmpty,
                             action: {
                                 let impactFeedback = UIImpactFeedbackGenerator(style: .light)
@@ -541,7 +541,7 @@ struct GalleryView: View {
                 VStack(spacing: 4) {
                     Image(systemName: "square.and.arrow.down")
                         .font(.title2)
-                    Text("Save")
+                    Text("common.save".localized)
                         .font(.caption)
                 }
                 .frame(maxWidth: .infinity)
@@ -593,13 +593,13 @@ struct GalleryView: View {
         if viewModel.selectedSection == .photos {
             viewModel.bulkSavePhotosToLibrary { success, error in
                 if success {
-                    showSaveSuccess(message: "\(viewModel.selectedPhotoIds.count) photos saved")
+                    showSaveSuccess(message: String(format: "gallery.photos_saved_count".localized, viewModel.selectedPhotoIds.count))
                 }
             }
         } else {
             viewModel.bulkSaveVideosToLibrary { success, error in
                 if success {
-                    showSaveSuccess(message: "\(viewModel.selectedVideoIds.count) videos saved")
+                    showSaveSuccess(message: String(format: "gallery.videos_saved_count".localized, viewModel.selectedVideoIds.count))
                 }
             }
         }
@@ -761,7 +761,7 @@ struct PhotoGridItem: View {
                         impactFeedback.impactOccurred()
                     }
                 } label: {
-                    Label("Copy", systemImage: "doc.on.doc")
+                    Label("common.copy".localized, systemImage: "doc.on.doc")
                 }
                 
                 Button {
@@ -910,7 +910,7 @@ struct VideoGridItem: View {
                 Button {
                     onTap()
                 } label: {
-                    Label("Play", systemImage: "play.circle")
+                    Label("gallery.play".localized, systemImage: "play.circle")
                 }
                 
                 Button {
@@ -1127,18 +1127,18 @@ struct DatePickerView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Select Dates")
+            .navigationTitle("gallery.select_dates".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Clear All") {
+                    Button("gallery.clear_all".localized) {
                         viewModel.selectedDates.removeAll()
                     }
                     .disabled(viewModel.selectedDates.isEmpty)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("common.done".localized) {
                         dismiss()
                     }
                     .fontWeight(.semibold)

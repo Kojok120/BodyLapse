@@ -118,7 +118,7 @@ struct InteractiveWeightChartView: View {
                                     Text("chart.body_fat".localized)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                    Text("\(bodyFat, specifier: "%.1f")%")
+                                    Text(String(format: "weight.percentage_format".localized, bodyFat))
                                         .font(.body)
                                         .foregroundColor(.orange)
                                         .lineLimit(1)
@@ -313,7 +313,7 @@ struct InteractiveWeightChartView: View {
                             let fraction = Double(3 - index) / 3.0
                             let value = bodyFatRange.lowerBound + (bodyFatRange.upperBound - bodyFatRange.lowerBound) * fraction
                             
-                            Text("\(value, specifier: "%.1f")%")
+                            Text(String(format: "weight.percentage_format".localized, value))
                                 .font(.caption2)
                                 .foregroundColor(.orange)
                                 .frame(maxHeight: .infinity, alignment: index == 0 ? .top : (index == 3 ? .bottom : .center))

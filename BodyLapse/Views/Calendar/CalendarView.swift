@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import Photos
+import PhotosUI
 
 struct CalendarView: View {
     @StateObject private var viewModel = CalendarViewModel()
@@ -33,6 +34,9 @@ struct CalendarView: View {
     @State private var saveSuccessMessage = ""
     @State private var showingAddCategory = false
     @State private var newCategoryToSetup: PhotoCategory?
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    @State private var isImportingPhoto = false
+    @State private var importCategoryId: String?
     
     enum TimePeriod: String, CaseIterable {
         case week = "7 Days"
@@ -242,28 +246,7 @@ struct CalendarView: View {
         // Update current photo and category information
         updateCurrentPhoto()
         
-        // If premium user with multiple categories, ensure categories are refreshed
-        if subscriptionManager.isPremium {
-            // Get all photos for today to check available categories
-            let todayPhotos = viewModel.allPhotosForDate(today)
-            if !todayPhotos.isEmpty {
-                // Update photosForSelectedDate immediately
-                photosForSelectedDate = todayPhotos
-                
-                // Get categories for these photos
-                let photoCategories = todayPhotos.map { $0.categoryId }
-                categoriesForSelectedDate = viewModel.availableCategories.filter { category in
-                    photoCategories.contains(category.id)
-                }
-                
-                // Select the first available category with a photo
-                if let firstCategory = categoriesForSelectedDate.first {
-                    currentCategoryIndex = 0
-                    currentPhoto = todayPhotos.first { $0.categoryId == firstCategory.id }
-                    viewModel.selectCategory(firstCategory)
-                }
-            }
-        }
+        // The updateCurrentPhoto call above should have already handled category updates correctly
     }
     
     private func handleChartDateChange(_ newDate: Date?) {
@@ -653,6 +636,29 @@ struct CalendarView: View {
                         Text("calendar.no_photo".localized)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+                        
+                        PhotosPicker(
+                            selection: $selectedPhotoItems,
+                            maxSelectionCount: 1,
+                            matching: .images
+                        ) {
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("calendar.upload_photo".localized)
+                            }
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.bodyLapseTurquoise)
+                            .cornerRadius(20)
+                        }
+                        .onChange(of: selectedPhotoItems) { _, items in
+                            if !items.isEmpty {
+                                importCategoryId = viewModel.selectedCategory.id
+                                handlePhotoImport()
+                            }
+                        }
                     }
                     .frame(width: geometry.size.width, height: geometry.size.height)
                 }
@@ -674,7 +680,7 @@ struct CalendarView: View {
                                         Button {
                                             copyPhoto(photo)
                                         } label: {
-                                            Label("Copy", systemImage: "doc.on.doc")
+                                            Label("common.copy".localized, systemImage: "doc.on.doc")
                                         }
                                         
                                         Button {
@@ -707,6 +713,29 @@ struct CalendarView: View {
                                     Text("calendar.no_photo".localized)
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
+                                    
+                                    PhotosPicker(
+                                        selection: $selectedPhotoItems,
+                                        maxSelectionCount: 1,
+                                        matching: .images
+                                    ) {
+                                        HStack {
+                                            Image(systemName: "square.and.arrow.up")
+                                            Text("calendar.upload_photo".localized)
+                                        }
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(Color.bodyLapseTurquoise)
+                                        .cornerRadius(20)
+                                    }
+                                    .onChange(of: selectedPhotoItems) { _, items in
+                                        if !items.isEmpty {
+                                            importCategoryId = categoriesForSelectedDate[index].id
+                                            handlePhotoImport()
+                                        }
+                                    }
                                 }
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                                 .tag(index)
@@ -741,7 +770,7 @@ struct CalendarView: View {
                                 Button {
                                     copyPhoto(photo)
                                 } label: {
-                                    Label("Copy", systemImage: "doc.on.doc")
+                                    Label("common.copy".localized, systemImage: "doc.on.doc")
                                 }
                                 
                                 Button {
@@ -774,6 +803,29 @@ struct CalendarView: View {
                             Text("calendar.no_photo".localized)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
+                            
+                            PhotosPicker(
+                                selection: $selectedPhotoItems,
+                                maxSelectionCount: 1,
+                                matching: .images
+                            ) {
+                                HStack {
+                                    Image(systemName: "square.and.arrow.up")
+                                    Text("calendar.upload_photo".localized)
+                                }
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.bodyLapseTurquoise)
+                                .cornerRadius(20)
+                            }
+                            .onChange(of: selectedPhotoItems) { _, items in
+                                if !items.isEmpty {
+                                    importCategoryId = viewModel.selectedCategory.id
+                                    handlePhotoImport()
+                                }
+                            }
                         }
                         .frame(width: geometry.size.width, height: geometry.size.height)
                     }
@@ -950,30 +1002,36 @@ struct CalendarView: View {
         // Get all photos for selected date
         photosForSelectedDate = viewModel.allPhotosForDate(selectedDate)
         
-        // Keep the selected category consistent
-        if !photosForSelectedDate.isEmpty {
-            // Get categories for these photos
-            let photoCategories = photosForSelectedDate.map { $0.categoryId }
-            categoriesForSelectedDate = viewModel.availableCategories.filter { category in
-                photoCategories.contains(category.id)
-            }
+        // For premium users with multiple categories, show all available categories
+        if subscriptionManager.isPremium && viewModel.availableCategories.count > 1 {
+            // Show all available categories regardless of whether they have photos
+            categoriesForSelectedDate = viewModel.availableCategories
             
             // Find the index of the currently selected category
             if let index = categoriesForSelectedDate.firstIndex(where: { $0.id == viewModel.selectedCategory.id }) {
                 currentCategoryIndex = index
-                currentPhoto = photosForSelectedDate.first { $0.categoryId == categoriesForSelectedDate[index].id }
+                // Find photo for the current category (might be nil)
+                currentPhoto = photosForSelectedDate.first { $0.categoryId == viewModel.selectedCategory.id }
             } else {
-                // Current category has no photo, but don't switch categories automatically
-                // Keep the same category selection but show no photo
-                currentPhoto = nil
-                // Keep categoriesForSelectedDate with available photos for swiping
+                // Fallback to first category if current selection is invalid
+                currentCategoryIndex = 0
+                if !categoriesForSelectedDate.isEmpty {
+                    let firstCategory = categoriesForSelectedDate[0]
+                    viewModel.selectCategory(firstCategory)
+                    currentPhoto = photosForSelectedDate.first { $0.categoryId == firstCategory.id }
+                }
             }
         } else {
-            // No photos for this date - keep showing placeholder
-            currentPhoto = nil
-            // Don't reset categoriesForSelectedDate or currentCategoryIndex
-            // This preserves the user's category selection
-            categoriesForSelectedDate = []
+            // Single category or free user
+            if !photosForSelectedDate.isEmpty {
+                categoriesForSelectedDate = [viewModel.selectedCategory]
+                currentCategoryIndex = 0
+                currentPhoto = photosForSelectedDate.first { $0.categoryId == viewModel.selectedCategory.id }
+            } else {
+                // No photos at all
+                categoriesForSelectedDate = []
+                currentPhoto = nil
+            }
         }
         
         currentMemo = viewModel.note(for: selectedDate)?.content ?? ""
@@ -983,10 +1041,12 @@ struct CalendarView: View {
         guard index >= 0 && index < categoriesForSelectedDate.count else { return }
         
         let category = categoriesForSelectedDate[index]
-        currentPhoto = photosForSelectedDate.first { $0.categoryId == category.id }
         
-        // Update selected category in viewModel
+        // Update selected category in viewModel first
         viewModel.selectCategory(category)
+        
+        // Find photo for this category (might be nil if no photo exists)
+        currentPhoto = photosForSelectedDate.first { $0.categoryId == category.id }
         
         // Update weight input if premium
         if subscriptionManager.isPremium {
@@ -1152,6 +1212,61 @@ struct CalendarView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 withAnimation {
                     showingSaveSuccess = false
+                }
+            }
+        }
+    }
+    
+    private func handlePhotoImport() {
+        guard let item = selectedPhotoItems.first,
+              let categoryId = importCategoryId else { return }
+        
+        isImportingPhoto = true
+        
+        Task {
+            do {
+                // Load the image data
+                guard let data = try await item.loadTransferable(type: Data.self),
+                      let image = UIImage(data: data) else {
+                    throw NSError(domain: "PhotoImport", code: 1, userInfo: [NSLocalizedDescriptionKey: "calendar.invalid_image".localized])
+                }
+                
+                // Check if photo already exists for this date and category
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "yyyy-MM-dd"
+                let dateString = dateFormatter.string(from: selectedDate)
+                if PhotoStorageService.shared.photoExists(for: dateString, categoryId: categoryId) {
+                    throw NSError(domain: "PhotoImport", code: 2, userInfo: [NSLocalizedDescriptionKey: "calendar.photo_already_exists".localized])
+                }
+                
+                // Save the photo
+                let photo = try PhotoStorageService.shared.savePhoto(
+                    image,
+                    captureDate: selectedDate,
+                    categoryId: categoryId,
+                    weight: nil,
+                    bodyFatPercentage: nil
+                )
+                
+                await MainActor.run {
+                    // Reload photos and update view
+                    viewModel.loadPhotos()
+                    viewModel.loadCategories()
+                    updateCurrentPhoto()
+                    
+                    // Clear selection
+                    selectedPhotoItems = []
+                    isImportingPhoto = false
+                    
+                    // Show success message
+                    showSaveSuccess(message: "calendar.photo_imported".localized)
+                }
+            } catch {
+                await MainActor.run {
+                    isImportingPhoto = false
+                    selectedPhotoItems = []
+                    videoAlertMessage = error.localizedDescription
+                    showingVideoAlert = true
                 }
             }
         }

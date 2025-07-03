@@ -15,13 +15,13 @@ struct ContourConfirmationView: View {
             
             VStack {
                 // Title
-                Text("Confirm Body Outline")
+                Text(NSLocalizedString("contour.confirm_title", comment: "Confirm body outline title"))
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                     .padding(.top, 50)
                 
-                Text("Is the green outline correctly following your body?")
+                Text(NSLocalizedString("contour.confirm_question", comment: "Confirm outline question"))
                     .font(.body)
                     .foregroundColor(.white.opacity(0.8))
                     .multilineTextAlignment(.center)

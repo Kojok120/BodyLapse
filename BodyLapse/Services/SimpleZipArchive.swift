@@ -5,6 +5,34 @@ import Foundation
 // native ZIP support without external libraries
 class SimpleZipArchive {
     
+    // Helper methods for safe binary reading
+    private static func readUInt16(from data: Data, at offset: Int) -> UInt16? {
+        guard offset + 2 <= data.count else { return nil }
+        var value: UInt16 = 0
+        for i in 0..<2 {
+            value |= UInt16(data[offset + i]) << (i * 8)
+        }
+        return value
+    }
+    
+    private static func readUInt32(from data: Data, at offset: Int) -> UInt32? {
+        guard offset + 4 <= data.count else { return nil }
+        var value: UInt32 = 0
+        for i in 0..<4 {
+            value |= UInt32(data[offset + i]) << (i * 8)
+        }
+        return value
+    }
+    
+    private static func readUInt64(from data: Data, at offset: Int) -> UInt64? {
+        guard offset + 8 <= data.count else { return nil }
+        var value: UInt64 = 0
+        for i in 0..<8 {
+            value |= UInt64(data[offset + i]) << (i * 8)
+        }
+        return value
+    }
+    
     static func createZipFile(
         atPath zipPath: String,
         withContentsOfDirectory directory: String,
@@ -23,8 +51,8 @@ class SimpleZipArchive {
             
             // Magic number and version
             archiveData.append("BODY".data(using: .utf8)!) // Magic number
-            var version: UInt16 = 1
-            archiveData.append(Data(bytes: &version, count: 2))
+            let version: UInt16 = 1
+            archiveData.append(contentsOf: withUnsafeBytes(of: version.littleEndian) { Array($0) })
             
             // Gather all files
             var files: [(path: String, data: Data)] = []
@@ -41,19 +69,21 @@ class SimpleZipArchive {
             }
             
             // Write file count
-            var fileCount = UInt32(files.count)
-            archiveData.append(Data(bytes: &fileCount, count: 4))
+            let fileCount = UInt32(files.count)
+            archiveData.append(contentsOf: withUnsafeBytes(of: fileCount.littleEndian) { Array($0) })
             
             // Write each file
             for file in files {
                 // Path length and path
-                var pathLength = UInt32(file.path.count)
-                archiveData.append(Data(bytes: &pathLength, count: 4))
-                archiveData.append(file.path.data(using: .utf8)!)
+                let pathLength = UInt32(file.path.count)
+                archiveData.append(contentsOf: withUnsafeBytes(of: pathLength.littleEndian) { Array($0) })
+                if let pathData = file.path.data(using: .utf8) {
+                    archiveData.append(pathData)
+                }
                 
                 // Data length and data
-                var dataLength = UInt64(file.data.count)
-                archiveData.append(Data(bytes: &dataLength, count: 8))
+                let dataLength = UInt64(file.data.count)
+                archiveData.append(contentsOf: withUnsafeBytes(of: dataLength.littleEndian) { Array($0) })
                 archiveData.append(file.data)
             }
             
@@ -75,38 +105,52 @@ class SimpleZipArchive {
             let zipURL = URL(fileURLWithPath: zipPath)
             let destinationURL = URL(fileURLWithPath: destination)
             
+            print("[SimpleZipArchive] Starting extraction from: \(zipPath)")
+            
             // Read archive data
             let archiveData = try Data(contentsOf: zipURL)
+            print("[SimpleZipArchive] Archive size: \(archiveData.count) bytes")
             var offset = 0
             
             // Check magic number
-            guard offset + 4 <= archiveData.count else { return false }
+            print("[SimpleZipArchive] Checking magic number...")
+            guard offset + 4 <= archiveData.count else { 
+                print("[SimpleZipArchive] Not enough data for magic number")
+                return false 
+            }
             let magicData = archiveData.subdata(in: offset..<offset+4)
-            guard String(data: magicData, encoding: .utf8) == "BODY" else { return false }
+            guard String(data: magicData, encoding: .utf8) == "BODY" else { 
+                print("[SimpleZipArchive] Invalid magic number")
+                return false 
+            }
             offset += 4
             
             // Read version
-            guard offset + 2 <= archiveData.count else { return false }
-            let version = archiveData.withUnsafeBytes { bytes in
-                bytes.load(fromByteOffset: offset, as: UInt16.self)
+            print("[SimpleZipArchive] Reading version...")
+            guard let version = readUInt16(from: archiveData, at: offset) else { 
+                print("[SimpleZipArchive] Failed to read version")
+                return false 
             }
-            guard version == 1 else { return false }
+            guard version == 1 else { 
+                print("[SimpleZipArchive] Unsupported version: \(version)")
+                return false 
+            }
             offset += 2
             
             // Read file count
-            guard offset + 4 <= archiveData.count else { return false }
-            let fileCount = archiveData.withUnsafeBytes { bytes in
-                bytes.load(fromByteOffset: offset, as: UInt32.self)
+            print("[SimpleZipArchive] Reading file count...")
+            guard let fileCount = readUInt32(from: archiveData, at: offset) else { 
+                print("[SimpleZipArchive] Failed to read file count")
+                return false 
             }
+            print("[SimpleZipArchive] File count: \(fileCount)")
             offset += 4
             
             // Read each file
-            for _ in 0..<fileCount {
+            for i in 0..<fileCount {
+                print("[SimpleZipArchive] Processing file \(i+1)/\(fileCount)...")
                 // Read path length
-                guard offset + 4 <= archiveData.count else { break }
-                let pathLength = archiveData.withUnsafeBytes { bytes in
-                    bytes.load(fromByteOffset: offset, as: UInt32.self)
-                }
+                guard let pathLength = readUInt32(from: archiveData, at: offset) else { break }
                 offset += 4
                 
                 // Read path
@@ -116,10 +160,7 @@ class SimpleZipArchive {
                 offset += Int(pathLength)
                 
                 // Read data length
-                guard offset + 8 <= archiveData.count else { break }
-                let dataLength = archiveData.withUnsafeBytes { bytes in
-                    bytes.load(fromByteOffset: offset, as: UInt64.self)
-                }
+                guard let dataLength = readUInt64(from: archiveData, at: offset) else { break }
                 offset += 8
                 
                 // Read file data

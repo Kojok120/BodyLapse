@@ -30,6 +30,7 @@
 "common.processing" = "처리 중...";
 "common.replace" = "교체";
 "common.retake" = "다시 찍기";
+"common.copy" = "복사";
 "common.use_photo" = "사진 사용";
 "common.save_photo" = "사진 저장";
 "common.enable" = "활성화";
@@ -82,6 +83,10 @@
 "calendar.add_weight_hint" = "사진 저장 시 체중 데이터 추가";
 "calendar.reload_data" = "데이터 새로고침";
 "calendar.add_memo" = "메모 추가";
+"calendar.upload_photo" = "사진 업로드";
+"calendar.invalid_image" = "잘못된 이미지 형식";
+"calendar.photo_already_exists" = "이 날짜와 카테고리에 이미 사진이 있습니다";
+"calendar.photo_imported" = "사진을 성공적으로 가져왔습니다";
 
 /* Camera View */
 "camera.access_required" = "카메라 접근 권한 필요";
@@ -107,6 +112,21 @@
 "gallery.photo_saved" = "사진이 라이브러리에 저장되었습니다";
 "gallery.video_saved" = "비디오가 라이브러리에 저장되었습니다";
 "gallery.photos_count" = "장";
+"gallery.action_cannot_be_undone" = "이 작업은 되돌릴 수 없습니다.";
+"gallery.play" = "재생";
+"gallery.select_dates" = "날짜 선택";
+"gallery.clear_all" = "모두 지우기";
+"gallery.deselect_all" = "모두 선택 해제";
+"gallery.select_all" = "모두 선택";
+"gallery.select" = "선택";
+"gallery.no_photos_matching_filter" = "필터 조건에 맞는 사진이 없습니다";
+"gallery.newest" = "최신순";
+"gallery.oldest" = "오래된순";
+"gallery.all" = "모두";
+"gallery.items_selected" = "%d개 선택됨";
+"gallery.delete_items_count" = "%d개 항목을 삭제하시겠습니까?";
+"gallery.photos_saved_count" = "%d장의 사진이 저장되었습니다";
+"gallery.videos_saved_count" = "%d개의 비디오가 저장되었습니다";
 
 /* Settings View */
 "settings.title" = "설정";
@@ -222,7 +242,7 @@
 "onboarding.passcode_mismatch" = "암호가 일치하지 않습니다";
 
 /* Onboarding Premium Features */
-"onboarding.premium.title" = "프리미엄 기능 잠금 해제";
+"onboarding.premium.title" = "BodyLapse Premium\n프리미엄 기능 잠금 해제";
 "onboarding.premium.subtitle" = "독점 도구로 피트니스 여정을 한 단계 업그레이드하세요";
 "onboarding.premium.metrics.title" = "측정값 추적";
 "onboarding.premium.metrics.description" = "상세한 차트로 체중과 체지방률 모니터링";
@@ -282,6 +302,10 @@
 "weight.body_fat" = "체지방률";
 "weight.enter_weight" = "체중 입력";
 "weight.enter_body_fat" = "체지방률 입력";
+"weight.no_data_yet" = "아직 체중 데이터가 없습니다";
+"weight.start_tracking_message" = "체중을 추적하여 시간 경과에 따른 진행 상황을 확인하세요";
+"weight.add_first_entry" = "첫 번째 항목 추가";
+"weight.recent_entries" = "최근 기록";
 
 /* Date and Time */
 "date.today" = "오늘";
@@ -510,9 +534,116 @@
 /* Confirmation View */
 "confirm.retake" = "다시 찍기";
 "confirm.confirm" = "확인";
+"contour.confirm_title" = "체형 윤곽 확인";
+"contour.confirm_question" = "녹색 윤곽선이 몸을 올바르게 따라가고 있습니까?";
 
 /* Timer */
 "timer.off" = "끄기";
 "timer.3s" = "3초";
 "timer.5s" = "5초";
 "timer.10s" = "10초";
+
+/* Import/Export Enhancements */
+"import_export.learn_more" = "자세히 보기";
+"import_export.show_less" = "간단히 보기";
+"import_export.import_detailed_guide" = "BodyLapse에서 만든 백업 파일에서 데이터를 가져옵니다. 가져올 데이터와 중복 처리 방법을 선택할 수 있습니다.";
+"import_export.merge_skip_detail" = "건너뛰기: 기존 데이터를 유지하고 새 항목만 추가";
+"import_export.merge_replace_detail" = "교체: 기존 데이터를 가져온 데이터로 덮어쓰기";
+"import_export.merge_keep_both_detail" = "둘 다 유지: 두 버전 모두 저장 (이름 변경)";
+"import_export.export_detailed_guide" = "BodyLapse 데이터의 백업을 만듭니다. 특정 데이터 유형과 날짜 범위를 선택하여 내보낼 수 있습니다.";
+"import_export.export_includes" = "내보내기에는 선택한 모든 데이터가 안전한 형식으로 포함됩니다";
+"import_export.export_format" = ".bodylapse 파일은 압축된 아카이브입니다";
+"import_export.export_privacy" = "공유하지 않는 한 데이터는 기기를 벗어나지 않습니다";
+
+/* Individual Photo Import */
+"import_export.import_single_photo" = "라이브러리에서 사진 가져오기";
+"import_export.import_single_photo_description" = "사진 라이브러리에서 사진 추가";
+"import_export.how_to_import_photos" = "사진 가져오는 방법";
+"import_export.photo_import_instruction1" = "라이브러리에서 사진 선택";
+"import_export.photo_import_instruction2" = "사진의 날짜 선택";
+"import_export.photo_import_instruction3" = "선택적으로 체중 데이터 추가";
+"import_export.select_photo" = "사진 선택";
+"import_export.photo_selected" = "사진 선택됨";
+"import_export.photo_date" = "사진 날짜";
+"import_export.category" = "카테고리";
+"import_export.photo_details" = "사진 상세정보";
+"import_export.weight_data_optional" = "체중 데이터는 선택사항이며 프리미엄 사용자만 사용 가능합니다";
+"import_export.import_photo" = "사진 가져오기";
+"import_export.import_success" = "가져오기 성공";
+"import_export.photo_imported_successfully" = "사진을 성공적으로 가져왔습니다!";
+"import_export.invalid_image" = "잘못된 이미지 형식";
+"import_export.photo_already_exists" = "이 날짜와 카테고리에 이미 사진이 있습니다";
+
+/* Import/Export Help */
+"import_export.help_title" = "가져오기/내보내기 도움말";
+"import_export.help_overview_title" = "개요";
+"import_export.help_overview_description" = "가져오기/내보내기를 사용하여 진행 상황을 백업하고, 기기 간에 데이터를 전송하거나 이전 백업에서 복원할 수 있습니다.";
+"import_export.help_export_title" = "데이터 내보내기";
+"import_export.help_import_title" = "데이터 가져오기";
+"import_export.help_faq_title" = "자주 묻는 질문";
+"import_export.help_tips_title" = "팁 및 모범 사례";
+
+/* Export Help Details */
+"import_export.help_export_what" = "내보내는 항목:";
+"import_export.help_export_item_photos" = "메타데이터가 포함된 진행 사진";
+"import_export.help_export_item_videos" = "생성된 타임랩스 비디오";
+"import_export.help_export_item_weight" = "체중 및 체지방 데이터";
+"import_export.help_export_item_notes" = "일일 메모";
+"import_export.help_export_item_categories" = "사용자 정의 카테고리";
+"import_export.help_export_item_settings" = "앱 설정 및 환경설정";
+"import_export.help_export_options" = "내보내기 옵션:";
+"import_export.help_export_options_description" = "내보내기에 포함할 특정 데이터 유형, 날짜 범위 및 카테고리를 선택하세요.";
+"import_export.help_export_format" = "파일 형식:";
+"import_export.help_export_format_description" = "내보내기는 선택한 모든 데이터가 포함된 압축 아카이브인 .bodylapse 파일을 생성합니다.";
+
+/* Import Help Details */
+"import_export.help_import_types" = "가져오기 유형:";
+"import_export.help_import_backup" = "전체 백업 가져오기";
+"import_export.help_import_backup_description" = "모든 데이터가 포함된 전체 .bodylapse 백업 파일 가져오기";
+"import_export.help_import_photo" = "개별 사진 가져오기";
+"import_export.help_import_photo_description" = "특정 날짜에 대한 사진 라이브러리에서 개별 사진 가져오기";
+"import_export.help_merge_strategies" = "병합 전략:";
+"import_export.help_merge_skip" = "기존 항목 건너뛰기";
+"import_export.help_merge_skip_description" = "현재 데이터를 모두 보존합니다. 가져오기에서 새 항목만 추가됩니다. 확실하지 않은 경우 안전한 옵션입니다.";
+"import_export.help_merge_replace" = "기존 항목 교체";
+"import_export.help_merge_replace_description" = "충돌이 발생하면 현재 데이터를 가져온 데이터로 덮어씁니다. 주의해서 사용하세요.";
+"import_export.help_merge_keep_both" = "두 버전 모두 유지";
+"import_export.help_merge_keep_both_description" = "가져온 항목의 이름을 변경하여 두 버전을 모두 저장합니다. 이전 데이터와 새 데이터를 비교하는 데 좋습니다.";
+
+/* FAQ */
+"import_export.help_faq_q1" = "카메라 롤에서 사진을 가져올 수 있나요?";
+"import_export.help_faq_a1" = "네! '라이브러리에서 사진 가져오기'를 사용하여 특정 날짜에 대한 개별 사진을 추가하세요.";
+"import_export.help_faq_q2" = "가져오기 중에 기존 데이터는 어떻게 되나요?";
+"import_export.help_faq_a2" = "병합 전략에 따라 다릅니다. '건너뛰기'는 기존 데이터를 보존하고 새 항목만 추가합니다. '교체'는 기존 데이터를 가져온 데이터로 덮어씁니다.";
+"import_export.help_faq_q3" = "다른 기기와 백업을 공유할 수 있나요?";
+"import_export.help_faq_a3" = "네, 내보낸 후 AirDrop, 이메일 또는 클라우드 저장소를 통해 .bodylapse 파일을 공유할 수 있습니다.";
+"import_export.help_faq_q4" = "백업 파일은 얼마나 큰가요?";
+"import_export.help_faq_a4" = "파일 크기는 사진과 비디오 수에 따라 다릅니다. 앱은 크기를 최소화하기 위해 데이터를 압축합니다.";
+"import_export.help_faq_q5" = "내보낸 파일을 가져올 수 없는 이유는 무엇인가요?";
+"import_export.help_faq_a5" = "권한 오류가 표시되면 파일이 완전히 다운로드되었는지 확인하세요(iCloud에 있지 않은지). 파일 앱에서 파일을 길게 누르고 필요한 경우 '다운로드'를 선택하세요.";
+
+/* Tips */
+"import_export.help_tip1" = "진행 상황의 백업을 만들기 위해 정기적으로 내보내기";
+"import_export.help_tip2" = "날짜 범위를 사용하여 더 작고 집중된 내보내기 만들기";
+"import_export.help_tip3" = "변경 사항을 미리 보려면 먼저 '건너뛰기' 전략으로 가져오기 테스트";
+"import_export.help_tip4" = "개별 사진 가져오기는 놓친 날짜를 추가하는 데 완벽합니다";
+
+/* Import Errors */
+"import_export.permission_error" = "선택한 파일에 액세스할 수 없습니다. 파일 앱에서 다시 선택해 보세요.";
+"import_export.file_access_error" = "선택한 파일을 읽을 수 없습니다. 파일이 다운로드되었는지 확인하고 다시 시도하세요.";
+"import_export.error_export_failed" = "내보내기 실패: %@";
+"import_export.error_import_failed" = "가져오기 실패: %@";
+"import_export.error_invalid_format" = "잘못된 파일 형식";
+"import_export.error_no_data" = "내보낼 데이터가 없습니다";
+"import_export.error_file_not_found" = "파일을 찾을 수 없습니다";
+"import_export.error_zip_failed" = "ZIP 작업 실패";
+
+/* Photo Capture */
+"photo.replace_today_title" = "오늘의 사진을 교체하시겠습니까?";
+"photo.replace_today_message" = "하루에 한 장의 사진만 저장할 수 있습니다. 기존 사진이 교체됩니다.";
+"photo.guidelines" = "가이드라인";
+"photo.switch_camera" = "전환";
+"photo.add_measurements_optional" = "측정값 추가 (선택사항)";
+"photo.body_fat" = "체지방";
+"photo.enter_value" = "0.0";
+"photo.measurements_note" = "이러한 측정값은 나중에 캘린더 뷰에서 언제든지 추가하거나 업데이트할 수 있습니다.";

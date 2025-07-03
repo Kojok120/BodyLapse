@@ -160,7 +160,7 @@ struct CalendarPopupView: View {
                         Circle()
                             .fill(Color.green)
                             .frame(width: 10, height: 10)
-                        Text("Photo taken")
+                        Text(NSLocalizedString("calendar.photo_taken", comment: "Photo taken indicator"))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -169,7 +169,7 @@ struct CalendarPopupView: View {
                         RoundedRectangle(cornerRadius: 4)
                             .stroke(Color.accentColor, lineWidth: 2)
                             .frame(width: 16, height: 16)
-                        Text("Selected")
+                        Text(NSLocalizedString("calendar.selected", comment: "Selected indicator"))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

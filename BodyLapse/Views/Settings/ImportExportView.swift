@@ -8,6 +8,8 @@ struct ImportExportView: View {
     @State private var showingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+    @State private var showingHelp = false
+    @State private var expandedSection: String? = nil
     
     var body: some View {
         NavigationView {
@@ -43,6 +45,38 @@ struct ImportExportView: View {
                     .disabled(viewModel.isExporting || viewModel.isImporting)
                 } header: {
                     Text("import_export.export".localized)
+                } footer: {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button(action: {
+                            withAnimation {
+                                expandedSection = expandedSection == "export" ? nil : "export"
+                            }
+                        }) {
+                            Label(expandedSection == "export" ? "import_export.show_less".localized : "import_export.learn_more".localized, 
+                                  systemImage: expandedSection == "export" ? "chevron.up" : "info.circle")
+                                .font(.caption)
+                                .foregroundColor(.bodyLapseTurquoise)
+                        }
+                        
+                        if expandedSection == "export" {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("import_export.export_detailed_guide".localized)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 8)
+                                
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Label("import_export.export_includes".localized, systemImage: "checkmark.circle")
+                                    Label("import_export.export_format".localized, systemImage: "doc.zipper")
+                                    Label("import_export.export_privacy".localized, systemImage: "lock.shield")
+                                }
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 8)
+                            .transition(.opacity)
+                        }
+                    }
                 }
                 
                 // Import Section
@@ -77,8 +111,39 @@ struct ImportExportView: View {
                 } header: {
                     Text("import_export.import".localized)
                 } footer: {
-                    Text("import_export.import_footer".localized)
-                        .font(.caption)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("import_export.import_footer".localized)
+                            .font(.caption)
+                        
+                        Button(action: {
+                            withAnimation {
+                                expandedSection = expandedSection == "import" ? nil : "import"
+                            }
+                        }) {
+                            Label(expandedSection == "import" ? "import_export.show_less".localized : "import_export.learn_more".localized, 
+                                  systemImage: expandedSection == "import" ? "chevron.up" : "info.circle")
+                                .font(.caption)
+                                .foregroundColor(.bodyLapseTurquoise)
+                        }
+                        
+                        if expandedSection == "import" {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("import_export.import_detailed_guide".localized)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 8)
+                                
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Label("import_export.merge_skip_detail".localized, systemImage: "arrow.right.circle")
+                                    Label("import_export.merge_replace_detail".localized, systemImage: "arrow.triangle.2.circlepath")
+                                }
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 8)
+                            .transition(.opacity)
+                        }
+                    }
                 }
                 
                 // Progress Section
@@ -102,6 +167,15 @@ struct ImportExportView: View {
             }
             .navigationTitle("import_export.title".localized)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showingHelp = true
+                    }) {
+                        Image(systemName: "questionmark.circle")
+                    }
+                }
+            }
             .sheet(isPresented: $showingExportOptions) {
                 ExportOptionsView(viewModel: viewModel)
             }
@@ -137,6 +211,9 @@ struct ImportExportView: View {
             .sheet(isPresented: $viewModel.showingImportOptions) {
                 ImportOptionsSheet(viewModel: viewModel)
             }
+            .sheet(isPresented: $showingHelp) {
+                ImportExportHelpView()
+            }
         }
     }
     
@@ -144,6 +221,21 @@ struct ImportExportView: View {
         switch result {
         case .success(let urls):
             guard let url = urls.first else { return }
+            
+            // Start accessing the security-scoped resource
+            guard url.startAccessingSecurityScopedResource() else {
+                showError(NSError(
+                    domain: "ImportError",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "import_export.permission_error".localized]
+                ))
+                return
+            }
+            
+            // Ensure we stop accessing the resource when done
+            defer {
+                url.stopAccessingSecurityScopedResource()
+            }
             
             // Copy file to temporary location for access
             let tempURL = FileManager.default.temporaryDirectory
@@ -153,12 +245,24 @@ struct ImportExportView: View {
                 if FileManager.default.fileExists(atPath: tempURL.path) {
                     try FileManager.default.removeItem(at: tempURL)
                 }
-                try FileManager.default.copyItem(at: url, to: tempURL)
+                
+                // Read the file data while we have access
+                let fileData = try Data(contentsOf: url)
+                try fileData.write(to: tempURL)
                 
                 // Show import options
                 viewModel.showImportOptions(for: tempURL)
             } catch {
-                showError(error)
+                let nsError = error as NSError
+                if nsError.domain == NSCocoaErrorDomain && nsError.code == NSFileReadNoPermissionError {
+                    showError(NSError(
+                        domain: "ImportError",
+                        code: 2,
+                        userInfo: [NSLocalizedDescriptionKey: "import_export.file_access_error".localized]
+                    ))
+                } else {
+                    showError(error)
+                }
             }
             
         case .failure(let error):
@@ -168,14 +272,8 @@ struct ImportExportView: View {
     
     private func handleExportCompletion() {
         if let exportURL = viewModel.exportedFileURL {
-            alertTitle = "import_export.export_completed".localized
-            alertMessage = "import_export.export_completed_message".localized
-            showingAlert = true
-            
-            // Share the file
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                shareFile(exportURL)
-            }
+            // Share the file immediately without showing alert
+            shareFile(exportURL)
         }
     }
     

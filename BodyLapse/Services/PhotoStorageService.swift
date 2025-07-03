@@ -144,6 +144,17 @@ class PhotoStorageService {
         return photo
     }
     
+    func photoExists(for dateString: String, categoryId: String) -> Bool {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        guard let date = dateFormatter.date(from: dateString) else { return false }
+        
+        let calendar = Calendar.current
+        return photos.contains { photo in
+            calendar.isDate(photo.captureDate, inSameDayAs: date) && photo.categoryId == categoryId
+        }
+    }
+    
     func hasPhotoForToday(categoryId: String = PhotoCategory.defaultCategory.id) -> Bool {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())

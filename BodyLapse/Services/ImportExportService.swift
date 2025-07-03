@@ -17,17 +17,17 @@ class ImportExportService {
         var errorDescription: String? {
             switch self {
             case .exportFailed(let reason):
-                return "エクスポート失敗: \(reason)"
+                return String(format: "import_export.error_export_failed".localized, reason)
             case .importFailed(let reason):
-                return "インポート失敗: \(reason)"
+                return String(format: "import_export.error_import_failed".localized, reason)
             case .invalidFormat:
-                return "無効なファイル形式です"
+                return "import_export.error_invalid_format".localized
             case .noDataToExport:
-                return "エクスポートするデータがありません"
+                return "import_export.error_no_data".localized
             case .fileNotFound:
-                return "ファイルが見つかりません"
+                return "import_export.error_file_not_found".localized
             case .zipOperationFailed:
-                return "ZIP操作に失敗しました"
+                return "import_export.error_zip_failed".localized
             }
         }
     }
@@ -60,10 +60,9 @@ class ImportExportService {
         let importWeightData: Bool
         let importNotes: Bool
         
-        enum MergeStrategy {
+        enum MergeStrategy: String, CaseIterable {
             case skip          // Skip existing data
             case replace       // Replace existing data
-            case keepBoth      // Keep both (rename new)
         }
         
         static let `default` = ImportOptions(
@@ -182,7 +181,9 @@ class ImportExportService {
                 
                 // Export categories
                 let categories = CategoryStorageService.shared.getActiveCategories()
-                let categoriesData = try JSONEncoder().encode(categories)
+                let encoder = JSONEncoder()
+                encoder.dateEncodingStrategy = .iso8601
+                let categoriesData = try encoder.encode(categories)
                 try categoriesData.write(to: dataDir.appendingPathComponent("categories.json"))
                 
                 currentStep += 1
@@ -192,7 +193,9 @@ class ImportExportService {
                 if options.includeWeightData {
                     let weightEntries = try await WeightStorageService.shared.loadEntries()
                     let filteredEntries = self.filterWeightEntries(weightEntries, options: options)
-                    let weightData = try JSONEncoder().encode(filteredEntries)
+                    let encoder = JSONEncoder()
+                    encoder.dateEncodingStrategy = .iso8601
+                    let weightData = try encoder.encode(filteredEntries)
                     try weightData.write(to: dataDir.appendingPathComponent("weight_data.json"))
                 }
                 
@@ -203,7 +206,9 @@ class ImportExportService {
                 if options.includeNotes {
                     let notes = await DailyNoteStorageService.shared.getAllNotes()
                     let filteredNotes = self.filterNotes(notes, options: options)
-                    let notesData = try JSONEncoder().encode(filteredNotes)
+                    let encoder = JSONEncoder()
+                    encoder.dateEncodingStrategy = .iso8601
+                    let notesData = try encoder.encode(filteredNotes)
                     try notesData.write(to: dataDir.appendingPathComponent("notes.json"))
                 }
                 
@@ -215,7 +220,9 @@ class ImportExportService {
                     let settings = await MainActor.run {
                         UserSettingsManager.shared.settings
                     }
-                    let settingsData = try JSONEncoder().encode(settings)
+                    let encoder = JSONEncoder()
+                    encoder.dateEncodingStrategy = .iso8601
+                    let settingsData = try encoder.encode(settings)
                     try settingsData.write(to: dataDir.appendingPathComponent("settings.json"))
                 }
                 
@@ -226,7 +233,9 @@ class ImportExportService {
                     categories: categories,
                     options: options
                 )
-                let manifestData = try JSONEncoder().encode(manifest)
+                let manifestEncoder = JSONEncoder()
+                manifestEncoder.dateEncodingStrategy = .iso8601
+                let manifestData = try manifestEncoder.encode(manifest)
                 try manifestData.write(to: tempDir.appendingPathComponent("manifest.json"))
                 
                 currentStep += 1
@@ -279,20 +288,32 @@ class ImportExportService {
         progress: @escaping (Float) -> Void,
         completion: @escaping (Result<ImportSummary, Error>) -> Void
     ) async {
-            
-            do {
+        print("[ImportExport] Starting import from: \(url.path)")
+        
+        do {
                 // Create temporary directory for extraction
                 let tempDir = FileManager.default.temporaryDirectory
                     .appendingPathComponent("BodyLapseImport_\(UUID().uuidString)")
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                 
-                // Extract ZIP
+                // Validate file size before extraction
+                print("[ImportExport] Validating file size...")
+                let fileSize = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64 ?? 0
+                print("[ImportExport] File size: \(fileSize) bytes")
+                guard fileSize > 0 && fileSize < 500_000_000 else { // Max 500MB
+                    throw ImportExportError.invalidFormat
+                }
+                
+                // Extract ZIP with validation
+                print("[ImportExport] Extracting archive...")
                 guard SimpleZipArchive.unzipFile(
                     atPath: url.path,
                     toDestination: tempDir.path
                 ) else {
+                    print("[ImportExport] Archive extraction failed")
                     throw ImportExportError.zipOperationFailed
                 }
+                print("[ImportExport] Archive extracted successfully")
                 
                 // Read manifest
                 let manifestPath = tempDir.appendingPathComponent("manifest.json")
@@ -300,12 +321,36 @@ class ImportExportService {
                     throw ImportExportError.invalidFormat
                 }
                 
-                let manifestData = try Data(contentsOf: manifestPath)
-                let manifest = try JSONDecoder().decode(ExportManifest.self, from: manifestData)
+                // Read and validate manifest data safely
+                print("[ImportExport] Reading manifest...")
+                let manifest = try safelyDecodeJSON(ExportManifest.self, from: manifestPath)
+                print("[ImportExport] Manifest loaded successfully")
+                print("[ImportExport] - Version: \(manifest.version)")
+                print("[ImportExport] - Export date: \(manifest.exportDate)")
+                print("[ImportExport] - Photos: \(manifest.dataInfo.photoCount)")
+                print("[ImportExport] - Videos: \(manifest.dataInfo.videoCount)")
+                print("[ImportExport] - Categories: \(manifest.dataInfo.categoryCount)")
+                
+                // Debug: List extracted files
+                print("[ImportExport] Temp directory structure:")
+                if let enumerator = FileManager.default.enumerator(atPath: tempDir.path) {
+                    while let element = enumerator.nextObject() as? String {
+                        print("[ImportExport]   - \(element)")
+                    }
+                }
                 
                 var summary = ImportSummary()
                 var totalSteps: Float = 0
                 var currentStep: Float = 0
+                
+                // Debug import options
+                print("[ImportExport] Import options:")
+                print("[ImportExport] - Merge strategy: \(options.mergeStrategy)")
+                print("[ImportExport] - Import photos: \(options.importPhotos)")
+                print("[ImportExport] - Import videos: \(options.importVideos)")
+                print("[ImportExport] - Import settings: \(options.importSettings)")
+                print("[ImportExport] - Import weight data: \(options.importWeightData)")
+                print("[ImportExport] - Import notes: \(options.importNotes)")
                 
                 // Calculate total steps
                 if options.importPhotos {
@@ -318,10 +363,15 @@ class ImportExportService {
                 
                 // Import categories first
                 let categoriesPath = tempDir.appendingPathComponent("data/categories.json")
+                print("[ImportExport] Checking for categories at: \(categoriesPath.path)")
                 if FileManager.default.fileExists(atPath: categoriesPath.path) {
-                    let categoriesData = try Data(contentsOf: categoriesPath)
-                    let categories = try JSONDecoder().decode([PhotoCategory].self, from: categoriesData)
+                    print("[ImportExport] Categories file found, loading...")
+                    let categories = try safelyDecodeJSON([PhotoCategory].self, from: categoriesPath)
+                    print("[ImportExport] Loaded \(categories.count) categories")
                     summary.categoriesImported = try self.importCategories(categories, options: options)
+                    print("[ImportExport] Categories imported: \(summary.categoriesImported)")
+                } else {
+                    print("[ImportExport] Categories file not found")
                 }
                 
                 currentStep += 1
@@ -330,28 +380,46 @@ class ImportExportService {
                 // Import photos
                 if options.importPhotos {
                     let photosDir = tempDir.appendingPathComponent("photos")
-                    summary.photosImported = try self.importPhotos(
-                        from: photosDir,
-                        options: options,
-                        progress: { photoProgress in
-                            let stepProgress = currentStep + (photoProgress * Float(manifest.dataInfo.photoCount))
-                            progress(stepProgress / totalSteps)
-                        }
-                    )
+                    print("[ImportExport] Starting photo import from: \(photosDir.path)")
+                    print("[ImportExport] Photos directory exists: \(FileManager.default.fileExists(atPath: photosDir.path))")
+                    
+                    do {
+                        summary.photosImported = try self.importPhotos(
+                            from: photosDir,
+                            options: options,
+                            progress: { photoProgress in
+                                let stepProgress = currentStep + (photoProgress * Float(manifest.dataInfo.photoCount))
+                                progress(stepProgress / totalSteps)
+                            }
+                        )
+                        print("[ImportExport] Photos imported: \(summary.photosImported)")
+                    } catch {
+                        print("[ImportExport] Error importing photos: \(error)")
+                        throw error
+                    }
                     currentStep += Float(manifest.dataInfo.photoCount)
                 }
                 
                 // Import videos
                 if options.importVideos {
                     let videosDir = tempDir.appendingPathComponent("videos")
-                    summary.videosImported = try await self.importVideos(
-                        from: videosDir,
-                        options: options,
-                        progress: { videoProgress in
-                            let stepProgress = currentStep + (videoProgress * Float(manifest.dataInfo.videoCount))
-                            progress(stepProgress / totalSteps)
-                        }
-                    )
+                    print("[ImportExport] Starting video import from: \(videosDir.path)")
+                    print("[ImportExport] Videos directory exists: \(FileManager.default.fileExists(atPath: videosDir.path))")
+                    
+                    do {
+                        summary.videosImported = try await self.importVideos(
+                            from: videosDir,
+                            options: options,
+                            progress: { videoProgress in
+                                let stepProgress = currentStep + (videoProgress * Float(manifest.dataInfo.videoCount))
+                                progress(stepProgress / totalSteps)
+                            }
+                        )
+                        print("[ImportExport] Videos imported: \(summary.videosImported)")
+                    } catch {
+                        print("[ImportExport] Error importing videos: \(error)")
+                        throw error
+                    }
                     currentStep += Float(manifest.dataInfo.videoCount)
                 }
                 
@@ -359,8 +427,7 @@ class ImportExportService {
                 if options.importWeightData {
                     let weightPath = tempDir.appendingPathComponent("data/weight_data.json")
                     if FileManager.default.fileExists(atPath: weightPath.path) {
-                        let weightData = try Data(contentsOf: weightPath)
-                        let entries = try JSONDecoder().decode([WeightEntry].self, from: weightData)
+                        let entries = try safelyDecodeJSON([WeightEntry].self, from: weightPath)
                         summary.weightEntriesImported = try await self.importWeightEntries(entries, options: options)
                     }
                 }
@@ -372,8 +439,7 @@ class ImportExportService {
                 if options.importNotes {
                     let notesPath = tempDir.appendingPathComponent("data/notes.json")
                     if FileManager.default.fileExists(atPath: notesPath.path) {
-                        let notesData = try Data(contentsOf: notesPath)
-                        let notes = try JSONDecoder().decode([DailyNote].self, from: notesData)
+                        let notes = try safelyDecodeJSON([DailyNote].self, from: notesPath)
                         summary.notesImported = try await self.importNotes(notes, options: options)
                     }
                 }
@@ -385,11 +451,10 @@ class ImportExportService {
                 if options.importSettings {
                     let settingsPath = tempDir.appendingPathComponent("data/settings.json")
                     if FileManager.default.fileExists(atPath: settingsPath.path) {
-                        let settingsData = try Data(contentsOf: settingsPath)
-                        let settings = try JSONDecoder().decode(UserSettings.self, from: settingsData)
+                        let settings = try safelyDecodeJSON(UserSettings.self, from: settingsPath)
                         await MainActor.run {
-                        UserSettingsManager.shared.settings = settings
-                    }
+                            UserSettingsManager.shared.settings = settings
+                        }
                         summary.settingsImported = true
                     }
                 }
@@ -397,18 +462,62 @@ class ImportExportService {
                 // Clean up temp directory
                 try? FileManager.default.removeItem(at: tempDir)
                 
-                DispatchQueue.main.async {
+                print("[ImportExport] Import completed - Summary:")
+                print("[ImportExport] - Photos imported: \(summary.photosImported)")
+                print("[ImportExport] - Videos imported: \(summary.videosImported)")
+                print("[ImportExport] - Categories imported: \(summary.categoriesImported)")
+                print("[ImportExport] - Weight entries imported: \(summary.weightEntriesImported)")
+                print("[ImportExport] - Notes imported: \(summary.notesImported)")
+                print("[ImportExport] - Total items: \(summary.totalItemsImported)")
+                
+                await MainActor.run {
                     completion(.success(summary))
                 }
-                
-        } catch {
-            DispatchQueue.main.async {
-                completion(.failure(error))
+            } catch {
+                await MainActor.run {
+                    completion(.failure(error))
+                }
             }
-        }
     }
     
     // MARK: - Helper Methods
+    
+    private func safelyDecodeJSON<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {
+        // Validate file exists and size
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw ImportExportError.fileNotFound
+        }
+        
+        let fileSize = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64 ?? 0
+        guard fileSize > 0 && fileSize < 10_000_000 else { // Max 10MB for JSON
+            throw ImportExportError.invalidFormat
+        }
+        
+        // Read file data safely
+        let data = try Data(contentsOf: url, options: [.mappedIfSafe])
+        guard data.count > 0 else {
+            throw ImportExportError.invalidFormat
+        }
+        
+        // Create decoder with proper settings
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        // Try to decode with ISO8601 first
+        do {
+            return try decoder.decode(type, from: data)
+        } catch {
+            // If ISO8601 fails, try with timestamp (for backward compatibility)
+            print("ISO8601 decode failed, trying timestamp strategy: \(error)")
+            decoder.dateDecodingStrategy = .secondsSince1970
+            do {
+                return try decoder.decode(type, from: data)
+            } catch {
+                print("JSON decode error for \(type): \(error)")
+                throw ImportExportError.invalidFormat
+            }
+        }
+    }
     
     private func exportPhotos(
         to directory: URL,
@@ -462,6 +571,7 @@ class ImportExportService {
             
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            encoder.dateEncodingStrategy = .iso8601
             let metadataData = try encoder.encode(photo)
             try metadataData.write(to: destMetadataPath)
             
@@ -505,6 +615,7 @@ class ImportExportService {
             
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            encoder.dateEncodingStrategy = .iso8601
             let metadataData = try encoder.encode(video)
             try metadataData.write(to: destMetadataPath)
             
@@ -572,35 +683,36 @@ class ImportExportService {
     private func importCategories(_ categories: [PhotoCategory], options: ImportOptions) throws -> Int {
         var imported = 0
         
+        print("[ImportExport] Importing \(categories.count) categories")
+        
         for category in categories {
-            let existing = CategoryStorageService.shared.getCategoryById(category.id)
-            
-            switch options.mergeStrategy {
-            case .skip:
-                if existing == nil {
-                    _ = CategoryStorageService.shared.addCategory(category)
+            autoreleasepool {
+                let existing = CategoryStorageService.shared.getCategoryById(category.id)
+                print("[ImportExport] Category \(category.id) exists: \(existing != nil)")
+                
+                switch options.mergeStrategy {
+                case .skip:
+                    if existing == nil {
+                        print("[ImportExport] Adding new category: \(category.name)")
+                        _ = CategoryStorageService.shared.addCategory(category)
+                        imported += 1
+                    } else {
+                        print("[ImportExport] Skipping existing category: \(category.name)")
+                    }
+                case .replace:
+                    if existing != nil {
+                        print("[ImportExport] Updating existing category: \(category.name)")
+                        CategoryStorageService.shared.updateCategory(category)
+                    } else {
+                        print("[ImportExport] Adding new category: \(category.name)")
+                        _ = CategoryStorageService.shared.addCategory(category)
+                    }
                     imported += 1
                 }
-            case .replace:
-                if existing != nil {
-                    CategoryStorageService.shared.updateCategory(category)
-                } else {
-                    _ = CategoryStorageService.shared.addCategory(category)
-                }
-                imported += 1
-            case .keepBoth:
-                if existing != nil {
-                    // Create new category with modified name
-                    var newCategory = category
-                    newCategory.name = "\(category.name) (インポート)"
-                    _ = CategoryStorageService.shared.addCategory(newCategory)
-                } else {
-                    _ = CategoryStorageService.shared.addCategory(category)
-                }
-                imported += 1
             }
         }
         
+        print("[ImportExport] Total categories imported: \(imported)")
         return imported
     }
     
@@ -610,10 +722,24 @@ class ImportExportService {
         progress: @escaping (Float) -> Void
     ) throws -> Int {
         var imported = 0
+        
+        print("[ImportExport] Importing photos from: \(directory.path)")
+        
+        // Check if directory exists
+        guard FileManager.default.fileExists(atPath: directory.path) else {
+            print("[ImportExport] Photos directory does not exist")
+            return 0
+        }
+        
         let categoryDirs = try FileManager.default.contentsOfDirectory(
             at: directory,
             includingPropertiesForKeys: [.isDirectoryKey]
         )
+        
+        print("[ImportExport] Found \(categoryDirs.count) category directories")
+        for dir in categoryDirs {
+            print("[ImportExport] Category dir: \(dir.lastPathComponent)")
+        }
         
         let totalPhotos = categoryDirs.flatMap { categoryDir -> [URL] in
             (try? FileManager.default.contentsOfDirectory(
@@ -622,47 +748,97 @@ class ImportExportService {
             ).filter { $0.pathExtension == "json" }) ?? []
         }.count
         
+        print("[ImportExport] Total photo metadata files: \(totalPhotos)")
+        
         var processedPhotos = 0
         
         for categoryDir in categoryDirs {
-            let _ = categoryDir.lastPathComponent
+            let categoryId = categoryDir.lastPathComponent
+            print("[ImportExport] Processing category: \(categoryId)")
             let photoFiles = try FileManager.default.contentsOfDirectory(
                 at: categoryDir,
                 includingPropertiesForKeys: nil
             ).filter { $0.pathExtension == "json" }
             
+            print("[ImportExport] Found \(photoFiles.count) photo metadata files in category \(categoryId)")
+            
             for metadataFile in photoFiles {
-                let metadataData = try Data(contentsOf: metadataFile)
-                let photo = try JSONDecoder().decode(Photo.self, from: metadataData)
-                
-                // Check if photo already exists
-                let existing = PhotoStorageService.shared.photos.first { $0.id == photo.id }
-                
-                var shouldImport = false
-                switch options.mergeStrategy {
-                case .skip:
-                    shouldImport = (existing == nil)
-                case .replace:
-                    shouldImport = true
-                case .keepBoth:
-                    shouldImport = true
-                }
-                
-                if shouldImport {
-                    // Copy image file
-                    let imageFileName = metadataFile.deletingPathExtension().lastPathComponent + ".jpg"
-                    let sourceImagePath = categoryDir.appendingPathComponent(imageFileName)
-                    
-                    if let image = UIImage(contentsOfFile: sourceImagePath.path) {
-                        _ = try PhotoStorageService.shared.savePhoto(
-                            image,
-                            captureDate: photo.captureDate,
-                            categoryId: photo.categoryId,
-                            isFaceBlurred: photo.isFaceBlurred,
-                            weight: photo.weight,
-                            bodyFatPercentage: photo.bodyFatPercentage
-                        )
-                        imported += 1
+                // Use autoreleasepool for memory management
+                autoreleasepool {
+                    do {
+                            // Read metadata file safely
+                            print("[ImportExport] Reading metadata file: \(metadataFile.lastPathComponent)")
+                            guard let photo = try? self.safelyDecodeJSON(Photo.self, from: metadataFile) else {
+                                print("[ImportExport] Failed to decode photo metadata from: \(metadataFile.lastPathComponent)")
+                                processedPhotos += 1
+                                progress(Float(processedPhotos) / Float(totalPhotos))
+                                return  // This returns from autoreleasepool, not the method
+                            }
+                            print("[ImportExport] Successfully decoded photo: \(photo.id)")
+                            
+                            // Check if photo already exists
+                            let existing = PhotoStorageService.shared.photos.first { $0.id == photo.id }
+                            print("[ImportExport] Photo \(photo.id) exists: \(existing != nil)")
+                            
+                            var shouldImport = false
+                            switch options.mergeStrategy {
+                            case .skip:
+                                shouldImport = (existing == nil)
+                                print("[ImportExport] Merge strategy: skip, shouldImport: \(shouldImport)")
+                            case .replace:
+                                shouldImport = true
+                                print("[ImportExport] Merge strategy: replace, shouldImport: \(shouldImport)")
+                            }
+                            
+                            if shouldImport {
+                                print("[ImportExport] Importing photo \(photo.id)")
+                                // Copy image file
+                                let sourceImagePath = categoryDir.appendingPathComponent(photo.fileName)
+                                print("[ImportExport] Looking for image file: \(sourceImagePath.path)")
+                                
+                                // Load image safely with proper error handling
+                                if FileManager.default.fileExists(atPath: sourceImagePath.path) {
+                                    do {
+                                        // Check file size
+                                        let attrs = try FileManager.default.attributesOfItem(atPath: sourceImagePath.path)
+                                        let fileSize = attrs[.size] as? Int64 ?? 0
+                                        if fileSize > 0 && fileSize < 50_000_000 { // Max 50MB per image
+                                            // Load image data with memory mapping
+                                            let imageData = try Data(contentsOf: sourceImagePath, options: [.mappedIfSafe])
+                                            
+                                            // Create image
+                                            if let image = UIImage(data: imageData) {
+                                                print("[ImportExport] Created UIImage successfully")
+                                                do {
+                                                    let savedPhoto = try PhotoStorageService.shared.savePhoto(
+                                                        image,
+                                                        captureDate: photo.captureDate,
+                                                        categoryId: photo.categoryId,
+                                                        isFaceBlurred: photo.isFaceBlurred,
+                                                        weight: photo.weight,
+                                                        bodyFatPercentage: photo.bodyFatPercentage
+                                                    )
+                                                    imported += 1
+                                                    print("[ImportExport] Successfully saved photo: \(savedPhoto.id)")
+                                                } catch {
+                                                    print("[ImportExport] Failed to save photo: \(error)")
+                                                }
+                                            } else {
+                                                print("[ImportExport] Failed to create UIImage from data")
+                                            }
+                                        } else {
+                                            print("Image too large or invalid size: \(fileSize) bytes")
+                                        }
+                                    } catch {
+                                        print("Error loading image: \(error)")
+                                    }
+                                } else {
+                                    print("[ImportExport] Image file not found: \(sourceImagePath.path)")
+                                }
+                            }
+                    } catch {
+                        // Log error but continue
+                        print("[ImportExport] Error importing photo: \(error)")
                     }
                 }
                 
@@ -671,6 +847,7 @@ class ImportExportService {
             }
         }
         
+        print("[ImportExport] Total photos imported: \(imported)")
         return imported
     }
     
@@ -685,31 +862,40 @@ class ImportExportService {
             includingPropertiesForKeys: nil
         ).filter { $0.pathExtension == "json" }
         
+        print("[ImportExport] Found \(videoFiles.count) video metadata files to import")
+        
         for (index, metadataFile) in videoFiles.enumerated() {
-            let metadataData = try Data(contentsOf: metadataFile)
-            let video = try JSONDecoder().decode(Video.self, from: metadataData)
-            
-            // Check if video already exists
-            VideoStorageService.shared.initialize()
-            let existing = VideoStorageService.shared.videos.first { $0.id == video.id }
+            // Process video import
+            do {
+                let metadataData = try Data(contentsOf: metadataFile)
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let video = try decoder.decode(Video.self, from: metadataData)
+                
+                // Check if video already exists
+                VideoStorageService.shared.initialize()
+                let existing = VideoStorageService.shared.videos.first { $0.id == video.id }
+                print("[ImportExport] Video \(video.id) exists: \(existing != nil)")
             
             var shouldImport = false
             switch options.mergeStrategy {
             case .skip:
                 shouldImport = (existing == nil)
+                print("[ImportExport] Merge strategy: skip, shouldImport: \(shouldImport)")
             case .replace:
                 shouldImport = true
                 if existing != nil {
+                    print("[ImportExport] Deleting existing video")
                     try VideoStorageService.shared.deleteVideo(existing!)
                 }
-            case .keepBoth:
-                shouldImport = true
+                print("[ImportExport] Merge strategy: replace, shouldImport: \(shouldImport)")
             }
             
             if shouldImport {
+                print("[ImportExport] Importing video \(video.id)")
                 // Copy video file
-                let videoFileName = metadataFile.deletingPathExtension().lastPathComponent + ".mp4"
-                let sourceVideoPath = directory.appendingPathComponent(videoFileName)
+                let sourceVideoPath = directory.appendingPathComponent(video.fileName)
+                print("[ImportExport] Looking for video file: \(sourceVideoPath.path)")
                 
                 if FileManager.default.fileExists(atPath: sourceVideoPath.path) {
                     _ = try await VideoStorageService.shared.saveVideo(
@@ -719,7 +905,17 @@ class ImportExportService {
                         frameCount: video.frameCount
                     )
                     imported += 1
+                    print("[ImportExport] Successfully imported video: \(video.fileName)")
+                } else {
+                    print("[ImportExport] Video file not found: \(sourceVideoPath.path)")
                 }
+                } else {
+                    print("[ImportExport] Skipping video import (shouldImport = false)")
+                }
+            } catch {
+                // Log error but continue processing other videos
+                print("[ImportExport] Error importing video from \(metadataFile.lastPathComponent): \(error)")
+                print("[ImportExport] Error details: \(error.localizedDescription)")
             }
             
             progress(Float(index + 1) / Float(videoFiles.count))
@@ -740,9 +936,6 @@ class ImportExportService {
                 shouldImport = (existing == nil)
             case .replace:
                 shouldImport = true
-            case .keepBoth:
-                // For weight entries, we can't have multiple entries for same date
-                shouldImport = (existing == nil)
             }
             
             if shouldImport {
@@ -766,9 +959,6 @@ class ImportExportService {
                 shouldImport = (existing == nil)
             case .replace:
                 shouldImport = true
-            case .keepBoth:
-                // For daily notes, we can't have multiple notes for same date
-                shouldImport = (existing == nil)
             }
             
             if shouldImport {

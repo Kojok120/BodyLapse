@@ -30,6 +30,7 @@
 "common.processing" = "処理中...";
 "common.replace" = "置き換える";
 "common.retake" = "撮り直す";
+"common.copy" = "コピー";
 "common.use_photo" = "写真を使用";
 "common.save_photo" = "写真を保存";
 "common.enable" = "有効にする";
@@ -82,6 +83,10 @@
 "calendar.add_weight_hint" = "写真を保存する際に体重データを追加";
 "calendar.reload_data" = "データを再読み込み";
 "calendar.add_memo" = "メモを追加";
+"calendar.upload_photo" = "写真をアップロード";
+"calendar.invalid_image" = "無効な画像形式";
+"calendar.photo_already_exists" = "この日付とカテゴリには既に写真が存在します";
+"calendar.photo_imported" = "写真がインポートされました";
 
 /* Camera View */
 "camera.access_required" = "カメラアクセスが必要です";
@@ -107,6 +112,21 @@
 "gallery.photo_saved" = "写真をライブラリに保存しました";
 "gallery.video_saved" = "動画をライブラリに保存しました";
 "gallery.photos_count" = "枚";
+"gallery.action_cannot_be_undone" = "この操作は取り消せません。";
+"gallery.play" = "再生";
+"gallery.select_dates" = "日付を選択";
+"gallery.clear_all" = "すべてクリア";
+"gallery.deselect_all" = "すべて選択解除";
+"gallery.select_all" = "すべて選択";
+"gallery.select" = "選択";
+"gallery.no_photos_matching_filter" = "フィルター条件に一致する写真がありません";
+"gallery.newest" = "新しい順";
+"gallery.oldest" = "古い順";
+"gallery.all" = "すべて";
+"gallery.items_selected" = "%d件選択中";
+"gallery.delete_items_count" = "%d個のアイテムを削除しますか？";
+"gallery.photos_saved_count" = "%d枚の写真を保存しました";
+"gallery.videos_saved_count" = "%d本の動画を保存しました";
 
 /* Settings View */
 "settings.title" = "設定";
@@ -220,7 +240,7 @@
 "onboarding.passcode_mismatch" = "パスコードが一致しません";
 
 /* Onboarding Premium Features */
-"onboarding.premium.title" = "プレミアム機能をアンロック";
+"onboarding.premium.title" = "BodyLapse Premium\nプレミアム機能をアンロック";
 "onboarding.premium.subtitle" = "専用ツールでフィットネスの旅を次のレベルへ";
 "onboarding.premium.metrics.title" = "メトリクスを追跡";
 "onboarding.premium.metrics.description" = "詳細なチャートで体重と体脂肪率をモニター";
@@ -280,6 +300,10 @@
 "weight.body_fat" = "体脂肪率";
 "weight.enter_weight" = "体重を入力";
 "weight.enter_body_fat" = "体脂肪率を入力";
+"weight.no_data_yet" = "体重データがまだありません";
+"weight.start_tracking_message" = "体重を記録して時間経過による進捗を確認しましょう";
+"weight.add_first_entry" = "最初のデータを追加";
+"weight.recent_entries" = "最近の記録";
 
 /* Date and Time */
 "date.today" = "今日";
@@ -375,7 +399,7 @@
 "import_export.export_description" = "写真、動画、設定をバックアップ";
 "import_export.import_data" = "データをインポート";
 "import_export.import_description" = "バックアップからデータを復元";
-"import_export.import_footer" = "BodyLapseエクスポートファイル（.bodylapse）のみインポート可能です";
+"import_export.import_footer" = "BodyLapseエクスポートファイル（.bodylapse）のみインポート可能です。iCloudからインポートする場合は、ファイルがダウンロード済みであることを確認してください。";
 "import_export.export_completed" = "エクスポート完了";
 "import_export.export_completed_message" = "データのエクスポートが完了しました";
 "import_export.import_completed" = "インポート完了";
@@ -508,9 +532,126 @@
 /* Confirmation View */
 "confirm.retake" = "撮り直す";
 "confirm.confirm" = "確認";
+"contour.confirm_title" = "体の輪郭を確認";
+"contour.confirm_question" = "緑の輪郭線が正しく体に沿っていますか？";
 
 /* Timer */
 "timer.off" = "オフ";
 "timer.3s" = "3秒";
 "timer.5s" = "5秒";
 "timer.10s" = "10秒";
+
+/* Import Errors */
+"import_export.permission_error" = "選択したファイルにアクセスできません。ファイルアプリから再度選択してください。";
+"import_export.file_access_error" = "選択したファイルを読み込めません。ファイルがダウンロード済みであることを確認してから再度お試しください。";
+"import_export.error_export_failed" = "エクスポート失敗: %@";
+"import_export.error_import_failed" = "インポート失敗: %@";
+"import_export.error_invalid_format" = "無効なファイル形式です";
+"import_export.error_no_data" = "エクスポートするデータがありません";
+"import_export.error_file_not_found" = "ファイルが見つかりません";
+"import_export.error_zip_failed" = "ZIP操作に失敗しました";
+
+/* Import/Export Enhancements */
+"import_export.learn_more" = "詳しく見る";
+"import_export.show_less" = "閉じる";
+"import_export.import_detailed_guide" = "BodyLapseで作成したバックアップファイルからデータをインポートします。インポートするデータの種類と重複データの処理方法を選択できます。";
+"import_export.merge_skip_detail" = "スキップ: 既存のデータを保持し、新しいアイテムのみ追加";
+"import_export.merge_replace_detail" = "置換: 既存のデータをインポートデータで上書き";
+"import_export.merge_keep_both_detail" = "両方保持: 両方のバージョンを保存（名前変更）";
+"import_export.export_detailed_guide" = "BodyLapseデータのバックアップを作成します。特定のデータタイプと日付範囲を選択してエクスポートできます。";
+"import_export.export_includes" = "エクスポートには選択したすべてのデータが安全な形式で含まれます";
+"import_export.export_format" = ".bodylapseファイルは圧縮されたアーカイブです";
+"import_export.export_privacy" = "共有しない限り、あなたのデータはデバイスから出ません";
+
+/* Individual Photo Import */
+"import_export.import_single_photo" = "写真ライブラリからインポート";
+"import_export.import_single_photo_description" = "写真ライブラリから写真を追加";
+"import_export.how_to_import_photos" = "写真のインポート方法";
+"import_export.photo_import_instruction1" = "ライブラリから写真を選択";
+"import_export.photo_import_instruction2" = "写真の日付を選択";
+"import_export.photo_import_instruction3" = "体重データを追加（オプション）";
+"import_export.select_photo" = "写真を選択";
+"import_export.photo_selected" = "写真を選択済み";
+"import_export.photo_date" = "写真の日付";
+"import_export.category" = "カテゴリ";
+"import_export.photo_details" = "写真の詳細";
+"import_export.weight_data_optional" = "体重データはオプションで、プレミアムユーザーのみ利用可能です";
+"import_export.import_photo" = "写真をインポート";
+"import_export.import_success" = "インポート成功";
+"import_export.photo_imported_successfully" = "写真のインポートが完了しました！";
+"import_export.invalid_image" = "無効な画像形式です";
+"import_export.photo_already_exists" = "この日付とカテゴリには既に写真が存在します";
+
+/* Import/Export Help */
+"import_export.help_title" = "インポート/エクスポート ヘルプ";
+"import_export.help_overview_title" = "概要";
+"import_export.help_overview_description" = "インポート/エクスポート機能を使用して、進捗をバックアップしたり、デバイス間でデータを転送したり、以前のバックアップから復元したりできます。";
+"import_export.help_export_title" = "データのエクスポート";
+"import_export.help_import_title" = "データのインポート";
+"import_export.help_faq_title" = "よくある質問";
+"import_export.help_tips_title" = "ヒントとベストプラクティス";
+
+/* Export Help Details */
+"import_export.help_export_what" = "エクスポートされる内容：";
+"import_export.help_export_item_photos" = "メタデータ付きの進捗写真";
+"import_export.help_export_item_videos" = "生成されたタイムラプス動画";
+"import_export.help_export_item_weight" = "体重と体脂肪率データ";
+"import_export.help_export_item_notes" = "日々のメモ";
+"import_export.help_export_item_categories" = "カスタムカテゴリ";
+"import_export.help_export_item_settings" = "アプリの設定と環境設定";
+"import_export.help_export_options" = "エクスポートオプション：";
+"import_export.help_export_options_description" = "エクスポートに含める特定のデータタイプ、日付範囲、カテゴリを選択します。";
+"import_export.help_export_format" = "ファイル形式：";
+"import_export.help_export_format_description" = "エクスポートは選択したすべてのデータを含む圧縮アーカイブである.bodylapseファイルを作成します。";
+
+/* Import Help Details */
+"import_export.help_import_types" = "インポートタイプ：";
+"import_export.help_import_backup" = "完全バックアップインポート";
+"import_export.help_import_backup_description" = "すべてのデータを含む完全な.bodylapseバックアップファイルをインポート";
+"import_export.help_import_photo" = "個別写真インポート";
+"import_export.help_import_photo_description" = "特定の日付の写真ライブラリから個別の写真をインポート";
+"import_export.help_merge_strategies" = "マージ戦略：";
+"import_export.help_merge_skip" = "既存をスキップ";
+"import_export.help_merge_skip_description" = "現在のデータをすべて保持します。インポートから新しいアイテムのみが追加されます。不確かな場合の安全なオプションです。";
+"import_export.help_merge_replace" = "既存を置き換え";
+"import_export.help_merge_replace_description" = "競合が発生した場合、現在のデータをインポートされたデータで上書きします。注意して使用してください。";
+"import_export.help_merge_keep_both" = "両方のバージョンを保持";
+"import_export.help_merge_keep_both_description" = "インポートされたアイテムの名前を変更して両方のバージョンを保存します。古いデータと新しいデータの比較に適しています。";
+
+/* FAQ */
+"import_export.help_faq_q1" = "カメラロールから写真をインポートできますか？";
+"import_export.help_faq_a1" = "はい！「ライブラリから写真をインポート」を使用して、特定の日付の個別の写真を追加できます。";
+"import_export.help_faq_q2" = "インポート中に既存のデータはどうなりますか？";
+"import_export.help_faq_a2" = "マージ戦略によって異なります。「スキップ」は既存のデータを保持し、新しいアイテムのみを追加します。「置き換え」は既存のデータをインポートされたデータで上書きします。";
+"import_export.help_faq_q3" = "バックアップを別のデバイスと共有できますか？";
+"import_export.help_faq_a3" = "はい、エクスポート後、AirDrop、メール、またはクラウドストレージを使用して.bodylapseファイルを共有できます。";
+"import_export.help_faq_q4" = "バックアップファイルのサイズはどのくらいですか？";
+"import_export.help_faq_a4" = "ファイルサイズは写真と動画の数によって異なります。アプリはサイズを最小限に抑えるためにデータを圧縮します。";
+"import_export.help_faq_q5" = "エクスポートしたファイルをインポートできないのはなぜですか？";
+"import_export.help_faq_a5" = "アクセス権限エラーが表示される場合は、ファイルが完全にダウンロードされていることを確認してください（iCloudにない）。ファイルアプリでファイルを長押しし、必要に応じて「ダウンロード」を選択してください。";
+
+/* Tips */
+"import_export.help_tip1" = "進捗のバックアップを作成するために定期的にエクスポート";
+"import_export.help_tip2" = "日付範囲を使用して、より小さく集中したエクスポートを作成";
+"import_export.help_tip3" = "変更をプレビューするために、最初に「スキップ」戦略でインポートをテスト";
+"import_export.help_tip4" = "個別の写真インポートは、逃した日を追加するのに最適";
+
+/* Import Errors */
+"import_export.permission_error" = "選択したファイルにアクセスできません。ファイルアプリから再度選択してください。";
+"import_export.file_access_error" = "選択したファイルを読み込めません。ファイルがダウンロードされていることを確認してから再試行してください。";
+"import_export.error_export_failed" = "エクスポート失敗: %@";
+"import_export.error_import_failed" = "インポート失敗: %@";
+"import_export.error_invalid_format" = "無効なファイル形式";
+"import_export.error_no_data" = "エクスポートするデータがありません";
+"import_export.error_file_not_found" = "ファイルが見つかりません";
+"import_export.error_zip_failed" = "ZIP操作に失敗しました";
+
+/* Photo Capture */
+"photo.replace_today_title" = "今日の写真を置き換えますか？";
+"photo.replace_today_message" = "1日1枚のみ保存できます。既存の写真は置き換えられます。";
+"photo.guidelines" = "ガイドライン";
+"photo.switch_camera" = "切替";
+"photo.add_measurements_optional" = "測定値を追加（オプション）";
+"photo.body_fat" = "体脂肪";
+"photo.enter_value" = "0.0";
+"photo.measurements_note" = "これらの測定値は後でカレンダービューからいつでも追加・更新できます。";

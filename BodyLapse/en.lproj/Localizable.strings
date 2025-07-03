@@ -30,6 +30,7 @@
 "common.processing" = "Processing...";
 "common.replace" = "Replace";
 "common.retake" = "Retake";
+"common.copy" = "Copy";
 "common.use_photo" = "Use Photo";
 "common.save_photo" = "Save Photo";
 "common.enable" = "Enable";
@@ -82,6 +83,10 @@
 "calendar.add_weight_hint" = "Add weight data when saving photos";
 "calendar.reload_data" = "Reload Data";
 "calendar.add_memo" = "Add memo";
+"calendar.upload_photo" = "Upload Photo";
+"calendar.invalid_image" = "Invalid image format";
+"calendar.photo_already_exists" = "A photo already exists for this date and category";
+"calendar.photo_imported" = "Photo imported successfully";
 
 /* Camera View */
 "camera.access_required" = "Camera Access Required";
@@ -107,6 +112,21 @@
 "gallery.photo_saved" = "Photo saved to library";
 "gallery.video_saved" = "Video saved to library";
 "gallery.photos_count" = "photos";
+"gallery.action_cannot_be_undone" = "This action cannot be undone.";
+"gallery.play" = "Play";
+"gallery.select_dates" = "Select Dates";
+"gallery.clear_all" = "Clear All";
+"gallery.deselect_all" = "Deselect All";
+"gallery.select_all" = "Select All";
+"gallery.select" = "Select";
+"gallery.no_photos_matching_filter" = "No photos matching filter criteria";
+"gallery.newest" = "Newest";
+"gallery.oldest" = "Oldest";
+"gallery.all" = "All";
+"gallery.items_selected" = "%d selected";
+"gallery.delete_items_count" = "Delete %d items?";
+"gallery.photos_saved_count" = "%d photos saved";
+"gallery.videos_saved_count" = "%d videos saved";
 
 /* Settings View */
 "settings.title" = "Settings";
@@ -222,7 +242,7 @@
 "onboarding.passcode_mismatch" = "Passcodes do not match";
 
 /* Onboarding Premium Features */
-"onboarding.premium.title" = "Unlock Premium Features";
+"onboarding.premium.title" = "BodyLapse Premium\nUnlock Premium Features";
 "onboarding.premium.subtitle" = "Take your fitness journey to the next level with exclusive tools";
 "onboarding.premium.metrics.title" = "Track Your Metrics";
 "onboarding.premium.metrics.description" = "Monitor weight and body fat percentage with detailed charts";
@@ -282,6 +302,10 @@
 "weight.body_fat" = "Body Fat %";
 "weight.enter_weight" = "Enter weight";
 "weight.enter_body_fat" = "Enter body fat percentage";
+"weight.no_data_yet" = "No Weight Data Yet";
+"weight.start_tracking_message" = "Start tracking your weight to see your progress over time";
+"weight.add_first_entry" = "Add First Entry";
+"weight.recent_entries" = "Recent Entries";
 
 /* Date and Time */
 "date.today" = "Today";
@@ -377,7 +401,7 @@
 "import_export.export_description" = "Backup photos, videos, and settings";
 "import_export.import_data" = "Import Data";
 "import_export.import_description" = "Restore data from backup";
-"import_export.import_footer" = "Only BodyLapse export files (.bodylapse) can be imported";
+"import_export.import_footer" = "Only BodyLapse export files (.bodylapse) can be imported. If importing from iCloud, make sure the file is downloaded first.";
 "import_export.export_completed" = "Export Complete";
 "import_export.export_completed_message" = "Data export completed successfully";
 "import_export.import_completed" = "Import Complete";
@@ -510,9 +534,116 @@
 /* Confirmation View */
 "confirm.retake" = "Retake";
 "confirm.confirm" = "Confirm";
+"contour.confirm_title" = "Confirm Body Outline";
+"contour.confirm_question" = "Is the green outline correctly following your body?";
 
 /* Timer */
 "timer.off" = "Off";
 "timer.3s" = "3 seconds";
 "timer.5s" = "5 seconds";
 "timer.10s" = "10 seconds";
+
+/* Import/Export Enhancements */
+"import_export.learn_more" = "Learn more";
+"import_export.show_less" = "Show less";
+"import_export.import_detailed_guide" = "Import data from a backup file created by BodyLapse. You can choose which data to import and how to handle duplicates.";
+"import_export.merge_skip_detail" = "Skip: Keep your existing data, only add new items";
+"import_export.merge_replace_detail" = "Replace: Overwrite existing data with imported data";
+"import_export.merge_keep_both_detail" = "Keep Both: Save both versions (renamed)";
+"import_export.export_detailed_guide" = "Create a backup of your BodyLapse data. You can select specific data types and date ranges to export.";
+"import_export.export_includes" = "Export includes all selected data in a secure format";
+"import_export.export_format" = ".bodylapse files are compressed archives";
+"import_export.export_privacy" = "Your data never leaves your device unless you share it";
+
+/* Individual Photo Import */
+"import_export.import_single_photo" = "Import Photo from Library";
+"import_export.import_single_photo_description" = "Add a photo from your photo library";
+"import_export.how_to_import_photos" = "How to Import Photos";
+"import_export.photo_import_instruction1" = "Select a photo from your library";
+"import_export.photo_import_instruction2" = "Choose the date for the photo";
+"import_export.photo_import_instruction3" = "Optionally add weight data";
+"import_export.select_photo" = "Select Photo";
+"import_export.photo_selected" = "Photo Selected";
+"import_export.photo_date" = "Photo Date";
+"import_export.category" = "Category";
+"import_export.photo_details" = "Photo Details";
+"import_export.weight_data_optional" = "Weight data is optional and only available for premium users";
+"import_export.import_photo" = "Import Photo";
+"import_export.import_success" = "Import Successful";
+"import_export.photo_imported_successfully" = "Photo imported successfully!";
+"import_export.invalid_image" = "Invalid image format";
+"import_export.photo_already_exists" = "A photo already exists for this date and category";
+
+/* Import/Export Help */
+"import_export.help_title" = "Import/Export Help";
+"import_export.help_overview_title" = "Overview";
+"import_export.help_overview_description" = "Import/Export allows you to backup your progress, transfer data between devices, or restore from a previous backup.";
+"import_export.help_export_title" = "Exporting Your Data";
+"import_export.help_import_title" = "Importing Data";
+"import_export.help_faq_title" = "Frequently Asked Questions";
+"import_export.help_tips_title" = "Tips & Best Practices";
+
+/* Export Help Details */
+"import_export.help_export_what" = "What gets exported:";
+"import_export.help_export_item_photos" = "Progress photos with metadata";
+"import_export.help_export_item_videos" = "Generated time-lapse videos";
+"import_export.help_export_item_weight" = "Weight and body fat data";
+"import_export.help_export_item_notes" = "Daily notes and memos";
+"import_export.help_export_item_categories" = "Custom categories";
+"import_export.help_export_item_settings" = "App settings and preferences";
+"import_export.help_export_options" = "Export Options:";
+"import_export.help_export_options_description" = "Select specific data types, date ranges, and categories to include in your export.";
+"import_export.help_export_format" = "File Format:";
+"import_export.help_export_format_description" = "Exports create a .bodylapse file, which is a compressed archive containing all selected data.";
+
+/* Import Help Details */
+"import_export.help_import_types" = "Import Types:";
+"import_export.help_import_backup" = "Full Backup Import";
+"import_export.help_import_backup_description" = "Import a complete .bodylapse backup file with all data";
+"import_export.help_import_photo" = "Single Photo Import";
+"import_export.help_import_photo_description" = "Import individual photos from your photo library for specific dates";
+"import_export.help_merge_strategies" = "Merge Strategies:";
+"import_export.help_merge_skip" = "Skip Existing";
+"import_export.help_merge_skip_description" = "Preserves all your current data. Only new items from the import will be added. Safe option if unsure.";
+"import_export.help_merge_replace" = "Replace Existing";
+"import_export.help_merge_replace_description" = "Overwrites your current data with imported data when conflicts occur. Use with caution.";
+"import_export.help_merge_keep_both" = "Keep Both Versions";
+"import_export.help_merge_keep_both_description" = "Saves both versions by renaming imported items. Good for comparing old and new data.";
+
+/* FAQ */
+"import_export.help_faq_q1" = "Can I import photos from my camera roll?";
+"import_export.help_faq_a1" = "Yes! Use 'Import Photo from Library' to add individual photos for specific dates.";
+"import_export.help_faq_q2" = "What happens to my existing data during import?";
+"import_export.help_faq_a2" = "It depends on your merge strategy. 'Skip' preserves existing data and only adds new items. 'Replace' overwrites existing data with imported data.";
+"import_export.help_faq_q3" = "Can I share my backup with another device?";
+"import_export.help_faq_a3" = "Yes, after exporting, you can share the .bodylapse file via AirDrop, email, or cloud storage.";
+"import_export.help_faq_q4" = "How large are backup files?";
+"import_export.help_faq_a4" = "File size depends on the number of photos and videos. The app compresses data to minimize size.";
+"import_export.help_faq_q5" = "Why can't I import my exported file?";
+"import_export.help_faq_a5" = "If you see a permission error, make sure the file is fully downloaded (not in iCloud). In Files app, tap and hold the file, then select 'Download' if needed.";
+
+/* Tips */
+"import_export.help_tip1" = "Export regularly to create backups of your progress";
+"import_export.help_tip2" = "Use date ranges to create smaller, focused exports";
+"import_export.help_tip3" = "Test imports with 'Skip' strategy first to preview changes";
+"import_export.help_tip4" = "Individual photo import is perfect for adding missed days";
+
+/* Import Errors */
+"import_export.permission_error" = "Cannot access the selected file. Please try selecting it again from Files app.";
+"import_export.file_access_error" = "Unable to read the selected file. Make sure the file is downloaded and try again.";
+"import_export.error_export_failed" = "Export failed: %@";
+"import_export.error_import_failed" = "Import failed: %@";
+"import_export.error_invalid_format" = "Invalid file format";
+"import_export.error_no_data" = "No data to export";
+"import_export.error_file_not_found" = "File not found";
+"import_export.error_zip_failed" = "ZIP operation failed";
+
+/* Photo Capture */
+"photo.replace_today_title" = "Replace Today's Photo?";
+"photo.replace_today_message" = "You can only save one photo per day. The existing photo will be replaced.";
+"photo.guidelines" = "Guidelines";
+"photo.switch_camera" = "Switch";
+"photo.add_measurements_optional" = "Add Measurements (Optional)";
+"photo.body_fat" = "Body Fat";
+"photo.enter_value" = "0.0";
+"photo.measurements_note" = "You can always add or update these measurements later from the Calendar view.";
