@@ -298,6 +298,8 @@
 "premium.subscription_length" = "Suscripción Mensual (Renovación automática)";
 "premium.subscription_details" = "Suscripción de 1 mes con renovación automática";
 "premium.includes_all_features" = "Incluye todas las funciones premium durante 1 mes:";
+"premium.start_with_free_month" = "Comienza con 1 mes gratis";
+"premium.subscribe_now" = "Suscribirse Ahora";
 
 /* Weight Input */
 "weight.title" = "Entrada de Peso";
@@ -650,3 +652,9 @@
 "photo.body_fat" = "Grasa Corporal";
 "photo.enter_value" = "0.0";
 "photo.measurements_note" = "Siempre puedes agregar o actualizar estas medidas más tarde desde la vista de Calendario.";
+
+/* Apple Health Integration */
+"weight.syncing_with_health" = "Sincronizando con Apple Health";
+"weight.loading_from_health" = "Cargando desde Health";
+"settings.apple_health_integration" = "Integración con Apple Health";
+"weight.enable_health_sync" = "Habilitar Sincronización de Salud en Ajustes";

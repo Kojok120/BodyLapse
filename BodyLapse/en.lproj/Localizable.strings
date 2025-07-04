@@ -298,6 +298,8 @@
 "premium.subscription_length" = "Monthly Subscription (Auto-renewing)";
 "premium.subscription_details" = "1 month subscription with automatic renewal";
 "premium.includes_all_features" = "Includes all premium features for 1 month:";
+"premium.start_with_free_month" = "Start with 1 month free";
+"premium.subscribe_now" = "Subscribe Now";
 
 /* Weight Input */
 "weight.title" = "Weight Input";
@@ -650,3 +652,9 @@
 "photo.body_fat" = "Body Fat";
 "photo.enter_value" = "0.0";
 "photo.measurements_note" = "You can always add or update these measurements later from the Calendar view.";
+
+/* Apple Health Integration */
+"weight.syncing_with_health" = "Syncing with Apple Health";
+"weight.loading_from_health" = "Loading from Health";
+"settings.apple_health_integration" = "Apple Health Integration";
+"weight.enable_health_sync" = "Enable Health Sync in Settings";

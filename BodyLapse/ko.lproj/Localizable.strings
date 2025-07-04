@@ -298,6 +298,8 @@
 "premium.subscription_length" = "월간 구독 (자동 갱신)";
 "premium.subscription_details" = "1개월 구독 (자동 갱신)";
 "premium.includes_all_features" = "1개월간 모든 프리미엄 기능 포함:";
+"premium.start_with_free_month" = "1개월 무료로 시작";
+"premium.subscribe_now" = "지금 구독하기";
 
 /* Weight Input */
 "weight.title" = "체중 입력";
@@ -650,3 +652,9 @@
 "photo.body_fat" = "체지방";
 "photo.enter_value" = "0.0";
 "photo.measurements_note" = "이러한 측정값은 나중에 캘린더 뷰에서 언제든지 추가하거나 업데이트할 수 있습니다.";
+
+/* Apple Health Integration */
+"weight.syncing_with_health" = "Apple 건강과 동기화 중";
+"weight.loading_from_health" = "건강에서 불러오는 중";
+"settings.apple_health_integration" = "Apple 건강 연동";
+"weight.enable_health_sync" = "설정에서 건강 동기화 활성화";

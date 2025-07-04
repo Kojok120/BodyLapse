@@ -156,19 +156,30 @@ struct SettingsView: View {
                         }
                         .foregroundColor(.primary)
                         
-                        // HealthKit Integration
-                        Toggle(isOn: $healthKitEnabled) {
+                        // HealthKit Integration - Clear Apple Health Branding
+                        VStack(spacing: 12) {
                             HStack {
-                                Image(systemName: "heart.fill")
+                                Image(systemName: "heart.text.square.fill")
+                                    .font(.title2)
                                     .foregroundColor(.red)
-                                VStack(alignment: .leading) {
+                                Text("settings.apple_health_integration".localized)
+                                    .font(.headline)
+                                Spacer()
+                            }
+                            
+                            Toggle(isOn: $healthKitEnabled) {
+                                VStack(alignment: .leading, spacing: 4) {
                                     Text("settings.sync_health".localized)
+                                        .font(.subheadline)
                                     Text("settings.auto_import".localized)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                             }
                         }
+                        .padding()
+                        .background(Color.red.opacity(0.05))
+                        .cornerRadius(12)
                         .onChange(of: healthKitEnabled) { _, newValue in
                             if newValue {
                                 requestHealthKitPermission()

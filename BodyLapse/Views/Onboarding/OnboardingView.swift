@@ -231,24 +231,24 @@ struct OnboardingView: View {
                         .foregroundColor(.white)
                         .padding(.top, 30)
                     
-                    // Subscription length (REQUIRED by App Store)
-                    Text("premium.subscription_length".localized)
-                        .font(.headline)
-                        .foregroundColor(.white)
+                    // Price (REQUIRED by App Store) - MOST PROMINENT
+                    if let product = premiumViewModel.products.first {
+                        Text(product.displayPrice + "/" + "date.month".localized)
+                            .font(.largeTitle.bold())
+                            .foregroundColor(.white)
+                    } else {
+                        Text("premium.price.fallback".localized + "/" + "date.month".localized)
+                            .font(.largeTitle.bold())
+                            .foregroundColor(.white)
+                    }
                     
-                    // Price (REQUIRED by App Store) - Always visible
-                    HStack(spacing: 6) {
-                        if let product = premiumViewModel.products.first {
-                            Text(product.displayPrice + "/" + "date.month".localized)
-                                .font(.title3.bold())
-                                .foregroundColor(.white)
-                        } else {
-                            Text("premium.price.fallback".localized + "/" + "date.month".localized)
-                                .font(.title3.bold())
-                                .foregroundColor(.white)
-                        }
+                    // Subscription length and trial info (subordinate)
+                    VStack(spacing: 4) {
+                        Text("premium.subscription_length".localized)
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.9))
                         
-                        Text("(" + "premium.after_trial".localized + ")")
+                        Text("premium.start_with_free_month".localized)
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.9))
                     }
@@ -271,27 +271,12 @@ struct OnboardingView: View {
                 ScrollView {
                     VStack(spacing: 15) {
                     
-                        // Free Trial Badge
-                        HStack {
-                            Image(systemName: "gift.fill")
-                                .font(.body)
-                            Text("premium.first_month_free".localized)
-                                .font(.headline.bold())
-                        }
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule()
-                                .fill(Color.yellow)
-                        )
-                        .padding(.top, 15)
-                        
                         Text("onboarding.premium.subtitle".localized)
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.9))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
+                            .padding(.top, 15)
             
                         // Premium features list
                         VStack(spacing: 10) {
@@ -363,7 +348,7 @@ struct OnboardingView: View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.body)
-                .foregroundColor(.yellow)
+                .foregroundColor(.white)
                 .frame(width: 24)
             
             VStack(alignment: .leading, spacing: 1) {
@@ -586,16 +571,14 @@ struct OnboardingView: View {
                                 }
                             }
                         }) {
-                            VStack(spacing: 4) {
+                            Group {
                                 if premiumViewModel.isPurchasing {
                                     ProgressView()
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                         .scaleEffect(0.8)
                                 } else {
-                                    Text("premium.start_free_trial".localized)
+                                    Text("premium.subscribe_now".localized)
                                         .font(.subheadline.bold())
-                                    Text("premium.then_per_month".localized)
-                                        .font(.caption2)
                                 }
                             }
                             .frame(minWidth: 120)

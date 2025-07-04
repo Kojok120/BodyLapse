@@ -296,6 +296,8 @@
 "premium.subscription_length" = "月額サブスクリプション（自動更新）";
 "premium.subscription_details" = "1ヶ月間のサブスクリプション（自動更新）";
 "premium.includes_all_features" = "1ヶ月間すべてのプレミアム機能が利用可能：";
+"premium.start_with_free_month" = "1ヶ月無料で始める";
+"premium.subscribe_now" = "今すぐ登録";
 
 /* Weight Input */
 "weight.title" = "体重入力";
@@ -658,3 +660,9 @@
 "photo.body_fat" = "体脂肪";
 "photo.enter_value" = "0.0";
 "photo.measurements_note" = "これらの測定値は後でカレンダービューからいつでも追加・更新できます。";
+
+/* Apple Health Integration */
+"weight.syncing_with_health" = "Apple ヘルスケアと同期中";
+"weight.loading_from_health" = "ヘルスケアから読み込み中";
+"settings.apple_health_integration" = "Apple ヘルスケア連携";
+"weight.enable_health_sync" = "設定でヘルスケア同期を有効にする";
