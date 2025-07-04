@@ -89,7 +89,7 @@ struct CalendarView: View {
     }
     
     private var mainContent: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: calculateSpacing()) {
             headerView
             
             photoPreviewSection
@@ -662,7 +662,7 @@ struct CalendarView: View {
                     }
                     .frame(width: geometry.size.width, height: geometry.size.height)
                 }
-                .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
+                .frame(height: calculatePhotoHeight())
             } else if categoriesForSelectedDate.count > 1 {
                 // Multiple categories - use TabView for smooth swiping
                 TabView(selection: $currentCategoryIndex) {
@@ -830,7 +830,7 @@ struct CalendarView: View {
                         .frame(width: geometry.size.width, height: geometry.size.height)
                     }
                 }
-                .frame(height: subscriptionManager.isPremium ? UIScreen.main.bounds.height * 0.38 : UIScreen.main.bounds.height * 0.46)
+                .frame(height: calculatePhotoHeight())
                 .background(Color.black)
                 .cornerRadius(12)
             }
@@ -1214,6 +1214,27 @@ struct CalendarView: View {
                     showingSaveSuccess = false
                 }
             }
+        }
+    }
+    
+    private func calculateSpacing() -> CGFloat {
+        let screenHeight = UIScreen.main.bounds.height
+        let isSmallScreen = screenHeight < 700
+        return isSmallScreen ? 4 : 6
+    }
+    
+    private func calculatePhotoHeight() -> CGFloat {
+        let screenHeight = UIScreen.main.bounds.height
+        
+        // Small screen detection (iPhone SE, etc.)
+        let isSmallScreen = screenHeight < 700
+        
+        if isSmallScreen {
+            // For small screens, use smaller ratios to prevent overlap
+            return subscriptionManager.isPremium ? screenHeight * 0.28 : screenHeight * 0.35
+        } else {
+            // For normal screens, use original ratios
+            return subscriptionManager.isPremium ? screenHeight * 0.38 : screenHeight * 0.46
         }
     }
     
