@@ -222,119 +222,116 @@ struct OnboardingView: View {
             )
             .ignoresSafeArea()
             
-            VStack(spacing: 10) {
-            // Free Trial Badge - PROMINENT
-            HStack {
-                Image(systemName: "gift.fill")
-                    .font(.title2)
-                Text("premium.first_month_free".localized)
-                    .font(.title3.bold())
-            }
-            .foregroundColor(.black)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 10)
-            .background(
-                Capsule()
-                    .fill(Color.yellow)
-                    .shadow(color: .yellow.opacity(0.5), radius: 10, x: 0, y: 5)
-            )
-            .scaleEffect(1.05)
-            .padding(.top, 10)
-            
-            Image(systemName: "crown.fill")
-                .font(.system(size: 40))
-                .foregroundColor(.yellow)
-                .padding(.top, 5)
-            
-            // Subscription title (REQUIRED by App Store)
-            Text("premium.title".localized)
-                .font(.headline.bold())
-                .foregroundColor(.white)
-            
-            // Subscription length (REQUIRED by App Store)
-            Text("premium.subscription_length".localized)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.9))
-            
-            Text("onboarding.premium.subtitle".localized)
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.8))
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .lineSpacing(1)
-                .padding(.horizontal, 20)
-                .padding(.top, 2)
-            
-            // Premium features list - balanced size
-            VStack(spacing: 8) {
-                compactPremiumFeatureItem(
-                    icon: "chart.line.uptrend.xyaxis",
-                    title: "premium.feature.tracking".localized,
-                    description: "premium.feature.tracking_desc".localized
-                )
-                
-                compactPremiumFeatureItem(
-                    icon: "photo.stack",
-                    title: "premium.feature.advanced_tracking".localized,
-                    description: "premium.feature.advanced_tracking_desc".localized
-                )
-                
-                compactPremiumFeatureItem(
-                    icon: "xmark.circle.fill",
-                    title: "premium.feature.no_ads".localized,
-                    description: "premium.feature.no_ads_desc".localized
-                )
-                
-                compactPremiumFeatureItem(
-                    icon: "drop.fill",
-                    title: "premium.feature.no_watermark".localized,
-                    description: "premium.feature.no_watermark_desc".localized
-                )
-            }
-            .padding(.horizontal, 15)
-            .padding(.top, 10)
-            
-            Spacer(minLength: 5)
-            
-            // Price with trial emphasis (REQUIRED by App Store)
-            VStack(spacing: 4) {
-                HStack(spacing: 6) {
-                    if let product = SubscriptionManagerService.shared.products.first {
-                        Text(product.displayPrice + "/" + "date.month".localized)
-                            .font(.title3.bold())
-                            .foregroundColor(.white)
-                    } else {
-                        Text("premium.price.fallback".localized)
-                            .font(.title3.bold())
-                            .foregroundColor(.white)
+            VStack(spacing: 0) {
+                // REQUIRED App Store Information - Always visible at top
+                VStack(spacing: 10) {
+                    // Subscription title (REQUIRED by App Store) - Fixed for all languages
+                    Text("BodyLapse Premium")
+                        .font(.title.bold())
+                        .foregroundColor(.white)
+                        .padding(.top, 30)
+                    
+                    // Subscription length (REQUIRED by App Store)
+                    Text("premium.subscription_length".localized)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    // Price (REQUIRED by App Store) - Always visible
+                    HStack(spacing: 6) {
+                        if let product = premiumViewModel.products.first {
+                            Text(product.displayPrice + "/" + "date.month".localized)
+                                .font(.title3.bold())
+                                .foregroundColor(.white)
+                        } else {
+                            Text("premium.price.fallback".localized + "/" + "date.month".localized)
+                                .font(.title3.bold())
+                                .foregroundColor(.white)
+                        }
+                        
+                        Text("(" + "premium.after_trial".localized + ")")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.9))
                     }
                     
-                    Text("(" + "premium.after_trial".localized + ")")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.8))
+                    // Links (REQUIRED by App Store)
+                    HStack(spacing: 20) {
+                        Link("premium.terms".localized, destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+                            .font(.footnote.bold())
+                            .foregroundColor(.white)
+                            .underline()
+                        
+                        Link("premium.privacy".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!)
+                            .font(.footnote.bold())
+                            .foregroundColor(.white)
+                            .underline()
+                    }
+                    .padding(.top, 8)
                 }
                 
-                Text("premium.auto_renew".localized)
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.6))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-            .padding(.top, 8)
+                ScrollView {
+                    VStack(spacing: 15) {
+                    
+                        // Free Trial Badge
+                        HStack {
+                            Image(systemName: "gift.fill")
+                                .font(.body)
+                            Text("premium.first_month_free".localized)
+                                .font(.headline.bold())
+                        }
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(Color.yellow)
+                        )
+                        .padding(.top, 15)
+                        
+                        Text("onboarding.premium.subtitle".localized)
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.9))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
             
-            // Legal links (REQUIRED by App Store)
-            HStack(spacing: 20) {
-                Link("premium.terms".localized, destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
-                
-                Link("premium.privacy".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!)
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
+                        // Premium features list
+                        VStack(spacing: 10) {
+                            compactPremiumFeatureItem(
+                                icon: "chart.line.uptrend.xyaxis",
+                                title: "premium.feature.tracking".localized,
+                                description: "premium.feature.tracking_desc".localized
+                            )
+                            
+                            compactPremiumFeatureItem(
+                                icon: "photo.stack",
+                                title: "premium.feature.advanced_tracking".localized,
+                                description: "premium.feature.advanced_tracking_desc".localized
+                            )
+                            
+                            compactPremiumFeatureItem(
+                                icon: "xmark.circle.fill",
+                                title: "premium.feature.no_ads".localized,
+                                description: "premium.feature.no_ads_desc".localized
+                            )
+                            
+                            compactPremiumFeatureItem(
+                                icon: "drop.fill",
+                                title: "premium.feature.no_watermark".localized,
+                                description: "premium.feature.no_watermark_desc".localized
+                            )
+                        }
+                        .padding(.horizontal, 15)
+            
+                        
+                        Text("premium.auto_renew".localized)
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.7))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 10)
+                            .padding(.bottom, 20)
+                    }
+                }
             }
-            .padding(.top, 5)
-            .padding(.bottom, 8)
-        }
         }
     }
     

@@ -6,6 +6,7 @@ Pods/
 
 # Build
 build/
+build_output/
 DerivedData/
 *.xcuserstate
 bodylapse-lp/
