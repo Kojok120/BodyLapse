@@ -106,6 +106,7 @@ class VideoGenerationService {
         let blurFaces: Bool
         let layout: VideoLayout
         let selectedCategories: [String]
+        let showDate: Bool
         
         enum TransitionStyle {
             case none
@@ -125,7 +126,8 @@ class VideoGenerationService {
             transitionStyle: .fade,
             blurFaces: false,
             layout: .single,
-            selectedCategories: []
+            selectedCategories: [],
+            showDate: true
         )
     }
     
@@ -261,7 +263,9 @@ class VideoGenerationService {
                     createPixelBuffer(
                         from: imageToProcess,
                         size: options.videoSize,
-                        addWatermark: options.addWatermark
+                        addWatermark: options.addWatermark,
+                        showDate: options.showDate,
+                        date: photo.captureDate
                     )
                 }) {
                     // Wait for input to be ready using async
@@ -315,7 +319,9 @@ class VideoGenerationService {
                             from: categoryPhotos,
                             categories: options.selectedCategories,
                             size: options.videoSize,
-                            addWatermark: options.addWatermark
+                            addWatermark: options.addWatermark,
+                            showDate: options.showDate,
+                            date: date
                         )
                     }) {
                         // Wait for input to be ready using async
@@ -355,7 +361,7 @@ class VideoGenerationService {
     
     
     
-    private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool) -> CVPixelBuffer? {
+    private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool, showDate: Bool = false, date: Date? = nil) -> CVPixelBuffer? {
         // Fix orientation if needed
         let orientedImage = image.fixedOrientation()
         
@@ -423,6 +429,11 @@ class VideoGenerationService {
             context.draw(cgImage, in: drawRect)
         }
         
+        // Add date if needed
+        if showDate, let date = date {
+            drawDate(date, in: context, size: size)
+        }
+        
         // Add watermark if needed
         if addWatermark {
             drawWatermark(in: context, size: size)
@@ -479,7 +490,7 @@ class VideoGenerationService {
         UIGraphicsPushContext(context)
         let flippedRect = CGRect(
             x: textRect.origin.x,
-            y: size.height - textRect.maxY,
+            y: textRect.origin.y,
             width: textRect.width,
             height: textRect.height
         )
@@ -490,11 +501,77 @@ class VideoGenerationService {
         context.restoreGState()
     }
     
+    private func drawDate(_ date: Date, in context: CGContext, size: CGSize) {
+        // Save current context state
+        context.saveGState()
+        
+        // Format date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/MM/dd"
+        let dateText = dateFormatter.string(from: date)
+        
+        // Calculate appropriate font size based on video size
+        let baseFontSize: CGFloat = min(size.width, size.height) * 0.06 // 6% of smaller dimension
+        let fontSize = max(baseFontSize, 36) // Minimum 36pt
+        
+        // Create date attributes with shadow
+        let shadow = NSShadow()
+        shadow.shadowColor = UIColor.black.withAlphaComponent(0.5)
+        shadow.shadowOffset = CGSize(width: 2, height: 2)
+        shadow.shadowBlurRadius = 4
+        
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize, weight: .semibold),
+            .foregroundColor: UIColor.white.withAlphaComponent(0.9),
+            .shadow: shadow
+        ]
+        
+        // Calculate text size
+        let textSize = dateText.size(withAttributes: attributes)
+        
+        // Position at top center with padding
+        let padding: CGFloat = min(size.width, size.height) * 0.04 // 4% padding
+        let textRect = CGRect(
+            x: (size.width - textSize.width) / 2,
+            y: padding,
+            width: textSize.width,
+            height: textSize.height
+        )
+        
+        // Create a semi-transparent background for better visibility
+        let backgroundRect = textRect.insetBy(dx: -padding/2, dy: -padding/4)
+        context.setFillColor(UIColor.black.withAlphaComponent(0.3).cgColor)
+        let cornerRadius: CGFloat = 6
+        let path = UIBezierPath(roundedRect: backgroundRect, cornerRadius: cornerRadius)
+        context.addPath(path.cgPath)
+        context.fillPath()
+        
+        // Flip coordinate system for text drawing
+        context.translateBy(x: 0, y: size.height)
+        context.scaleBy(x: 1.0, y: -1.0)
+        
+        // Draw the date text
+        UIGraphicsPushContext(context)
+        let flippedRect = CGRect(
+            x: textRect.origin.x,
+            y: textRect.origin.y,
+            width: textRect.width,
+            height: textRect.height
+        )
+        dateText.draw(in: flippedRect, withAttributes: attributes)
+        UIGraphicsPopContext()
+        
+        // Restore context state
+        context.restoreGState()
+    }
+    
     private func createSideBySidePixelBuffer(
         from categoryPhotos: [String: UIImage],
         categories: [String],
         size: CGSize,
-        addWatermark: Bool
+        addWatermark: Bool,
+        showDate: Bool = false,
+        date: Date? = nil
     ) -> CVPixelBuffer? {
         let options: [String: Any] = [
             kCVPixelBufferCGImageCompatibilityKey as String: kCFBooleanTrue!,
@@ -610,6 +687,11 @@ class VideoGenerationService {
             context.move(to: CGPoint(x: 0, y: cellHeight))
             context.addLine(to: CGPoint(x: size.width, y: cellHeight))
             context.strokePath()
+        }
+        
+        // Add date if needed
+        if showDate, let date = date {
+            drawDate(date, in: context, size: size)
         }
         
         // Add watermark if needed

@@ -16,6 +16,9 @@ struct UserSettings: Codable {
     // App Rating
     var hasRatedApp: Bool = false
     
+    // Video Generation
+    var showDateInVideo: Bool = true
+    
     // Debug settings
     #if DEBUG
     var debugAllowPastDatePhotos: Bool = false

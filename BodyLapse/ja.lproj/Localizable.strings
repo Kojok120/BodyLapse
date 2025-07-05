@@ -64,6 +64,7 @@
 "calendar.speed" = "速度";
 "calendar.quality" = "品質";
 "calendar.blur_faces" = "顔をぼかす";
+"calendar.show_date" = "日付を表示";
 "calendar.watermark_notice" = "無料版にはウォーターマークが含まれます";
 "calendar.estimated_duration" = "推定時間";
 "calendar.generate_video" = "動画を生成";
@@ -136,6 +137,8 @@
 "settings.reset_guideline" = "ボディガイドラインをリセット";
 "settings.set_guideline" = "ボディガイドラインを設定";
 "settings.weight_unit" = "重量単位";
+"settings.video_generation" = "動画生成";
+"settings.show_date_in_video" = "動画に日付を表示";
 "settings.security" = "セキュリティ";
 "settings.app_lock" = "アプリロック";
 "settings.change_pin" = "PINを変更";

@@ -64,6 +64,7 @@
 "calendar.speed" = "Velocidad";
 "calendar.quality" = "Calidad";
 "calendar.blur_faces" = "Difuminar Caras";
+"calendar.show_date" = "Mostrar Fecha";
 "calendar.watermark_notice" = "La versión gratuita incluye marca de agua";
 "calendar.estimated_duration" = "Duración Estimada";
 "calendar.generate_video" = "Generar Video";
@@ -136,6 +137,8 @@
 "settings.reset_guideline" = "Restablecer Guía Corporal";
 "settings.set_guideline" = "Establecer Guía Corporal";
 "settings.weight_unit" = "Unidad de Peso";
+"settings.video_generation" = "Generación de Video";
+"settings.show_date_in_video" = "Mostrar Fecha en Video";
 "settings.security" = "Seguridad";
 "settings.app_lock" = "Bloqueo de App";
 "settings.change_pin" = "Cambiar PIN";

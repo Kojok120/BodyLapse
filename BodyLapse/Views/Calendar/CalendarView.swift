@@ -1518,6 +1518,7 @@ struct VideoGenerationView: View {
     @State private var selectedSpeed: VideoSpeed = .normal
     @State private var selectedQuality: VideoQuality = .standard
     @State private var enableFaceBlur = false
+    @State private var showDateInVideo = true
     @State private var videoLayout: VideoGenerationService.VideoGenerationOptions.VideoLayout = .single
     @State private var selectedCategories: Set<String> = []
     @State private var availableCategories: [PhotoCategory] = []
@@ -1604,6 +1605,8 @@ struct VideoGenerationView: View {
                     
                     Toggle("calendar.blur_faces".localized, isOn: $enableFaceBlur)
                     
+                    Toggle("calendar.show_date".localized, isOn: $showDateInVideo)
+                    
                     // Video layout selection - Premium feature
                     if subscriptionManager.isPremium && availableCategories.count > 1 {
                         // Always use side-by-side layout for multiple categories
@@ -1665,7 +1668,8 @@ struct VideoGenerationView: View {
                             transitionStyle: .fade,
                             blurFaces: enableFaceBlur,
                             layout: videoLayout,
-                            selectedCategories: Array(selectedCategories)
+                            selectedCategories: Array(selectedCategories),
+                            showDate: showDateInVideo
                         )
                         
                         // Show interstitial ad for free users
@@ -1711,6 +1715,9 @@ struct VideoGenerationView: View {
             }
         }
         .onAppear {
+            // Initialize from user settings
+            showDateInVideo = userSettings.settings.showDateInVideo
+            
             // Load available categories
             let isPremium = subscriptionManager.isPremium
             availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)

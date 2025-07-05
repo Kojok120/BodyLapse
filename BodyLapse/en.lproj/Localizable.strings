@@ -64,6 +64,7 @@
 "calendar.speed" = "Speed";
 "calendar.quality" = "Quality";
 "calendar.blur_faces" = "Blur Faces";
+"calendar.show_date" = "Show Date";
 "calendar.watermark_notice" = "Free version includes a watermark";
 "calendar.estimated_duration" = "Estimated Duration";
 "calendar.generate_video" = "Generate Video";
@@ -136,6 +137,8 @@
 "settings.reset_guideline" = "Reset Body Guideline";
 "settings.set_guideline" = "Set Body Guideline";
 "settings.weight_unit" = "Weight Unit";
+"settings.video_generation" = "Video Generation";
+"settings.show_date_in_video" = "Show Date in Video";
 "settings.security" = "Security";
 "settings.app_lock" = "App Lock";
 "settings.change_pin" = "Change PIN";
