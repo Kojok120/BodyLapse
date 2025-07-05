@@ -59,6 +59,8 @@
 "calendar.period_label" = "기간";
 "calendar.selected_period" = "선택된 기간";
 "calendar.date_range" = "날짜 범위";
+"calendar.start_date" = "시작일";
+"calendar.end_date" = "종료일";
 "calendar.photos" = "사진";
 "calendar.video_settings" = "비디오 설정";
 "calendar.speed" = "속도";

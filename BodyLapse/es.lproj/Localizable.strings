@@ -59,6 +59,8 @@
 "calendar.period_label" = "Período";
 "calendar.selected_period" = "Período Seleccionado";
 "calendar.date_range" = "Rango de Fechas";
+"calendar.start_date" = "Fecha de Inicio";
+"calendar.end_date" = "Fecha de Fin";
 "calendar.photos" = "Fotos";
 "calendar.video_settings" = "Configuración de Video";
 "calendar.speed" = "Velocidad";

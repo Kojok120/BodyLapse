@@ -355,8 +355,8 @@ struct CalendarView: View {
             dateRange: dateRange,
             isGenerating: $isGeneratingVideo,
             userSettings: userSettings,
-            onGenerate: { options in
-                generateVideo(with: options)
+            onGenerate: { options, startDate, endDate in
+                generateVideo(with: options, startDate: startDate, endDate: endDate)
             }
         )
         .onAppear {
@@ -1055,12 +1055,10 @@ struct CalendarView: View {
         }
     }
     
-    private func generateVideo(with options: VideoGenerationService.VideoGenerationOptions) {
+    private func generateVideo(with options: VideoGenerationService.VideoGenerationOptions, startDate: Date, endDate: Date) {
         isGeneratingVideo = true
         videoGenerationProgress = 0
         
-        let startDate = dateRange.first ?? Date()
-        let endDate = dateRange.last ?? Date()
         let dateRange = startDate...endDate
         
         VideoGenerationService.shared.generateVideo(
@@ -1511,7 +1509,7 @@ struct VideoGenerationView: View {
     let dateRange: [Date]
     @Binding var isGenerating: Bool
     let userSettings: UserSettingsManager
-    let onGenerate: (VideoGenerationService.VideoGenerationOptions) -> Void
+    let onGenerate: (VideoGenerationService.VideoGenerationOptions, Date, Date) -> Void
     
     @Environment(\.dismiss) private var dismiss
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
@@ -1522,6 +1520,10 @@ struct VideoGenerationView: View {
     @State private var videoLayout: VideoGenerationService.VideoGenerationOptions.VideoLayout = .single
     @State private var selectedCategories: Set<String> = []
     @State private var availableCategories: [PhotoCategory] = []
+    
+    // Date range selection
+    @State private var customStartDate: Date = Date()
+    @State private var customEndDate: Date = Date()
     
     enum VideoSpeed: String, CaseIterable {
         case slow = "Slow (0.5s/frame)"
@@ -1571,6 +1573,7 @@ struct VideoGenerationView: View {
         NavigationView {
             Form {
                 Section(header: Text("calendar.period_label".localized)) {
+                    // Show current period info
                     HStack {
                         Text("calendar.selected_period".localized)
                         Spacer()
@@ -1578,15 +1581,23 @@ struct VideoGenerationView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    if let firstDate = dateRange.first,
-                       let lastDate = dateRange.last {
-                        HStack {
-                            Text("calendar.date_range".localized)
-                            Spacer()
-                            Text(formatDateRange(from: firstDate, to: lastDate))
-                                .foregroundColor(.secondary)
-                                .font(.caption)
-                        }
+                    // Always show date pickers
+                    DatePicker("calendar.start_date".localized, 
+                              selection: $customStartDate,
+                              in: ...customEndDate,
+                              displayedComponents: .date)
+                    
+                    DatePicker("calendar.end_date".localized,
+                              selection: $customEndDate,
+                              in: customStartDate...,
+                              displayedComponents: .date)
+                    
+                    HStack {
+                        Text("calendar.date_range".localized)
+                        Spacer()
+                        Text(formatDateRange(from: customStartDate, to: customEndDate))
+                            .foregroundColor(.secondary)
+                            .font(.caption)
                     }
                 }
                 
@@ -1692,21 +1703,21 @@ struct VideoGenerationView: View {
                                         print("[VideoGeneration] Found top view controller: \(type(of: viewController))")
                                         AdMobService.shared.showInterstitialAd(from: viewController) {
                                             print("[VideoGeneration] Interstitial ad closed - starting video generation")
-                                            onGenerate(options)
+                                            onGenerate(options, customStartDate, customEndDate)
                                         }
                                     } else {
                                         print("[VideoGeneration] Could not find view controller")
-                                        onGenerate(options)
+                                        onGenerate(options, customStartDate, customEndDate)
                                     }
                                 } else {
                                     print("[VideoGeneration] Could not find window")
-                                    onGenerate(options)
+                                    onGenerate(options, customStartDate, customEndDate)
                                 }
                             }
                         } else {
                             print("[VideoGeneration] Premium user - generating video without ad")
                             dismiss()
-                            onGenerate(options)
+                            onGenerate(options, customStartDate, customEndDate)
                         }
                     }
                     .fontWeight(.semibold)
@@ -1717,6 +1728,14 @@ struct VideoGenerationView: View {
         .onAppear {
             // Initialize from user settings
             showDateInVideo = userSettings.settings.showDateInVideo
+            
+            // Initialize custom date range from current dateRange
+            if let firstDate = dateRange.first {
+                customStartDate = firstDate
+            }
+            if let lastDate = dateRange.last {
+                customEndDate = lastDate
+            }
             
             // Load available categories
             let isPremium = subscriptionManager.isPremium
@@ -1740,11 +1759,9 @@ struct VideoGenerationView: View {
     
     private func countPhotosInRange() -> Int {
         let photos = PhotoStorageService.shared.photos
-        let startDate = dateRange.first ?? Date()
-        let endDate = dateRange.last ?? Date()
         
         return photos.filter { photo in
-            photo.captureDate >= startDate && photo.captureDate <= endDate
+            photo.captureDate >= customStartDate && photo.captureDate <= customEndDate
         }.count
     }
     

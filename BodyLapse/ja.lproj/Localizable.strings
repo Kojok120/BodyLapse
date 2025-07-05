@@ -59,6 +59,8 @@
 "calendar.period_label" = "期間";
 "calendar.selected_period" = "選択された期間";
 "calendar.date_range" = "日付範囲";
+"calendar.start_date" = "開始日";
+"calendar.end_date" = "終了日";
 "calendar.photos" = "写真";
 "calendar.video_settings" = "動画設定";
 "calendar.speed" = "速度";
