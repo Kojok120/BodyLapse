@@ -67,6 +67,7 @@
 "calendar.quality" = "Quality";
 "calendar.blur_faces" = "Blur Faces";
 "calendar.show_date" = "Show Date";
+"calendar.show_graph" = "Show Graph";
 "calendar.watermark_notice" = "Free version includes a watermark";
 "calendar.estimated_duration" = "Estimated Duration";
 "calendar.generate_video" = "Generate Video";
@@ -391,6 +392,7 @@
 "video.layout.single" = "Single";
 "video.layout.sidebyside" = "Side by Side";
 "video.category.select" = "Select Categories (Max 4)";
+"video.no_photo" = "No Photo";
 
 /* Gallery Filter */
 "gallery.filter" = "Filter";

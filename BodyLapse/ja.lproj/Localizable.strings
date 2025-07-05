@@ -67,6 +67,7 @@
 "calendar.quality" = "品質";
 "calendar.blur_faces" = "顔をぼかす";
 "calendar.show_date" = "日付を表示";
+"calendar.show_graph" = "グラフを表示";
 "calendar.watermark_notice" = "無料版にはウォーターマークが含まれます";
 "calendar.estimated_duration" = "推定時間";
 "calendar.generate_video" = "動画を生成";
@@ -390,6 +391,7 @@
 "video.layout.single" = "シングル";
 "video.layout.sidebyside" = "サイドバイサイド";
 "video.category.select" = "カテゴリ選択（最大4つ）";
+"video.no_photo" = "写真なし";
 
 /* Gallery Filter */
 "gallery.filter" = "フィルター";

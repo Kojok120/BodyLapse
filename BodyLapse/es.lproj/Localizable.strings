@@ -67,6 +67,7 @@
 "calendar.quality" = "Calidad";
 "calendar.blur_faces" = "Difuminar Caras";
 "calendar.show_date" = "Mostrar Fecha";
+"calendar.show_graph" = "Mostrar Gráfico";
 "calendar.watermark_notice" = "La versión gratuita incluye marca de agua";
 "calendar.estimated_duration" = "Duración Estimada";
 "calendar.generate_video" = "Generar Video";
@@ -392,6 +393,7 @@
 "video.layout.single" = "Individual";
 "video.layout.sidebyside" = "Lado a Lado";
 "video.category.select" = "Seleccionar Categorías (Máx 4)";
+"video.no_photo" = "Sin foto";
 
 /* Gallery Filter */
 "gallery.filter" = "Filtrar";

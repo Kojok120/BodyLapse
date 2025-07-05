@@ -67,6 +67,7 @@
 "calendar.quality" = "품질";
 "calendar.blur_faces" = "얼굴 흐리게";
 "calendar.show_date" = "날짜 표시";
+"calendar.show_graph" = "그래프 표시";
 "calendar.watermark_notice" = "무료 버전에는 워터마크가 포함됩니다";
 "calendar.estimated_duration" = "예상 시간";
 "calendar.generate_video" = "비디오 생성";
@@ -392,6 +393,7 @@
 "video.layout.single" = "단일";
 "video.layout.sidebyside" = "나란히";
 "video.category.select" = "카테고리 선택 (최대 4개)";
+"video.no_photo" = "사진 없음";
 
 /* Gallery Filter */
 "gallery.filter" = "필터";

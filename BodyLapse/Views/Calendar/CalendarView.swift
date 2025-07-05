@@ -1059,7 +1059,11 @@ struct CalendarView: View {
         isGeneratingVideo = true
         videoGenerationProgress = 0
         
-        let dateRange = startDate...endDate
+        // Ensure the date range includes the entire day
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: startDate)
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: endDate) ?? endDate
+        let dateRange = startOfDay...endOfDay
         
         VideoGenerationService.shared.generateVideo(
             from: viewModel.photos,
@@ -1517,6 +1521,7 @@ struct VideoGenerationView: View {
     @State private var selectedQuality: VideoQuality = .standard
     @State private var enableFaceBlur = false
     @State private var showDateInVideo = true
+    @State private var showGraphInVideo = true
     @State private var videoLayout: VideoGenerationService.VideoGenerationOptions.VideoLayout = .single
     @State private var selectedCategories: Set<String> = []
     @State private var availableCategories: [PhotoCategory] = []
@@ -1618,6 +1623,11 @@ struct VideoGenerationView: View {
                     
                     Toggle("calendar.show_date".localized, isOn: $showDateInVideo)
                     
+                    // Show graph toggle - Premium feature
+                    if subscriptionManager.isPremium {
+                        Toggle("calendar.show_graph".localized, isOn: $showGraphInVideo)
+                    }
+                    
                     // Video layout selection - Premium feature
                     if subscriptionManager.isPremium && availableCategories.count > 1 {
                         // Always use side-by-side layout for multiple categories
@@ -1680,7 +1690,8 @@ struct VideoGenerationView: View {
                             blurFaces: enableFaceBlur,
                             layout: videoLayout,
                             selectedCategories: Array(selectedCategories),
-                            showDate: showDateInVideo
+                            showDate: showDateInVideo,
+                            showGraph: showGraphInVideo && subscriptionManager.isPremium
                         )
                         
                         // Show interstitial ad for free users

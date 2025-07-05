@@ -107,6 +107,7 @@ class VideoGenerationService {
         let layout: VideoLayout
         let selectedCategories: [String]
         let showDate: Bool
+        let showGraph: Bool
         
         enum TransitionStyle {
             case none
@@ -127,7 +128,8 @@ class VideoGenerationService {
             blurFaces: false,
             layout: .single,
             selectedCategories: [],
-            showDate: true
+            showDate: true,
+            showGraph: false
         )
     }
     
@@ -147,15 +149,23 @@ class VideoGenerationService {
             if options.layout == .single || options.selectedCategories.isEmpty {
                 // Single category video - filter by first selected category or all photos
                 let categoryId = options.selectedCategories.first
+                let calendar = Calendar.current
                 filteredPhotos = photos.filter { photo in
-                    dateRange.contains(photo.captureDate) &&
+                    let photoDate = calendar.startOfDay(for: photo.captureDate)
+                    let rangeStart = calendar.startOfDay(for: dateRange.lowerBound)
+                    let rangeEnd = calendar.startOfDay(for: dateRange.upperBound)
+                    return photoDate >= rangeStart && photoDate <= rangeEnd &&
                     (categoryId == nil || photo.categoryId == categoryId)
                 }.sorted { $0.captureDate < $1.captureDate }
             } else {
                 // Side-by-side video - filter by selected categories only
+                let calendar = Calendar.current
                 filteredPhotos = photos.filter { photo in
-                    dateRange.contains(photo.captureDate) &&
-                    options.selectedCategories.contains(photo.categoryId ?? "")
+                    let photoDate = calendar.startOfDay(for: photo.captureDate)
+                    let rangeStart = calendar.startOfDay(for: dateRange.lowerBound)
+                    let rangeEnd = calendar.startOfDay(for: dateRange.upperBound)
+                    return photoDate >= rangeStart && photoDate <= rangeEnd &&
+                    options.selectedCategories.contains(photo.categoryId)
                 }.sorted { $0.captureDate < $1.captureDate }
             }
             
@@ -165,6 +175,9 @@ class VideoGenerationService {
                 }
                 return
             }
+            
+            print("[VideoGeneration] Date range: \(dateRange.lowerBound) to \(dateRange.upperBound)")
+            print("[VideoGeneration] Total photos: \(photos.count), Filtered photos: \(filteredPhotos.count)")
             
             Task {
                 do {
@@ -208,6 +221,29 @@ class VideoGenerationService {
         
         // Remove any existing file
         try? FileManager.default.removeItem(at: outputURL)
+        
+        // Load weight entries if graph is enabled
+        var weightEntries: [WeightEntry] = []
+        var dateRange: ClosedRange<Date>? = nil
+        
+        if options.showGraph && !photos.isEmpty {
+            // Calculate date range from photos
+            let sortedDates = photos.map { $0.captureDate }.sorted()
+            if let startDate = sortedDates.first, let endDate = sortedDates.last {
+                dateRange = startDate...endDate
+                
+                // Load weight entries for the date range
+                do {
+                    weightEntries = try await WeightStorageService.shared.getEntries(
+                        from: startDate,
+                        to: endDate
+                    )
+                } catch {
+                    // Continue without weight data if loading fails
+                    print("Failed to load weight entries: \(error)")
+                }
+            }
+        }
         
         // Create video writer
         let videoWriter = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
@@ -265,7 +301,10 @@ class VideoGenerationService {
                         size: options.videoSize,
                         addWatermark: options.addWatermark,
                         showDate: options.showDate,
-                        date: photo.captureDate
+                        date: photo.captureDate,
+                        showGraph: options.showGraph,
+                        weightEntries: weightEntries,
+                        dateRange: dateRange
                     )
                 }) {
                     // Wait for input to be ready using async
@@ -321,7 +360,10 @@ class VideoGenerationService {
                             size: options.videoSize,
                             addWatermark: options.addWatermark,
                             showDate: options.showDate,
-                            date: date
+                            date: date,
+                            showGraph: options.showGraph,
+                            weightEntries: weightEntries,
+                            dateRange: dateRange
                         )
                     }) {
                         // Wait for input to be ready using async
@@ -361,7 +403,7 @@ class VideoGenerationService {
     
     
     
-    private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool, showDate: Bool = false, date: Date? = nil) -> CVPixelBuffer? {
+    private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, weightEntries: [WeightEntry]? = nil, dateRange: ClosedRange<Date>? = nil) -> CVPixelBuffer? {
         // Fix orientation if needed
         let orientedImage = image.fixedOrientation()
         
@@ -408,8 +450,13 @@ class VideoGenerationService {
         
         // Calculate aspect fit rect
         let imageSize = orientedImage.size
-        let widthRatio = size.width / imageSize.width
-        let heightRatio = size.height / imageSize.height
+        
+        // Reserve space for graph if needed
+        let availableHeight = showGraph ? size.height * 0.75 : size.height // Reserve 25% for graph
+        let availableSize = CGSize(width: size.width, height: availableHeight)
+        
+        let widthRatio = availableSize.width / imageSize.width
+        let heightRatio = availableSize.height / imageSize.height
         let scale = min(widthRatio, heightRatio)
         
         let scaledSize = CGSize(
@@ -417,9 +464,11 @@ class VideoGenerationService {
             height: imageSize.height * scale
         )
         
+        // Position image in the lower portion if graph is shown
+        let yOffset = showGraph ? size.height * 0.20 : (size.height - scaledSize.height) / 2
         let drawRect = CGRect(
             x: (size.width - scaledSize.width) / 2,
-            y: (size.height - scaledSize.height) / 2,
+            y: yOffset,
             width: scaledSize.width,
             height: scaledSize.height
         )
@@ -432,6 +481,11 @@ class VideoGenerationService {
         // Add date if needed
         if showDate, let date = date {
             drawDate(date, in: context, size: size)
+        }
+        
+        // Add graph if needed (premium feature)
+        if showGraph, let weightEntries = weightEntries, let dateRange = dateRange, let currentDate = date {
+            drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size)
         }
         
         // Add watermark if needed
@@ -565,13 +619,105 @@ class VideoGenerationService {
         context.restoreGState()
     }
     
+    private func drawWeightChart(weightEntries: [WeightEntry], currentDate: Date, dateRange: ClosedRange<Date>, in context: CGContext, size: CGSize) {
+        // Calculate chart size and position
+        let chartHeight = size.height * 0.15 // 15% of video height
+        let chartWidth = size.width * 0.9 // 90% of video width
+        let chartX = (size.width - chartWidth) / 2
+        let chartY: CGFloat = 10 // Position at top of the frame
+        
+        // Configure chart options
+        let chartOptions = StaticWeightChartRenderer.ChartOptions(
+            size: CGSize(width: chartWidth, height: chartHeight),
+            showBodyFat: true,
+            backgroundColor: UIColor.black.withAlphaComponent(0.8),
+            gridColor: UIColor.white.withAlphaComponent(0.2),
+            weightLineColor: UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0),
+            bodyFatLineColor: UIColor(red: 1.0, green: 0.624, blue: 0.039, alpha: 1.0),
+            progressBarColor: UIColor(red: 0.0, green: 0.8, blue: 0.0, alpha: 0.8),
+            textColor: .white,
+            font: .systemFont(ofSize: 12)
+        )
+        
+        // Render the chart
+        if let chartImage = StaticWeightChartRenderer.shared.renderChart(
+            entries: weightEntries,
+            currentDate: currentDate,
+            dateRange: dateRange,
+            options: chartOptions
+        ) {
+            // Draw chart with a semi-transparent background
+            context.saveGState()
+            
+            // Add a rounded background
+            let backgroundRect = CGRect(x: chartX - 10, y: chartY - 10, width: chartWidth + 20, height: chartHeight + 20)
+            context.setFillColor(UIColor.black.withAlphaComponent(0.5).cgColor)
+            let path = UIBezierPath(roundedRect: backgroundRect, cornerRadius: 10)
+            context.addPath(path.cgPath)
+            context.fillPath()
+            
+            // Draw the chart
+            if let cgChart = chartImage.cgImage {
+                context.draw(cgChart, in: CGRect(x: chartX, y: chartY, width: chartWidth, height: chartHeight))
+            }
+            
+            // Add weight and body fat labels if available
+            if let entry = weightEntries.first(where: { Calendar.current.isDate($0.date, inSameDayAs: currentDate) }) {
+                // Format weight
+                let weightText = String(format: "%.1f kg", entry.weight)
+                var bodyFatText = ""
+                if let bodyFat = entry.bodyFatPercentage {
+                    bodyFatText = String(format: " | %.1f%%", bodyFat)
+                }
+                let fullText = weightText + bodyFatText
+                
+                // Draw text below chart
+                let attributes: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 18, weight: .semibold),
+                    .foregroundColor: UIColor.white
+                ]
+                
+                let textSize = fullText.size(withAttributes: attributes)
+                let textRect = CGRect(
+                    x: (size.width - textSize.width) / 2,
+                    y: chartY + chartHeight + 25,
+                    width: textSize.width,
+                    height: textSize.height
+                )
+                
+                // Flip coordinate system for text drawing
+                context.translateBy(x: 0, y: size.height)
+                context.scaleBy(x: 1.0, y: -1.0)
+                
+                UIGraphicsPushContext(context)
+                let flippedRect = CGRect(
+                    x: textRect.origin.x,
+                    y: size.height - textRect.origin.y - textRect.height,
+                    width: textRect.width,
+                    height: textRect.height
+                )
+                fullText.draw(in: flippedRect, withAttributes: attributes)
+                UIGraphicsPopContext()
+                
+                // Restore coordinate system
+                context.scaleBy(x: 1.0, y: -1.0)
+                context.translateBy(x: 0, y: -size.height)
+            }
+            
+            context.restoreGState()
+        }
+    }
+    
     private func createSideBySidePixelBuffer(
         from categoryPhotos: [String: UIImage],
         categories: [String],
         size: CGSize,
         addWatermark: Bool,
         showDate: Bool = false,
-        date: Date? = nil
+        date: Date? = nil,
+        showGraph: Bool = false,
+        weightEntries: [WeightEntry]? = nil,
+        dateRange: ClosedRange<Date>? = nil
     ) -> CVPixelBuffer? {
         let options: [String: Any] = [
             kCVPixelBufferCGImageCompatibilityKey as String: kCFBooleanTrue!,
@@ -614,57 +760,61 @@ class VideoGenerationService {
         context.setFillColor(UIColor.black.cgColor)
         context.fill(CGRect(origin: .zero, size: size))
         
-        // Calculate layout
-        let categoriesWithPhotos = categories.filter { categoryPhotos[$0] != nil }
-        let photoCount = categoriesWithPhotos.count
-        
-        guard photoCount > 0 else { return buffer }
+        // Calculate layout based on total selected categories (not just categories with photos)
+        let totalCategories = categories.count
         
         // Calculate grid layout (max 2x2)
-        let columns = min(photoCount, 2)
-        let rows = (photoCount + 1) / 2
+        let columns = min(totalCategories, 2)
+        let rows = (totalCategories + 1) / 2
+        
+        // Reserve space for graph if needed
+        let availableHeight = showGraph ? size.height * 0.75 : size.height
+        let yOffset: CGFloat = showGraph ? size.height * 0.20 : 0
         
         let cellWidth = size.width / CGFloat(columns)
-        let cellHeight = size.height / CGFloat(rows)
+        let cellHeight = availableHeight / CGFloat(rows)
         
-        // Draw each photo
-        for (index, categoryId) in categoriesWithPhotos.enumerated() {
-            guard let image = categoryPhotos[categoryId] else { continue }
-            
+        // Draw each category slot (with or without photo)
+        for (index, categoryId) in categories.enumerated() {
             let col = index % columns
             let row = index / columns
             
             let cellRect = CGRect(
                 x: CGFloat(col) * cellWidth,
-                y: CGFloat(row) * cellHeight,
+                y: yOffset + CGFloat(row) * cellHeight,
                 width: cellWidth,
                 height: cellHeight
             )
             
-            // Fix orientation
-            let orientedImage = image.fixedOrientation()
-            
-            // Calculate aspect fit rect within cell
-            let imageSize = orientedImage.size
-            let widthRatio = (cellWidth - 4) / imageSize.width  // 4pt padding
-            let heightRatio = (cellHeight - 4) / imageSize.height
-            let scale = min(widthRatio, heightRatio)
-            
-            let scaledSize = CGSize(
-                width: imageSize.width * scale,
-                height: imageSize.height * scale
-            )
-            
-            let drawRect = CGRect(
-                x: cellRect.origin.x + (cellRect.width - scaledSize.width) / 2,
-                y: cellRect.origin.y + (cellRect.height - scaledSize.height) / 2,
-                width: scaledSize.width,
-                height: scaledSize.height
-            )
-            
-            // Draw the image
-            if let cgImage = orientedImage.cgImage {
-                context.draw(cgImage, in: drawRect)
+            if let image = categoryPhotos[categoryId] {
+                // Fix orientation
+                let orientedImage = image.fixedOrientation()
+                
+                // Calculate aspect fit rect within cell
+                let imageSize = orientedImage.size
+                let widthRatio = (cellWidth - 4) / imageSize.width  // 4pt padding
+                let heightRatio = (cellHeight - 4) / imageSize.height
+                let scale = min(widthRatio, heightRatio)
+                
+                let scaledSize = CGSize(
+                    width: imageSize.width * scale,
+                    height: imageSize.height * scale
+                )
+                
+                let drawRect = CGRect(
+                    x: cellRect.origin.x + (cellRect.width - scaledSize.width) / 2,
+                    y: cellRect.origin.y + (cellRect.height - scaledSize.height) / 2,
+                    width: scaledSize.width,
+                    height: scaledSize.height
+                )
+                
+                // Draw the image
+                if let cgImage = orientedImage.cgImage {
+                    context.draw(cgImage, in: drawRect)
+                }
+            } else {
+                // Draw placeholder for missing photo
+                drawNoPhotoPlaceholder(in: cellRect, context: context)
             }
             
             // Draw category label
@@ -677,21 +827,26 @@ class VideoGenerationService {
         
         if columns > 1 {
             // Vertical divider
-            context.move(to: CGPoint(x: cellWidth, y: 0))
-            context.addLine(to: CGPoint(x: cellWidth, y: size.height))
+            context.move(to: CGPoint(x: cellWidth, y: yOffset))
+            context.addLine(to: CGPoint(x: cellWidth, y: yOffset + availableHeight))
             context.strokePath()
         }
         
         if rows > 1 {
             // Horizontal divider
-            context.move(to: CGPoint(x: 0, y: cellHeight))
-            context.addLine(to: CGPoint(x: size.width, y: cellHeight))
+            context.move(to: CGPoint(x: 0, y: yOffset + cellHeight))
+            context.addLine(to: CGPoint(x: size.width, y: yOffset + cellHeight))
             context.strokePath()
         }
         
         // Add date if needed
         if showDate, let date = date {
             drawDate(date, in: context, size: size)
+        }
+        
+        // Add graph if needed (premium feature)
+        if showGraph, let weightEntries = weightEntries, let dateRange = dateRange, let currentDate = date {
+            drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size)
         }
         
         // Add watermark if needed
@@ -752,6 +907,59 @@ class VideoGenerationService {
             height: textRect.height
         )
         categoryName.draw(in: flippedRect, withAttributes: attributes)
+        UIGraphicsPopContext()
+        
+        // Restore context state
+        context.restoreGState()
+    }
+    
+    private func drawNoPhotoPlaceholder(in rect: CGRect, context: CGContext) {
+        // Save context state
+        context.saveGState()
+        
+        // Draw dark background with subtle border
+        context.setFillColor(UIColor(white: 0.1, alpha: 1.0).cgColor)
+        context.fill(rect.insetBy(dx: 2, dy: 2))
+        
+        // Draw border
+        context.setStrokeColor(UIColor(white: 0.3, alpha: 0.5).cgColor)
+        context.setLineWidth(1)
+        context.stroke(rect.insetBy(dx: 2, dy: 2))
+        
+        // Draw "No Photo" text in center
+        let noPhotoText = "video.no_photo".localized
+        let fontSize = min(rect.width, rect.height) * 0.08
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
+            .foregroundColor: UIColor(white: 0.4, alpha: 1.0),
+            .paragraphStyle: {
+                let style = NSMutableParagraphStyle()
+                style.alignment = .center
+                return style
+            }()
+        ]
+        
+        let textSize = noPhotoText.size(withAttributes: attributes)
+        let textRect = CGRect(
+            x: rect.origin.x + (rect.width - textSize.width) / 2,
+            y: rect.origin.y + (rect.height - textSize.height) / 2,
+            width: textSize.width,
+            height: textSize.height
+        )
+        
+        // Flip coordinate system for text drawing
+        context.translateBy(x: 0, y: rect.maxY * 2)
+        context.scaleBy(x: 1.0, y: -1.0)
+        
+        // Draw the text
+        UIGraphicsPushContext(context)
+        let flippedRect = CGRect(
+            x: textRect.origin.x,
+            y: rect.maxY * 2 - textRect.maxY,
+            width: textRect.width,
+            height: textRect.height
+        )
+        noPhotoText.draw(in: flippedRect, withAttributes: attributes)
         UIGraphicsPopContext()
         
         // Restore context state
