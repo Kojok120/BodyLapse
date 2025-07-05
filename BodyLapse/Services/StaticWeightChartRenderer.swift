@@ -17,6 +17,7 @@ class StaticWeightChartRenderer {
         let progressBarColor: UIColor
         let textColor: UIColor
         let font: UIFont
+        let isWeightInLbs: Bool
         
         static let `default` = ChartOptions(
             size: CGSize(width: 1080, height: 300),
@@ -27,8 +28,14 @@ class StaticWeightChartRenderer {
             bodyFatLineColor: UIColor(red: 1.0, green: 0.624, blue: 0.039, alpha: 1.0),
             progressBarColor: UIColor(red: 0.0, green: 0.8, blue: 0.0, alpha: 0.8),
             textColor: .label,
-            font: .systemFont(ofSize: 14)
+            font: .systemFont(ofSize: 14),
+            isWeightInLbs: false
         )
+    }
+    
+    // Helper to convert weight based on unit preference
+    private func convertedWeight(_ weight: Double, isLbs: Bool) -> Double {
+        return isLbs ? weight * 2.20462 : weight
     }
     
     // Helper to normalize values to 0-1 range (matching InteractiveWeightChartView)
@@ -79,10 +86,12 @@ class StaticWeightChartRenderer {
         
         // Calculate chart area (with padding)
         let padding: CGFloat = 20
+        let leftPadding = padding * 3  // Space for weight labels
+        let rightPadding = padding * 3  // Increased space for body fat percentage labels
         let chartRect = CGRect(
-            x: padding * 3,
+            x: leftPadding,
             y: padding,
-            width: options.size.width - padding * 4,
+            width: options.size.width - leftPadding - rightPadding,
             height: options.size.height - padding * 3
         )
         
@@ -101,7 +110,7 @@ class StaticWeightChartRenderer {
         drawGrid(in: context, rect: chartRect, options: options)
         
         // Calculate Y-axis ranges with proper normalization (matching InteractiveWeightChartView)
-        let weights = filteredEntries.map { $0.weight }
+        let weights = filteredEntries.map { convertedWeight($0.weight, isLbs: options.isWeightInLbs) }
         guard let minWeight = weights.min(), let maxWeight = weights.max() else {
             return nil
         }
@@ -225,13 +234,14 @@ class StaticWeightChartRenderer {
         ]
         
         // Weight labels (left axis) - 4 labels like InteractiveWeightChartView
+        let weightUnit = options.isWeightInLbs ? "lbs" : "kg"
         for i in 0..<4 {
             let fraction = Double(3 - i) / 3.0
             let weight = weightRange.lowerBound + (weightRange.upperBound - weightRange.lowerBound) * fraction
             let y = rect.minY + rect.height * CGFloat(i) / 3.0
             
-            let text = String(format: "%.1f", weight)
-            let textRect = CGRect(x: rect.minX - 45, y: y - options.font.lineHeight / 2, width: 40, height: options.font.lineHeight)
+            let text = String(format: "%.1f%@", weight, weightUnit)
+            let textRect = CGRect(x: rect.minX - 55, y: y - options.font.lineHeight / 2, width: 50, height: options.font.lineHeight)
             text.draw(in: textRect, withAttributes: attributes)
         }
         
@@ -248,7 +258,7 @@ class StaticWeightChartRenderer {
                 let y = rect.minY + rect.height * CGFloat(i) / 3.0
                 
                 let text = String(format: "%.1f%%", bodyFat)
-                let textRect = CGRect(x: rect.maxX + 5, y: y - options.font.lineHeight / 2, width: 40, height: options.font.lineHeight)
+                let textRect = CGRect(x: rect.maxX + 5, y: y - options.font.lineHeight / 2, width: 50, height: options.font.lineHeight)
                 text.draw(in: textRect, withAttributes: rightAttributes)
             }
         }
@@ -273,7 +283,8 @@ class StaticWeightChartRenderer {
         
         for entry in entries {
             let x = rect.minX + xPosition(for: entry.date, in: rect.width, dateRange: dateRange)
-            let normalizedValue = normalizeValue(entry.weight, in: weightRange)
+            let convertedWeightValue = convertedWeight(entry.weight, isLbs: options.isWeightInLbs)
+            let normalizedValue = normalizeValue(convertedWeightValue, in: weightRange)
             let y = rect.maxY - rect.height * CGFloat(normalizedValue)
             
             if firstPoint {
@@ -291,7 +302,8 @@ class StaticWeightChartRenderer {
         context.setFillColor(options.weightLineColor.cgColor)
         for entry in entries {
             let x = rect.minX + xPosition(for: entry.date, in: rect.width, dateRange: dateRange)
-            let normalizedValue = normalizeValue(entry.weight, in: weightRange)
+            let convertedWeightValue = convertedWeight(entry.weight, isLbs: options.isWeightInLbs)
+            let normalizedValue = normalizeValue(convertedWeightValue, in: weightRange)
             let y = rect.maxY - rect.height * CGFloat(normalizedValue)
             
             context.fillEllipse(in: CGRect(x: x - 4, y: y - 4, width: 8, height: 8))

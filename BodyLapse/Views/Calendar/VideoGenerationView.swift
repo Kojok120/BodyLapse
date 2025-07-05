@@ -176,7 +176,8 @@ struct VideoGenerationView: View {
                             layout: videoLayout,
                             selectedCategories: Array(selectedCategories),
                             showDate: showDateInVideo,
-                            showGraph: showGraphInVideo && subscriptionManager.isPremium
+                            showGraph: showGraphInVideo && subscriptionManager.isPremium,
+                            isWeightInLbs: userSettings.settings.weightUnit == .lbs
                         )
                         
                         // Show interstitial ad for free users

@@ -108,6 +108,7 @@ class VideoGenerationService {
         let selectedCategories: [String]
         let showDate: Bool
         let showGraph: Bool
+        let isWeightInLbs: Bool
         
         enum TransitionStyle {
             case none
@@ -129,7 +130,8 @@ class VideoGenerationService {
             layout: .single,
             selectedCategories: [],
             showDate: true,
-            showGraph: false
+            showGraph: false,
+            isWeightInLbs: false
         )
     }
     
@@ -304,7 +306,8 @@ class VideoGenerationService {
                         date: photo.captureDate,
                         showGraph: options.showGraph,
                         weightEntries: weightEntries,
-                        dateRange: dateRange
+                        dateRange: dateRange,
+                        isWeightInLbs: options.isWeightInLbs
                     )
                 }) {
                     // Wait for input to be ready using async
@@ -363,7 +366,8 @@ class VideoGenerationService {
                             date: date,
                             showGraph: options.showGraph,
                             weightEntries: weightEntries,
-                            dateRange: dateRange
+                            dateRange: dateRange,
+                            isWeightInLbs: options.isWeightInLbs
                         )
                     }) {
                         // Wait for input to be ready using async
@@ -403,7 +407,7 @@ class VideoGenerationService {
     
     
     
-    private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, weightEntries: [WeightEntry]? = nil, dateRange: ClosedRange<Date>? = nil) -> CVPixelBuffer? {
+    private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, weightEntries: [WeightEntry]? = nil, dateRange: ClosedRange<Date>? = nil, isWeightInLbs: Bool = false) -> CVPixelBuffer? {
         // Fix orientation if needed
         let orientedImage = image.fixedOrientation()
         
@@ -485,7 +489,7 @@ class VideoGenerationService {
         
         // Add graph if needed (premium feature)
         if showGraph, let weightEntries = weightEntries, let dateRange = dateRange, let currentDate = date {
-            drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size)
+            drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size, isWeightInLbs: isWeightInLbs)
         }
         
         // Add watermark if needed
@@ -619,14 +623,14 @@ class VideoGenerationService {
         context.restoreGState()
     }
     
-    private func drawWeightChart(weightEntries: [WeightEntry], currentDate: Date, dateRange: ClosedRange<Date>, in context: CGContext, size: CGSize) {
+    private func drawWeightChart(weightEntries: [WeightEntry], currentDate: Date, dateRange: ClosedRange<Date>, in context: CGContext, size: CGSize, isWeightInLbs: Bool) {
         // Calculate chart size and position
         let chartHeight = size.height * 0.15 // 15% of video height
         let chartWidth = size.width * 0.9 // 90% of video width
         let chartX = (size.width - chartWidth) / 2
         let chartY: CGFloat = 10 // Position at top of the frame
         
-        // Configure chart options
+        // Configure chart options        
         let chartOptions = StaticWeightChartRenderer.ChartOptions(
             size: CGSize(width: chartWidth, height: chartHeight),
             showBodyFat: true,
@@ -636,7 +640,8 @@ class VideoGenerationService {
             bodyFatLineColor: UIColor(red: 1.0, green: 0.624, blue: 0.039, alpha: 1.0),
             progressBarColor: UIColor(red: 0.0, green: 0.8, blue: 0.0, alpha: 0.8),
             textColor: .white,
-            font: .systemFont(ofSize: 12)
+            font: .systemFont(ofSize: 12),
+            isWeightInLbs: isWeightInLbs
         )
         
         // Render the chart
@@ -663,8 +668,10 @@ class VideoGenerationService {
             
             // Add weight and body fat labels if available
             if let entry = weightEntries.first(where: { Calendar.current.isDate($0.date, inSameDayAs: currentDate) }) {
-                // Format weight
-                let weightText = String(format: "%.1f kg", entry.weight)
+                // Format weight with correct unit
+                let convertedWeight = isWeightInLbs ? entry.weight * 2.20462 : entry.weight
+                let weightUnit = isWeightInLbs ? "lbs" : "kg"
+                let weightText = String(format: "%.1f %@", convertedWeight, weightUnit)
                 var bodyFatText = ""
                 if let bodyFat = entry.bodyFatPercentage {
                     bodyFatText = String(format: " | %.1f%%", bodyFat)
@@ -717,7 +724,8 @@ class VideoGenerationService {
         date: Date? = nil,
         showGraph: Bool = false,
         weightEntries: [WeightEntry]? = nil,
-        dateRange: ClosedRange<Date>? = nil
+        dateRange: ClosedRange<Date>? = nil,
+        isWeightInLbs: Bool = false
     ) -> CVPixelBuffer? {
         let options: [String: Any] = [
             kCVPixelBufferCGImageCompatibilityKey as String: kCFBooleanTrue!,
@@ -846,7 +854,7 @@ class VideoGenerationService {
         
         // Add graph if needed (premium feature)
         if showGraph, let weightEntries = weightEntries, let dateRange = dateRange, let currentDate = date {
-            drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size)
+            drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size, isWeightInLbs: isWeightInLbs)
         }
         
         // Add watermark if needed
