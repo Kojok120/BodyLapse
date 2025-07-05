@@ -142,6 +142,11 @@
 "settings.weight_unit" = "Unidad de Peso";
 "settings.video_generation" = "Generación de Video";
 "settings.show_date_in_video" = "Mostrar Fecha en Video";
+"settings.appearance" = "Apariencia";
+"settings.appearance_mode" = "Modo de Apariencia";
+"settings.appearance_light" = "Claro";
+"settings.appearance_dark" = "Oscuro";
+"settings.appearance_system" = "Seguir al Sistema";
 "settings.security" = "Seguridad";
 "settings.app_lock" = "Bloqueo de App";
 "settings.change_pin" = "Cambiar PIN";

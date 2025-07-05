@@ -142,6 +142,11 @@
 "settings.weight_unit" = "무게 단위";
 "settings.video_generation" = "비디오 생성";
 "settings.show_date_in_video" = "비디오에 날짜 표시";
+"settings.appearance" = "디스플레이";
+"settings.appearance_mode" = "외관 모드";
+"settings.appearance_light" = "라이트";
+"settings.appearance_dark" = "다크";
+"settings.appearance_system" = "시스템 설정 따르기";
 "settings.security" = "보안";
 "settings.app_lock" = "앱 잠금";
 "settings.change_pin" = "PIN 변경";

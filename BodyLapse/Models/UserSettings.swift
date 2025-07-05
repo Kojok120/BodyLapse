@@ -19,6 +19,9 @@ struct UserSettings: Codable {
     // Video Generation
     var showDateInVideo: Bool = true
     
+    // Appearance
+    var appearanceMode: AppearanceMode = .system
+    
     // Debug settings
     #if DEBUG
     var debugAllowPastDatePhotos: Bool = false
@@ -39,6 +42,23 @@ struct UserSettings: Codable {
     enum AppLockMethod: String, Codable {
         case biometric = "Face ID / Touch ID"
         case passcode = "Passcode"
+    }
+    
+    enum AppearanceMode: String, Codable, CaseIterable {
+        case light = "light"
+        case dark = "dark"
+        case system = "system"
+        
+        var displayName: String {
+            switch self {
+            case .light:
+                return "settings.appearance_light".localized
+            case .dark:
+                return "settings.appearance_dark".localized
+            case .system:
+                return "settings.appearance_system".localized
+            }
+        }
     }
 }
 
@@ -75,6 +95,9 @@ class UserSettingsManager: ObservableObject {
     
     private func handleSettingsChange(oldValue: UserSettings) {
         // Handle settings changes if needed
+        if oldValue.appearanceMode != settings.appearanceMode {
+            AppearanceManager.shared.syncWithSettings()
+        }
     }
 }
 

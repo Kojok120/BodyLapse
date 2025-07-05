@@ -26,6 +26,11 @@ struct BodyLapseApp: App {
         
         // Set up daily photo reminder check
         NotificationService.shared.setupDailyPhotoCheck()
+        
+        // Initialize appearance manager to apply saved appearance mode
+        Task { @MainActor in
+            _ = AppearanceManager.shared
+        }
     }
     
     var body: some Scene {

@@ -5,6 +5,7 @@ struct SettingsView: View {
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @StateObject private var authService = AuthenticationService.shared
     @StateObject private var languageManager = LanguageManager.shared
+    @StateObject private var appearanceManager = AppearanceManager.shared
     @State private var showingAbout = false
     @State private var showingPremiumUpgrade = false
     @State private var showingPasswordSetup = false
@@ -110,6 +111,14 @@ struct SettingsView: View {
                         
                         Button(action: { showingChangePassword = true }) {
                             Label("settings.change_pin".localized, systemImage: "number.square")
+                        }
+                    }
+                }
+                
+                Section("settings.appearance".localized) {
+                    Picker("settings.appearance_mode".localized, selection: $appearanceManager.currentAppearance) {
+                        ForEach(UserSettings.AppearanceMode.allCases, id: \.self) { mode in
+                            Text(mode.displayName).tag(mode)
                         }
                     }
                 }

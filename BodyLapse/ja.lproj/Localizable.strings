@@ -142,6 +142,11 @@
 "settings.weight_unit" = "重量単位";
 "settings.video_generation" = "動画生成";
 "settings.show_date_in_video" = "動画に日付を表示";
+"settings.appearance" = "表示設定";
+"settings.appearance_mode" = "外観モード";
+"settings.appearance_light" = "ライト";
+"settings.appearance_dark" = "ダーク";
+"settings.appearance_system" = "システム設定に従う";
 "settings.security" = "セキュリティ";
 "settings.app_lock" = "アプリロック";
 "settings.change_pin" = "PINを変更";
