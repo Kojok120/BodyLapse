@@ -58,22 +58,27 @@ struct ResetGuidelineView: View {
             
             if shouldShowCamera && !showingContourConfirmation {
                 VStack {
+                    // X button at the top right
                     HStack {
+                        Spacer()
+                        
                         Button(action: {
                             dismiss()
                         }) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 24))
                                 .foregroundColor(.white)
-                                .padding()
-                                .background(Circle().fill(Color.black.opacity(0.5)))
+                                .frame(width: 50, height: 50)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
                         }
-                        .padding(.leading, 20)
+                        .padding(.trailing, 20)
                         .padding(.top, 60)
-                        
-                        Spacer()
-                        
-                        // Timer button
+                    }
+                    
+                    // Timer and Camera switch buttons on the same horizontal level
+                    HStack {
+                        // Timer button on the left
                         Menu {
                             Button(action: { 
                                 timerDuration = 0
@@ -102,33 +107,38 @@ struct ResetGuidelineView: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "timer")
-                                    .font(.system(size: 20))
+                                    .font(.title3)
                                 if timerDuration > 0 {
                                     Text("\(timerDuration)s")
                                         .font(.caption)
                                 }
                             }
                             .foregroundColor(.white)
-                            .padding(10)
-                            .background(Circle().fill(Color.black.opacity(0.5)))
+                            .frame(width: 60, height: 50)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(RoundedRectangle(cornerRadius: 25))
                         }
                         .disabled(cameraController == nil)
                         .opacity(cameraController == nil ? 0.5 : 1.0)
+                        .padding(.leading, 20)
                         
+                        Spacer()
+                        
+                        // Camera switch button on the right
                         Button(action: {
                             guard let controller = cameraController else { return }
                             controller.switchCamera()
                         }) {
                             Image(systemName: "camera.rotate")
-                                .font(.system(size: 24))
+                                .font(.title2)
                                 .foregroundColor(.white)
-                                .padding()
-                                .background(Circle().fill(Color.black.opacity(0.5)))
+                                .frame(width: 50, height: 50)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
                         }
                         .disabled(cameraController == nil)
                         .opacity(cameraController == nil ? 0.5 : 1.0)
                         .padding(.trailing, 20)
-                        .padding(.top, 60)
                     }
                     
                     // Countdown display
