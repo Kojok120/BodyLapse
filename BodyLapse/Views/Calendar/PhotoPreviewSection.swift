@@ -34,9 +34,6 @@ struct PhotoPreviewSection: View {
                     .padding(.top, 8)
             }
             
-            // Memo display - always show section
-            memoSection
-            
             // Photo viewer
             if photosForSelectedDate.isEmpty {
                 noPhotoPlaceholder
@@ -45,6 +42,9 @@ struct PhotoPreviewSection: View {
             } else {
                 singleCategoryView
             }
+            
+            // Memo display - always show section
+            memoSection
         }
         .padding(.horizontal)
         .alert("calendar.confirm_delete_photo".localized, isPresented: $showingDeleteAlert) {

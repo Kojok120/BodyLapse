@@ -48,7 +48,7 @@ class StoreManager: ObservableObject {
                 // WARNING: No products returned from App Store
             }
             
-            for product in products {
+            for _ in products {
                 // Product loaded: \(product.id)
             }
             

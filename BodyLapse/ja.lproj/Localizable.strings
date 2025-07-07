@@ -678,3 +678,28 @@
 "weight.loading_from_health" = "ヘルスケアから読み込み中";
 "settings.apple_health_integration" = "Apple ヘルスケア連携";
 "weight.enable_health_sync" = "設定でヘルスケア同期を有効にする";
+
+/* Onboarding - New 3-Step Flow */
+"onboarding.main_title" = "毎日の写真で\n変化を記録";
+"onboarding.feature.daily_photo" = "1日1枚の写真";
+"onboarding.feature.timelapse" = "タイムラプス動画を作成";
+"onboarding.feature.privacy" = "プライバシー保護";
+"onboarding.privacy_detail" = "動画生成時の顔ぼかし機能\n画像や動画はすべて端末内に保存";
+"onboarding.ready" = "準備完了！";
+"onboarding.photo_title" = "あなたの変化を記録する\n最初の一歩";
+"onboarding.hint_label" = "💡 ヒント：";
+"onboarding.hint_text" = "毎日同じ場所、同じアングルで";
+"onboarding.reset_note" = "※設定からいつでもリセット可能";
+"onboarding.customize_title" = "アプリをカスタマイズ";
+"onboarding.reminder_title" = "デイリーリマインダー";
+"onboarding.reminder_subtitle" = "19時に通知（撮り忘れ防止）";
+"onboarding.privacy_lock_title" = "プライバシー保護";
+"onboarding.privacy_lock_subtitle" = "Face ID/パスコード";
+"onboarding.premium_features_title" = "プレミアム機能";
+"onboarding.premium_feature1" = "体重・体脂肪率をグラフで記録（ヘルスケアと連携可能）";
+"onboarding.premium_feature2" = "複数の写真カテゴリー";
+"onboarding.premium_feature3" = "広告なし";
+"onboarding.premium_feature4" = "ウォーターマークなし";
+"onboarding.learn_more" = "詳しく見る";
+"onboarding.start_now" = "今すぐ始める";
+"onboarding.complete" = "完了";

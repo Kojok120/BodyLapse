@@ -470,8 +470,9 @@ class ImportExportService {
                 print("[ImportExport] - Notes imported: \(summary.notesImported)")
                 print("[ImportExport] - Total items: \(summary.totalItemsImported)")
                 
+                let finalSummary = summary
                 await MainActor.run {
-                    completion(.success(summary))
+                    completion(.success(finalSummary))
                 }
             } catch {
                 await MainActor.run {
@@ -765,7 +766,6 @@ class ImportExportService {
             for metadataFile in photoFiles {
                 // Use autoreleasepool for memory management
                 autoreleasepool {
-                    do {
                             // Read metadata file safely
                             print("[ImportExport] Reading metadata file: \(metadataFile.lastPathComponent)")
                             guard let photo = try? self.safelyDecodeJSON(Photo.self, from: metadataFile) else {
@@ -836,10 +836,6 @@ class ImportExportService {
                                     print("[ImportExport] Image file not found: \(sourceImagePath.path)")
                                 }
                             }
-                    } catch {
-                        // Log error but continue
-                        print("[ImportExport] Error importing photo: \(error)")
-                    }
                 }
                 
                 processedPhotos += 1
@@ -951,7 +947,7 @@ class ImportExportService {
         var imported = 0
         
         for note in notes {
-            let existing = try await DailyNoteStorageService.shared.getNote(for: note.date)
+            let existing = await DailyNoteStorageService.shared.getNote(for: note.date)
             
             var shouldImport = false
             switch options.mergeStrategy {

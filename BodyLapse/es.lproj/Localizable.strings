@@ -670,3 +670,28 @@
 "weight.loading_from_health" = "Cargando desde Health";
 "settings.apple_health_integration" = "Integración con Apple Health";
 "weight.enable_health_sync" = "Habilitar Sincronización de Salud en Ajustes";
+
+/* Onboarding - New 3-Step Flow */
+"onboarding.main_title" = "Registra tu transformación\ncon fotos diarias";
+"onboarding.feature.daily_photo" = "Una foto por día";
+"onboarding.feature.timelapse" = "Crea videos time-lapse";
+"onboarding.feature.privacy" = "Protección de privacidad";
+"onboarding.privacy_detail" = "Desenfoque facial para generación de video\nTodo permanece en tu dispositivo";
+"onboarding.ready" = "¡Listo!";
+"onboarding.photo_title" = "Tu primer paso para\nregistrar tu transformación";
+"onboarding.hint_label" = "💡 Consejo:";
+"onboarding.hint_text" = "Mismo lugar, mismo ángulo todos los días";
+"onboarding.reset_note" = "※ Se puede restablecer en Ajustes";
+"onboarding.customize_title" = "Personaliza tu App";
+"onboarding.reminder_title" = "Recordatorio Diario";
+"onboarding.reminder_subtitle" = "Notificación a las 7 PM (evita olvidar)";
+"onboarding.privacy_lock_title" = "Protección de Privacidad";
+"onboarding.privacy_lock_subtitle" = "Face ID/Código de acceso";
+"onboarding.premium_features_title" = "Características Premium";
+"onboarding.premium_feature1" = "Registra peso y grasa corporal con gráficos (compatible con HealthKit)";
+"onboarding.premium_feature2" = "Múltiples categorías de fotos";
+"onboarding.premium_feature3" = "Sin anuncios";
+"onboarding.premium_feature4" = "Sin marca de agua en videos";
+"onboarding.learn_more" = "Más información";
+"onboarding.start_now" = "Comenzar ahora";
+"onboarding.complete" = "Completar";

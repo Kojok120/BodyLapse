@@ -670,3 +670,28 @@
 "weight.loading_from_health" = "건강에서 불러오는 중";
 "settings.apple_health_integration" = "Apple 건강 연동";
 "weight.enable_health_sync" = "설정에서 건강 동기화 활성화";
+
+/* Onboarding - New 3-Step Flow */
+"onboarding.main_title" = "매일 사진으로\n변화를 기록하세요";
+"onboarding.feature.daily_photo" = "하루 한 장의 사진";
+"onboarding.feature.timelapse" = "타임랩스 비디오 생성";
+"onboarding.feature.privacy" = "프라이버시 보호";
+"onboarding.privacy_detail" = "비디오 생성 시 얼굴 블러 처리\n모든 것이 기기에 저장됩니다";
+"onboarding.ready" = "준비 완료!";
+"onboarding.photo_title" = "변화를 기록하는\n첫 걸음";
+"onboarding.hint_label" = "💡 팁:";
+"onboarding.hint_text" = "매일 같은 장소, 같은 각도로";
+"onboarding.reset_note" = "※ 설정에서 언제든지 재설정 가능";
+"onboarding.customize_title" = "앱 맞춤 설정";
+"onboarding.reminder_title" = "일일 알림";
+"onboarding.reminder_subtitle" = "오후 7시 알림 (잊지 않도록)";
+"onboarding.privacy_lock_title" = "프라이버시 보호";
+"onboarding.privacy_lock_subtitle" = "Face ID/암호";
+"onboarding.premium_features_title" = "프리미엄 기능";
+"onboarding.premium_feature1" = "체중 및 체지방률을 차트로 기록 (HealthKit 호환)";
+"onboarding.premium_feature2" = "다중 사진 카테고리";
+"onboarding.premium_feature3" = "광고 없음";
+"onboarding.premium_feature4" = "비디오에 워터마크 없음";
+"onboarding.learn_more" = "자세히 보기";
+"onboarding.start_now" = "지금 시작";
+"onboarding.complete" = "완료";

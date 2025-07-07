@@ -51,6 +51,9 @@ BodyLapse is a privacy-focused iOS app that helps you track your fitness journey
 - **Speed Control** - Slow, normal, or fast playback options
 - **Quality Settings** - Standard (720p), High (1080p), or Ultra (4K)
 - **Privacy Options** - Apply face blur to videos
+- **Date Range Selection** - Create videos for custom time periods
+- **Date Display Toggle** - Show/hide dates on video frames
+- **Weight Graph Overlay** - Display weight progress chart (Premium)
 - **Smart Navigation** - Auto-plays video after generation
 
 #### 🖼️ Gallery Management
@@ -81,6 +84,13 @@ BodyLapse is a privacy-focused iOS app that helps you track your fitness journey
 #### 🎯 Premium Benefits
 - **No Advertisements** - Clean, distraction-free experience
 - **No Watermarks** - Professional-looking videos
+- **1-Month Free Trial** - Try all premium features risk-free
+
+### 🎨 Appearance Settings
+- **Light Mode** - Clean, bright interface
+- **Dark Mode** - Easy on the eyes for nighttime use
+- **System Mode** - Automatically matches your device settings
+
 ### 🔐 Security & Privacy
 - **Face ID/Touch ID** - Secure app access with biometrics
 - **PIN Protection** - 4-digit passcode option
@@ -238,18 +248,22 @@ BodyLapse/
 - Core photo capture and storage system
 - Body detection and pose guidelines
 - Calendar view with progress tracking
-- Time-lapse video generation
-- Gallery with bulk operations
-- Weight and body fat tracking
+- Time-lapse video generation with custom options
+  - Date range selection
+  - Date display toggle
+  - Weight graph overlay (Premium)
+- Gallery with bulk operations and date display
+- Weight and body fat tracking with unit conversion
 - Multiple photo categories
 - Import/Export functionality
-- Daily memo system
+- Daily memo system (100 character limit)
 - Complete localization (4 languages)
-- Premium subscription system
+- Premium subscription system (1-month free trial)
 - Ad integration (AdMob)
 - HealthKit integration
 - Face ID/Touch ID authentication
 - Comprehensive onboarding flow
+- Appearance mode settings (Light/Dark/System)
 
 
 

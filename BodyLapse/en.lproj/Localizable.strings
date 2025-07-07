@@ -508,6 +508,31 @@
 "date.format.short" = "M/d";
 "date.format.long" = "MMMM d, yyyy";
 
+/* Onboarding - New 3-Step Flow */
+"onboarding.main_title" = "Record your transformation\nwith daily photos";
+"onboarding.feature.daily_photo" = "One photo per day";
+"onboarding.feature.timelapse" = "Create time-lapse videos";
+"onboarding.feature.privacy" = "Privacy protection";
+"onboarding.privacy_detail" = "Face blur for video generation\nEverything stays on your device";
+"onboarding.ready" = "Ready!";
+"onboarding.photo_title" = "Your first step to\nrecord your transformation";
+"onboarding.hint_label" = "💡 Tip:";
+"onboarding.hint_text" = "Same place, same angle every day";
+"onboarding.reset_note" = "※ Can be reset in Settings";
+"onboarding.customize_title" = "Customize Your App";
+"onboarding.reminder_title" = "Daily Reminder";
+"onboarding.reminder_subtitle" = "Notification at 7 PM (prevent forgetting)";
+"onboarding.privacy_lock_title" = "Privacy Protection";
+"onboarding.privacy_lock_subtitle" = "Face ID/Passcode";
+"onboarding.premium_features_title" = "Premium Features";
+"onboarding.premium_feature1" = "Record weight & body fat with charts (HealthKit compatible)";
+"onboarding.premium_feature2" = "Multiple photo categories";
+"onboarding.premium_feature3" = "No ads";
+"onboarding.premium_feature4" = "No watermark on videos";
+"onboarding.learn_more" = "Learn More";
+"onboarding.start_now" = "Start Now";
+"onboarding.complete" = "Complete";
+
 /* Debug Options */
 "settings.debug.premium_mode" = "Premium Mode";
 "settings.debug.past_photos" = "Allow Past Date Photos";

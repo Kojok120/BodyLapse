@@ -64,7 +64,7 @@ class AdMobService: NSObject {
                                request: request) { [weak self] ad, error in
             self?.isLoadingInterstitial = false
             
-            if let error = error {
+            if error != nil {
                 // Failed to load interstitial ad
                 return
             }

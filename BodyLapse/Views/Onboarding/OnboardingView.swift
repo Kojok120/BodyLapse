@@ -5,7 +5,6 @@ import StoreKit
 struct OnboardingView: View {
     @EnvironmentObject var userSettings: UserSettingsManager
     @State private var currentStep = 1
-    @State private var isInOnboardingPhase = false
     
     // App lock
     @State private var showingAppLockSetup = false
@@ -15,427 +14,53 @@ struct OnboardingView: View {
     @State private var showingPasscodeError = false
     @State private var passcodeErrorMessage = ""
     
-    // Premium subscription
+    // Premium
+    @State private var showingPremiumView = false
     @StateObject private var premiumViewModel = PremiumViewModel()
+    
+    // Permissions
+    @State private var notificationsEnabled = false
+    @State private var appLockEnabled = false
+    
+    // Skip photo capture
+    @State private var didCapturePhoto = false
     
     var body: some View {
         NavigationView {
             VStack {
-                if !isInOnboardingPhase {
-                    // Explanation phase
-                    VStack {
-                        explanationProgressIndicator
-                        
-                        TabView(selection: $currentStep) {
-                            featureStep1
-                                .tag(1)
-                            
-                            featureStep2
-                                .tag(2)
-                            
-                            featureStep3
-                                .tag(3)
-                            
-                            featureStep4
-                                .tag(4)
-                            
-                            featureStep5
-                                .tag(5)
-                        }
-                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                        .animation(.easeInOut, value: currentStep)
-                        
-                        explanationNavigationButtons
-                    }
-                } else {
-                    // Onboarding phase
-                    VStack {
-                        onboardingProgressIndicator
-                        
-                        TabView(selection: $currentStep) {
-                            letsGetStartedStep
-                                .tag(1)
-                            
-                            baselinePhotoStep
-                                .tag(2)
-                            
-                            appLockStep
-                                .tag(3)
-                            
-                            notificationPermissionStep
-                                .tag(4)
-                        }
-                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                        .animation(.easeInOut, value: currentStep)
-                        
-                        onboardingNavigationButtons
-                    }
+                // Progress indicator
+                progressIndicator
+                
+                // Main content
+                TabView(selection: $currentStep) {
+                    welcomeStep
+                        .tag(1)
+                    
+                    photoStep
+                        .tag(2)
+                    
+                    personalizationStep
+                        .tag(3)
                 }
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .animation(.easeInOut(duration: 0.3), value: currentStep)
+                
+                // Navigation buttons
+                navigationButtons
             }
-            .navigationTitle(isInOnboardingPhase ? "onboarding.setup_account".localized : "onboarding.welcome".localized)
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarHidden(isInOnboardingPhase && currentStep == 2) // Hide for camera step
+            .navigationBarHidden(currentStep == 2 && !didCapturePhoto) // Hide nav bar during camera
         }
         .interactiveDismissDisabled()
-        .alert("premium.purchase_error".localized, isPresented: .constant(premiumViewModel.purchaseError != nil)) {
-            Button("common.ok".localized) {
-                premiumViewModel.purchaseError = nil
-            }
-        } message: {
-            Text(premiumViewModel.purchaseError ?? "")
+        .sheet(isPresented: $showingPremiumView) {
+            PremiumView()
         }
-        .task {
-            // Preload products when onboarding starts
-            await premiumViewModel.loadProducts()
-        }
-    }
-    
-    private var explanationProgressIndicator: some View {
-        HStack(spacing: 8) {
-            ForEach(1...5, id: \.self) { step in
-                Circle()
-                    .fill(step <= currentStep ? Color.accentColor : Color.gray.opacity(0.3))
-                    .frame(width: 8, height: 8)
-            }
-        }
-        .padding()
-    }
-    
-    private var onboardingProgressIndicator: some View {
-        HStack(spacing: 8) {
-            ForEach(1...4, id: \.self) { step in
-                Circle()
-                    .fill(step <= currentStep ? Color.accentColor : Color.gray.opacity(0.3))
-                    .frame(width: 8, height: 8)
-            }
-        }
-        .padding()
-    }
-    
-    // Feature explanation steps
-    private var featureStep1: some View {
-        featureExplanationView(
-            icon: "camera.fill",
-            title: "onboarding.daily_photos.title".localized,
-            description: "onboarding.daily_photos.subtitle".localized,
-            subDescription: "onboarding.daily_photos.description".localized
-        )
-    }
-    
-    private var featureStep2: some View {
-        featureExplanationView(
-            icon: "video.fill",
-            title: "onboarding.timelapse.title".localized,
-            description: "onboarding.timelapse.subtitle".localized,
-            subDescription: "onboarding.timelapse.description".localized
-        )
-    }
-    
-    private var featureStep3: some View {
-        featureExplanationView(
-            icon: "eye.slash.fill",
-            title: "onboarding.privacy.title".localized,
-            description: "onboarding.privacy.subtitle".localized,
-            subDescription: "onboarding.privacy.description".localized
-        )
-    }
-    
-    private var featureStep4: some View {
-        featureExplanationView(
-            icon: "photo.on.rectangle.angled",
-            title: "onboarding.comparison.title".localized,
-            description: "onboarding.comparison.subtitle".localized,
-            subDescription: "onboarding.comparison.description".localized
-        )
-    }
-    
-    private var featureStep5: some View {
-        premiumFeaturesView
-    }
-    
-    private var letsGetStartedStep: some View {
-        VStack(spacing: 30) {
-            Spacer()
-            
-            Image(systemName: "figure.arms.open")
-                .font(.system(size: 80))
-                .foregroundColor(.accentColor)
-                .padding(.bottom, 20)
-            
-            Text("onboarding.start.title".localized)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            
-            Text("onboarding.start.subtitle".localized)
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            
-            Spacer()
-            Spacer()
-        }
-        .padding()
-    }
-    
-    private func featureExplanationView(icon: String, title: String, description: String, subDescription: String) -> some View {
-        VStack(spacing: 20) {
-            Spacer()
-            
-            Image(systemName: icon)
-                .font(.system(size: 60))
-                .foregroundColor(.accentColor)
-                .padding(.bottom, 20)
-            
-            Text(title)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            
-            Text(description)
-                .font(.headline)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.center)
-                .lineSpacing(4)
-                .padding(.horizontal, 30)
-            
-            Text(subDescription)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .lineSpacing(2)
-                .padding(.horizontal, 40)
-                .padding(.top, 10)
-            
-            Spacer()
-            Spacer()
-        }
-        .padding()
-    }
-    
-    private var premiumFeaturesView: some View {
-        ZStack {
-            // Background gradient
-            LinearGradient(
-                gradient: Gradient(colors: [Color.bodyLapseTurquoise, Color.bodyLapseTurquoise.opacity(0.8)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // REQUIRED App Store Information - Always visible at top
-                VStack(spacing: 10) {
-                    // Subscription title (REQUIRED by App Store) - Fixed for all languages
-                    Text("BodyLapse Premium")
-                        .font(.title.bold())
-                        .foregroundColor(.white)
-                        .padding(.top, 30)
-                    
-                    // Price (REQUIRED by App Store) - MOST PROMINENT
-                    if let product = premiumViewModel.products.first {
-                        Text(product.displayPrice + "/" + "date.month".localized)
-                            .font(.largeTitle.bold())
-                            .foregroundColor(.white)
-                    } else {
-                        Text("premium.price.fallback".localized + "/" + "date.month".localized)
-                            .font(.largeTitle.bold())
-                            .foregroundColor(.white)
-                    }
-                    
-                    // Subscription length and trial info (subordinate)
-                    VStack(spacing: 4) {
-                        Text("premium.subscription_length".localized)
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.9))
-                        
-                        Text("premium.start_with_free_month".localized)
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.9))
-                    }
-                    
-                    // Links (REQUIRED by App Store)
-                    HStack(spacing: 20) {
-                        Link("premium.terms".localized, destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
-                            .font(.footnote.bold())
-                            .foregroundColor(.white)
-                            .underline()
-                        
-                        Link("premium.privacy".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!)
-                            .font(.footnote.bold())
-                            .foregroundColor(.white)
-                            .underline()
-                    }
-                    .padding(.top, 8)
-                }
-                
-                ScrollView {
-                    VStack(spacing: 15) {
-                    
-                        Text("onboarding.premium.subtitle".localized)
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.9))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 15)
-            
-                        // Premium features list
-                        VStack(spacing: 10) {
-                            compactPremiumFeatureItem(
-                                icon: "chart.line.uptrend.xyaxis",
-                                title: "premium.feature.tracking".localized,
-                                description: "premium.feature.tracking_desc".localized
-                            )
-                            
-                            compactPremiumFeatureItem(
-                                icon: "photo.stack",
-                                title: "premium.feature.advanced_tracking".localized,
-                                description: "premium.feature.advanced_tracking_desc".localized
-                            )
-                            
-                            compactPremiumFeatureItem(
-                                icon: "xmark.circle.fill",
-                                title: "premium.feature.no_ads".localized,
-                                description: "premium.feature.no_ads_desc".localized
-                            )
-                            
-                            compactPremiumFeatureItem(
-                                icon: "drop.fill",
-                                title: "premium.feature.no_watermark".localized,
-                                description: "premium.feature.no_watermark_desc".localized
-                            )
-                        }
-                        .padding(.horizontal, 15)
-            
-                        
-                        Text("premium.auto_renew".localized)
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.7))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 10)
-                            .padding(.bottom, 20)
-                    }
-                }
-            }
-        }
-    }
-    
-    private func premiumFeatureItem(icon: String, title: String, description: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 35))
-                .foregroundColor(.accentColor)
-                .frame(width: 40)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
-                
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            
-            Spacer()
-        }
-        .padding(.horizontal, 15)
-    }
-    
-    private func compactPremiumFeatureItem(icon: String, title: String, description: String) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.body)
-                .foregroundColor(.white)
-                .frame(width: 24)
-            
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.subheadline.bold())
-                    .foregroundColor(.white)
-                
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
-                    .lineLimit(1)
-            }
-            
-            Spacer()
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(10)
-    }
-    
-    private var baselinePhotoStep: some View {
-        BaselinePhotoCaptureView { photo in
-            // Photo captured, move to next step
-            currentStep = 3
-        }
-    }
-    
-    private var appLockStep: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "lock.shield")
-                .font(.system(size: 60))
-                .foregroundColor(.accentColor)
-                .padding(.bottom, 20)
-            
-            Text("onboarding.security.title".localized)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            
-            Text("onboarding.security.subtitle".localized)
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
-            VStack(spacing: 16) {
-                Button(action: {
-                    checkBiometricAvailability()
-                }) {
-                    HStack {
-                        Image(systemName: biometricIcon)
-                        Text(biometricLocalizedName)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
-                
-                Button(action: {
-                    selectedLockMethod = .passcode
-                    showingAppLockSetup = true
-                }) {
-                    HStack {
-                        Image(systemName: "number")
-                        Text("onboarding.setup_passcode".localized)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .foregroundColor(.primary)
-                    .cornerRadius(10)
-                }
-            }
-            .padding(.horizontal, 40)
-            .padding(.top, 20)
-            
-            Spacer()
-        }
-        .padding()
         .sheet(isPresented: $showingAppLockSetup) {
             PasscodeSetupView(
                 passcode: $passcode,
                 confirmPasscode: $confirmPasscode,
                 onComplete: {
                     saveAppLockSettings(enableLock: true)
+                    appLockEnabled = true
                 }
             )
         }
@@ -446,254 +71,253 @@ struct OnboardingView: View {
         }
     }
     
-    private var notificationPermissionStep: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "bell.badge")
-                .font(.system(size: 60))
-                .foregroundColor(.accentColor)
-                .padding(.bottom, 20)
-            
-            Text("onboarding.notification.title".localized)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            
-            Text("onboarding.notification.subtitle".localized)
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
-            VStack(spacing: 10) {
-                Text("onboarding.notification.description".localized)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                Text("• " + "onboarding.notification.daily_reminder".localized)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 40)
+    // MARK: - Progress Indicator
+    private var progressIndicator: some View {
+        HStack(spacing: 8) {
+            ForEach(1...3, id: \.self) { step in
+                Circle()
+                    .fill(step <= currentStep ? Color.accentColor : Color.gray.opacity(0.3))
+                    .frame(width: 8, height: 8)
             }
-            .padding(.top, 10)
-            
-            Button(action: {
-                requestNotificationPermission()
-            }) {
-                HStack {
-                    Image(systemName: "bell.fill")
-                    Text("onboarding.enable_notifications".localized)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.accentColor)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-            }
-            .padding(.horizontal, 40)
-            .padding(.top, 20)
-            
-            Spacer()
         }
         .padding()
     }
     
-    private var explanationNavigationButtons: some View {
-        HStack {
-            if currentStep > 1 {
-                Button(action: {
-                    hideKeyboard()
-                    withAnimation {
-                        currentStep -= 1
-                    }
-                }) {
-                    Text("common.back".localized)
-                        .foregroundColor(.accentColor)
-                        .fontWeight(.medium)
-                }
-                .padding()
-            }
-            
+    // MARK: - Step 1: Welcome
+    private var welcomeStep: some View {
+        VStack(spacing: 30) {
             Spacer()
             
-            if currentStep < 5 {
-                Button(action: {
-                    hideKeyboard()
-                    withAnimation {
-                        currentStep += 1
-                    }
-                }) {
-                    Text("common.next".localized)
-                        .frame(minWidth: 80)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .fontWeight(.medium)
-                }
-                .padding()
-            } else {
-                // Step 5 - Premium features screen
-                VStack(spacing: 12) {
-                    HStack(spacing: 16) {
-                        Button(action: {
-                            hideKeyboard()
-                            // Skip premium and continue to onboarding
-                            withAnimation {
-                                isInOnboardingPhase = true
-                                currentStep = 1
-                            }
-                        }) {
-                            Text("onboarding.premium_offer.maybe_later".localized)
-                                .foregroundColor(.secondary)
-                                .fontWeight(.medium)
-                                .font(.body)
-                        }
-                        
-                        Button(action: {
-                            hideKeyboard()
-                            // Directly handle purchase
-                            Task {
-                                if let product = premiumViewModel.products.first {
-                                    await premiumViewModel.purchase(product)
-                                    // Check if purchase was successful after a short delay
-                                    try? await Task.sleep(nanoseconds: 500_000_000)
-                                    if premiumViewModel.isPremium {
-                                        withAnimation {
-                                            isInOnboardingPhase = true
-                                            currentStep = 1
-                                        }
-                                    }
-                                } else {
-                                    await premiumViewModel.loadProducts()
-                                }
-                            }
-                        }) {
-                            Group {
-                                if premiumViewModel.isPurchasing {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.8)
-                                } else {
-                                    Text("premium.subscribe_now".localized)
-                                        .font(.subheadline.bold())
-                                }
-                            }
-                            .frame(minWidth: 120)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .background(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.yellow, Color.orange]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
-                            .fontWeight(.medium)
-                        }
-                        .disabled(premiumViewModel.isPurchasing)
-                    }
-                    
-                    // Restore Purchases button
-                    Button(action: {
-                        Task {
-                            await premiumViewModel.restorePurchases()
-                            if premiumViewModel.isPremium {
-                                withAnimation {
-                                    isInOnboardingPhase = true
-                                    currentStep = 1
-                                }
-                            }
-                        }
-                    }) {
-                        Text("premium.restore".localized)
-                            .font(.caption)
-                            .foregroundColor(.accentColor)
-                    }
-                    .disabled(premiumViewModel.isPurchasing)
-                }
-                .padding(.vertical, 8)
-                .padding(.horizontal)
+            // App icon
+            Image(systemName: "figure.arms.open")
+                .font(.system(size: 80))
+                .foregroundColor(.accentColor)
+                .padding(.bottom, 10)
+            
+            // Title
+            Text("onboarding.main_title".localized)
+                .font(.title)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+                .lineSpacing(8)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            // Value propositions
+            VStack(alignment: .leading, spacing: 20) {
+                ValuePropositionRow(
+                    icon: "camera.fill",
+                    text: "onboarding.feature.daily_photo".localized
+                )
+                
+                ValuePropositionRow(
+                    icon: "video.fill",
+                    text: "onboarding.feature.timelapse".localized
+                )
+                
+                ValuePropositionRow(
+                    icon: "eye.slash.fill",
+                    text: "onboarding.feature.privacy".localized
+                )
             }
+            .padding(.horizontal, 40)
+            
+            // Privacy detail
+            Text("onboarding.privacy_detail".localized)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.top, 10)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            Spacer()
+            Spacer()
         }
-        .padding(.horizontal)
-        .padding(.bottom, -5)
+        .padding()
+        .transition(.asymmetric(
+            insertion: .move(edge: .trailing).combined(with: .opacity),
+            removal: .move(edge: .leading).combined(with: .opacity)
+        ))
     }
     
-    private var onboardingNavigationButtons: some View {
-        HStack {
-            if currentStep > 1 && currentStep != 2 {
-                Button(action: {
-                    hideKeyboard()
+    // MARK: - Step 2: Photo Capture
+    private var photoStep: some View {
+        Group {
+            if !didCapturePhoto {
+                BaselinePhotoCaptureViewWithSkip { photo in
+                    didCapturePhoto = true
                     withAnimation {
-                        currentStep -= 1
+                        currentStep = 3
                     }
-                }) {
-                    Text("common.back".localized)
+                } onSkip: {
+                    didCapturePhoto = true
+                    withAnimation {
+                        currentStep = 3
+                    }
+                }
+            } else {
+                // Show success state after capture/skip
+                VStack(spacing: 20) {
+                    Spacer()
+                    
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(.green)
+                    
+                    Text("onboarding.ready".localized)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
+                    Spacer()
+                }
+                .onAppear {
+                    // Auto-advance after a short delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation {
+                            currentStep = 3
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Step 3: Personalization
+    private var personalizationStep: some View {
+        ScrollView {
+            VStack(spacing: 25) {
+                // Header
+                VStack(spacing: 10) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 50))
                         .foregroundColor(.accentColor)
-                        .fontWeight(.medium)
+                    
+                    Text("onboarding.customize_title".localized)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                }
+                .padding(.top, 30)
+                .padding(.bottom, 20)
+                
+                // Settings toggles
+                VStack(spacing: 20) {
+                    // Notifications
+                    SettingToggleRow(
+                        icon: "bell.fill",
+                        title: "onboarding.reminder_title".localized,
+                        subtitle: "onboarding.reminder_subtitle".localized,
+                        isOn: $notificationsEnabled,
+                        action: {
+                            if notificationsEnabled {
+                                requestNotificationPermission()
+                            }
+                        }
+                    )
+                    
+                    // App Lock
+                    SettingToggleRow(
+                        icon: "lock.shield",
+                        title: "onboarding.privacy_lock_title".localized,
+                        subtitle: "onboarding.privacy_lock_subtitle".localized,
+                        isOn: $appLockEnabled,
+                        action: {
+                            if appLockEnabled && !showingAppLockSetup {
+                                checkBiometricAvailability()
+                            }
+                        }
+                    )
+                }
+                .padding(.horizontal)
+                
+                // Premium section
+                VStack(spacing: 15) {
+                    HStack {
+                        Image(systemName: "star.fill")
+                            .foregroundColor(.yellow)
+                        Text("onboarding.premium_features_title".localized)
+                            .font(.headline)
+                            .fontWeight(.bold)
+                        Spacer()
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        OnboardingPremiumFeatureRow(text: "onboarding.premium_feature1".localized)
+                        OnboardingPremiumFeatureRow(text: "onboarding.premium_feature2".localized)
+                        OnboardingPremiumFeatureRow(text: "onboarding.premium_feature3".localized)
+                        OnboardingPremiumFeatureRow(text: "onboarding.premium_feature4".localized)
+                    }
+                    
+                    Button(action: {
+                        showingPremiumView = true
+                    }) {
+                        Text("onboarding.learn_more".localized)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.accentColor.opacity(0.1))
+                            .foregroundColor(.accentColor)
+                            .cornerRadius(10)
+                    }
                 }
                 .padding()
+                .background(Color(UIColor.secondarySystemBackground))
+                .cornerRadius(15)
+                .padding(.horizontal)
+                .padding(.top, 10)
+                
+                Spacer(minLength: 100)
             }
-            
-            Spacer()
-            
-            if currentStep == 1 {
+        }
+    }
+    
+    // MARK: - Navigation Buttons
+    private var navigationButtons: some View {
+        HStack {
+            // Back button (only on step 3)
+            if currentStep == 3 {
                 Button(action: {
-                    hideKeyboard()
                     withAnimation {
                         currentStep = 2
                     }
                 }) {
-                    Text("onboarding.start".localized)
-                        .frame(minWidth: 80)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
+                    Text("common.back".localized)
+                        .foregroundColor(.accentColor)
+                        .fontWeight(.medium)
+                }
+                .padding()
+            }
+            
+            Spacer()
+            
+            // Next/Complete button
+            if currentStep == 1 {
+                Button(action: {
+                    withAnimation {
+                        currentStep = 2
+                    }
+                }) {
+                    Text("onboarding.start_now".localized)
+                        .frame(minWidth: 120)
+                        .padding(.horizontal, 25)
+                        .padding(.vertical, 14)
                         .background(Color.accentColor)
                         .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .fontWeight(.medium)
+                        .cornerRadius(12)
+                        .fontWeight(.semibold)
                 }
                 .padding()
             } else if currentStep == 3 {
                 Button(action: {
-                    hideKeyboard()
-                    saveAppLockSettings(enableLock: false)
-                    currentStep = 4
-                }) {
-                    Text("common.skip".localized)
-                        .foregroundColor(.secondary)
-                        .fontWeight(.medium)
-                }
-                .padding()
-            } else if currentStep == 4 {
-                Button(action: {
-                    hideKeyboard()
                     completeOnboarding()
                 }) {
-                    Text("common.skip".localized)
-                        .foregroundColor(.secondary)
-                        .fontWeight(.medium)
-                }
-                .padding()
-                
-                Button(action: {
-                    hideKeyboard()
-                    completeOnboarding()
-                }) {
-                    Text("common.finish".localized)
-                        .frame(minWidth: 80)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
+                    Text("onboarding.complete".localized)
+                        .frame(minWidth: 120)
+                        .padding(.horizontal, 25)
+                        .padding(.vertical, 14)
                         .background(Color.accentColor)
                         .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .fontWeight(.medium)
+                        .cornerRadius(12)
+                        .fontWeight(.semibold)
                 }
                 .padding()
             }
@@ -701,9 +325,7 @@ struct OnboardingView: View {
         .padding(.horizontal)
     }
     
-    private func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
+    // MARK: - Helper Methods
     
     private var biometricIcon: String {
         let context = LAContext()
@@ -720,23 +342,6 @@ struct OnboardingView: View {
             }
         }
         return "lock.shield"
-    }
-    
-    private var biometricName: String {
-        let context = LAContext()
-        var error: NSError?
-        
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            switch context.biometryType {
-            case .faceID:
-                return "Face ID"
-            case .touchID:
-                return "Touch ID"
-            default:
-                return "Biometric Authentication"
-            }
-        }
-        return "Biometric Authentication"
     }
     
     private var biometricLocalizedName: String {
@@ -760,47 +365,39 @@ struct OnboardingView: View {
         let context = LAContext()
         var error: NSError?
         
-        // Checking biometric availability...
-        
         if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            // Biometric available
-            
             // Request authentication to ensure user grants permission
             context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "onboarding.enable_biometric".localized) { success, authError in
                 DispatchQueue.main.async {
                     if success {
-                        // Biometric authentication successful
                         selectedLockMethod = .biometric
-                        saveAppLockSettings(enableLock: true)
-                        currentStep = 4
+                        showingAppLockSetup = true
                     } else {
-                        // Biometric authentication failed
                         if let error = authError as NSError? {
                             if error.code == LAError.userCancel.rawValue {
-                                // User cancelled, don't show error
+                                appLockEnabled = false
                                 return
                             }
                         }
                         passcodeErrorMessage = authError?.localizedDescription ?? "onboarding.enable_biometric".localized
                         showingPasscodeError = true
+                        appLockEnabled = false
                     }
                 }
             }
         } else {
-            // Biometric not available
-            passcodeErrorMessage = "onboarding.enable_biometric".localized
-            showingPasscodeError = true
+            // Biometric not available, show passcode setup
+            selectedLockMethod = .passcode
+            showingAppLockSetup = true
         }
     }
     
     private func saveAppLockSettings(enableLock: Bool) {
-        // Saving app lock settings
-        
         userSettings.settings.isAppLockEnabled = enableLock
         
         if enableLock {
             userSettings.settings.appLockMethod = selectedLockMethod
-            if selectedLockMethod == .passcode && !passcode.isEmpty {
+            if !passcode.isEmpty {
                 userSettings.settings.appPasscode = passcode
             }
         }
@@ -817,14 +414,20 @@ struct OnboardingView: View {
             if authorized {
                 // Set up daily photo check after permission is granted
                 NotificationService.shared.setupDailyPhotoCheck()
+            } else {
+                // If denied, turn off the toggle
+                notificationsEnabled = false
             }
-            // Continue to next step regardless of permission result
-            completeOnboarding()
         }
     }
     
     private func completeOnboarding() {
-        // Setting hasCompletedOnboarding = true
+        // Save final settings
+        if notificationsEnabled {
+            NotificationService.shared.setupDailyPhotoCheck()
+        }
+        
+        // Mark onboarding as complete
         userSettings.settings.hasCompletedOnboarding = true
         
         // Force save to UserDefaults
@@ -832,14 +435,97 @@ struct OnboardingView: View {
             UserDefaults.standard.set(encoded, forKey: "BodyLapseUserSettings")
             UserDefaults.standard.synchronize()
         }
-        
-        // Onboarding complete
-        // The view will automatically change due to hasCompletedOnboarding = true
     }
 }
 
-struct BaselinePhotoCaptureView: View {
+// MARK: - Supporting Views
+
+struct ValuePropositionRow: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 15) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(.accentColor)
+                .frame(width: 30)
+            
+            Text(text)
+                .font(.body)
+                .fontWeight(.medium)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            Spacer()
+        }
+    }
+}
+
+struct SettingToggleRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    @Binding var isOn: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(.accentColor)
+                .frame(width: 30)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.body)
+                    .fontWeight(.medium)
+                
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Toggle("", isOn: $isOn)
+                .labelsHidden()
+                .onChange(of: isOn) { _, _ in
+                    action()
+                }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 15)
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(10)
+    }
+}
+
+struct OnboardingPremiumFeatureRow: View {
+    let text: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text("•")
+                .font(.body)
+                .foregroundColor(.secondary)
+            
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Modified Baseline Photo Capture View with Skip
+
+struct BaselinePhotoCaptureViewWithSkip: View {
     let onPhotoCapture: (Photo) -> Void
+    let onSkip: () -> Void
     @State private var cameraController: SimpleCameraViewController?
     @State private var isProcessing = false
     @State private var capturedImage: UIImage?
@@ -848,8 +534,9 @@ struct BaselinePhotoCaptureView: View {
     @State private var contourError: String?
     @State private var shouldShowCamera = true
     
-    init(onPhotoCapture: @escaping (Photo) -> Void) {
+    init(onPhotoCapture: @escaping (Photo) -> Void, onSkip: @escaping () -> Void) {
         self.onPhotoCapture = onPhotoCapture
+        self.onSkip = onSkip
         // Initialize photo storage service
         PhotoStorageService.shared.initialize()
     }
@@ -879,9 +566,11 @@ struct BaselinePhotoCaptureView: View {
             
             if shouldShowCamera && !showingContourConfirmation {
                 VStack {
-                    // Camera switch button at top
+                    // Top section with camera switch
                     HStack {
                         Spacer()
+                        
+                        // Camera switch button
                         Button(action: {
                             guard let controller = cameraController else { return }
                             controller.switchCamera()
@@ -899,20 +588,38 @@ struct BaselinePhotoCaptureView: View {
                     }
                     
                     Spacer()
-                
+                    
+                    // Bottom section with instructions and buttons
                     VStack(spacing: 20) {
-                        Text("onboarding.first_photo.title".localized)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .shadow(radius: 2)
+                        VStack(spacing: 10) {
+                            Text("onboarding.photo_title".localized)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .shadow(radius: 2)
+                                .lineLimit(nil)
+                                .fixedSize(horizontal: false, vertical: true)
+                            
+                            VStack(spacing: 4) {
+                                Text("onboarding.hint_label".localized)
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                
+                                Text("onboarding.hint_text".localized)
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.9))
+                            }
+                            
+                            Text("onboarding.reset_note".localized)
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.7))
+                                .padding(.top, 5)
+                        }
+                        .padding(.horizontal, 30)
                         
-                        Text("onboarding.first_photo.subtitle".localized)
-                            .font(.body)
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                            .shadow(radius: 2)
-                        
+                        // Capture button
                         Button(action: {
                             guard let controller = cameraController, !isProcessing else { return }
                             controller.capturePhoto()
@@ -928,10 +635,27 @@ struct BaselinePhotoCaptureView: View {
                         }
                         .disabled(isProcessing || cameraController == nil)
                         .opacity(isProcessing || cameraController == nil ? 0.5 : 1.0)
-                        .animation(.easeInOut(duration: 0.2), value: cameraController == nil)
-                        .padding(.bottom, 40)
+                        .padding(.bottom, 20)
                     }
-                    .padding()
+                    
+                    // Skip button at bottom right
+                    HStack {
+                        Spacer()
+                        
+                        Button(action: {
+                            onSkip()
+                        }) {
+                            Text("common.skip".localized)
+                                .font(.body)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 8)
+                                .background(Color.black.opacity(0.5))
+                                .cornerRadius(20)
+                        }
+                        .padding(.trailing, 30)
+                        .padding(.bottom, 30)
+                    }
                 }
             }
             
@@ -955,13 +679,11 @@ struct BaselinePhotoCaptureView: View {
                 
                 switch result {
                 case .success(let contour):
-                    // Detected contour points
                     self.detectedContour = contour
                     self.isProcessing = false
                     self.showingContourConfirmation = true
                     
                 case .failure(let error):
-                    // Failed to detect body contour
                     self.contourError = error.localizedDescription
                     self.isProcessing = false
                     // Still show confirmation without contour to let user proceed
@@ -1023,15 +745,17 @@ struct BaselinePhotoCaptureView: View {
                     self.onPhotoCapture(photo)
                 }
             } catch {
-                // Failed to save baseline photo
                 DispatchQueue.main.async { [self] in
                     self.isProcessing = false
+                    // Even if save fails, continue
+                    self.onSkip()
                 }
             }
         }
     }
 }
 
+// MARK: - Keep existing PasscodeSetupView
 struct PasscodeSetupView: View {
     @Binding var passcode: String
     @Binding var confirmPasscode: String
@@ -1108,7 +832,6 @@ struct PasscodeSetupView: View {
         dismiss()
     }
 }
-
 
 #Preview {
     OnboardingView()
