@@ -123,8 +123,8 @@ struct SettingsView: View {
                     }
                 }
                 
-                if !isNotificationEnabled {
-                    Section("settings.reminders".localized) {
+                Section("settings.reminders".localized) {
+                    if !isNotificationEnabled {
                         HStack {
                             Image(systemName: "bell.fill")
                                 .foregroundColor(.blue)
@@ -135,6 +135,31 @@ struct SettingsView: View {
                             }
                             .foregroundColor(.blue)
                         }
+                    } else {
+                        // Daily reminder time setting
+                        DatePicker(
+                            "settings.reminder_time".localized,
+                            selection: Binding(
+                                get: {
+                                    Calendar.current.date(from: DateComponents(
+                                        hour: userSettings.settings.reminderHour,
+                                        minute: userSettings.settings.reminderMinute
+                                    )) ?? Date()
+                                },
+                                set: { newDate in
+                                    let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                    userSettings.settings.reminderHour = components.hour ?? 19
+                                    userSettings.settings.reminderMinute = components.minute ?? 0
+                                    // Reschedule the daily reminder with new time
+                                    NotificationService.shared.scheduleDailyReminder()
+                                }
+                            ),
+                            displayedComponents: .hourAndMinute
+                        )
+                        
+                        Text("settings.reminder_time_description".localized)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
                 

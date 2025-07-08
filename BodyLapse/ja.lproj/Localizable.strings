@@ -153,6 +153,7 @@
 "settings.reminders" = "リマインダー";
 "settings.daily_reminder" = "毎日のリマインダー";
 "settings.reminder_time" = "リマインダー時刻";
+"settings.reminder_time_description" = "毎日の写真リマインダーを受け取る時刻を選択";
 "settings.premium_features" = "プレミアム機能";
 "settings.premium_active" = "プレミアムアクティブ";
 "settings.manage_subscription" = "サブスクリプションを管理";
@@ -478,6 +479,8 @@
 "gallery.section_photos" = "写真";
 "notification.no_photo_title" = "まだ今日の写真を撮っていません";
 "notification.no_photo_body" = "今日の進捗を記録しましょう！タップして撮影を開始";
+"notification.daily_reminder_title" = "毎日の写真リマインダー";
+"notification.daily_reminder_body" = "今日の進捗写真を撮影する時間です！";
 "import.preparing_export" = "エクスポートを準備中...";
 "import.preparing_import" = "インポートを準備中...";
 "import.preparing_photos" = "写真を準備中...";
@@ -692,7 +695,7 @@
 "onboarding.reset_note" = "※設定からいつでもリセット可能";
 "onboarding.customize_title" = "アプリをカスタマイズ";
 "onboarding.reminder_title" = "デイリーリマインダー";
-"onboarding.reminder_subtitle" = "19時に通知（撮り忘れ防止）";
+"onboarding.reminder_subtitle" = "21時に通知（撮り忘れ防止）";
 "onboarding.privacy_lock_title" = "プライバシー保護";
 "onboarding.privacy_lock_subtitle" = "Face ID/パスコード";
 "onboarding.premium_features_title" = "プレミアム機能";

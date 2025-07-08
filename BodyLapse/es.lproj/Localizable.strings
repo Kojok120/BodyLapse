@@ -153,6 +153,7 @@
 "settings.reminders" = "Recordatorios";
 "settings.daily_reminder" = "Recordatorio Diario";
 "settings.reminder_time" = "Hora del Recordatorio";
+"settings.reminder_time_description" = "Elige cuándo recibir tu recordatorio diario de fotos";
 "settings.premium_features" = "Funciones Premium";
 "settings.premium_active" = "Premium Activo";
 "settings.manage_subscription" = "Gestionar Suscripción";
@@ -447,8 +448,8 @@
 /* Notification Onboarding */
 "onboarding.notification.title" = "Mantente en el Camino";
 "onboarding.notification.subtitle" = "Nunca pierdas un día de progreso";
-"onboarding.notification.description" = "BodyLapse te recordará si no has tomado una foto antes de las 7 PM";
-"onboarding.notification.daily_reminder" = "Recordatorio diario a las 7 PM si no se ha tomado foto";
+"onboarding.notification.description" = "BodyLapse te recordará si no has tomado una foto antes de las 9 PM";
+"onboarding.notification.daily_reminder" = "Recordatorio diario a las 9 PM si no se ha tomado foto";
 "onboarding.enable_notifications" = "Habilitar Notificaciones";
 
 /* Additional Strings */
@@ -480,6 +481,8 @@
 "gallery.section_photos" = "Fotos";
 "notification.no_photo_title" = "Aún no has tomado la foto de hoy";
 "notification.no_photo_body" = "¡Registremos el progreso de hoy! Toca para comenzar a disparar";
+"notification.daily_reminder_title" = "Recordatorio de Foto Diaria";
+"notification.daily_reminder_body" = "¡Es hora de capturar tu foto de progreso de hoy!";
 "import.preparing_export" = "Preparando exportación...";
 "import.preparing_import" = "Preparando importación...";
 "import.preparing_photos" = "Preparando fotos...";
@@ -684,7 +687,7 @@
 "onboarding.reset_note" = "※ Se puede restablecer en Ajustes";
 "onboarding.customize_title" = "Personaliza tu App";
 "onboarding.reminder_title" = "Recordatorio Diario";
-"onboarding.reminder_subtitle" = "Notificación a las 7 PM (evita olvidar)";
+"onboarding.reminder_subtitle" = "Notificación a las 9 PM (evita olvidar)";
 "onboarding.privacy_lock_title" = "Protección de Privacidad";
 "onboarding.privacy_lock_subtitle" = "Face ID/Código de acceso";
 "onboarding.premium_features_title" = "Características Premium";

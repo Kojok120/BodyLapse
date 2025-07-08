@@ -6,7 +6,8 @@ class NotificationService: NSObject {
     static let shared = NotificationService()
     
     private let notificationCenter = UNUserNotificationCenter.current()
-    private let reminderIdentifier = "daily-photo-reminder"
+    private let reminderIdentifier = "daily-photo-reminder"  // User-configured daily reminder
+    private let missedPhotoIdentifier = "missed-photo-reminder"  // 21:00 automatic check
     
     private override init() {
         super.init()
@@ -45,14 +46,61 @@ class NotificationService: NSObject {
         // Check permission status first
         checkNotificationPermission { [weak self] authorized in
             guard authorized else { return }
-            self?.scheduleDailyCheck()
+            // Schedule both types of reminders
+            self?.scheduleDailyCheck()  // 21:00 check for missed photos
+            self?.scheduleDailyReminder()  // User-configured daily reminder
+        }
+    }
+    
+    // Schedule user-configured daily reminder
+    func scheduleDailyReminder() {
+        // Cancel existing user reminder
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [reminderIdentifier])
+        
+        // Check permission status first
+        checkNotificationPermission { [weak self] authorized in
+            guard authorized else { return }
+            
+            Task { @MainActor in
+                // Get user settings
+                let settings = UserSettingsManager.shared.settings
+                
+                // Schedule daily reminder at user-configured time
+                var dateComponents = DateComponents()
+                dateComponents.hour = settings.reminderHour
+                dateComponents.minute = settings.reminderMinute
+                
+                let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+                
+                // Create reminder content
+                let content = UNMutableNotificationContent()
+                content.title = "notification.daily_reminder_title".localized
+                content.body = "notification.daily_reminder_body".localized
+                content.sound = .default
+                content.badge = 1
+                content.userInfo = ["openCamera": true]
+                
+                let request = UNNotificationRequest(
+                    identifier: self?.reminderIdentifier ?? "daily-photo-reminder",
+                    content: content,
+                    trigger: trigger
+                )
+                
+                self?.notificationCenter.add(request) { error in
+                    if let error = error {
+                        print("Error scheduling daily reminder: \(error)")
+                    } else {
+                        print("Daily reminder scheduled for \(settings.reminderHour):\(String(format: "%02d", settings.reminderMinute))")
+                    }
+                }
+            }
         }
     }
     
     private func scheduleDailyCheck() {
-        // Schedule a daily check at 19:00
+        // Schedule a daily check at 21:00
         var dateComponents = DateComponents()
-        dateComponents.hour = 19
+        dateComponents.hour = 21
         dateComponents.minute = 0
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
@@ -75,7 +123,7 @@ class NotificationService: NSObject {
             if let error = error {
                 print("Error scheduling daily check: \(error)")
             } else {
-                print("Daily photo check scheduled for 19:00")
+                print("Daily photo check scheduled for 21:00")
             }
         }
     }
@@ -89,7 +137,7 @@ class NotificationService: NSObject {
             return
         }
         
-        // Send reminder notification
+        // Send missed photo notification
         let content = UNMutableNotificationContent()
         content.title = "notification.no_photo_title".localized
         content.body = "notification.no_photo_body".localized
@@ -99,7 +147,7 @@ class NotificationService: NSObject {
         
         // Send immediately
         let request = UNNotificationRequest(
-            identifier: reminderIdentifier,
+            identifier: missedPhotoIdentifier,
             content: content,
             trigger: nil // nil trigger means send immediately
         )
@@ -114,8 +162,8 @@ class NotificationService: NSObject {
     }
     
     func cancelDailyReminder() {
-        notificationCenter.removePendingNotificationRequests(withIdentifiers: [reminderIdentifier])
-        notificationCenter.removeDeliveredNotifications(withIdentifiers: [reminderIdentifier])
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [reminderIdentifier, missedPhotoIdentifier, "daily-photo-check"])
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: [reminderIdentifier, missedPhotoIdentifier])
     }
     
     // MARK: - Badge Management
@@ -167,8 +215,9 @@ extension NotificationService: UNUserNotificationCenterDelegate {
         // Clear badge when notification is tapped
         clearBadge()
         
-        // Check if this is a photo reminder or has openCamera flag
+        // Check if this is any type of photo reminder or has openCamera flag
         if response.notification.request.identifier == reminderIdentifier ||
+           response.notification.request.identifier == missedPhotoIdentifier ||
            (response.notification.request.content.userInfo["openCamera"] as? Bool == true) {
             // Post notification to navigate to camera tab with camera launch
             NotificationCenter.default.post(

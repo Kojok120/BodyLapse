@@ -177,7 +177,7 @@ export_2025_01_08.bodylapse (ZIP archive)
 ## 🔔 Notification System
 
 ### Automatic Daily Check
-- **Check Time**: 7:00 PM (19:00) daily
+- **Check Time**: 9:00 PM (21:00) daily
 - **Condition**: Notification sent only if no photo taken that day
 - **Action**: Tap notification to open camera directly
 - **Setup**: Permission requested during onboarding

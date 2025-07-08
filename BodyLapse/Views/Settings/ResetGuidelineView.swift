@@ -274,6 +274,7 @@ struct ResetGuidelineView: View {
         isProcessing = true
         
         DispatchQueue.global(qos: .userInitiated).async {
+            // Save guideline if contour exists
             if !contour.isEmpty {
                 let isFrontCamera = self.cameraController?.currentPosition == .front
                 var finalContour = contour
@@ -297,6 +298,34 @@ struct ResetGuidelineView: View {
                     NotificationCenter.default.post(name: Notification.Name("GuidelineUpdated"), object: nil, userInfo: userInfo)
                     print("ResetGuidelineView: Posted GuidelineUpdated notification for category: \(self.categoryId ?? PhotoCategory.defaultCategory.id)")
                 }
+            }
+            
+            // Save photo with force overwrite if exists for today
+            do {
+                let targetCategoryId = self.categoryId ?? PhotoCategory.defaultCategory.id
+                let today = Date()
+                
+                // Use replacePhoto to force overwrite any existing photo for today in this category
+                let photo = try PhotoStorageService.shared.replacePhoto(
+                    for: today,
+                    categoryId: targetCategoryId,
+                    with: image,
+                    isFaceBlurred: false,
+                    bodyDetectionConfidence: contour.isEmpty ? nil : 1.0
+                )
+                
+                print("ResetGuidelineView: Saved photo for category: \(targetCategoryId), photo ID: \(photo.id)")
+                
+                // Post notification that a photo was saved
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: Notification.Name("PhotosUpdated"),
+                        object: nil,
+                        userInfo: ["photo": photo]
+                    )
+                }
+            } catch {
+                print("ResetGuidelineView: Failed to save photo: \(error)")
             }
             
             DispatchQueue.main.async { [self] in

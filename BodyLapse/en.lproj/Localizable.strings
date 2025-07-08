@@ -153,6 +153,7 @@
 "settings.reminders" = "Reminders";
 "settings.daily_reminder" = "Daily Reminder";
 "settings.reminder_time" = "Reminder Time";
+"settings.reminder_time_description" = "Choose when to receive your daily photo reminder";
 "settings.premium_features" = "Premium Features";
 "settings.premium_active" = "Premium Active";
 "settings.manage_subscription" = "Manage Subscription";
@@ -447,8 +448,8 @@
 /* Notification Onboarding */
 "onboarding.notification.title" = "Stay on Track";
 "onboarding.notification.subtitle" = "Never miss a day of progress";
-"onboarding.notification.description" = "BodyLapse will remind you if you haven't taken a photo by 7 PM";
-"onboarding.notification.daily_reminder" = "Daily reminder at 7 PM if no photo taken";
+"onboarding.notification.description" = "BodyLapse will remind you if you haven't taken a photo by 9 PM";
+"onboarding.notification.daily_reminder" = "Daily reminder at 9 PM if no photo taken";
 "onboarding.enable_notifications" = "Enable Notifications";
 
 /* Additional Strings */
@@ -480,6 +481,8 @@
 "gallery.section_photos" = "Photos";
 "notification.no_photo_title" = "Haven't taken today's photo yet";
 "notification.no_photo_body" = "Let's record today's progress! Tap to start shooting";
+"notification.daily_reminder_title" = "Daily Photo Reminder";
+"notification.daily_reminder_body" = "Time to capture today's progress photo!";
 "import.preparing_export" = "Preparing export...";
 "import.preparing_import" = "Preparing import...";
 "import.preparing_photos" = "Preparing photos...";

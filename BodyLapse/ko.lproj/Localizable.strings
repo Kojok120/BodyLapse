@@ -153,6 +153,7 @@
 "settings.reminders" = "알림";
 "settings.daily_reminder" = "일일 알림";
 "settings.reminder_time" = "알림 시간";
+"settings.reminder_time_description" = "매일 사진 알림을 받을 시간을 선택하세요";
 "settings.premium_features" = "프리미엄 기능";
 "settings.premium_active" = "프리미엄 활성화";
 "settings.manage_subscription" = "구독 관리";
@@ -447,8 +448,8 @@
 /* Notification Onboarding */
 "onboarding.notification.title" = "꾸준히 기록하세요";
 "onboarding.notification.subtitle" = "하루도 놓치지 마세요";
-"onboarding.notification.description" = "오후 7시까지 사진을 찍지 않으면 BodyLapse가 알려드립니다";
-"onboarding.notification.daily_reminder" = "사진이 없으면 오후 7시에 일일 알림";
+"onboarding.notification.description" = "오후 9시까지 사진을 찍지 않으면 BodyLapse가 알려드립니다";
+"onboarding.notification.daily_reminder" = "사진이 없으면 오후 9시에 일일 알림";
 "onboarding.enable_notifications" = "알림 활성화";
 
 /* Additional Strings */
@@ -480,6 +481,8 @@
 "gallery.section_photos" = "사진";
 "notification.no_photo_title" = "아직 오늘 사진을 찍지 않았습니다";
 "notification.no_photo_body" = "오늘의 진행 상황을 기록해보세요! 탭하여 촬영을 시작하세요";
+"notification.daily_reminder_title" = "일일 사진 알림";
+"notification.daily_reminder_body" = "오늘의 진행 사진을 촬영할 시간입니다!";
 "import.preparing_export" = "내보내기 준비 중...";
 "import.preparing_import" = "가져오기 준비 중...";
 "import.preparing_photos" = "사진 준비 중...";
@@ -684,7 +687,7 @@
 "onboarding.reset_note" = "※ 설정에서 언제든지 재설정 가능";
 "onboarding.customize_title" = "앱 맞춤 설정";
 "onboarding.reminder_title" = "일일 알림";
-"onboarding.reminder_subtitle" = "오후 7시 알림 (잊지 않도록)";
+"onboarding.reminder_subtitle" = "오후 9시 알림 (잊지 않도록)";
 "onboarding.privacy_lock_title" = "프라이버시 보호";
 "onboarding.privacy_lock_subtitle" = "Face ID/암호";
 "onboarding.premium_features_title" = "프리미엄 기능";
