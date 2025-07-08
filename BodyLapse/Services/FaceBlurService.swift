@@ -69,7 +69,7 @@ class FaceBlurService {
             
             let blurFilter = CIFilter.gaussianBlur()
             blurFilter.inputImage = croppedFace
-            blurFilter.radius = 60
+            blurFilter.radius = 150
             
             guard let blurredFace = blurFilter.outputImage else { continue }
             
