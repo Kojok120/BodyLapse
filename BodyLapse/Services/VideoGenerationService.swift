@@ -588,7 +588,8 @@ class VideoGenerationService {
         let textSize = dateText.size(withAttributes: attributes)
         
         // Position at top center with padding
-        let padding: CGFloat = min(size.width, size.height) * 0.04 // 4% padding
+        // Increase top padding to avoid overlap with image
+        let padding: CGFloat = min(size.width, size.height) * 0.00 // 8% padding (increased from 4%)
         let textRect = CGRect(
             x: (size.width - textSize.width) / 2,
             y: padding,
