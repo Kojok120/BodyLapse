@@ -681,6 +681,8 @@
 "onboarding.feature.privacy" = "Protección de privacidad";
 "onboarding.privacy_detail" = "Desenfoque facial para generación de video\nTodo permanece en tu dispositivo";
 "onboarding.ready" = "¡Listo!";
+"onboarding.photo_saved" = "Tu foto se ha guardado correctamente";
+"onboarding.retake_photo" = "Volver a tomar";
 "onboarding.photo_title" = "Tu primer paso para\nregistrar tu transformación";
 "onboarding.hint_label" = "💡 Consejo:";
 "onboarding.hint_text" = "Mismo lugar, mismo ángulo todos los días";

@@ -54,13 +54,22 @@ struct OnboardingView: View {
         .sheet(isPresented: $showingPremiumView) {
             PremiumView()
         }
-        .sheet(isPresented: $showingAppLockSetup) {
+        .sheet(isPresented: $showingAppLockSetup, onDismiss: {
+            // If passcode is empty, user cancelled - turn off app lock
+            if passcode.isEmpty {
+                appLockEnabled = false
+            }
+        }) {
             PasscodeSetupView(
                 passcode: $passcode,
                 confirmPasscode: $confirmPasscode,
                 onComplete: {
                     saveAppLockSettings(enableLock: true)
                     appLockEnabled = true
+                    // Mark as authenticated during onboarding to prevent auth screen from showing
+                    if AuthenticationService.shared.isAuthenticationEnabled {
+                        AuthenticationService.shared.isAuthenticated = true
+                    }
                 }
             )
         }
@@ -147,18 +156,12 @@ struct OnboardingView: View {
             if !didCapturePhoto {
                 BaselinePhotoCaptureViewWithSkip { photo in
                     didCapturePhoto = true
-                    withAnimation {
-                        currentStep = 3
-                    }
                 } onSkip: {
                     didCapturePhoto = true
-                    withAnimation {
-                        currentStep = 3
-                    }
                 }
             } else {
-                // Show success state after capture/skip
-                VStack(spacing: 20) {
+                // Show success state with options to retake or continue
+                VStack(spacing: 30) {
                     Spacer()
                     
                     Image(systemName: "checkmark.circle.fill")
@@ -169,15 +172,40 @@ struct OnboardingView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Spacer()
-                }
-                .onAppear {
-                    // Auto-advance after a short delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        withAnimation {
-                            currentStep = 3
+                    Text("onboarding.photo_saved".localized)
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 15) {
+                        Button(action: {
+                            withAnimation {
+                                currentStep = 3
+                            }
+                        }) {
+                            Text("common.next".localized)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.accentColor)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                        
+                        Button(action: {
+                            didCapturePhoto = false
+                        }) {
+                            Text("onboarding.retake_photo".localized)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.secondary.opacity(0.2))
+                                .foregroundColor(.primary)
+                                .cornerRadius(10)
                         }
                     }
+                    .padding(.horizontal, 40)
+                    
+                    Spacer()
                 }
             }
         }
@@ -273,11 +301,11 @@ struct OnboardingView: View {
     // MARK: - Navigation Buttons
     private var navigationButtons: some View {
         HStack {
-            // Back button (only on step 3)
-            if currentStep == 3 {
+            // Back button (on step 2 and 3)
+            if currentStep > 1 {
                 Button(action: {
                     withAnimation {
-                        currentStep = 2
+                        currentStep -= 1
                     }
                 }) {
                     Text("common.back".localized)
@@ -306,6 +334,9 @@ struct OnboardingView: View {
                         .fontWeight(.semibold)
                 }
                 .padding()
+            } else if currentStep == 2 && !didCapturePhoto {
+                // Hide navigation buttons during camera capture
+                EmptyView()
             } else if currentStep == 3 {
                 Button(action: {
                     completeOnboarding()
@@ -398,8 +429,24 @@ struct OnboardingView: View {
         if enableLock {
             userSettings.settings.appLockMethod = selectedLockMethod
             if !passcode.isEmpty {
-                userSettings.settings.appPasscode = passcode
+                // Use AuthenticationService to securely store password in Keychain
+                if AuthenticationService.shared.setPassword(passcode) {
+                    AuthenticationService.shared.isAuthenticationEnabled = true
+                    if selectedLockMethod == .biometric {
+                        AuthenticationService.shared.isBiometricEnabled = true
+                    }
+                } else {
+                    // Failed to save password
+                    passcodeErrorMessage = "Failed to save PIN"
+                    showingPasscodeError = true
+                    return
+                }
             }
+        } else {
+            // Disable authentication
+            AuthenticationService.shared.isAuthenticationEnabled = false
+            AuthenticationService.shared.isBiometricEnabled = false
+            AuthenticationService.shared.removePassword()
         }
         
         // Save to UserDefaults but don't complete onboarding yet
@@ -425,6 +472,11 @@ struct OnboardingView: View {
         // Save final settings
         if notificationsEnabled {
             NotificationService.shared.setupDailyPhotoCheck()
+        }
+        
+        // If authentication was enabled during onboarding, mark as authenticated to avoid showing auth screen
+        if AuthenticationService.shared.isAuthenticationEnabled {
+            AuthenticationService.shared.isAuthenticated = true
         }
         
         // Mark onboarding as complete
@@ -894,6 +946,9 @@ struct PasscodeSetupView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("common.cancel".localized) {
+                        // Reset the passcode fields
+                        passcode = ""
+                        confirmPasscode = ""
                         dismiss()
                     }
                 }

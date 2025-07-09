@@ -518,6 +518,8 @@
 "onboarding.feature.privacy" = "Privacy protection";
 "onboarding.privacy_detail" = "Face blur for video generation\nEverything stays on your device";
 "onboarding.ready" = "Ready!";
+"onboarding.photo_saved" = "Your photo has been saved successfully";
+"onboarding.retake_photo" = "Retake Photo";
 "onboarding.photo_title" = "Your first step to\nrecord your transformation";
 "onboarding.hint_label" = "💡 Tip:";
 "onboarding.hint_text" = "Same place, same angle every day";

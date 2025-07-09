@@ -689,6 +689,8 @@
 "onboarding.feature.privacy" = "プライバシー保護";
 "onboarding.privacy_detail" = "動画生成時の顔ぼかし機能\n画像や動画はすべて端末内に保存";
 "onboarding.ready" = "準備完了！";
+"onboarding.photo_saved" = "写真が正常に保存されました";
+"onboarding.retake_photo" = "撮り直す";
 "onboarding.photo_title" = "あなたの変化を記録する\n最初の一歩";
 "onboarding.hint_label" = "💡 ヒント：";
 "onboarding.hint_text" = "毎日同じ場所、同じアングルで";

@@ -681,6 +681,8 @@
 "onboarding.feature.privacy" = "프라이버시 보호";
 "onboarding.privacy_detail" = "비디오 생성 시 얼굴 블러 처리\n모든 것이 기기에 저장됩니다";
 "onboarding.ready" = "준비 완료!";
+"onboarding.photo_saved" = "사진이 성공적으로 저장되었습니다";
+"onboarding.retake_photo" = "다시 찍기";
 "onboarding.photo_title" = "변화를 기록하는\n첫 걸음";
 "onboarding.hint_label" = "💡 팁:";
 "onboarding.hint_text" = "매일 같은 장소, 같은 각도로";
