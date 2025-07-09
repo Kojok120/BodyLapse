@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import TipKit
 
 @main
 struct BodyLapseApp: App {
@@ -37,12 +36,6 @@ struct BodyLapseApp: App {
         Task { @MainActor in
             _ = AppearanceManager.shared
         }
-        
-        // Configure TipKit
-        try? Tips.configure([
-            .displayFrequency(.immediate),
-            .datastoreLocation(.applicationDefault)
-        ])
     }
     
     private func checkAndClearKeychainOnFreshInstall() {
@@ -73,15 +66,9 @@ struct BodyLapseApp: App {
             .onChange(of: scenePhase) { oldPhase, newPhase in
                 switch newPhase {
                 case .inactive:
-                    // Show privacy screen when app becomes inactive (including app switcher)
-                    withAnimation(.easeInOut(duration: 0.1)) {
                         isShowingPrivacyScreen = true
-                    }
                 case .active:
-                    // Hide privacy screen when app becomes active
-                    withAnimation(.easeInOut(duration: 0.1)) {
                         isShowingPrivacyScreen = false
-                    }
                 case .background:
                     // Keep privacy screen shown in background
                     isShowingPrivacyScreen = true
