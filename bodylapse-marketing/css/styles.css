@@ -78,13 +78,23 @@ body {
     padding: 120px;
     display: flex;
     align-items: center;
-    gap: 120px;
+    gap: 00px;
+}
+
+/* Slide 5 specific adjustment */
+#slide-5 .content-wrapper {
+    gap: 0px;
+}
+
+#slide-5 .text-section {
+    padding-right: 0px;
 }
 
 /* Text Section */
 .text-section {
-    flex: 1;
-    max-width: 800px;
+    flex: 1.5;
+    max-width: 1200px;
+    padding-right: 0px;
 }
 
 .premium-badge {
@@ -100,22 +110,26 @@ body {
 }
 
 .title {
-    font-size: 72px;
+    font-size: 134px;
     font-weight: 800;
     color: #fff;
     line-height: 1.1;
-    margin-bottom: 32px;
-    letter-spacing: -2px;
+    margin-bottom: 48px;
+    letter-spacing: -3px;
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+    word-break: keep-all;
+    white-space: normal;
 }
 
 .subtitle {
-    font-size: 32px;
+    font-size: 72px;
     font-weight: 400;
     color: #fff;
     line-height: 1.4;
-    margin-bottom: 48px;
+    margin-bottom: 0;
     text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+    word-break: keep-all;
+    white-space: normal;
 }
 
 .features {
@@ -280,6 +294,51 @@ body {
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
 }
 
+/* Privacy Storage Mockup */
+.privacy-storage-mockup {
+    width: 440px;
+    height: 956px;
+    position: relative;
+}
+
+.gallery-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Offline Feature Mockup */
+.offline-feature-mockup {
+    width: 440px;
+    height: 956px;
+    position: relative;
+}
+
+.offline-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* App Lock Mockup */
+.app-lock-mockup {
+    width: 440px;
+    height: 956px;
+    position: relative;
+}
+
+.app-lock-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
 /* App Logo Section */
 .app-logo-section {
     width: 400px;
@@ -336,18 +395,30 @@ body {
 }
 
 #slide-3 {
-    background: linear-gradient(135deg, #2E8B57 0%, #6B8E23 100%);
+    background: linear-gradient(135deg, #2E8B57 0%, #3CB371 100%);
 }
 
 #slide-4 {
-    background: linear-gradient(135deg, #6B8E23 0%, #BDB76B 100%);
+    background: linear-gradient(135deg, #3CB371 0%, #6B8E23 100%);
 }
 
 #slide-5 {
-    background: linear-gradient(135deg, #BDB76B 0%, #DAA520 100%);
+    background: linear-gradient(135deg, #6B8E23 0%, #9ACD32 100%);
 }
 
 #slide-6 {
+    background: linear-gradient(135deg, #9ACD32 0%, #BDB76B 100%);
+}
+
+#slide-7 {
+    background: linear-gradient(135deg, #BDB76B 0%, #DAA520 100%);
+}
+
+#slide-8 {
+    background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+}
+
+#slide-9 {
     background: linear-gradient(135deg, #16213e 0%, #0f0f1e 100%);
 }
 
