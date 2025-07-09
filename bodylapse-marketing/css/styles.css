@@ -1,0 +1,388 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    width: 2688px;
+    height: 1242px;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+}
+
+/* Language Selector */
+.language-selector {
+    position: absolute;
+    top: 40px;
+    right: 60px;
+    z-index: 100;
+    display: flex;
+    gap: 12px;
+}
+
+.lang-btn {
+    width: 60px;
+    height: 40px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.lang-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.lang-btn.active {
+    background: #007AFF;
+    border-color: #007AFF;
+}
+
+
+/* Slide Container */
+.slide-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slide.active {
+    opacity: 1;
+}
+
+/* Content Wrapper */
+.content-wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 120px;
+    display: flex;
+    align-items: center;
+    gap: 120px;
+}
+
+/* Text Section */
+.text-section {
+    flex: 1;
+    max-width: 800px;
+}
+
+.premium-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 8px 24px;
+    border-radius: 30px;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+}
+
+.title {
+    font-size: 72px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 32px;
+    letter-spacing: -2px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.subtitle {
+    font-size: 32px;
+    font-weight: 400;
+    color: #fff;
+    line-height: 1.4;
+    margin-bottom: 48px;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.features {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 16px 24px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.feature-icon {
+    font-size: 36px;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.feature-text {
+    font-size: 24px;
+    color: #fff;
+    font-weight: 500;
+}
+
+/* Visual Section */
+.visual-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Phone Mockup - Removed frame */
+.phone-mockup {
+    width: 440px;
+    height: 956px;
+    position: relative;
+}
+
+.demo-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+.video-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 40px;
+}
+
+.placeholder-note {
+    font-size: 14px;
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Privacy Demo */
+.before-after-showcase {
+    position: relative;
+    width: 800px;
+    height: 800px;
+}
+
+.privacy-demo {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    gap: 40px;
+    align-items: center;
+}
+
+.privacy-img {
+    width: 330px;
+    height: 717px;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+.image-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 40px;
+    border-radius: 20px;
+}
+
+/* Chart Mockup */
+.chart-mockup {
+    width: 440px;
+    height: 956px;
+    position: relative;
+}
+
+.chart-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Comparison Showcase */
+.comparison-showcase {
+    width: 440px;
+    height: 956px;
+    position: relative;
+}
+
+.comparison-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Calendar Mockup */
+.calendar-mockup {
+    width: 440px;
+    height: 956px;
+    position: relative;
+}
+
+.calendar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Body Outline Mockup */
+.body-outline-mockup {
+    width: 440px;
+    height: 956px;
+    position: relative;
+}
+
+.outline-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* App Logo Section */
+.app-logo-section {
+    width: 400px;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.app-icon {
+    width: 256px;
+    height: 256px;
+    border-radius: 57px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* CTA Section */
+.cta-section {
+    margin-top: 60px;
+}
+
+.cta-text {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 24px;
+}
+
+.cta-button {
+    background: #007AFF;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 600;
+    padding: 20px 48px;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cta-button:hover {
+    background: #0051D5;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3);
+}
+
+/* Slide-specific backgrounds - Turquoise to Yellow gradient */
+#slide-1 {
+    background: linear-gradient(135deg, #008B8B 0%, #20B2AA 100%);
+}
+
+#slide-2 {
+    background: linear-gradient(135deg, #20B2AA 0%, #2E8B57 100%);
+}
+
+#slide-3 {
+    background: linear-gradient(135deg, #2E8B57 0%, #6B8E23 100%);
+}
+
+#slide-4 {
+    background: linear-gradient(135deg, #6B8E23 0%, #BDB76B 100%);
+}
+
+#slide-5 {
+    background: linear-gradient(135deg, #BDB76B 0%, #DAA520 100%);
+}
+
+#slide-6 {
+    background: linear-gradient(135deg, #16213e 0%, #0f0f1e 100%);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide.active .title {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.slide.active .subtitle {
+    animation: fadeInUp 0.8s ease-out 0.1s both;
+}
+
+.slide.active .feature-item {
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.slide.active .feature-item:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.slide.active .feature-item:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.slide.active .visual-section {
+    animation: fadeInUp 1s ease-out 0.5s both;
+}

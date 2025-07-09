@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=2688, height=1242, initial-scale=1.0">
+    <title>BodyLapse - Track Your Fitness Journey</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="ja">JA</button>
+        <button class="lang-btn" data-lang="ko">KO</button>
+        <button class="lang-btn" data-lang="es">ES</button>
+    </div>
+
+
+    <!-- Slide Container -->
+    <div class="slide-container">
+        <!-- Slide 1: Daily Photo & Time-lapse -->
+        <div class="slide active" id="slide-1">
+            <div class="content-wrapper">
+                <div class="text-section">
+                    <h1 class="title" data-i18n="slide1.title">Capture Your Transformation</h1>
+                    <p class="subtitle" data-i18n="slide1.subtitle">Take daily photos and watch your fitness journey unfold in stunning time-lapse videos</p>
+                    <div class="features">
+                        <div class="feature-item">
+                            <span class="feature-icon">📸</span>
+                            <span class="feature-text" data-i18n="slide1.feature1">Daily photo reminders</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🎬</span>
+                            <span class="feature-text" data-i18n="slide1.feature2">Automatic time-lapse generation</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📱</span>
+                            <span class="feature-text" data-i18n="slide1.feature3">100% offline - your privacy first</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="phone-mockup">
+                        <video class="demo-video" autoplay loop muted playsinline>
+                            <source src="assets/videos/timelapse-demo.mp4" type="video/mp4">
+                        </video>
+                        <div class="video-placeholder"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Face Blur Privacy -->
+        <div class="slide" id="slide-2">
+            <div class="content-wrapper">
+                <div class="text-section">
+                    <h1 class="title" data-i18n="slide2.title">Your Privacy Matters</h1>
+                    <p class="subtitle" data-i18n="slide2.subtitle">Advanced face blur technology keeps your identity private while tracking your progress</p>
+                    <div class="features">
+                        <div class="feature-item">
+                            <span class="feature-icon">🔒</span>
+                            <span class="feature-text" data-i18n="slide2.feature1">Automatic face detection & blur</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🛡️</span>
+                            <span class="feature-text" data-i18n="slide2.feature2">On-device processing only</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">👤</span>
+                            <span class="feature-text" data-i18n="slide2.feature3">Share progress, not identity</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="before-after-showcase">
+                        <div class="privacy-demo">
+                            <img src="assets/images/privacy-before.png" alt="Before blur" class="privacy-img before">
+                            <img src="assets/images/privacy-after.png" alt="After blur" class="privacy-img after">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Weight & Body Fat Tracking -->
+        <div class="slide" id="slide-3">
+            <div class="content-wrapper">
+                <div class="text-section">
+                    <div class="premium-badge" data-i18n="premium">PREMIUM</div>
+                    <h1 class="title" data-i18n="slide3.title">Track Every Metric</h1>
+                    <p class="subtitle" data-i18n="slide3.subtitle">Monitor weight and body fat percentage with beautiful charts and insights</p>
+                    <div class="features">
+                        <div class="feature-item">
+                            <span class="feature-icon">📊</span>
+                            <span class="feature-text" data-i18n="slide3.feature1">Interactive progress charts</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">💪</span>
+                            <span class="feature-text" data-i18n="slide3.feature2">Body composition tracking</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🏥</span>
+                            <span class="feature-text" data-i18n="slide3.feature3">HealthKit integration</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="chart-mockup">
+                        <img src="assets/images/weight-chart.png" alt="Weight tracking chart" class="chart-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Before/After Comparison -->
+        <div class="slide" id="slide-4">
+            <div class="content-wrapper">
+                <div class="text-section">
+                    <h1 class="title" data-i18n="slide4.title">See Your Progress</h1>
+                    <p class="subtitle" data-i18n="slide4.subtitle">Compare any two dates side-by-side to visualize your transformation</p>
+                    <div class="features">
+                        <div class="feature-item">
+                            <span class="feature-icon">🔄</span>
+                            <span class="feature-text" data-i18n="slide4.feature1">Instant before/after views</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📅</span>
+                            <span class="feature-text" data-i18n="slide4.feature2">Select any dates to compare</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📈</span>
+                            <span class="feature-text" data-i18n="slide4.feature3">Track long-term changes</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="comparison-showcase">
+                        <img src="assets/images/comparison-view.png" alt="Before/After comparison" class="comparison-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Body Outline Detection -->
+        <div class="slide" id="slide-5">
+            <div class="content-wrapper">
+                <div class="text-section">
+                    <h1 class="title" data-i18n="slide5.title">Perfect Alignment Every Time</h1>
+                    <p class="subtitle" data-i18n="slide5.subtitle">Smart body outline detection ensures consistent photos for accurate progress tracking</p>
+                    <div class="features">
+                        <div class="feature-item">
+                            <span class="feature-icon">🎯</span>
+                            <span class="feature-text" data-i18n="slide5.feature1">AI-powered body detection</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📐</span>
+                            <span class="feature-text" data-i18n="slide5.feature2">Consistent pose guidance</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📊</span>
+                            <span class="feature-text" data-i18n="slide5.feature3">More accurate comparisons</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="body-outline-mockup">
+                        <img src="assets/images/body-outline.png" alt="Body outline detection" class="outline-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Call to Action -->
+        <div class="slide" id="slide-6">
+            <div class="content-wrapper">
+                <div class="text-section">
+                    <h1 class="title" data-i18n="slide6.title">Start Your Journey Today</h1>
+                    <p class="subtitle" data-i18n="slide6.subtitle">Join thousands who are transforming their bodies with BodyLapse</p>
+                    <div class="features">
+                        <div class="feature-item">
+                            <span class="feature-icon">🆓</span>
+                            <span class="feature-text" data-i18n="slide6.feature1">Free to start</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🔒</span>
+                            <span class="feature-text" data-i18n="slide6.feature2">100% private & secure</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">⭐</span>
+                            <span class="feature-text" data-i18n="slide6.feature3">Premium features available</span>
+                        </div>
+                    </div>
+                    <div class="cta-section">
+                        <p class="cta-text" data-i18n="cta.text">Start your transformation today</p>
+                        <button class="cta-button" data-i18n="cta.button">Download BodyLapse</button>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="app-logo-section">
+                        <img src="assets/images/app-icon.png" alt="BodyLapse App Icon" class="app-icon">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="js/translations.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
