@@ -14,13 +14,15 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if !authService.isAuthenticated && authService.isAuthenticationEnabled && hasAppeared {
+            if !userSettings.settings.hasCompletedOnboarding {
+                // Always show onboarding first if not completed
+                OnboardingView()
+                    .environmentObject(userSettings)
+            } else if !authService.isAuthenticated && authService.isAuthenticationEnabled && hasAppeared {
+                // Only show authentication after onboarding is complete
                 AuthenticationView {
                     // Authentication successful
                 }
-            } else if !userSettings.settings.hasCompletedOnboarding {
-                OnboardingView()
-                    .environmentObject(userSettings)
             } else {
                 MainTabView()
             }

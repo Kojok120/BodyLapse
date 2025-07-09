@@ -11,7 +11,7 @@ struct UserSettings: Codable {
     // Security
     var isAppLockEnabled: Bool = false
     var appLockMethod: AppLockMethod = .biometric
-    var appPasscode: String?
+    // appPasscode removed - now stored securely in Keychain via AuthenticationService
     
     // App Rating
     var hasRatedApp: Bool = false
@@ -86,8 +86,32 @@ class UserSettingsManager: ObservableObject {
         if let data = userDefaults.data(forKey: settingsKey),
            let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
             self.settings = decoded
+            
+            // Migrate password from old UserSettings to AuthenticationService
+            migratePasswordIfNeeded()
         } else {
             self.settings = UserSettings.default
+        }
+    }
+    
+    private func migratePasswordIfNeeded() {
+        // Check if there's an old password stored in UserDefaults that needs migration
+        // This handles users upgrading from the old version
+        if let oldData = userDefaults.data(forKey: settingsKey),
+           let jsonObject = try? JSONSerialization.jsonObject(with: oldData) as? [String: Any],
+           let oldPasscode = jsonObject["appPasscode"] as? String,
+           !oldPasscode.isEmpty {
+            
+            // Migrate to AuthenticationService
+            if AuthenticationService.shared.setPassword(oldPasscode) {
+                AuthenticationService.shared.isAuthenticationEnabled = settings.isAppLockEnabled
+                if settings.appLockMethod == .biometric {
+                    AuthenticationService.shared.isBiometricEnabled = true
+                }
+                
+                // Remove the old password from UserDefaults by re-saving settings
+                save()
+            }
         }
     }
     
