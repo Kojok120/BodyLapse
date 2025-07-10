@@ -262,7 +262,11 @@ struct SettingsView: View {
                             .disabled(healthKitSyncInProgress)
                         }
                     } else {
-                        Button(action: { showingPremiumUpgrade = true }) {
+                        Button(action: { 
+                            showingPremiumUpgrade = true 
+                            // Mark premium features guidance as completed when button is tapped
+                            tooltipManager.markFeatureCompleted(for: .premiumFeatures)
+                        }) {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text("settings.upgrade_premium".localized)
@@ -281,6 +285,7 @@ struct SettingsView: View {
                                 }
                             }
                         }
+                        .withGuidanceBadge(for: .premiumFeatures, size: 10, offset: CGPoint(x: 8, y: -8))
                     }
                 }
                 
