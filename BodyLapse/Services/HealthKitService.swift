@@ -220,13 +220,16 @@ class HealthKitService {
                 return
             }
             
-            let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+            // Fetch all available data from HealthKit (start from August 1, 2024)
+            let startDate = Calendar.current.date(from: DateComponents(year: 2024, month: 8, day: 1))!
             
-            fetchWeightData(from: thirtyDaysAgo, to: Date()) { entries, error in
+            fetchWeightData(from: startDate, to: Date()) { entries, error in
                 if let error = error {
                     completion(false, error)
                     return
                 }
+                
+                print("HealthKit sync: Retrieved \(entries.count) entries from all available data")
                 
                 // Save entries to WeightStorageService
                 Task {
