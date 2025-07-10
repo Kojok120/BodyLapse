@@ -42,6 +42,12 @@ class SimpleCameraViewController: UIViewController {
     var onCountdownUpdate: ((Int) -> Void)?
     var onCountdownComplete: (() -> Void)?
     
+    // Zoom properties
+    private var zoomFactor: CGFloat = 1.0
+    private var minZoomFactor: CGFloat = 1.0
+    private var maxZoomFactor: CGFloat = 10.0
+    private var lastZoomFactor: CGFloat = 1.0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         print("SimpleCameraViewController: viewDidLoad called")
@@ -152,6 +158,13 @@ class SimpleCameraViewController: UIViewController {
             previewLayer.frame = view.bounds
         }
         
+        // Setup zoom factors
+        setupZoomFactors(for: camera)
+        
+        // Add pinch gesture recognizer
+        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinchGesture(_:)))
+        view.addGestureRecognizer(pinchGesture)
+        
         // Start session
         print("SimpleCameraViewController: Starting capture session")
         DispatchQueue.global(qos: .userInitiated).async {
@@ -232,12 +245,50 @@ class SimpleCameraViewController: UIViewController {
             let newInput = try AVCaptureDeviceInput(device: newCamera)
             if captureSession.canAddInput(newInput) {
                 captureSession.addInput(newInput)
+                // Update zoom factors for the new camera
+                setupZoomFactors(for: newCamera)
             }
         } catch {
             print("Error switching camera: \(error)")
         }
         
         captureSession.commitConfiguration()
+    }
+    
+    // MARK: - Zoom Support
+    
+    private func setupZoomFactors(for device: AVCaptureDevice) {
+        minZoomFactor = device.minAvailableVideoZoomFactor
+        maxZoomFactor = min(device.maxAvailableVideoZoomFactor, 10.0) // Cap at 10x
+        zoomFactor = device.videoZoomFactor
+    }
+    
+    @objc private func handlePinchGesture(_ gesture: UIPinchGestureRecognizer) {
+        guard let captureSession = captureSession,
+              let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput else { return }
+        
+        let device = currentInput.device
+        
+        switch gesture.state {
+        case .began:
+            lastZoomFactor = zoomFactor
+        case .changed:
+            let newZoomFactor = lastZoomFactor * gesture.scale
+            let clampedFactor = max(minZoomFactor, min(maxZoomFactor, newZoomFactor))
+            
+            do {
+                try device.lockForConfiguration()
+                device.videoZoomFactor = clampedFactor
+                device.unlockForConfiguration()
+                zoomFactor = clampedFactor
+            } catch {
+                print("Error setting zoom factor: \(error)")
+            }
+        case .ended, .cancelled:
+            break
+        default:
+            break
+        }
     }
 }
 

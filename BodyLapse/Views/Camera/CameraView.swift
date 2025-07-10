@@ -394,12 +394,43 @@ struct CameraPreviewView: UIViewRepresentable {
         
         view.layer.addSublayer(previewLayer)
         
+        // Add pinch gesture recognizer for zoom
+        let pinchGesture = UIPinchGestureRecognizer(target: context.coordinator, action: #selector(context.coordinator.handlePinchGesture(_:)))
+        view.addGestureRecognizer(pinchGesture)
+        
         // Ensure the layer is properly sized when the view appears
         DispatchQueue.main.async {
             previewLayer.frame = view.bounds
         }
         
         return view
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(cameraViewModel: cameraViewModel)
+    }
+    
+    class Coordinator: NSObject {
+        let cameraViewModel: CameraViewModel
+        private var lastZoomFactor: CGFloat = 1.0
+        
+        init(cameraViewModel: CameraViewModel) {
+            self.cameraViewModel = cameraViewModel
+        }
+        
+        @objc func handlePinchGesture(_ gesture: UIPinchGestureRecognizer) {
+            switch gesture.state {
+            case .began:
+                lastZoomFactor = cameraViewModel.zoomFactor
+            case .changed:
+                let newZoomFactor = lastZoomFactor * gesture.scale
+                cameraViewModel.setZoomFactor(newZoomFactor)
+            case .ended, .cancelled:
+                break
+            default:
+                break
+            }
+        }
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {

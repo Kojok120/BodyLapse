@@ -23,6 +23,11 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var countdownValue: Int = 0
     @Published var isCountingDown = false
     
+    // Zoom functionality
+    @Published var zoomFactor: CGFloat = 1.0
+    @Published var minZoomFactor: CGFloat = 1.0
+    @Published var maxZoomFactor: CGFloat = 10.0
+    
     // Multi-category flow
     @Published var showingCategoryTransition = false
     @Published var nextCategory: PhotoCategory?
@@ -170,6 +175,9 @@ class CameraViewModel: NSObject, ObservableObject {
                 session.addInput(input)
                 currentInput = input
                 currentCameraPosition = device.position
+                
+                // Set up zoom factors
+                setupZoomFactors(for: device)
             }
             
             if session.canAddOutput(output) {
@@ -455,6 +463,9 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
                 session.addInput(newInput)
                 self.currentInput = newInput
                 self.currentCameraPosition = newPosition
+                
+                // Set up zoom factors for the new device
+                setupZoomFactors(for: newDevice)
             } else {
                 // If we can't add the new input, add back the current one
                 session.addInput(currentInput)
@@ -567,5 +578,33 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
             name: NSNotification.Name("NavigateToCalendarToday"),
             object: nil
         )
+    }
+    
+    // MARK: - Zoom Support
+    
+    private func setupZoomFactors(for device: AVCaptureDevice) {
+        DispatchQueue.main.async { [weak self] in
+            self?.minZoomFactor = device.minAvailableVideoZoomFactor
+            self?.maxZoomFactor = min(device.maxAvailableVideoZoomFactor, 10.0) // Cap at 10x
+            self?.zoomFactor = device.videoZoomFactor
+        }
+    }
+    
+    func setZoomFactor(_ factor: CGFloat) {
+        guard let device = currentInput?.device else { return }
+        
+        let clampedFactor = max(minZoomFactor, min(maxZoomFactor, factor))
+        
+        do {
+            try device.lockForConfiguration()
+            device.videoZoomFactor = clampedFactor
+            device.unlockForConfiguration()
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.zoomFactor = clampedFactor
+            }
+        } catch {
+            print("Error setting zoom factor: \(error)")
+        }
     }
 }
