@@ -711,5 +711,3 @@
 "guidance.premium_features.description" = "Unlock advanced features like multiple categories, weight tracking, and ad-free experience.";
 "guidance.category_management.title" = "Manage Categories";
 "guidance.category_management.description" = "Create, edit, and organize your photo categories. Set up different angles and poses for comprehensive tracking.";
-"guidance.authentication_setup.title" = "App Security";
-"guidance.authentication_setup.description" = "Secure your progress photos with Face ID, Touch ID, or a passcode. Keep your transformation private.";

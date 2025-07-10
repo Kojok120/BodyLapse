@@ -711,5 +711,3 @@
 "guidance.premium_features.description" = "여러 카테고리, 체중 추적, 광고 없는 경험 등 고급 기능을 잠금 해제하세요.";
 "guidance.category_management.title" = "카테고리 관리";
 "guidance.category_management.description" = "사진 카테고리를 생성, 편집 및 정리하세요. 포괄적인 추적을 위해 다양한 각도와 포즈를 설정하세요.";
-"guidance.authentication_setup.title" = "앱 보안";
-"guidance.authentication_setup.description" = "Face ID, Touch ID 또는 패스코드로 진행 상황 사진을 보호하세요. 변화를 비공개로 유지하세요.";

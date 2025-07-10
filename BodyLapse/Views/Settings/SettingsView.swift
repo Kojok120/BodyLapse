@@ -23,8 +23,6 @@ struct SettingsView: View {
     @StateObject private var tooltipManager = TooltipManager.shared
     @State private var showingCategoryManagementGuidance = false
     
-    // Authentication Setup Guidance
-    @State private var showingAuthenticationSetupGuidance = false
     
     // App Store ID - replace with actual ID when app is published
     private let appStoreID = "YOUR_APP_STORE_ID"
@@ -39,10 +37,6 @@ struct SettingsView: View {
                     categoryManagementGuidanceOverlay
                 }
                 
-                // Authentication Setup guidance overlay
-                if showingAuthenticationSetupGuidance {
-                    authenticationSetupGuidanceOverlay
-                }
             }
         }
     }
@@ -132,13 +126,6 @@ struct SettingsView: View {
                             }
                         }
                     ))
-                    .withGuidanceBadge(for: .authenticationSetup, size: 10, offset: CGPoint(x: 8, y: -8))
-                    .onTapGesture {
-                        if tooltipManager.needsGuidance(for: .authenticationSetup) && !tooltipManager.hasShownTooltip(for: .authenticationSetup) {
-                            showingAuthenticationSetupGuidance = true
-                            tooltipManager.markTooltipShown(for: .authenticationSetup)
-                        }
-                    }
                     
                     if authService.isAuthenticationEnabled {
                         Toggle("\(authService.biometricTypeString)", isOn: .init(
@@ -458,34 +445,6 @@ struct SettingsView: View {
         }
     }
     
-    private var authenticationSetupGuidanceOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.1)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    showingAuthenticationSetupGuidance = false
-                    tooltipManager.markFeatureCompleted(for: .authenticationSetup)
-                }
-            
-            VStack {
-                Spacer()
-                
-                GuidanceTooltip(
-                    title: tooltipManager.getTitle(for: .authenticationSetup),
-                    description: tooltipManager.getDescription(for: .authenticationSetup),
-                    isVisible: showingAuthenticationSetupGuidance,
-                    onDismiss: {
-                        showingAuthenticationSetupGuidance = false
-                        tooltipManager.markFeatureCompleted(for: .authenticationSetup)
-                    }
-                )
-                .padding(.horizontal, 20)
-                .padding(.bottom, 100)
-                
-                Spacer()
-            }
-        }
-    }
     
     private func requestHealthKitPermission() {
         HealthKitService.shared.requestAuthorization { success, error in

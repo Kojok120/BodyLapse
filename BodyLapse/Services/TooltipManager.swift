@@ -11,7 +11,6 @@ class TooltipManager: ObservableObject {
         case categoryAdding = "category_adding"
         case premiumFeatures = "premium_features"
         case categoryManagement = "category_management"
-        case authenticationSetup = "authentication_setup"
     }
     
     // MARK: - UserDefaults Keys
@@ -114,8 +113,6 @@ extension TooltipManager {
             return "guidance.premium_features.title".localized
         case .categoryManagement:
             return "guidance.category_management.title".localized
-        case .authenticationSetup:
-            return "guidance.authentication_setup.title".localized
         }
     }
     
@@ -130,8 +127,6 @@ extension TooltipManager {
             return "guidance.premium_features.description".localized
         case .categoryManagement:
             return "guidance.category_management.description".localized
-        case .authenticationSetup:
-            return "guidance.authentication_setup.description".localized
         }
     }
 }
