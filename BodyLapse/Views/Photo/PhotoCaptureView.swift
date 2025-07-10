@@ -230,8 +230,11 @@ struct GuidelineOverlay: View {
     var body: some View {
         GeometryReader { geometry in
             if let guideline = guideline {
-                // Show saved body contour
-                let scaledPoints = guideline.scaledPoints(for: geometry.size)
+                // Show saved body contour with aspect fit scaling to match camera preview
+                let scaledPoints = aspectFitScaledPoints(
+                    guideline: guideline,
+                    viewSize: geometry.size
+                )
                 
                 Path { path in
                     guard scaledPoints.count > 2 else { return }
@@ -281,6 +284,33 @@ struct GuidelineOverlay: View {
                 }
                 .stroke(Color.white.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [5, 5]))
             }
+        }
+    }
+    
+    // Helper function to scale guideline points with aspect fit logic to match camera preview
+    private func aspectFitScaledPoints(guideline: BodyGuideline, viewSize: CGSize) -> [CGPoint] {
+        let originalSize = guideline.imageSize
+        
+        // Calculate scale factors for aspect fit
+        let scaleX = viewSize.width / originalSize.width
+        let scaleY = viewSize.height / originalSize.height
+        // Use the smaller scale to ensure the content fits within the view
+        let scale = min(scaleX, scaleY)
+        
+        // Calculate the size after scaling
+        let scaledWidth = originalSize.width * scale
+        let scaledHeight = originalSize.height * scale
+        
+        // Calculate offset to center the scaled content
+        let offsetX = (viewSize.width - scaledWidth) / 2
+        let offsetY = (viewSize.height - scaledHeight) / 2
+        
+        // Apply scale and offset to guideline points
+        return guideline.points.map { point in
+            CGPoint(
+                x: point.x * scale + offsetX,
+                y: point.y * scale + offsetY
+            )
         }
     }
 }

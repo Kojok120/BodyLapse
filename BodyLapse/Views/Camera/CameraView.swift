@@ -382,7 +382,7 @@ struct CameraPreviewView: UIViewRepresentable {
         
         let previewLayer = cameraViewModel.cameraPreviewLayer
         previewLayer.frame = view.bounds
-        previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.videoGravity = .resizeAspect
         
         if let connection = previewLayer.connection {
             connection.videoRotationAngle = 90 // .portrait is 90 degrees
@@ -443,7 +443,7 @@ struct CameraPreviewView: UIViewRepresentable {
             
             let previewLayer = cameraViewModel.cameraPreviewLayer
             previewLayer.frame = uiView.bounds
-            previewLayer.videoGravity = .resizeAspectFill
+            previewLayer.videoGravity = .resizeAspect
             
             if let connection = previewLayer.connection {
                 connection.videoRotationAngle = 90 // .portrait is 90 degrees
@@ -517,15 +517,15 @@ struct GuidelineOverlayView: View {
     let viewSize: CGSize
     let currentCameraPosition: AVCaptureDevice.Position
     
-    // Calculate scaled points with aspect fill logic (same as camera preview)
-    private var aspectFillScaledContour: [CGPoint] {
+    // Calculate scaled points with aspect fit logic (same as camera preview)
+    private var aspectScaledContour: [CGPoint] {
         let originalSize = guideline.imageSize
         
-        // Calculate scale factors for aspect fill
+        // Calculate scale factors for aspect fit
         let scaleX = viewSize.width / originalSize.width
         let scaleY = viewSize.height / originalSize.height
-        // Use the larger scale to ensure the view is filled
-        let scale = max(scaleX, scaleY)
+        // Use the smaller scale to ensure the content fits within the view
+        let scale = min(scaleX, scaleY)
         
         // Calculate the size after scaling
         let scaledWidth = originalSize.width * scale
@@ -563,7 +563,7 @@ struct GuidelineOverlayView: View {
     
     var body: some View {
         ZStack {
-            let scaledContour = aspectFillScaledContour
+            let scaledContour = aspectScaledContour
             
             if !scaledContour.isEmpty && scaledContour.count > 2 {
                 // Semi-transparent background fill

@@ -32,9 +32,8 @@ struct ContourConfirmationView: View {
                     ZStack {
                         Image(uiImage: image)
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
+                            .aspectRatio(contentMode: .fit)
                             .frame(width: geometry.size.width, height: geometry.size.height)
-                            .clipped()
                         
                         if showingContourPreview {
                             ContourOverlay(
@@ -91,11 +90,11 @@ struct ContourOverlay: View {
     let viewSize: CGSize
     
     private var scaledContour: [CGPoint] {
-        // Use aspect fill logic to match camera preview
+        // Use aspect fit logic to match camera preview
         let scaleX = viewSize.width / imageSize.width
         let scaleY = viewSize.height / imageSize.height
-        // Use the larger scale to ensure the view is filled
-        let scale = max(scaleX, scaleY)
+        // Use the smaller scale to ensure the content fits within the view
+        let scale = min(scaleX, scaleY)
         
         // Calculate the size after scaling
         let scaledWidth = imageSize.width * scale

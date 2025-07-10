@@ -152,7 +152,7 @@ class SimpleCameraViewController: UIViewController {
         
         // Setup preview layer
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        previewLayer?.videoGravity = .resizeAspectFill
+        previewLayer?.videoGravity = .resizeAspect
         if let previewLayer = previewLayer {
             view.layer.addSublayer(previewLayer)
             previewLayer.frame = view.bounds

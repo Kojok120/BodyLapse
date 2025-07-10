@@ -385,7 +385,7 @@ class CameraViewModel: NSObject, ObservableObject {
             return existingLayer
         }
         let layer = AVCaptureVideoPreviewLayer(session: session)
-        layer.videoGravity = .resizeAspectFill
+        layer.videoGravity = .resizeAspect
         previewLayer = layer
         return layer
     }
