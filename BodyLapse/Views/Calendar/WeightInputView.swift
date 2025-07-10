@@ -81,6 +81,55 @@ struct WeightInputView: View {
                 }
                 .padding(.horizontal, 30)
                 
+                // HealthKit Integration Section
+                if subscriptionManager.isPremium {
+                    VStack(spacing: 12) {
+                        HStack {
+                            Image(systemName: "heart.text.square.fill")
+                                .font(.title2)
+                                .foregroundColor(.red)
+                            Text("settings.apple_health_integration".localized)
+                                .font(.headline)
+                            Spacer()
+                        }
+                        
+                        Toggle(isOn: $userSettings.settings.healthKitEnabled) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("settings.sync_health".localized)
+                                    .font(.subheadline)
+                                Text("settings.auto_import".localized)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .onChange(of: userSettings.settings.healthKitEnabled) { _, newValue in
+                            if newValue {
+                                requestHealthKitPermission()
+                            }
+                        }
+                        
+                        if userSettings.settings.healthKitEnabled {
+                            Button(action: syncHealthData) {
+                                HStack {
+                                    if isLoadingHealthData {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                    } else {
+                                        Image(systemName: "arrow.triangle.2.circlepath")
+                                    }
+                                    Text("settings.sync_now".localized)
+                                }
+                            }
+                            .disabled(isLoadingHealthData)
+                        }
+                    }
+                    .padding()
+                    .background(Color.red.opacity(0.05))
+                    .cornerRadius(12)
+                    .padding(.horizontal, 30)
+                    .padding(.top, 20)
+                }
+                
                 Spacer()
                 
                 // Action buttons
@@ -192,6 +241,43 @@ struct WeightInputView: View {
         isLoadingHealthData = true
         
         // Fetch weight data from HealthKit
+        HealthKitService.shared.fetchLatestWeight { weightKg, error in
+            DispatchQueue.main.async {
+                if let weightKg = weightKg {
+                    self.weightText = String(format: "%.1f", self.convertWeight(weightKg))
+                }
+                
+                // Also fetch body fat
+                HealthKitService.shared.fetchLatestBodyFatPercentage { bodyFatPercent, error in
+                    DispatchQueue.main.async {
+                        if let bodyFatPercent = bodyFatPercent {
+                            self.bodyFatText = String(format: "%.1f", bodyFatPercent)
+                        }
+                        self.isLoadingHealthData = false
+                    }
+                }
+            }
+        }
+    }
+    
+    private func requestHealthKitPermission() {
+        HealthKitService.shared.requestAuthorization { success, error in
+            DispatchQueue.main.async {
+                if success {
+                    self.userSettings.settings.healthKitEnabled = true
+                } else {
+                    self.userSettings.settings.healthKitEnabled = false
+                }
+            }
+        }
+    }
+    
+    private func syncHealthData() {
+        guard subscriptionManager.isPremium && userSettings.settings.healthKitEnabled else { return }
+        
+        isLoadingHealthData = true
+        
+        // Fetch latest weight data from HealthKit
         HealthKitService.shared.fetchLatestWeight { weightKg, error in
             DispatchQueue.main.async {
                 if let weightKg = weightKg {
