@@ -5,7 +5,6 @@ struct PhotoCaptureView: View {
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var showingReplaceAlert = false
     @State private var pendingPhoto: UIImage?
-    @State private var showingWeightInput = false
     @State private var capturedPhoto: Photo?
     @State private var showGuidelines = true
     @State private var cameraController: SimpleCameraViewController?
@@ -43,20 +42,6 @@ struct PhotoCaptureView: View {
                 }
             } message: {
                 Text("photo.replace_today_message".localized)
-            }
-            .sheet(isPresented: $showingWeightInput) {
-                if let photo = capturedPhoto {
-                    PhotoWeightInputView(photo: photo) { weight, bodyFat in
-                        if weight != nil || bodyFat != nil {
-                            print("[PhotoCapture] Updating photo metadata - weight: \(weight ?? -1), bodyFat: \(bodyFat ?? -1)")
-                            PhotoStorageService.shared.updatePhotoMetadata(
-                                photo,
-                                weight: weight,
-                                bodyFatPercentage: bodyFat
-                            )
-                        }
-                    }
-                }
             }
         }
     }
@@ -143,11 +128,7 @@ struct PhotoCaptureView: View {
             
             capturedPhoto = photo
             
-            // Show weight input for premium users
-            // Auto-display of weight input sheet disabled
-            // if subscriptionManager.isPremium {
-            //     showingWeightInput = true
-            // }
+            // Auto-display of weight input sheet is disabled
             
         } catch {
             print("Failed to save photo: \(error)")

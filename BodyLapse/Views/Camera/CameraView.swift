@@ -17,12 +17,10 @@ struct CameraView: View {
     
     enum ActiveSheet: Identifiable {
         case photoReview
-        case weightInput
         
         var id: Int {
             switch self {
             case .photoReview: return 1
-            case .weightInput: return 2
             }
         }
     }
@@ -265,40 +263,12 @@ struct CameraView: View {
                 activeSheet = .photoReview
             }
         }
-        .onChange(of: viewModel.showingWeightInput) { _, newValue in
-            if newValue {
-                activeSheet = .weightInput
-            }
-        }
         .alert("camera.one_photo_per_day".localized, isPresented: $viewModel.showingReplaceAlert) {
             Button("common.replace".localized, role: .destructive) {
                 if let image = viewModel.capturedImage {
-                    if subscriptionManager.isPremium == true {
-                        Task {
-                            do {
-                                // Check if weight data already exists for today
-                                let hasWeightToday = try await WeightStorageService.shared.getEntry(for: Date()) != nil
-                                if hasWeightToday {
-                                    // Weight already recorded for today, skip input screen
-                                    viewModel.savePhoto(image)
-                                    viewModel.capturedImage = nil
-                                } else {
-                                    // No weight data for today, show input screen
-                                    // Auto-display of weight input sheet disabled
-                                    // viewModel.showingWeightInput = true
-                                    viewModel.savePhoto(image)
-                                    viewModel.capturedImage = nil
-                                }
-                            } catch {
-                                // If there's an error checking, just save the photo without weight input
-                                viewModel.savePhoto(image)
-                                viewModel.capturedImage = nil
-                            }
-                        }
-                    } else {
-                        viewModel.savePhoto(image)
-                        viewModel.capturedImage = nil
-                    }
+                    // Auto-display of weight input sheet is disabled - just replace the photo
+                    viewModel.savePhoto(image, isReplacement: true)
+                    viewModel.capturedImage = nil
                 }
             }
             Button("common.cancel".localized, role: .cancel) {
@@ -323,26 +293,6 @@ struct CameraView: View {
                         }
                     )
                 }
-            case .weightInput:
-                WeightInputSheet(
-                    weight: $viewModel.tempWeight,
-                    bodyFat: $viewModel.tempBodyFat,
-                    onSave: {
-                        if let image = viewModel.capturedImage {
-                            viewModel.savePhoto(image)
-                            viewModel.capturedImage = nil
-                        }
-                        viewModel.showingWeightInput = false
-                        activeSheet = nil
-                    },
-                    onCancel: {
-                        viewModel.capturedImage = nil
-                        viewModel.tempWeight = nil
-                        viewModel.tempBodyFat = nil
-                        viewModel.showingWeightInput = false
-                        activeSheet = nil
-                    }
-                )
             }
         }
         .sheet(isPresented: $showingAddCategory) {

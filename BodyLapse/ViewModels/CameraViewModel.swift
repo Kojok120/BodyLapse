@@ -10,7 +10,6 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var bodyDetected = false
     @Published var bodyConfidence: Double = 0.0
     @Published var showingReplaceAlert = false
-    @Published var showingWeightInput = false
     @Published var tempWeight: Double?
     @Published var tempBodyFat: Double?
     @Published var showGuidelines = true
@@ -275,13 +274,13 @@ class CameraViewModel: NSObject, ObservableObject {
     }
     
     @MainActor
-    func savePhoto(_ image: UIImage) {
+    func savePhoto(_ image: UIImage, isReplacement: Bool = false) {
         // Always save without face blur - face blur is only for video generation
-        saveProcessedPhoto(image, wasBlurred: false)
+        saveProcessedPhoto(image, wasBlurred: false, isReplacement: isReplacement)
     }
     
     @MainActor
-    private func saveProcessedPhoto(_ image: UIImage, wasBlurred: Bool) {
+    private func saveProcessedPhoto(_ image: UIImage, wasBlurred: Bool, isReplacement: Bool) {
         do {
             #if DEBUG
             let saveDate = UserSettingsManager.shared.settings.debugAllowPastDatePhotos ? debugSelectedDate : Date()
@@ -289,7 +288,7 @@ class CameraViewModel: NSObject, ObservableObject {
             let saveDate = Date()
             #endif
             
-            if hasPhotoForSelectedCategory() {
+            if isReplacement {
                 _ = try PhotoStorageService.shared.replacePhoto(
                     for: saveDate,
                     categoryId: selectedCategory.id,
