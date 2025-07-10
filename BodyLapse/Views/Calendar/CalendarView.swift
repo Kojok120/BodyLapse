@@ -147,6 +147,10 @@ struct CalendarView: View {
             viewModel.loadCategories()
             updateCurrentPhoto()
         }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("WeightDataSyncComplete"))) { _ in
+            // Refresh data after weight sync is complete
+            updateCurrentPhoto()
+        }
         .onChange(of: selectedDate) { _, newDate in
             updateCurrentPhoto()
             selectedChartDate = newDate

@@ -322,9 +322,17 @@ class PhotoStorageService {
                 // Photo loaded from metadata
             }
             
-            // Sync weight data from WeightStorageService
+            // Sync weight data from WeightStorageService immediately
             Task {
                 await syncWeightDataFromStorage()
+                
+                // Post notification that sync is complete
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: Notification.Name("WeightDataSyncComplete"),
+                        object: nil
+                    )
+                }
             }
         } catch {
             // Failed to decode metadata

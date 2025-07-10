@@ -169,18 +169,8 @@ struct WeightInputView: View {
             }
         }
         .onAppear {
-            if let photo = photo {
-                if let weight = photo.weight {
-                    weightText = String(format: "%.1f", convertWeight(weight))
-                }
-                if let bodyFat = photo.bodyFatPercentage {
-                    bodyFatText = String(format: "%.1f", bodyFat)
-                }
-                
-                // If no weight data and HealthKit is enabled, try to fetch it
-                if photo.weight == nil && subscriptionManager.isPremium && userSettings.settings.healthKitEnabled {
-                    fetchHealthKitData()
-                }
+            Task {
+                await loadInitialData()
             }
             
             // Debug: Check actual HealthKit authorization status
@@ -224,6 +214,49 @@ struct WeightInputView: View {
     private func clear() {
         onSave(nil, nil)
         dismiss()
+    }
+    
+    private func loadInitialData() async {
+        let targetDate = photo?.captureDate ?? selectedDate
+        
+        // First, try to get data from the Photo object
+        if let photo = photo {
+            if let weight = photo.weight {
+                await MainActor.run {
+                    weightText = String(format: "%.1f", convertWeight(weight))
+                }
+            }
+            if let bodyFat = photo.bodyFatPercentage {
+                await MainActor.run {
+                    bodyFatText = String(format: "%.1f", bodyFat)
+                }
+            }
+        }
+        
+        // If no data in Photo object, try to get from WeightStorageService
+        if weightText.isEmpty || bodyFatText.isEmpty {
+            do {
+                if let weightEntry = try await WeightStorageService.shared.getEntry(for: targetDate) {
+                    await MainActor.run {
+                        if weightText.isEmpty && weightEntry.weight > 0 {
+                            weightText = String(format: "%.1f", convertWeight(weightEntry.weight))
+                        }
+                        if bodyFatText.isEmpty, let bodyFat = weightEntry.bodyFatPercentage {
+                            bodyFatText = String(format: "%.1f", bodyFat)
+                        }
+                    }
+                }
+            } catch {
+                print("Failed to load weight entry: \(error)")
+            }
+        }
+        
+        // If still no weight data and HealthKit is enabled, try to fetch it
+        if weightText.isEmpty && subscriptionManager.isPremium && userSettings.settings.healthKitEnabled {
+            await MainActor.run {
+                fetchHealthKitData()
+            }
+        }
     }
     
     private func convertWeight(_ kg: Double) -> Double {
