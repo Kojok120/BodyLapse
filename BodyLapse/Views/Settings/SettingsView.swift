@@ -19,16 +19,39 @@ struct SettingsView: View {
     @State private var showingLanguageChangeAlert = false
     @State private var isNotificationEnabled = false
     
+    // Category Management Guidance
+    @StateObject private var tooltipManager = TooltipManager.shared
+    @State private var showingCategoryManagementGuidance = false
+    
     // App Store ID - replace with actual ID when app is published
     private let appStoreID = "YOUR_APP_STORE_ID"
     
     var body: some View {
         NavigationView {
-            Form {
+            ZStack {
+                mainContent
+                
+                // Category Management guidance overlay
+                if showingCategoryManagementGuidance {
+                    categoryManagementGuidanceOverlay
+                }
+            }
+        }
+    }
+    
+    private var mainContent: some View {
+        Form {
                 Section("settings.photo_settings".localized) {
                     if subscriptionManager.isPremium {
                         NavigationLink(destination: CategoryManagementView()) {
                             Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
+                        }
+                        .withGuidanceBadge(for: .categoryManagement, size: 10, offset: CGPoint(x: 8, y: -8))
+                        .onTapGesture {
+                            if tooltipManager.needsGuidance(for: .categoryManagement) && !tooltipManager.hasShownTooltip(for: .categoryManagement) {
+                                showingCategoryManagementGuidance = true
+                                tooltipManager.markTooltipShown(for: .categoryManagement)
+                            }
                         }
                     } else {
                         Button(action: { showingPremiumUpgrade = true }) {
@@ -388,6 +411,34 @@ struct SettingsView: View {
             .onAppear {
                 healthKitEnabled = userSettings.settings.healthKitEnabled
                 checkNotificationStatus()
+            }
+    }
+    
+    private var categoryManagementGuidanceOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.1)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    showingCategoryManagementGuidance = false
+                    tooltipManager.markFeatureCompleted(for: .categoryManagement)
+                }
+            
+            VStack {
+                Spacer()
+                
+                GuidanceTooltip(
+                    title: tooltipManager.getTitle(for: .categoryManagement),
+                    description: tooltipManager.getDescription(for: .categoryManagement),
+                    isVisible: showingCategoryManagementGuidance,
+                    onDismiss: {
+                        showingCategoryManagementGuidance = false
+                        tooltipManager.markFeatureCompleted(for: .categoryManagement)
+                    }
+                )
+                .padding(.horizontal, 20)
+                .padding(.bottom, 100)
+                
+                Spacer()
             }
         }
     }
