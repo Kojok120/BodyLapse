@@ -36,6 +36,7 @@ struct CalendarView: View {
     // Guidance system state
     @StateObject private var tooltipManager = TooltipManager.shared
     @State private var showingVideoGuidance = false
+    @State private var showingCategoryGuidance = false
     
     var dateRange: [Date] {
         let calendar = Calendar.current
@@ -62,6 +63,11 @@ struct CalendarView: View {
                 if showingVideoGuidance {
                     videoGuidanceOverlay
                 }
+                
+                // Category guidance overlay
+                if showingCategoryGuidance {
+                    categoryGuidanceOverlay
+                }
             }
         }
     }
@@ -84,6 +90,9 @@ struct CalendarView: View {
                 },
                 onVideoGuidanceRequested: {
                     showingVideoGuidance = true
+                },
+                onCategoryGuidanceRequested: {
+                    showingCategoryGuidance = true
                 }
             )
             
@@ -710,89 +719,135 @@ struct CalendarView: View {
     }
     
     private var videoGuidanceTooltip: some View {
-        VStack(alignment: .trailing, spacing: 0) {
-            // Tooltip content
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(tooltipManager.getTitle(for: .videoGeneration))
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        dismissVideoGuidance()
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.white.opacity(0.8))
-                    }
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(tooltipManager.getTitle(for: .videoGeneration))
+                    .font(.headline)
+                    .foregroundColor(.white)
                 
-                Text(tooltipManager.getDescription(for: .videoGeneration))
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.9))
-                    .lineLimit(nil)
-                    .multilineTextAlignment(.leading)
+                Spacer()
                 
                 Button(action: {
                     dismissVideoGuidance()
                 }) {
-                    HStack {
-                        Spacer()
-                        Text("guidance.got_it".localized)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.white.opacity(0.2))
-                    )
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.8))
                 }
-                .padding(.top, 4)
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.black.opacity(0.85))
-                    .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
-            )
-            .frame(maxWidth: 280)
             
-            // Arrow pointing down to the button
-            tooltipArrow
-                .padding(.trailing, 55) // Position arrow to point to button
+            Text(tooltipManager.getDescription(for: .videoGeneration))
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.9))
+                .lineLimit(nil)
+                .multilineTextAlignment(.leading)
+            
+            Button(action: {
+                dismissVideoGuidance()
+            }) {
+                HStack {
+                    Spacer()
+                    Text("guidance.got_it".localized)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.white.opacity(0.2))
+                )
+            }
+            .padding(.top, 4)
         }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.black.opacity(0.85))
+                .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+        )
+        .frame(maxWidth: 280)
         .scaleEffect(showingVideoGuidance ? 1.0 : 0.8)
         .opacity(showingVideoGuidance ? 1.0 : 0.0)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showingVideoGuidance)
     }
     
-    private var tooltipArrow: some View {
-        VStack(spacing: 0) {
-            // Triangle pointing down with better visibility
-            Path { path in
-                path.move(to: CGPoint(x: 12, y: 0))
-                path.addLine(to: CGPoint(x: 24, y: 18))
-                path.addLine(to: CGPoint(x: 0, y: 18))
-                path.closeSubpath()
+    // MARK: - Category Guidance Overlay
+    private var categoryGuidanceOverlay: some View {
+        Color.black.opacity(0.1)
+            .ignoresSafeArea()
+            .onTapGesture {
+                dismissCategoryGuidance()
             }
-            .fill(Color.black.opacity(0.85))
             .overlay(
-                // White stroke for better visibility
-                Path { path in
-                    path.move(to: CGPoint(x: 12, y: 0))
-                    path.addLine(to: CGPoint(x: 24, y: 18))
-                    path.addLine(to: CGPoint(x: 0, y: 18))
-                    path.closeSubpath()
+                GeometryReader { geometry in
+                    VStack {
+                        // Position tooltip above the button area
+                        HStack {
+                            categoryGuidanceTooltip
+                                .padding(.leading, 50) // Align with plus button position (account for "正面" button width)
+                            Spacer()
+                        }
+                        .padding(.top, 50) // Move closer to button
+                        
+                        Spacer()
+                    }
                 }
-                .stroke(Color.white.opacity(0.3), lineWidth: 1)
             )
-            .frame(width: 24, height: 18)
-            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+    }
+    
+    private var categoryGuidanceTooltip: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(tooltipManager.getTitle(for: .categoryAdding))
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Button(action: {
+                    dismissCategoryGuidance()
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+            }
+            
+            Text(tooltipManager.getDescription(for: .categoryAdding))
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.9))
+                .lineLimit(nil)
+                .multilineTextAlignment(.leading)
+            
+            Button(action: {
+                dismissCategoryGuidance()
+            }) {
+                HStack {
+                    Spacer()
+                    Text("guidance.got_it".localized)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.white.opacity(0.2))
+                )
+            }
+            .padding(.top, 4)
         }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.black.opacity(0.85))
+                .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+        )
+        .frame(maxWidth: 280)
+        .scaleEffect(showingCategoryGuidance ? 1.0 : 0.8)
+        .opacity(showingCategoryGuidance ? 1.0 : 0.0)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showingCategoryGuidance)
     }
     
     // MARK: - Guidance Helper Methods
@@ -803,6 +858,16 @@ struct CalendarView: View {
         // After dismissing guidance, proceed with video generation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             showingVideoGeneration = true
+        }
+    }
+    
+    private func dismissCategoryGuidance() {
+        showingCategoryGuidance = false
+        tooltipManager.markFeatureCompleted(for: .categoryAdding)
+        
+        // After dismissing guidance, proceed with adding category
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            showingAddCategory = true
         }
     }
 }

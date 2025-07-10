@@ -14,6 +14,7 @@ struct CalendarHeaderView: View {
     
     // Guidance system callbacks
     let onVideoGuidanceRequested: () -> Void
+    let onCategoryGuidanceRequested: () -> Void
     
     // Guidance system state
     @StateObject private var tooltipManager = TooltipManager.shared
@@ -58,7 +59,7 @@ struct CalendarHeaderView: View {
                 // Add category button
                 if CategoryStorageService.shared.canAddMoreCategories() {
                     Button(action: {
-                        showingAddCategory = true
+                        handleCategoryAddingTap()
                     }) {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 14, weight: .semibold))
@@ -70,6 +71,16 @@ struct CalendarHeaderView: View {
                                     .fill(Color(UIColor.secondarySystemBackground))
                             )
                     }
+                    .overlay(
+                        // Guidance badge
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 10, height: 10)
+                            .offset(x: 8, y: -8)
+                            .opacity(tooltipManager.needsGuidance(for: .categoryAdding) ? 1.0 : 0.0)
+                            .animation(.easeInOut(duration: 0.2), value: tooltipManager.needsGuidance(for: .categoryAdding)),
+                        alignment: .topTrailing
+                    )
                 }
             }
             .padding(.horizontal)
@@ -144,6 +155,18 @@ struct CalendarHeaderView: View {
         } else {
             // No guidance needed, proceed with video generation
             showingVideoGeneration = true
+        }
+    }
+    
+    private func handleCategoryAddingTap() {
+        // Check if guidance is needed
+        if tooltipManager.needsGuidance(for: .categoryAdding) && !tooltipManager.hasShownTooltip(for: .categoryAdding) {
+            // Mark as shown and request guidance display
+            tooltipManager.markTooltipShown(for: .categoryAdding)
+            onCategoryGuidanceRequested()
+        } else {
+            // No guidance needed, proceed with adding category
+            showingAddCategory = true
         }
     }
 }

@@ -704,15 +704,9 @@
 /* Guidance System */
 "guidance.got_it" = "Got it";
 "guidance.video_generation.title" = "Create Time-lapse Videos";
-"guidance.video_generation.description" = "Generate amazing time-lapse videos from your progress photos. Tap here to see your transformation over time!";
-"guidance.weight_chart.title" = "Weight Progress Chart";
-"guidance.weight_chart.description" = "Track your weight and body fat percentage over time. Premium feature with interactive charts.";
+"guidance.video_generation.description" = "Generate your own time-lapse videos from your progress photos. Tap here to see your transformation over time!";
 "guidance.category_adding.title" = "Add Photo Categories";
 "guidance.category_adding.description" = "Create custom categories like 'Front', 'Side', 'Back' to track different angles of your progress.";
-"guidance.selection_mode.title" = "Selection Mode";
-"guidance.selection_mode.description" = "Select multiple photos or videos to delete, share, or organize them in bulk.";
-"guidance.bulk_actions.title" = "Bulk Actions";
-"guidance.bulk_actions.description" = "Perform actions on multiple items at once. Save time managing your progress photos and videos.";
 "guidance.premium_features.title" = "Premium Features";
 "guidance.premium_features.description" = "Unlock advanced features like multiple categories, weight tracking, and ad-free experience.";
 "guidance.category_management.title" = "Manage Categories";

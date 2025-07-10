@@ -8,10 +8,7 @@ class TooltipManager: ObservableObject {
     // MARK: - Feature IDs
     enum FeatureID: String, CaseIterable {
         case videoGeneration = "video_generation"
-        case weightChart = "weight_chart"
         case categoryAdding = "category_adding"
-        case selectionMode = "selection_mode"
-        case bulkActions = "bulk_actions"
         case premiumFeatures = "premium_features"
         case categoryManagement = "category_management"
         case authenticationSetup = "authentication_setup"
@@ -111,14 +108,8 @@ extension TooltipManager {
         switch feature {
         case .videoGeneration:
             return "guidance.video_generation.title".localized
-        case .weightChart:
-            return "guidance.weight_chart.title".localized
         case .categoryAdding:
             return "guidance.category_adding.title".localized
-        case .selectionMode:
-            return "guidance.selection_mode.title".localized
-        case .bulkActions:
-            return "guidance.bulk_actions.title".localized
         case .premiumFeatures:
             return "guidance.premium_features.title".localized
         case .categoryManagement:
@@ -133,14 +124,8 @@ extension TooltipManager {
         switch feature {
         case .videoGeneration:
             return "guidance.video_generation.description".localized
-        case .weightChart:
-            return "guidance.weight_chart.description".localized
         case .categoryAdding:
             return "guidance.category_adding.description".localized
-        case .selectionMode:
-            return "guidance.selection_mode.description".localized
-        case .bulkActions:
-            return "guidance.bulk_actions.description".localized
         case .premiumFeatures:
             return "guidance.premium_features.description".localized
         case .categoryManagement:
