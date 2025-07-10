@@ -284,7 +284,10 @@ struct CameraView: View {
                                     viewModel.capturedImage = nil
                                 } else {
                                     // No weight data for today, show input screen
-                                    viewModel.showingWeightInput = true
+                                    // Auto-display of weight input sheet disabled
+                                    // viewModel.showingWeightInput = true
+                                    viewModel.savePhoto(image)
+                                    viewModel.capturedImage = nil
                                 }
                             } catch {
                                 // If there's an error checking, just save the photo without weight input

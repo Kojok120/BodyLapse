@@ -144,9 +144,10 @@ struct PhotoCaptureView: View {
             capturedPhoto = photo
             
             // Show weight input for premium users
-            if subscriptionManager.isPremium {
-                showingWeightInput = true
-            }
+            // Auto-display of weight input sheet disabled
+            // if subscriptionManager.isPremium {
+            //     showingWeightInput = true
+            // }
             
         } catch {
             print("Failed to save photo: \(error)")

@@ -267,27 +267,9 @@ class CameraViewModel: NSObject, ObservableObject {
             }
         } else {
             Task { @MainActor [weak self] in
-                if SubscriptionManagerService.shared.isPremium == true {
-                    // Check if weight data already exists for today
-                    do {
-                        let hasWeightToday = try await WeightStorageService.shared.getEntry(for: Date()) != nil
-                        if hasWeightToday {
-                            // Weight already recorded for today, skip input screen
-                            self?.savePhoto(image)
-                            self?.capturedImage = nil
-                        } else {
-                            // No weight data for today, show input screen
-                            self?.showingWeightInput = true
-                        }
-                    } catch {
-                        // If there's an error checking, just save the photo without weight input
-                        self?.savePhoto(image)
-                        self?.capturedImage = nil
-                    }
-                } else {
-                    self?.savePhoto(image)
-                    self?.capturedImage = nil
-                }
+                // Auto-display of weight input sheet disabled - all cases now simply save the photo
+                self?.savePhoto(image)
+                self?.capturedImage = nil
             }
         }
     }
