@@ -33,6 +33,10 @@ struct CalendarView: View {
     @State private var showingAddCategory = false
     @State private var newCategoryToSetup: PhotoCategory?
     
+    // Guidance system state
+    @StateObject private var tooltipManager = TooltipManager.shared
+    @State private var showingVideoGuidance = false
+    
     var dateRange: [Date] {
         let calendar = Calendar.current
         let endDate = Date()
@@ -51,7 +55,14 @@ struct CalendarView: View {
     
     var body: some View {
         NavigationView {
-            mainContent
+            ZStack {
+                mainContent
+                
+                // Video guidance overlay
+                if showingVideoGuidance {
+                    videoGuidanceOverlay
+                }
+            }
         }
     }
     
@@ -70,6 +81,9 @@ struct CalendarView: View {
                 onCategorySelect: { category in
                     viewModel.selectCategory(category)
                     updateCurrentPhoto()
+                },
+                onVideoGuidanceRequested: {
+                    showingVideoGuidance = true
                 }
             )
             
@@ -668,6 +682,127 @@ struct CalendarView: View {
                     showingVideoAlert = true
                 }
             }
+        }
+    }
+    
+    // MARK: - Video Guidance Overlay
+    private var videoGuidanceOverlay: some View {
+        Color.black.opacity(0.1)
+            .ignoresSafeArea()
+            .onTapGesture {
+                dismissVideoGuidance()
+            }
+            .overlay(
+                GeometryReader { geometry in
+                    VStack {
+                        // Position tooltip above the button area
+                        HStack {
+                            Spacer()
+                            videoGuidanceTooltip
+                                .padding(.trailing, 25) // Align with button position
+                        }
+                        .padding(.top, 75) // Move closer to button
+                        
+                        Spacer()
+                    }
+                }
+            )
+    }
+    
+    private var videoGuidanceTooltip: some View {
+        VStack(alignment: .trailing, spacing: 0) {
+            // Tooltip content
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(tooltipManager.getTitle(for: .videoGeneration))
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        dismissVideoGuidance()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+                
+                Text(tooltipManager.getDescription(for: .videoGeneration))
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.9))
+                    .lineLimit(nil)
+                    .multilineTextAlignment(.leading)
+                
+                Button(action: {
+                    dismissVideoGuidance()
+                }) {
+                    HStack {
+                        Spacer()
+                        Text("guidance.got_it".localized)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.white)
+                        Spacer()
+                    }
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.white.opacity(0.2))
+                    )
+                }
+                .padding(.top, 4)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.black.opacity(0.85))
+                    .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+            )
+            .frame(maxWidth: 280)
+            
+            // Arrow pointing down to the button
+            tooltipArrow
+                .padding(.trailing, 55) // Position arrow to point to button
+        }
+        .scaleEffect(showingVideoGuidance ? 1.0 : 0.8)
+        .opacity(showingVideoGuidance ? 1.0 : 0.0)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showingVideoGuidance)
+    }
+    
+    private var tooltipArrow: some View {
+        VStack(spacing: 0) {
+            // Triangle pointing down with better visibility
+            Path { path in
+                path.move(to: CGPoint(x: 12, y: 0))
+                path.addLine(to: CGPoint(x: 24, y: 18))
+                path.addLine(to: CGPoint(x: 0, y: 18))
+                path.closeSubpath()
+            }
+            .fill(Color.black.opacity(0.85))
+            .overlay(
+                // White stroke for better visibility
+                Path { path in
+                    path.move(to: CGPoint(x: 12, y: 0))
+                    path.addLine(to: CGPoint(x: 24, y: 18))
+                    path.addLine(to: CGPoint(x: 0, y: 18))
+                    path.closeSubpath()
+                }
+                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+            )
+            .frame(width: 24, height: 18)
+            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+        }
+    }
+    
+    // MARK: - Guidance Helper Methods
+    private func dismissVideoGuidance() {
+        showingVideoGuidance = false
+        tooltipManager.markFeatureCompleted(for: .videoGeneration)
+        
+        // After dismissing guidance, proceed with video generation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            showingVideoGeneration = true
         }
     }
 }

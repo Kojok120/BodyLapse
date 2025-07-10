@@ -700,3 +700,22 @@
 "onboarding.learn_more" = "Más información";
 "onboarding.start_now" = "Comenzar ahora";
 "onboarding.complete" = "Completar";
+
+/* Guidance System */
+"guidance.got_it" = "Entendido";
+"guidance.video_generation.title" = "Crear Videos Time-lapse";
+"guidance.video_generation.description" = "Genera increíbles videos time-lapse desde tus fotos de progreso. ¡Toca aquí para ver tu transformación a lo largo del tiempo!";
+"guidance.weight_chart.title" = "Gráfico de Progreso de Peso";
+"guidance.weight_chart.description" = "Rastrea tu peso y porcentaje de grasa corporal a lo largo del tiempo. Función premium con gráficos interactivos.";
+"guidance.category_adding.title" = "Agregar Categorías de Fotos";
+"guidance.category_adding.description" = "Crea categorías personalizadas como 'Frontal', 'Lateral', 'Trasera' para rastrear diferentes ángulos de tu progreso.";
+"guidance.selection_mode.title" = "Modo de Selección";
+"guidance.selection_mode.description" = "Selecciona múltiples fotos o videos para eliminar, compartir u organizar en lotes.";
+"guidance.bulk_actions.title" = "Acciones en Lote";
+"guidance.bulk_actions.description" = "Realiza acciones en múltiples elementos a la vez. Ahorra tiempo gestionando tus fotos y videos de progreso.";
+"guidance.premium_features.title" = "Funciones Premium";
+"guidance.premium_features.description" = "Desbloquea funciones avanzadas como múltiples categorías, seguimiento de peso y experiencia sin anuncios.";
+"guidance.category_management.title" = "Gestión de Categorías";
+"guidance.category_management.description" = "Crea, edita y organiza tus categorías de fotos. Configura diferentes ángulos y poses para un seguimiento completo.";
+"guidance.authentication_setup.title" = "Seguridad de la App";
+"guidance.authentication_setup.description" = "Asegura tus fotos de progreso con Face ID, Touch ID o un código. Mantén tu transformación privada.";

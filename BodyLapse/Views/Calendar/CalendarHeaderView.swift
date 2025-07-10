@@ -12,6 +12,12 @@ struct CalendarHeaderView: View {
     let isGeneratingVideo: Bool
     let onCategorySelect: (PhotoCategory) -> Void
     
+    // Guidance system callbacks
+    let onVideoGuidanceRequested: () -> Void
+    
+    // Guidance system state
+    @StateObject private var tooltipManager = TooltipManager.shared
+    
     var body: some View {
         VStack(spacing: 12) {
             // Category selection (Premium feature)
@@ -102,7 +108,7 @@ struct CalendarHeaderView: View {
     
     private var generateVideoButton: some View {
         Button(action: {
-            showingVideoGeneration = true
+            handleVideoGenerationTap()
         }) {
             HStack {
                 Image(systemName: "video.fill")
@@ -116,5 +122,28 @@ struct CalendarHeaderView: View {
             .cornerRadius(20)
         }
         .disabled(isGeneratingVideo)
+        .overlay(
+            // Guidance badge
+            Circle()
+                .fill(Color.red)
+                .frame(width: 10, height: 10)
+                .offset(x: 8, y: -8)
+                .opacity(tooltipManager.needsGuidance(for: .videoGeneration) ? 1.0 : 0.0)
+                .animation(.easeInOut(duration: 0.2), value: tooltipManager.needsGuidance(for: .videoGeneration)),
+            alignment: .topTrailing
+        )
+    }
+    
+    // MARK: - Helper Methods
+    private func handleVideoGenerationTap() {
+        // Check if guidance is needed
+        if tooltipManager.needsGuidance(for: .videoGeneration) && !tooltipManager.hasShownTooltip(for: .videoGeneration) {
+            // Mark as shown and request guidance display
+            tooltipManager.markTooltipShown(for: .videoGeneration)
+            onVideoGuidanceRequested()
+        } else {
+            // No guidance needed, proceed with video generation
+            showingVideoGeneration = true
+        }
     }
 }
