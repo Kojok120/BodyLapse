@@ -40,6 +40,9 @@ class HealthKitService {
         let weightStatus = healthStore.authorizationStatus(for: bodyMassType)
         let bodyFatStatus = healthStore.authorizationStatus(for: bodyFatPercentageType)
         
+        print("Weight authorization status: \(weightStatus.rawValue)")
+        print("Body fat authorization status: \(bodyFatStatus.rawValue)")
+        
         return weightStatus == .sharingAuthorized && bodyFatStatus == .sharingAuthorized
     }
     

@@ -77,6 +77,7 @@
 "calendar.quality.standard" = "Standard (720p)";
 "calendar.quality.high" = "High (1080p)";
 "calendar.quality.ultra" = "Ultra (4K)";
+"calendar.sync_today_data" = "Sync Selected Date's Data";
 "calendar.generating_video" = "Generating Video";
 "calendar.select_date" = "Select Date";
 "calendar.has_photo" = "Photo";

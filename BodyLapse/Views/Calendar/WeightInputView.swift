@@ -105,6 +105,9 @@ struct WeightInputView: View {
                         .onChange(of: userSettings.settings.healthKitEnabled) { _, newValue in
                             if newValue {
                                 requestHealthKitPermission()
+                            } else {
+                                // When turning off, just update the setting
+                                userSettings.settings.healthKitEnabled = false
                             }
                         }
                         
@@ -117,7 +120,7 @@ struct WeightInputView: View {
                                     } else {
                                         Image(systemName: "arrow.triangle.2.circlepath")
                                     }
-                                    Text("settings.sync_now".localized)
+                                    Text("calendar.sync_today_data".localized)
                                 }
                             }
                             .disabled(isLoadingHealthData)
@@ -179,6 +182,13 @@ struct WeightInputView: View {
                     fetchHealthKitData()
                 }
             }
+            
+            // Debug: Check actual HealthKit authorization status
+            if subscriptionManager.isPremium {
+                let isAuthorized = HealthKitService.shared.isAuthorized()
+                print("HealthKit authorization status: \(isAuthorized)")
+                print("Settings healthKitEnabled: \(userSettings.settings.healthKitEnabled)")
+            }
         }
     }
     
@@ -238,61 +248,84 @@ struct WeightInputView: View {
     }
     
     private func fetchHealthKitData() {
-        isLoadingHealthData = true
-        
-        // Fetch weight data from HealthKit
-        HealthKitService.shared.fetchLatestWeight { weightKg, error in
-            DispatchQueue.main.async {
-                if let weightKg = weightKg {
-                    self.weightText = String(format: "%.1f", self.convertWeight(weightKg))
-                }
-                
-                // Also fetch body fat
-                HealthKitService.shared.fetchLatestBodyFatPercentage { bodyFatPercent, error in
-                    DispatchQueue.main.async {
-                        if let bodyFatPercent = bodyFatPercent {
-                            self.bodyFatText = String(format: "%.1f", bodyFatPercent)
-                        }
-                        self.isLoadingHealthData = false
-                    }
-                }
-            }
-        }
+        // Use the same logic as syncHealthData
+        syncHealthData()
     }
     
     private func requestHealthKitPermission() {
+        print("Requesting HealthKit permission...")
         HealthKitService.shared.requestAuthorization { success, error in
             DispatchQueue.main.async {
+                print("HealthKit authorization result: success=\(success), error=\(error?.localizedDescription ?? "none")")
+                
                 if success {
                     self.userSettings.settings.healthKitEnabled = true
+                    print("HealthKit permission granted, performing initial sync...")
+                    // Perform initial sync after permission is granted
+                    self.syncHealthData()
                 } else {
                     self.userSettings.settings.healthKitEnabled = false
+                    print("HealthKit permission denied or failed")
+                    if let error = error {
+                        print("HealthKit authorization failed: \(error.localizedDescription)")
+                    }
                 }
             }
         }
     }
     
     private func syncHealthData() {
-        guard subscriptionManager.isPremium && userSettings.settings.healthKitEnabled else { return }
+        print("syncHealthData called - isPremium: \(subscriptionManager.isPremium), healthKitEnabled: \(userSettings.settings.healthKitEnabled)")
+        
+        guard subscriptionManager.isPremium && userSettings.settings.healthKitEnabled else {
+            print("Sync cancelled - not premium or health kit not enabled")
+            return
+        }
         
         isLoadingHealthData = true
+        print("Starting HealthKit data sync...")
         
-        // Fetch latest weight data from HealthKit
-        HealthKitService.shared.fetchLatestWeight { weightKg, error in
+        // Get the target date (selected date or photo date)
+        let targetDate = photo?.captureDate ?? selectedDate
+        
+        // Fetch weight data for only the selected date
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: targetDate)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
+        
+        print("Fetching HealthKit data for specific date: \(startOfDay) to \(endOfDay)")
+        
+        HealthKitService.shared.fetchWeightData(from: startOfDay, to: endOfDay) { entries, error in
             DispatchQueue.main.async {
-                if let weightKg = weightKg {
-                    self.weightText = String(format: "%.1f", self.convertWeight(weightKg))
+                if let error = error {
+                    print("Error fetching weight data: \(error.localizedDescription)")
+                    self.isLoadingHealthData = false
+                    return
                 }
                 
-                // Also fetch body fat
-                HealthKitService.shared.fetchLatestBodyFatPercentage { bodyFatPercent, error in
-                    DispatchQueue.main.async {
-                        if let bodyFatPercent = bodyFatPercent {
-                            self.bodyFatText = String(format: "%.1f", bodyFatPercent)
-                        }
-                        self.isLoadingHealthData = false
-                    }
+                print("Fetched \(entries.count) weight entries for the selected date")
+                
+                // Find the entry for the exact date only
+                let sameDayEntry = entries.first { entry in
+                    calendar.isDate(entry.date, inSameDayAs: targetDate)
                 }
+                
+                if let entry = sameDayEntry {
+                    print("Found entry for the selected date: weight=\(entry.weight) kg, bodyFat=\(entry.bodyFatPercentage ?? 0)%, date=\(entry.date)")
+                    
+                    // Update the text fields with the found data
+                    self.weightText = String(format: "%.1f", self.convertWeight(entry.weight))
+                    
+                    if let bodyFat = entry.bodyFatPercentage {
+                        self.bodyFatText = String(format: "%.1f", bodyFat)
+                    }
+                } else {
+                    print("No weight data found for the selected date")
+                    // Don't update the text fields - leave them as they are
+                }
+                
+                self.isLoadingHealthData = false
+                print("HealthKit sync completed")
             }
         }
     }

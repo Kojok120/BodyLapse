@@ -77,6 +77,7 @@
 "calendar.quality.standard" = "標準（720p）";
 "calendar.quality.high" = "高画質（1080p）";
 "calendar.quality.ultra" = "超高画質（4K）";
+"calendar.sync_today_data" = "この日のデータを取得";
 "calendar.generating_video" = "動画を生成中";
 "calendar.select_date" = "日付を選択";
 "calendar.has_photo" = "写真";
