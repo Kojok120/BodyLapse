@@ -528,7 +528,7 @@
 "onboarding.reset_note" = "※ Can be reset in Settings";
 "onboarding.customize_title" = "Customize Your App";
 "onboarding.reminder_title" = "Daily Reminder";
-"onboarding.reminder_subtitle" = "Notification at 7 PM (prevent forgetting)";
+"onboarding.reminder_subtitle" = "Notification at 9 PM (prevent forgetting)";
 "onboarding.privacy_lock_title" = "Privacy Protection";
 "onboarding.privacy_lock_subtitle" = "Face ID/Passcode";
 "onboarding.premium_features_title" = "Premium Features";

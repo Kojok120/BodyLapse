@@ -448,8 +448,8 @@
 /* Notification Onboarding */
 "onboarding.notification.title" = "進捗をキープ";
 "onboarding.notification.subtitle" = "毎日の進捗を逃さない";
-"onboarding.notification.description" = "19時までに写真が撮影されていない場合、BodyLapseがお知らせします";
-"onboarding.notification.daily_reminder" = "写真未撮影時は19時にリマインダー";
+"onboarding.notification.description" = "21時までに写真が撮影されていない場合、BodyLapseがお知らせします";
+"onboarding.notification.daily_reminder" = "写真未撮影時は21時にリマインダー";
 "onboarding.enable_notifications" = "通知を有効にする";
 
 /* Additional Strings */
