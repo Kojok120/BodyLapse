@@ -90,35 +90,43 @@ struct PhotoPreviewSection: View {
     
     private var noPhotoPlaceholder: some View {
         GeometryReader { geometry in
-            VStack(spacing: 20) {
-                Image(systemName: "photo")
-                    .font(.system(size: 60))
-                    .foregroundColor(.gray)
-                Text("calendar.no_photo".localized)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+            ZStack {
+                // Placeholder image as background
+                Image("placeholder-image")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .opacity(0.3)
                 
-                PhotosPicker(
-                    selection: $selectedPhotoItems,
-                    maxSelectionCount: 1,
-                    matching: .images
-                ) {
-                    HStack {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("calendar.upload_photo".localized)
+                // Overlay content
+                VStack {
+                    Spacer()
+                    
+                    PhotosPicker(
+                        selection: $selectedPhotoItems,
+                        maxSelectionCount: 1,
+                        matching: .images
+                    ) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.up")
+                            Text("calendar.upload_photo".localized)
+                        }
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.bodyLapseTurquoise)
+                        .cornerRadius(20)
                     }
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.bodyLapseTurquoise)
-                    .cornerRadius(20)
-                }
-                .onChange(of: selectedPhotoItems) { _, items in
-                    if !items.isEmpty {
-                        importCategoryId = viewModel.selectedCategory.id
-                        handlePhotoImport()
+                    .onChange(of: selectedPhotoItems) { _, items in
+                        if !items.isEmpty {
+                            importCategoryId = viewModel.selectedCategory.id
+                            handlePhotoImport()
+                        }
                     }
+                    
+                    Spacer()
+                        .frame(height: 30)
                 }
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
@@ -185,35 +193,43 @@ struct PhotoPreviewSection: View {
     
     @ViewBuilder
     private func categoryPlaceholder(categoryId: String, geometry: GeometryProxy) -> some View {
-        VStack(spacing: 20) {
-            Image(systemName: "photo")
-                .font(.system(size: 60))
-                .foregroundColor(.gray)
-            Text("calendar.no_photo".localized)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+        ZStack {
+            // Placeholder image as background
+            Image("placeholder-image")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .opacity(0.3)
             
-            PhotosPicker(
-                selection: $selectedPhotoItems,
-                maxSelectionCount: 1,
-                matching: .images
-            ) {
-                HStack {
-                    Image(systemName: "square.and.arrow.up")
-                    Text("calendar.upload_photo".localized)
+            // Overlay content
+            VStack {
+                Spacer()
+                
+                PhotosPicker(
+                    selection: $selectedPhotoItems,
+                    maxSelectionCount: 1,
+                    matching: .images
+                ) {
+                    HStack {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("calendar.upload_photo".localized)
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.bodyLapseTurquoise)
+                    .cornerRadius(20)
                 }
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.bodyLapseTurquoise)
-                .cornerRadius(20)
-            }
-            .onChange(of: selectedPhotoItems) { _, items in
-                if !items.isEmpty {
-                    importCategoryId = categoryId
-                    handlePhotoImport()
+                .onChange(of: selectedPhotoItems) { _, items in
+                    if !items.isEmpty {
+                        importCategoryId = categoryId
+                        handlePhotoImport()
+                    }
                 }
+                
+                Spacer()
+                    .frame(height: 30)
             }
         }
         .frame(width: geometry.size.width, height: geometry.size.height)

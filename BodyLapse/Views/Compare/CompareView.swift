@@ -233,14 +233,12 @@ struct CompareView: View {
                                     .fill(Color(UIColor.systemGray5))
                                     .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
                                     .overlay(
-                                        VStack {
-                                            Image(systemName: "photo")
-                                                .font(.system(size: 40))
-                                                .foregroundColor(.gray)
-                                            Text("compare.select_first".localized)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
+                                        // Placeholder image as background
+                                        Image("compare-placeholder-image")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                            .opacity(0.3)
                                     )
                             }
                         }
@@ -318,14 +316,12 @@ struct CompareView: View {
                                     .fill(Color(UIColor.systemGray5))
                                     .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
                                     .overlay(
-                                        VStack {
-                                            Image(systemName: "photo")
-                                                .font(.system(size: 40))
-                                                .foregroundColor(.gray)
-                                            Text("compare.select_second".localized)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
+                                        // Placeholder image as background
+                                        Image("compare-placeholder-image")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
+                                            .opacity(0.3)
                                     )
                             }
                         }
