@@ -5,12 +5,9 @@ import Charts
 struct InteractiveWeightChartView: View {
     let entries: [WeightEntry]
     @Binding var selectedDate: Date?
-    let currentPhoto: Photo?
-    let onEditWeight: () -> Void
     let fullDateRange: ClosedRange<Date>? // 全体の期間を指定
     @StateObject private var userSettings = UserSettingsManager.shared
     
-    @State private var plotWidth: CGFloat = 0
     @State private var isDragging = false
     
     private var sortedEntries: [WeightEntry] {
@@ -91,66 +88,6 @@ struct InteractiveWeightChartView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Selected data display
-            if let selectedDate = selectedDate {
-                HStack(spacing: 20) {
-                    Text(formatDate(selectedDate))
-                        .font(.subheadline)
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 20) {
-                        if let selectedEntry = selectedEntry {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("chart.weight".localized)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
-                                    .font(.body)
-                                    .foregroundColor(.bodyLapseTurquoise)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-                            }
-                            .frame(minWidth: 60)
-                            
-                            if let bodyFat = selectedEntry.bodyFatPercentage {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("chart.body_fat".localized)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text(String(format: "weight.percentage_format".localized, bodyFat))
-                                        .font(.body)
-                                        .foregroundColor(.orange)
-                                        .lineLimit(1)
-                                        .minimumScaleFactor(0.8)
-                                }
-                                .frame(minWidth: 60)
-                            }
-                        } else {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("chart.no_data".localized)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("chart.tap_to_add".localized)
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                            }
-                            .frame(minWidth: 120)
-                        }
-                    }
-                    
-                    Button(action: onEditWeight) {
-                        Image(systemName: selectedEntry != nil ? "pencil.circle.fill" : "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.accentColor)
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(UIColor.systemGray6))
-                .cornerRadius(10)
-            }
-            
             // Chart with normalized Y-axes
             HStack(spacing: 0) {
                 // Left Y-axis labels for weight
@@ -429,33 +366,8 @@ struct InteractiveWeightChartView: View {
         }
     }
     
-    private var selectedEntry: WeightEntry? {
-        guard let selectedDate = selectedDate else { return nil }
-        
-        return sortedEntries.first { entry in
-            Calendar.current.isDate(entry.date, inSameDayAs: selectedDate)
-        }
-    }
-    
     private func convertedWeight(_ weight: Double) -> Double {
         userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
-    }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        
-        // Check current language and set appropriate format
-        let currentLanguage = LanguageManager.shared.currentLanguage
-        switch currentLanguage {
-        case "ja":
-            formatter.dateFormat = "yyyy/MM/dd"
-        case "ko":
-            formatter.dateFormat = "yyyy.MM.dd"
-        default:
-            formatter.dateFormat = "MMM d, yyyy"
-        }
-        
-        return formatter.string(from: date)
     }
 }
 
@@ -465,8 +377,6 @@ struct InteractiveWeightChartView_Previews: PreviewProvider {
         InteractiveWeightChartView(
             entries: [],
             selectedDate: .constant(nil),
-            currentPhoto: nil,
-            onEditWeight: {},
             fullDateRange: nil
         )
     }

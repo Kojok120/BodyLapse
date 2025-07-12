@@ -5,7 +5,6 @@ struct DataGraphSection: View {
     let weightViewModel: WeightTrackingViewModel
     let dateRange: [Date]
     @Binding var selectedChartDate: Date?
-    let currentPhoto: Photo?
     let onEditWeight: () -> Void
     
     var body: some View {
@@ -20,13 +19,22 @@ struct DataGraphSection: View {
                     }
                 }()
                 
-                // Always show the weight chart view for premium users
-                // InteractiveWeightChartView handles empty data internally
+                // Date slider with swipe functionality
+                DateSliderView(
+                    entries: filteredEntries,
+                    selectedDate: $selectedChartDate,
+                    onEditWeight: onEditWeight,
+                    dateRange: fullRange,
+                    onDateChange: { newDate in
+                        selectedChartDate = newDate
+                    }
+                )
+                .padding(.horizontal)
+                
+                // Weight chart view for premium users
                 InteractiveWeightChartView(
                     entries: filteredEntries,
                     selectedDate: $selectedChartDate,
-                    currentPhoto: currentPhoto,
-                    onEditWeight: onEditWeight,
                     fullDateRange: fullRange
                 )
                 .padding(.horizontal)

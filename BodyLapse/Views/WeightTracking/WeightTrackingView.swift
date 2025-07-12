@@ -58,8 +58,6 @@ struct WeightTrackingView: View {
                                 InteractiveWeightChartView(
                                     entries: viewModel.filteredEntries(for: selectedTimeRange),
                                     selectedDate: $selectedDate,
-                                    currentPhoto: nil,
-                                    onEditWeight: {},
                                     fullDateRange: nil
                                 )
                                 .padding(.horizontal)

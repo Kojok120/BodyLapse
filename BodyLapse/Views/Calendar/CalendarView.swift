@@ -40,8 +40,11 @@ struct CalendarView: View {
     
     var dateRange: [Date] {
         let calendar = Calendar.current
-        let endDate = Date()
-        let startDate = calendar.date(byAdding: .day, value: -selectedPeriod.days + 1, to: endDate) ?? endDate
+        let endDate = calendar.startOfDay(for: Date())
+        
+        // Calculate start date to ensure exactly selectedPeriod.days worth of dates
+        // For 7 days: we want 7 dates including today, so start from 6 days ago
+        let startDate = calendar.date(byAdding: .day, value: -(selectedPeriod.days - 1), to: endDate) ?? endDate
         
         var dates: [Date] = []
         var currentDate = startDate
@@ -122,7 +125,6 @@ struct CalendarView: View {
                     weightViewModel: weightViewModel,
                     dateRange: dateRange,
                     selectedChartDate: $selectedChartDate,
-                    currentPhoto: currentPhoto,
                     onEditWeight: {
                         showingWeightInput = true
                     }
