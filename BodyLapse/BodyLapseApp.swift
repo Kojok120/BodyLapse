@@ -96,12 +96,29 @@ struct BodyLapseApp: App {
 struct PrivacyScreenView: View {
     var body: some View {
         ZStack {
-            Color(uiColor: .systemBackground)
+            // Gradient background to match launch screen
+            LinearGradient(
+                colors: [
+                    Color(red: 0.0, green: 0.686, blue: 0.8),     // Turquoise
+                    Color(red: 0.988, green: 0.988, blue: 0.514)  // Yellow-Green
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
             
-            Image("privacy-screen")
-                .resizable()
-                .scaledToFit()
-                .padding(40)
+            // Center logo container
+            ZStack {
+                // White semi-transparent circle background
+                Circle()
+                    .fill(Color.white.opacity(0.9))
+                    .frame(width: 150, height: 150)
+                
+                // Logo image
+                Image("LaunchIcon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+            }
         }
     }
 }
