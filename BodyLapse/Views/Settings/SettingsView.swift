@@ -25,7 +25,7 @@ struct SettingsView: View {
     
     
     // App Store ID - replace with actual ID when app is published
-    private let appStoreID = "YOUR_APP_STORE_ID"
+    private let appStoreID = "6747956750"
     
     var body: some View {
         NavigationView {
@@ -530,6 +530,24 @@ struct AboutView: View {
                 .padding(.horizontal)
                 
                 Spacer()
+                
+                Button(action: {
+                    if let url = URL(string: "https://kojok120.github.io/bodylapse-legal/contact.html") {
+                        UIApplication.shared.open(url)
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "envelope.fill")
+                            .foregroundColor(.accentColor)
+                        Text("about.contact".localized)
+                            .font(.subheadline)
+                            .foregroundColor(.primary)
+                    }
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(10)
+                }
+                .padding(.horizontal)
                 
                 Text("about.made_with_love".localized)
                     .font(.caption)
