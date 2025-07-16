@@ -10,24 +10,11 @@ struct GalleryView: View {
     @State private var itemToDelete: Any?
     @State private var showingSaveSuccess = false
     @State private var saveSuccessMessage = ""
-    @State private var itemToShare: Any?
     @State private var showingBulkDeleteAlert = false
     @State private var currentGridColumns: Int = 3
     
-    // 統一的なシート管理
-    @State private var activeSheet: ActiveSheet?
-    
-    enum ActiveSheet: Identifiable {
-        case shareOptions(Photo)
-        case share([Any])
-        
-        var id: String {
-            switch self {
-            case .shareOptions: return "shareOptions"
-            case .share: return "share"
-            }
-        }
-    }
+    // Unified sheet management
+    @State private var activeSheet: GalleryActiveSheet?
     
     init(videoToPlay: Binding<UUID?> = .constant(nil)) {
         self._videoToPlay = videoToPlay
@@ -120,7 +107,7 @@ struct GalleryView: View {
             }
             .overlay(alignment: .top) {
                 if showingSaveSuccess {
-                    saveSuccessToast
+                    SaveSuccessToast(message: saveSuccessMessage, isShowing: $showingSaveSuccess)
                         .transition(.move(edge: .top).combined(with: .opacity))
                         .animation(.spring(), value: showingSaveSuccess)
                 }
@@ -144,23 +131,45 @@ struct GalleryView: View {
         }
     }
     
+    // MARK: - Private Methods
+    
     private func checkForVideoToPlay() {
         if let videoId = videoToPlay {
-            // Checking for video to play
-            // Find the video and play it
             if let video = viewModel.videos.first(where: { $0.id == videoId }) {
-                // Found video to play
                 viewModel.selectedSection = .videos
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     selectedVideo = video
-                    videoToPlay = nil // Clear after playing
+                    videoToPlay = nil
                 }
-            } else {
-                // Video not found in list
             }
         }
     }
     
+    private func deleteSelectedItem() {
+        if let photo = itemToDelete as? Photo {
+            viewModel.deletePhoto(photo)
+        } else if let video = itemToDelete as? Video {
+            viewModel.deleteVideo(video)
+        }
+        itemToDelete = nil
+    }
+    
+    private func bulkDelete() {
+        if viewModel.selectedSection == .photos {
+            viewModel.bulkDeletePhotos()
+        } else {
+            viewModel.bulkDeleteVideos()
+        }
+    }
+    
+    private func handlePhotoShare(_ image: UIImage, withFaceBlur: Bool) {
+        GalleryActionService.shared.handlePhotoShare(image, withFaceBlur: withFaceBlur, activeSheet: $activeSheet)
+    }
+}
+
+// MARK: - View Components
+
+extension GalleryView {
     private var sectionPicker: some View {
         Picker("Section", selection: $viewModel.selectedSection) {
             ForEach(GalleryViewModel.GallerySection.allCases, id: \.self) { section in
@@ -173,9 +182,7 @@ struct GalleryView: View {
     
     private var photosSection: some View {
         VStack(spacing: 0) {
-            // Filter toolbar
             if !viewModel.photos.isEmpty {
-                filterToolbar
                 filterChips
             }
             
@@ -216,7 +223,6 @@ struct GalleryView: View {
                                 }
                                 .padding(.horizontal, 2)
                                 
-                                // Add divider between month sections
                                 if viewModel.photosGroupedByMonth().last?.0 != month {
                                     Divider()
                                         .background(Color.bodyLapseLightGray)
@@ -275,7 +281,6 @@ struct GalleryView: View {
                             }
                             .padding(.horizontal, 2)
                             
-                            // Add divider between month sections
                             if viewModel.videosGroupedByMonth().last?.0 != month {
                                 Divider()
                                     .background(Color.bodyLapseLightGray)
@@ -316,86 +321,8 @@ struct GalleryView: View {
         .padding(.top, 100)
     }
     
-    private func deleteSelectedItem() {
-        if let photo = itemToDelete as? Photo {
-            viewModel.deletePhoto(photo)
-        } else if let video = itemToDelete as? Video {
-            viewModel.deleteVideo(video)
-        }
-        itemToDelete = nil
-    }
-    
-    private var saveSuccessToast: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.green)
-                .font(.title2)
-            
-            Text(saveSuccessMessage)
-                .font(.subheadline)
-                .fontWeight(.medium)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            Capsule()
-                .fill(Color(UIColor.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-        )
-        .padding(.top, 50)
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                withAnimation {
-                    showingSaveSuccess = false
-                }
-            }
-        }
-    }
-    
-    private func showSaveSuccess(message: String) {
-        saveSuccessMessage = message
-        withAnimation {
-            showingSaveSuccess = true
-        }
-    }
-    
-    private func savePhoto(_ photo: Photo) {
-        viewModel.savePhotoToLibrary(photo) { success, error in
-            if success {
-                showSaveSuccess(message: "gallery.photo_saved".localized)
-            } else {
-                // Failed to save photo
-            }
-        }
-    }
-    
-    private func saveVideo(_ video: Video) {
-        viewModel.saveVideoToLibrary(video) { success, error in
-            if success {
-                showSaveSuccess(message: "gallery.video_saved".localized)
-            } else {
-                // Failed to save video
-            }
-        }
-    }
-    
-    private func sharePhoto(_ photo: Photo) {
-        activeSheet = .shareOptions(photo)
-    }
-    
-    private func handlePhotoShare(_ image: UIImage, withFaceBlur: Bool) {
-        itemToShare = [image]
-        activeSheet = .share([image])
-    }
-    
-    private func shareVideo(_ video: Video) {
-        itemToShare = [video.fileURL]
-        activeSheet = .share([video.fileURL])
-    }
-    
     private var filterChips: some View {
         VStack(spacing: 12) {
-            // Top row: Sort toggle, Date picker, and Select button
             HStack(spacing: 12) {
                 // Sort toggle
                 Button(action: {
@@ -492,11 +419,10 @@ struct GalleryView: View {
                 }
             }
             
-            // Category chips for premium users (only show when not in selection mode)
+            // Category chips for premium users
             if !viewModel.isSelectionMode && viewModel.availableCategories.count > 1 && SubscriptionManagerService.shared.isPremium {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        // "All" chip
                         CategoryChip(
                             title: "gallery.all".localized,
                             isSelected: viewModel.selectedCategories.isEmpty,
@@ -507,7 +433,6 @@ struct GalleryView: View {
                             }
                         )
                         
-                        // Category chips
                         ForEach(viewModel.availableCategories) { category in
                             CategoryChip(
                                 title: category.name,
@@ -526,21 +451,6 @@ struct GalleryView: View {
         .padding(.horizontal)
         .padding(.vertical, 12)
         .background(Color(UIColor.secondarySystemBackground))
-    }
-    
-    private var filterToolbar: some View {
-        EmptyView()
-    }
-    
-    private func getActiveFilterCount() -> Int {
-        var count = 0
-        if !viewModel.selectedCategories.isEmpty {
-            count += 1
-        }
-        if viewModel.sortOrder != .newest {
-            count += 1
-        }
-        return count
     }
     
     private var selectionActionBar: some View {
@@ -600,18 +510,52 @@ struct GalleryView: View {
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: -2)
         )
     }
+}
+
+// MARK: - Action Methods
+
+extension GalleryView {
+    private func savePhoto(_ photo: Photo) {
+        GalleryActionService.shared.savePhoto(photo) { [self] success, error in
+            if success {
+                GalleryActionService.shared.showSaveSuccess(
+                    message: "gallery.photo_saved".localized,
+                    showingSaveSuccess: $showingSaveSuccess,
+                    saveSuccessMessage: $saveSuccessMessage
+                )
+            }
+        }
+    }
+    
+    private func saveVideo(_ video: Video) {
+        GalleryActionService.shared.saveVideo(video) { [self] success, error in
+            if success {
+                GalleryActionService.shared.showSaveSuccess(
+                    message: "gallery.video_saved".localized,
+                    showingSaveSuccess: $showingSaveSuccess,
+                    saveSuccessMessage: $saveSuccessMessage
+                )
+            }
+        }
+    }
+    
+    private func sharePhoto(_ photo: Photo) {
+        GalleryActionService.shared.sharePhoto(photo, activeSheet: $activeSheet)
+    }
+    
+    private func shareVideo(_ video: Video) {
+        GalleryActionService.shared.shareVideo(video, activeSheet: $activeSheet)
+    }
     
     private func shareSelectedItems() {
         if viewModel.selectedSection == .photos {
-            let images = viewModel.getSelectedPhotosForSharing()
+            let images = GalleryActionService.shared.getSelectedPhotosForSharing(from: viewModel)
             if !images.isEmpty {
-                itemToShare = images
                 activeSheet = .share(images)
             }
         } else {
-            let urls = viewModel.getSelectedVideosForSharing()
+            let urls = GalleryActionService.shared.getSelectedVideosForSharing(from: viewModel)
             if !urls.isEmpty {
-                itemToShare = urls
                 activeSheet = .share(urls)
             }
         }
@@ -619,845 +563,25 @@ struct GalleryView: View {
     
     private func saveSelectedItems() {
         if viewModel.selectedSection == .photos {
-            viewModel.bulkSavePhotosToLibrary { success, error in
+            GalleryActionService.shared.bulkSavePhotosToLibrary(from: viewModel) { [self] success, error in
                 if success {
-                    showSaveSuccess(message: String(format: "gallery.photos_saved_count".localized, viewModel.selectedPhotoIds.count))
-                }
-            }
-        } else {
-            viewModel.bulkSaveVideosToLibrary { success, error in
-                if success {
-                    showSaveSuccess(message: String(format: "gallery.videos_saved_count".localized, viewModel.selectedVideoIds.count))
-                }
-            }
-        }
-    }
-    
-    private func bulkDelete() {
-        if viewModel.selectedSection == .photos {
-            viewModel.bulkDeletePhotos()
-        } else {
-            viewModel.bulkDeleteVideos()
-        }
-    }
-}
-
-struct FilterOptionsView: View {
-    @ObservedObject var viewModel: GalleryViewModel
-    @Environment(\.dismiss) var dismiss
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                Section("gallery.filter.category".localized) {
-                    if viewModel.availableCategories.count > 1 && SubscriptionManagerService.shared.isPremium {
-                        ForEach(viewModel.availableCategories) { category in
-                            HStack {
-                                Text(category.name)
-                                Spacer()
-                                if viewModel.selectedCategories.contains(category.id) {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.bodyLapseTurquoise)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                viewModel.toggleCategory(category.id)
-                            }
-                        }
-                    } else {
-                        Text("gallery.filter.all_categories".localized)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                Section("gallery.filter.sort".localized) {
-                    ForEach(GalleryViewModel.SortOrder.allCases, id: \.self) { order in
-                        HStack {
-                            Text(order.localizedString)
-                            Spacer()
-                            if viewModel.sortOrder == order {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.bodyLapseTurquoise)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            viewModel.sortOrder = order
-                        }
-                    }
-                }
-                
-                Section {
-                    Button(action: {
-                        viewModel.clearFilters()
-                    }) {
-                        Text("gallery.filter.reset".localized)
-                            .foregroundColor(.red)
-                    }
-                }
-            }
-            .navigationTitle("gallery.filter".localized)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("common.done".localized) {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct PhotoGridItem: View {
-    let photo: Photo
-    let isSelected: Bool
-    let isSelectionMode: Bool
-    let onTap: () -> Void
-    let onDelete: () -> Void
-    let onSave: () -> Void
-    let onShare: () -> Void
-    @State private var image: UIImage?
-    
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                if let image = image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: geometry.size.width, height: geometry.size.width)
-                        .clipped()
-                } else {
-                    Rectangle()
-                        .fill(Color(UIColor.systemGray5))
-                        .overlay(
-                            ProgressView()
-                        )
-                }
-                
-                VStack {
-                    HStack {
-                        // Date label in top-left corner
-                        Text(formatDate(photo.captureDate))
-                            .font(.caption2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(4)
-                            .padding(8)
-                        
-                        Spacer()
-                        
-                        if isSelectionMode && isSelected {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.bodyLapseTurquoise)
-                                .background(Circle().fill(Color.white))
-                                .padding(8)
-                        }
-                    }
-                    Spacer()
-                }
-                
-                // Selection overlay
-                if isSelectionMode && isSelected {
-                    Rectangle()
-                        .fill(Color.bodyLapseTurquoise.opacity(0.3))
-                }
-            }
-            .frame(width: geometry.size.width, height: geometry.size.width)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            .contentShape(Rectangle())
-            .onTapGesture {
-                onTap()
-            }
-            .onAppear {
-                loadImage()
-            }
-        }
-        .aspectRatio(1, contentMode: .fit)
-        .contextMenu {
-            if !isSelectionMode {
-                Button {
-                    if let image = image {
-                        UIPasteboard.general.image = image
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                        impactFeedback.impactOccurred()
-                    }
-                } label: {
-                    Label("common.copy".localized, systemImage: "doc.on.doc")
-                }
-                
-                Button {
-                    onShare()
-                } label: {
-                    Label("common.share".localized, systemImage: "square.and.arrow.up")
-                }
-                
-                Button {
-                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                    impactFeedback.impactOccurred()
-                    onSave()
-                } label: {
-                    Label("gallery.save_to_photos".localized, systemImage: "square.and.arrow.down")
-                }
-                
-                Divider()
-                
-                Button(role: .destructive) {
-                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                    impactFeedback.impactOccurred()
-                    onDelete()
-                } label: {
-                    Label("common.delete".localized, systemImage: "trash")
-                }
-            }
-        } preview: {
-            if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 300)
-            }
-        }
-    }
-    
-    private func loadImage() {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let loadedImage = PhotoStorageService.shared.loadImage(for: photo)
-            DispatchQueue.main.async {
-                self.image = loadedImage
-            }
-        }
-    }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M/d"
-        return formatter.string(from: date)
-    }
-}
-
-struct VideoGridItem: View {
-    let video: Video
-    let isSelected: Bool
-    let isSelectionMode: Bool
-    let onTap: () -> Void
-    let onDelete: () -> Void
-    let onSave: () -> Void
-    let onShare: () -> Void
-    @State private var thumbnail: UIImage?
-    
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                if let thumbnail = thumbnail {
-                    Image(uiImage: thumbnail)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: geometry.size.width, height: geometry.size.width)
-                        .clipped()
-                } else {
-                    Rectangle()
-                        .fill(Color(UIColor.systemGray5))
-                        .overlay(
-                            Image(systemName: "video")
-                                .font(.system(size: 30))
-                                .foregroundColor(.gray)
-                        )
-                }
-                
-                VStack {
-                    HStack {
-                        // Date label in top-left corner
-                        Text(formatDate(video.createdDate))
-                            .font(.caption2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(4)
-                            .padding(8)
-                        
-                        Spacer()
-                        
-                        if isSelectionMode && isSelected {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.bodyLapseTurquoise)
-                                .background(Circle().fill(Color.white))
-                                .padding(8)
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    HStack {
-                        Image(systemName: "play.circle.fill")
-                            .font(.system(size: 30))
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                        
-                        Text(video.formattedDuration)
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(4)
-                    }
-                    .padding(8)
-                }
-                
-                // Selection overlay
-                if isSelectionMode && isSelected {
-                    Rectangle()
-                        .fill(Color.bodyLapseTurquoise.opacity(0.3))
-                }
-            }
-            .frame(width: geometry.size.width, height: geometry.size.width)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            .contentShape(Rectangle())
-            .onTapGesture {
-                onTap()
-            }
-            .onAppear {
-                loadThumbnail()
-            }
-        }
-        .aspectRatio(1, contentMode: .fit)
-        .contextMenu {
-            if !isSelectionMode {
-                Button {
-                    onTap()
-                } label: {
-                    Label("gallery.play".localized, systemImage: "play.circle")
-                }
-                
-                Button {
-                    onShare()
-                } label: {
-                    Label("common.share".localized, systemImage: "square.and.arrow.up")
-                }
-                
-                Button {
-                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                    impactFeedback.impactOccurred()
-                    onSave()
-                } label: {
-                    Label("gallery.save_to_photos".localized, systemImage: "square.and.arrow.down")
-                }
-                
-                Divider()
-                
-                Button(role: .destructive) {
-                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                    impactFeedback.impactOccurred()
-                    onDelete()
-                } label: {
-                    Label("common.delete".localized, systemImage: "trash")
-                }
-            }
-        } preview: {
-            if let thumbnail = thumbnail {
-                VStack {
-                    Image(uiImage: thumbnail)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 300)
-                    
-                    Text("\(video.frameCount) photos • \(video.formattedDuration)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 4)
-                }
-            }
-        }
-    }
-    
-    private func loadThumbnail() {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let loadedThumbnail = VideoStorageService.shared.loadThumbnail(for: video)
-            DispatchQueue.main.async {
-                self.thumbnail = loadedThumbnail
-            }
-        }
-    }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M/d"
-        return formatter.string(from: date)
-    }
-}
-
-struct PhotoDetailSheet: View {
-    let photo: Photo
-    @Environment(\.dismiss) private var dismiss
-    @StateObject private var userSettings = UserSettingsManager.shared
-    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
-    @State private var activeSheet: ActiveSheet?
-    
-    enum ActiveSheet: Identifiable {
-        case shareOptions(Photo)
-        case share([Any])
-        
-        var id: String {
-            switch self {
-            case .shareOptions: return "shareOptions"
-            case .share: return "share"
-            }
-        }
-    }
-    
-    // Zoom functionality state
-    @State private var currentScale: CGFloat = 1.0
-    @State private var lastScale: CGFloat = 1.0
-    @State private var currentOffset: CGSize = .zero
-    @State private var lastOffset: CGSize = .zero
-    
-    var body: some View {
-        NavigationView {
-            VStack {
-                if let image = PhotoStorageService.shared.loadImage(for: photo) {
-                    GeometryReader { geometry in
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                            .scaleEffect(currentScale)
-                            .offset(currentOffset)
-                            .clipped()
-                            .gesture(
-                                SimultaneousGesture(
-                                    MagnificationGesture()
-                                        .onChanged { value in
-                                            currentScale = lastScale * value
-                                        }
-                                        .onEnded { value in
-                                            lastScale = currentScale
-                                            // Reset if scale is too small
-                                            if currentScale < 1.0 {
-                                                withAnimation(.spring()) {
-                                                    currentScale = 1.0
-                                                    lastScale = 1.0
-                                                    currentOffset = .zero
-                                                    lastOffset = .zero
-                                                }
-                                            }
-                                        },
-                                    
-                                    DragGesture()
-                                        .onChanged { value in
-                                            // Only allow drag when zoomed in
-                                            if currentScale > 1.0 {
-                                                currentOffset = CGSize(
-                                                    width: lastOffset.width + value.translation.width,
-                                                    height: lastOffset.height + value.translation.height
-                                                )
-                                            }
-                                        }
-                                        .onEnded { value in
-                                            lastOffset = currentOffset
-                                            
-                                            // Limit the offset to prevent image from going too far
-                                            let maxOffsetX = (geometry.size.width * (currentScale - 1)) / 2
-                                            let maxOffsetY = (geometry.size.height * (currentScale - 1)) / 2
-                                            
-                                            let constrainedOffset = CGSize(
-                                                width: min(maxOffsetX, max(-maxOffsetX, currentOffset.width)),
-                                                height: min(maxOffsetY, max(-maxOffsetY, currentOffset.height))
-                                            )
-                                            
-                                            if constrainedOffset != currentOffset {
-                                                withAnimation(.spring()) {
-                                                    currentOffset = constrainedOffset
-                                                    lastOffset = constrainedOffset
-                                                }
-                                            }
-                                        }
-                                )
-                            )
-                            .onTapGesture(count: 2) {
-                                // Double tap to reset zoom
-                                withAnimation(.spring()) {
-                                    currentScale = 1.0
-                                    lastScale = 1.0
-                                    currentOffset = .zero
-                                    lastOffset = .zero
-                                }
-                            }
-                    }
-                    .frame(maxHeight: .infinity)
-                    
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(photo.formattedDate)
-                            .font(.headline)
-                        
-                        if subscriptionManager.isPremium {
-                            HStack {
-                                if let weight = photo.weight {
-                                    Label("\(String(format: "%.1f", weight)) \(userSettings.settings.weightUnit.symbol)", systemImage: "scalemass")
-                                        .font(.subheadline)
-                                }
-                                
-                                if let bodyFat = photo.bodyFatPercentage {
-                                    Label("\(String(format: "%.1f", bodyFat))%", systemImage: "percent")
-                                        .font(.subheadline)
-                                }
-                            }
-                            .foregroundColor(.secondary)
-                        }
-                        
-                        if photo.isFaceBlurred {
-                            Label("camera.face_blurred".localized, systemImage: "eye.slash")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Spacer()
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        if PhotoStorageService.shared.loadImage(for: photo) != nil {
-                            activeSheet = .shareOptions(photo)
-                        }
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("common.done".localized) {
-                        dismiss()
-                    }
-                }
-            }
-            .sheet(item: $activeSheet) { sheet in
-                switch sheet {
-                case .shareOptions(let photo):
-                    ShareOptionsDialog(
-                        photo: photo,
-                        onDismiss: {
-                            activeSheet = nil
-                        },
-                        onShare: handlePhotoShare
+                    GalleryActionService.shared.showSaveSuccess(
+                        message: String(format: "gallery.photos_saved_count".localized, viewModel.selectedPhotoIds.count),
+                        showingSaveSuccess: $showingSaveSuccess,
+                        saveSuccessMessage: $saveSuccessMessage
                     )
-                case .share(let items):
-                    ShareSheet(activityItems: items) {
-                        activeSheet = nil
-                    }
                 }
             }
-        }
-    }
-    
-    private func handlePhotoShare(_ image: UIImage, withFaceBlur: Bool) {
-        activeSheet = .share([image])
-    }
-}
-
-struct FilterChip: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(isSelected ? .white : .primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    isSelected ? Color.bodyLapseTurquoise : Color(UIColor.tertiarySystemBackground)
-                )
-                .cornerRadius(15)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(isSelected ? Color.clear : Color(UIColor.separator).opacity(0.5), lineWidth: 1)
-                )
-        }
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
-    }
-}
-
-struct CategoryChip: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(isSelected ? .white : .primary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .frame(minWidth: 60)
-                .background(
-                    isSelected ? Color.bodyLapseTurquoise : Color(UIColor.tertiarySystemBackground)
-                )
-                .cornerRadius(20)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(isSelected ? Color.clear : Color(UIColor.separator).opacity(0.3), lineWidth: 1)
-                )
-        }
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
-    }
-}
-
-struct DatePickerView: View {
-    @ObservedObject var viewModel: GalleryViewModel
-    @Environment(\.dismiss) var dismiss
-    @State private var selectedMonth = Date()
-    private let calendar = Calendar.current
-    
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                // Month/Year selector
-                monthYearSelector
-                    .padding(.horizontal)
-                    .padding(.top, 20)
-                
-                // Date chips grid
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 12)], spacing: 12) {
-                        ForEach(datesInSelectedMonth(), id: \.self) { date in
-                            DateChip(
-                                date: date,
-                                isSelected: viewModel.selectedDates.contains(where: { calendar.isDate($0, inSameDayAs: date) }),
-                                hasPhotos: hasPhotosOnDate(date),
-                                action: {
-                                    viewModel.toggleDate(date)
-                                }
-                            )
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-                
-                Spacer()
-            }
-            .navigationTitle("gallery.select_dates".localized)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("gallery.clear_all".localized) {
-                        viewModel.selectedDates.removeAll()
-                    }
-                    .disabled(viewModel.selectedDates.isEmpty)
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("common.done".localized) {
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
+        } else {
+            GalleryActionService.shared.bulkSaveVideosToLibrary(from: viewModel) { [self] success, error in
+                if success {
+                    GalleryActionService.shared.showSaveSuccess(
+                        message: String(format: "gallery.videos_saved_count".localized, viewModel.selectedVideoIds.count),
+                        showingSaveSuccess: $showingSaveSuccess,
+                        saveSuccessMessage: $saveSuccessMessage
+                    )
                 }
             }
-        }
-    }
-    
-    private var monthYearSelector: some View {
-        HStack {
-            Button(action: previousMonth) {
-                Image(systemName: "chevron.left.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(.bodyLapseTurquoise)
-            }
-            
-            Spacer()
-            
-            VStack(spacing: 4) {
-                Text(monthString)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                Text(yearString)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            Button(action: nextMonth) {
-                Image(systemName: "chevron.right.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(.bodyLapseTurquoise)
-            }
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(UIColor.secondarySystemBackground))
-        )
-    }
-    
-    private func previousMonth() {
-        selectedMonth = calendar.date(byAdding: .month, value: -1, to: selectedMonth) ?? selectedMonth
-    }
-    
-    private func nextMonth() {
-        selectedMonth = calendar.date(byAdding: .month, value: 1, to: selectedMonth) ?? selectedMonth
-    }
-    
-    private var monthString: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM"
-        return formatter.string(from: selectedMonth)
-    }
-    
-    private var yearString: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy"
-        return formatter.string(from: selectedMonth)
-    }
-    
-    private func datesInSelectedMonth() -> [Date] {
-        let startOfMonth = calendar.dateInterval(of: .month, for: selectedMonth)?.start ?? Date()
-        let range = calendar.range(of: .day, in: .month, for: startOfMonth) ?? 1..<2
-        
-        return range.compactMap { day -> Date? in
-            calendar.date(byAdding: .day, value: day - 1, to: startOfMonth)
-        }
-    }
-    
-    private func hasPhotosOnDate(_ date: Date) -> Bool {
-        return viewModel.photos.contains { photo in
-            calendar.isDate(photo.captureDate, inSameDayAs: date)
-        }
-    }
-}
-
-struct DateChip: View {
-    let date: Date
-    let isSelected: Bool
-    let hasPhotos: Bool
-    let action: () -> Void
-    
-    private let calendar = Calendar.current
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 4) {
-                Text("\(calendar.component(.day, from: date))")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(isSelected ? .white : .primary)
-                
-                if hasPhotos {
-                    Circle()
-                        .fill(isSelected ? Color.white.opacity(0.9) : Color.orange)
-                        .frame(width: 6, height: 6)
-                } else {
-                    Circle()
-                        .fill(Color.clear)
-                        .frame(width: 6, height: 6)
-                }
-            }
-            .frame(width: 60, height: 60)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.bodyLapseTurquoise : (hasPhotos ? Color(UIColor.tertiarySystemBackground) : Color(UIColor.systemGray5)))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(calendar.isDateInToday(date) ? Color.bodyLapseTurquoise : Color.clear, lineWidth: 2)
-            )
-        }
-        .scaleEffect(isSelected ? 1.05 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
-        .opacity(hasPhotos ? 1.0 : 0.6)
-    }
-}
-
-struct VideoPlayerView: View {
-    let video: Video
-    @Environment(\.dismiss) private var dismiss
-    @State private var player: AVPlayer?
-    @State private var showingShareSheet = false
-    
-    var body: some View {
-        NavigationView {
-            VStack {
-                if let player = player {
-                    VideoPlayer(player: player)
-                        .edgesIgnoringSafeArea(.all)
-                } else {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(video.dateRangeText)
-                        .font(.headline)
-                    
-                    HStack {
-                        Label("\(video.frameCount) " + "gallery.photos_count".localized, systemImage: "photo.stack")
-                        Spacer()
-                        Label(video.formattedDuration, systemImage: "timer")
-                    }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                }
-                .padding()
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        showingShareSheet = true
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("common.done".localized) {
-                        dismiss()
-                    }
-                }
-            }
-            .sheet(isPresented: $showingShareSheet) {
-                ShareSheet(activityItems: [video.fileURL]) {
-                    showingShareSheet = false
-                }
-            }
-            .onAppear {
-                setupPlayer()
-            }
-            .onDisappear {
-                player?.pause()
-            }
-        }
-    }
-    
-    private func setupPlayer() {
-        player = AVPlayer(url: video.fileURL)
-        player?.play()
-        
-        NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: player?.currentItem,
-            queue: .main
-        ) { _ in
-            player?.seek(to: .zero)
-            player?.play()
         }
     }
 }
