@@ -236,7 +236,9 @@ struct CalendarView: View {
                     onShare: handlePhotoShare
                 )
             case .share(let items):
-                ShareSheet(activityItems: items)
+                ShareSheet(activityItems: items) {
+                    activeSheet = nil
+                }
             }
         }
         .sheet(isPresented: $showingAddCategory) {

@@ -136,7 +136,9 @@ struct GalleryView: View {
                         onShare: handlePhotoShare
                     )
                 case .share(let items):
-                    ShareSheet(activityItems: items)
+                    ShareSheet(activityItems: items) {
+                        activeSheet = nil
+                    }
                 }
             }
         }
@@ -1134,7 +1136,9 @@ struct PhotoDetailSheet: View {
             }
             .sheet(isPresented: $showingShareSheet) {
                 if let image = PhotoStorageService.shared.loadImage(for: photo) {
-                    ShareSheet(activityItems: [image])
+                    ShareSheet(activityItems: [image]) {
+                        showingShareSheet = false
+                    }
                 }
             }
         }
@@ -1405,7 +1409,9 @@ struct VideoPlayerView: View {
                 }
             }
             .sheet(isPresented: $showingShareSheet) {
-                ShareSheet(activityItems: [video.fileURL])
+                ShareSheet(activityItems: [video.fileURL]) {
+                    showingShareSheet = false
+                }
             }
             .onAppear {
                 setupPlayer()
