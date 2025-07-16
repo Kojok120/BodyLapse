@@ -1003,7 +1003,19 @@ struct PhotoDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var userSettings = UserSettingsManager.shared
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
-    @State private var showingShareSheet = false
+    @State private var activeSheet: ActiveSheet?
+    
+    enum ActiveSheet: Identifiable {
+        case shareOptions(Photo)
+        case share([Any])
+        
+        var id: String {
+            switch self {
+            case .shareOptions: return "shareOptions"
+            case .share: return "share"
+            }
+        }
+    }
     
     // Zoom functionality state
     @State private var currentScale: CGFloat = 1.0
@@ -1121,7 +1133,7 @@ struct PhotoDetailSheet: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
                         if PhotoStorageService.shared.loadImage(for: photo) != nil {
-                            showingShareSheet = true
+                            activeSheet = .shareOptions(photo)
                         }
                     } label: {
                         Image(systemName: "square.and.arrow.up")
@@ -1134,14 +1146,27 @@ struct PhotoDetailSheet: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingShareSheet) {
-                if let image = PhotoStorageService.shared.loadImage(for: photo) {
-                    ShareSheet(activityItems: [image]) {
-                        showingShareSheet = false
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .shareOptions(let photo):
+                    ShareOptionsDialog(
+                        photo: photo,
+                        onDismiss: {
+                            activeSheet = nil
+                        },
+                        onShare: handlePhotoShare
+                    )
+                case .share(let items):
+                    ShareSheet(activityItems: items) {
+                        activeSheet = nil
                     }
                 }
             }
         }
+    }
+    
+    private func handlePhotoShare(_ image: UIImage, withFaceBlur: Bool) {
+        activeSheet = .share([image])
     }
 }
 
