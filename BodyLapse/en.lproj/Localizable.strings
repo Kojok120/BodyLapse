@@ -713,3 +713,14 @@
 "guidance.premium_features.description" = "Unlock advanced features like multiple categories, weight tracking, and ad-free experience.";
 "guidance.category_management.title" = "Manage Categories";
 "guidance.category_management.description" = "Create, edit, and organize your photo categories. Set up different angles and poses for comprehensive tracking.";
+
+/* Share Options Dialog */
+"share.options.title" = "Share Options";
+"share.options.description" = "Choose how you want to share your photo";
+"share.options.normal" = "Share Original";
+"share.options.normal.description" = "Share photo without any modifications";
+"share.options.blur" = "Share with Face Blur";
+"share.options.blur.description" = "Automatically blur faces for privacy";
+"share.error.title" = "Share Error";
+"share.error.load_failed" = "Failed to load photo";
+"share.error.processing_failed" = "Face blur processing failed";

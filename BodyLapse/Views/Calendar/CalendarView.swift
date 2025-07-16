@@ -26,12 +26,26 @@ struct CalendarView: View {
     @State private var currentCategoryIndex: Int = 0
     @State private var photosForSelectedDate: [Photo] = []
     @State private var categoriesForSelectedDate: [PhotoCategory] = []
-    @State private var showingShareSheet = false
-    @State private var itemToShare: [Any] = []
     @State private var showingSaveSuccess = false
     @State private var saveSuccessMessage = ""
     @State private var showingAddCategory = false
     @State private var newCategoryToSetup: PhotoCategory?
+    
+    // 統一的なシート管理
+    @State private var activeSheet: ActiveSheet?
+    @State private var itemToShare: [Any] = []
+    
+    enum ActiveSheet: Identifiable {
+        case shareOptions(Photo)
+        case share([Any])
+        
+        var id: String {
+            switch self {
+            case .shareOptions: return "shareOptions"
+            case .share: return "share"
+            }
+        }
+    }
     
     // Guidance system state
     @StateObject private var tooltipManager = TooltipManager.shared
@@ -211,8 +225,19 @@ struct CalendarView: View {
                 }
             }
         )
-        .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(activityItems: itemToShare)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .shareOptions(let photo):
+                ShareOptionsDialog(
+                    photo: photo,
+                    onDismiss: {
+                        activeSheet = nil
+                    },
+                    onShare: handlePhotoShare
+                )
+            case .share(let items):
+                ShareSheet(activityItems: items)
+            }
         }
         .sheet(isPresented: $showingAddCategory) {
             AddCategorySheet { newCategory in
@@ -579,9 +604,12 @@ struct CalendarView: View {
     }
     
     private func sharePhoto(_ photo: Photo) {
-        guard let image = PhotoStorageService.shared.loadImage(for: photo) else { return }
+        activeSheet = .shareOptions(photo)
+    }
+    
+    private func handlePhotoShare(_ image: UIImage, withFaceBlur: Bool) {
         itemToShare = [image]
-        showingShareSheet = true
+        activeSheet = .share([image])
     }
     
     private func savePhoto(_ photo: Photo) {

@@ -11,9 +11,23 @@ struct GalleryView: View {
     @State private var showingSaveSuccess = false
     @State private var saveSuccessMessage = ""
     @State private var itemToShare: Any?
-    @State private var showingShareSheet = false
     @State private var showingBulkDeleteAlert = false
     @State private var currentGridColumns: Int = 3
+    
+    // 統一的なシート管理
+    @State private var activeSheet: ActiveSheet?
+    
+    enum ActiveSheet: Identifiable {
+        case shareOptions(Photo)
+        case share([Any])
+        
+        var id: String {
+            switch self {
+            case .shareOptions: return "shareOptions"
+            case .share: return "share"
+            }
+        }
+    }
     
     init(videoToPlay: Binding<UUID?> = .constant(nil)) {
         self._videoToPlay = videoToPlay
@@ -111,8 +125,17 @@ struct GalleryView: View {
                         .animation(.spring(), value: showingSaveSuccess)
                 }
             }
-            .sheet(isPresented: $showingShareSheet) {
-                if let items = itemToShare as? [Any] {
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .shareOptions(let photo):
+                    ShareOptionsDialog(
+                        photo: photo,
+                        onDismiss: {
+                            activeSheet = nil
+                        },
+                        onShare: handlePhotoShare
+                    )
+                case .share(let items):
                     ShareSheet(activityItems: items)
                 }
             }
@@ -355,14 +378,17 @@ struct GalleryView: View {
     }
     
     private func sharePhoto(_ photo: Photo) {
-        guard let image = PhotoStorageService.shared.loadImage(for: photo) else { return }
+        activeSheet = .shareOptions(photo)
+    }
+    
+    private func handlePhotoShare(_ image: UIImage, withFaceBlur: Bool) {
         itemToShare = [image]
-        showingShareSheet = true
+        activeSheet = .share([image])
     }
     
     private func shareVideo(_ video: Video) {
         itemToShare = [video.fileURL]
-        showingShareSheet = true
+        activeSheet = .share([video.fileURL])
     }
     
     private var filterChips: some View {
@@ -578,13 +604,13 @@ struct GalleryView: View {
             let images = viewModel.getSelectedPhotosForSharing()
             if !images.isEmpty {
                 itemToShare = images
-                showingShareSheet = true
+                activeSheet = .share(images)
             }
         } else {
             let urls = viewModel.getSelectedVideosForSharing()
             if !urls.isEmpty {
                 itemToShare = urls
-                showingShareSheet = true
+                activeSheet = .share(urls)
             }
         }
     }

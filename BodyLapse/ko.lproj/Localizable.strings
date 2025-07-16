@@ -713,3 +713,14 @@
 "guidance.premium_features.description" = "여러 카테고리, 체중 추적, 광고 없는 경험 등 고급 기능을 잠금 해제하세요.";
 "guidance.category_management.title" = "카테고리 관리";
 "guidance.category_management.description" = "사진 카테고리를 생성, 편집 및 정리하세요. 포괄적인 추적을 위해 다양한 각도와 포즈를 설정하세요.";
+
+/* Share Options Dialog */
+"share.options.title" = "공유 옵션";
+"share.options.description" = "사진을 공유할 방법을 선택하세요";
+"share.options.normal" = "원본 공유";
+"share.options.normal.description" = "수정 없이 사진을 공유합니다";
+"share.options.blur" = "얼굴 흐림 처리 후 공유";
+"share.options.blur.description" = "프라이버시 보호를 위해 얼굴을 자동으로 흐리게 처리합니다";
+"share.error.title" = "공유 오류";
+"share.error.load_failed" = "사진 로드에 실패했습니다";
+"share.error.processing_failed" = "얼굴 흐림 처리에 실패했습니다";

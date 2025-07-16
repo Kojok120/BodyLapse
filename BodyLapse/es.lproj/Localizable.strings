@@ -713,3 +713,14 @@
 "guidance.premium_features.description" = "Desbloquea funciones avanzadas como múltiples categorías, seguimiento de peso y experiencia sin anuncios.";
 "guidance.category_management.title" = "Gestión de Categorías";
 "guidance.category_management.description" = "Crea, edita y organiza tus categorías de fotos. Configura diferentes ángulos y poses para un seguimiento completo.";
+
+/* Share Options Dialog */
+"share.options.title" = "Opciones de Compartir";
+"share.options.description" = "Elige cómo quieres compartir tu foto";
+"share.options.normal" = "Compartir Original";
+"share.options.normal.description" = "Compartir foto sin modificaciones";
+"share.options.blur" = "Compartir con Desenfocar Rostro";
+"share.options.blur.description" = "Desenfoca automáticamente los rostros para privacidad";
+"share.error.title" = "Error al Compartir";
+"share.error.load_failed" = "Error al cargar la foto";
+"share.error.processing_failed" = "Error en el procesamiento del desenfoque facial";

@@ -721,3 +721,14 @@
 "guidance.premium_features.description" = "複数カテゴリー、体重追跡、広告なしエクスペリエンスなどの高度な機能を解放できます。";
 "guidance.category_management.title" = "カテゴリー管理";
 "guidance.category_management.description" = "写真カテゴリーの作成、編集、整理ができます。様々な角度&ポーズを設定しましょう。";
+
+/* Share Options Dialog */
+"share.options.title" = "共有オプション";
+"share.options.description" = "写真の共有方法を選択してください";
+"share.options.normal" = "元の写真を共有";
+"share.options.normal.description" = "加工せずにそのまま共有します";
+"share.options.blur" = "顔ぼかしして共有";
+"share.options.blur.description" = "プライバシー保護のため顔を自動でぼかします";
+"share.error.title" = "共有エラー";
+"share.error.load_failed" = "写真の読み込みに失敗しました";
+"share.error.processing_failed" = "顔ぼかし処理に失敗しました";
