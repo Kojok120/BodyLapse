@@ -9,6 +9,9 @@ struct ShareOptionsDialog: View {
     @State private var isProcessing = false
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var showFaceBlurPreview = false
+    @State private var originalImage: UIImage?
+    @State private var processedImage: UIImage?
     
     var body: some View {
         NavigationView {
@@ -73,6 +76,17 @@ struct ShareOptionsDialog: View {
         } message: {
             Text(errorMessage)
         }
+        .fullScreenCover(isPresented: $showFaceBlurPreview) {
+            if let originalImg = originalImage, let processedImg = processedImage {
+                FaceBlurPreviewView(
+                    originalImage: originalImg,
+                    processedImage: processedImg
+                ) { finalImage in
+                    showFaceBlurPreview = false
+                    onShare(finalImage, true)
+                }
+            }
+        }
     }
     
     private func sharePhoto(withFaceBlur: Bool) {
@@ -85,13 +99,14 @@ struct ShareOptionsDialog: View {
             isProcessing = true
             
             Task {
-                let userSettings = await UserSettingsManager.shared
-                let blurMethod = await userSettings.settings.faceBlurMethod.toServiceMethod
+                let blurMethod = UserSettingsManager.shared.settings.faceBlurMethod.toServiceMethod
                 let processedImage = await FaceBlurService.shared.processImageAsync(image, blurMethod: blurMethod)
                 
                 await MainActor.run {
                     isProcessing = false
-                    onShare(processedImage, true)
+                    originalImage = image
+                    self.processedImage = processedImage
+                    showFaceBlurPreview = true
                 }
             }
         } else {
