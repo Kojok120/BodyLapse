@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct DailyNote: Codable, Identifiable {
+struct DailyNote: Codable, Identifiable, Equatable {
     let id: UUID
     let date: Date
     var content: String
