@@ -291,7 +291,9 @@ class VideoGenerationService {
                 // Apply face blur if enabled
                 let imageToProcess: UIImage
                 if options.blurFaces {
-                    imageToProcess = await FaceBlurService.shared.processImageAsync(image)
+                    let userSettings = await UserSettingsManager.shared
+                    let blurMethod = await userSettings.settings.faceBlurMethod.toServiceMethod
+                    imageToProcess = await FaceBlurService.shared.processImageAsync(image, blurMethod: blurMethod)
                 } else {
                     imageToProcess = image
                 }
@@ -346,7 +348,9 @@ class VideoGenerationService {
                        let image = PhotoStorageService.shared.loadImage(for: photo) {
                         // Apply face blur if enabled
                         if options.blurFaces {
-                            categoryPhotos[categoryId] = await FaceBlurService.shared.processImageAsync(image)
+                            let userSettings = await UserSettingsManager.shared
+                            let blurMethod = await userSettings.settings.faceBlurMethod.toServiceMethod
+                            categoryPhotos[categoryId] = await FaceBlurService.shared.processImageAsync(image, blurMethod: blurMethod)
                         } else {
                             categoryPhotos[categoryId] = image
                         }

@@ -26,6 +26,9 @@ struct UserSettings: Codable {
     // Appearance
     var appearanceMode: AppearanceMode = .system
     
+    // Face Blur Settings
+    var faceBlurMethod: FaceBlurMethod = .strongBlur
+    
     // Debug settings
     #if DEBUG
     var debugAllowPastDatePhotos: Bool = false
@@ -61,6 +64,29 @@ struct UserSettings: Codable {
                 return "settings.appearance_dark".localized
             case .system:
                 return "settings.appearance_system".localized
+            }
+        }
+    }
+    
+    enum FaceBlurMethod: String, Codable, CaseIterable {
+        case strongBlur = "strongBlur"
+        case blackout = "blackout"
+        
+        var displayName: String {
+            switch self {
+            case .strongBlur:
+                return "settings.face_blur_strong".localized
+            case .blackout:
+                return "settings.face_blur_blackout".localized
+            }
+        }
+        
+        var toServiceMethod: FaceBlurService.BlurMethod {
+            switch self {
+            case .strongBlur:
+                return .strongBlur
+            case .blackout:
+                return .blackout
             }
         }
     }

@@ -138,6 +138,9 @@
 "settings.photo_settings" = "写真設定";
 "settings.category_management" = "カテゴリ管理";
 "settings.show_guidelines" = "ボディガイドラインを表示";
+"settings.face_blur_method" = "顔ぼかし方法";
+"settings.face_blur_strong" = "強力ぼかし（デフォルト）";
+"settings.face_blur_blackout" = "黒塗り（最も確実）";
 "settings.reset_guideline" = "ボディガイドラインをリセット";
 "settings.set_guideline" = "ボディガイドラインを設定";
 "settings.weight_unit" = "重量単位";

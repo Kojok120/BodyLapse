@@ -138,6 +138,9 @@
 "settings.photo_settings" = "Photo Settings";
 "settings.category_management" = "Category Management";
 "settings.show_guidelines" = "Show Body Guidelines";
+"settings.face_blur_method" = "Face Blur Method";
+"settings.face_blur_strong" = "Strong Blur (Default)";
+"settings.face_blur_blackout" = "Black Out (Most Secure)";
 "settings.reset_guideline" = "Reset Body Guideline";
 "settings.set_guideline" = "Set Body Guideline";
 "settings.weight_unit" = "Weight Unit";

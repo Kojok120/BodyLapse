@@ -85,7 +85,9 @@ struct ShareOptionsDialog: View {
             isProcessing = true
             
             Task {
-                let processedImage = await FaceBlurService.shared.processImageAsync(image)
+                let userSettings = await UserSettingsManager.shared
+                let blurMethod = await userSettings.settings.faceBlurMethod.toServiceMethod
+                let processedImage = await FaceBlurService.shared.processImageAsync(image, blurMethod: blurMethod)
                 
                 await MainActor.run {
                     isProcessing = false

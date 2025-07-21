@@ -138,6 +138,9 @@
 "settings.photo_settings" = "사진 설정";
 "settings.category_management" = "카테고리 관리";
 "settings.show_guidelines" = "바디 가이드라인 표시";
+"settings.face_blur_method" = "얼굴 블러 방법";
+"settings.face_blur_strong" = "강력한 블러 (기본값)";
+"settings.face_blur_blackout" = "검은색 칠하기 (가장 안전)";
 "settings.reset_guideline" = "바디 가이드라인 재설정";
 "settings.set_guideline" = "바디 가이드라인 설정";
 "settings.weight_unit" = "무게 단위";

@@ -138,6 +138,9 @@
 "settings.photo_settings" = "Configuración de Fotos";
 "settings.category_management" = "Gestión de Categorías";
 "settings.show_guidelines" = "Mostrar Guías Corporales";
+"settings.face_blur_method" = "Método de Desenfoque Facial";
+"settings.face_blur_strong" = "Desenfoque Fuerte (Predeterminado)";
+"settings.face_blur_blackout" = "Ennegrecimiento (Más Seguro)";
 "settings.reset_guideline" = "Restablecer Guía Corporal";
 "settings.set_guideline" = "Establecer Guía Corporal";
 "settings.weight_unit" = "Unidad de Peso";

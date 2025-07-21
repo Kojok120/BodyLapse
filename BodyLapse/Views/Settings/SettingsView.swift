@@ -70,6 +70,13 @@ struct SettingsView: View {
                     
                     Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
                     
+                    // Face Blur Method Selection
+                    Picker("settings.face_blur_method".localized, selection: $userSettings.settings.faceBlurMethod) {
+                        ForEach(UserSettings.FaceBlurMethod.allCases, id: \.self) { method in
+                            Text(method.displayName).tag(method)
+                        }
+                    }
+                    
                     // Only show guideline button for free users
                     if !subscriptionManager.isPremium {
                         Button(action: {
