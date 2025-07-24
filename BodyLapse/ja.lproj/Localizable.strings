@@ -42,6 +42,9 @@
 "calendar.period.3months" = "3ヶ月";
 "calendar.period.6months" = "6ヶ月";
 "calendar.period.1year" = "1年";
+"calendar.period.2years" = "2年";
+"calendar.period.3years" = "3年";
+"calendar.period.5years" = "5年";
 "calendar.generate" = "生成";
 "calendar.body_detected" = "体を検出しました";
 "calendar.align_body" = "体を合わせてください";

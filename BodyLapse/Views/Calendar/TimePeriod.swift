@@ -6,6 +6,9 @@ enum TimePeriod: String, CaseIterable {
     case threeMonths = "3 Months"
     case sixMonths = "6 Months"
     case year = "1 Year"
+    case twoYears = "2 Years"
+    case threeYears = "3 Years"
+    case fiveYears = "5 Years"
     
     var localizedString: String {
         switch self {
@@ -14,6 +17,9 @@ enum TimePeriod: String, CaseIterable {
         case .threeMonths: return "calendar.period.3months".localized
         case .sixMonths: return "calendar.period.6months".localized
         case .year: return "calendar.period.1year".localized
+        case .twoYears: return "calendar.period.2years".localized
+        case .threeYears: return "calendar.period.3years".localized
+        case .fiveYears: return "calendar.period.5years".localized
         }
     }
     
@@ -24,6 +30,9 @@ enum TimePeriod: String, CaseIterable {
         case .threeMonths: return 90
         case .sixMonths: return 180
         case .year: return 365
+        case .twoYears: return 730
+        case .threeYears: return 1095
+        case .fiveYears: return 1825
         }
     }
 }

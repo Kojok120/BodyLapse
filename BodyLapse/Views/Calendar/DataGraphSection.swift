@@ -61,6 +61,9 @@ struct DataGraphSection: View {
         case .threeMonths: return .threeMonths
         case .sixMonths: return .threeMonths // Use 3 months as fallback
         case .year: return .year
+        case .twoYears: return .all
+        case .threeYears: return .all
+        case .fiveYears: return .all
         }
     }
 }

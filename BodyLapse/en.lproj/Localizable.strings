@@ -42,6 +42,9 @@
 "calendar.period.3months" = "3 Months";
 "calendar.period.6months" = "6 Months";
 "calendar.period.1year" = "1 Year";
+"calendar.period.2years" = "2 Years";
+"calendar.period.3years" = "3 Years";
+"calendar.period.5years" = "5 Years";
 "calendar.generate" = "Generate";
 "calendar.body_detected" = "Body detected";
 "calendar.align_body" = "Align your body";
