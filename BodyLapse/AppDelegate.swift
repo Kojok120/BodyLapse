@@ -41,13 +41,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             }
         }
         NotificationService.shared.clearDeliveredNotifications()
+        
+        // Reschedule notifications when app becomes active
+        NotificationService.shared.rescheduleNotificationsIfNeeded()
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         // Handle notification received while app is in background
-        if let isPhotoCheck = userInfo["isPhotoCheck"] as? Bool, isPhotoCheck {
-            NotificationService.shared.checkAndSendPhotoReminder()
-        }
         completionHandler(.newData)
     }
     

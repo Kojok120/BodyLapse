@@ -311,6 +311,9 @@ class CameraViewModel: NSObject, ObservableObject {
             }
             // Photo saved successfully
             
+            // Cancel today's 21:00 notification since photo was taken
+            NotificationService.shared.cancelTodaysMissedPhotoNotification()
+            
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 

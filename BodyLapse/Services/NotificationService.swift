@@ -52,6 +52,29 @@ class NotificationService: NSObject {
         }
     }
     
+    // Cancel today's 21:00 notification if photo was taken
+    func cancelTodaysMissedPhotoNotification() {
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // Find and cancel today's notification
+        for dayOffset in 0..<7 {
+            let identifier = "missed-photo-day-\(dayOffset)"
+            
+            notificationCenter.getPendingNotificationRequests { requests in
+                for request in requests {
+                    if request.identifier == identifier,
+                       let scheduledDate = request.content.userInfo["scheduledDate"] as? Date,
+                       calendar.isDate(scheduledDate, inSameDayAs: today) {
+                        self.notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+                        print("Cancelled today's 21:00 notification")
+                        break
+                    }
+                }
+            }
+        }
+    }
+    
     // Schedule user-configured daily reminder
     func scheduleDailyReminder() {
         // Cancel existing user reminder
@@ -98,71 +121,78 @@ class NotificationService: NSObject {
     }
     
     private func scheduleDailyCheck() {
-        // Schedule a daily check at 21:00
-        var dateComponents = DateComponents()
-        dateComponents.hour = 21
-        dateComponents.minute = 0
+        // Schedule notifications for the next 7 days at 21:00
+        let calendar = Calendar.current
+        let now = Date()
         
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        // Cancel all existing missed photo notifications
+        var identifiersToRemove = [String]()
+        for day in 0..<7 {
+            identifiersToRemove.append("missed-photo-day-\(day)")
+        }
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiersToRemove)
         
-        // Create a special identifier for the check
-        let checkIdentifier = "daily-photo-check"
-        
-        // Use a minimal notification that will trigger our check
-        let content = UNMutableNotificationContent()
-        content.title = "" // Empty title to trigger check without showing
-        content.userInfo = ["isPhotoCheck": true]
-        
-        let request = UNNotificationRequest(
-            identifier: checkIdentifier,
-            content: content,
-            trigger: trigger
-        )
-        
-        notificationCenter.add(request) { error in
-            if let error = error {
-                print("Error scheduling daily check: \(error)")
-            } else {
-                print("Daily photo check scheduled for 21:00")
+        // Schedule notifications for the next 7 days
+        for dayOffset in 0..<7 {
+            guard let targetDate = calendar.date(byAdding: .day, value: dayOffset, to: now) else { continue }
+            
+            var dateComponents = calendar.dateComponents([.year, .month, .day], from: targetDate)
+            dateComponents.hour = 21
+            dateComponents.minute = 0
+            
+            // Skip if the time has already passed today
+            if let notificationDate = calendar.date(from: dateComponents), notificationDate <= now {
+                continue
+            }
+            
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+            
+            let content = UNMutableNotificationContent()
+            content.title = "notification.no_photo_title".localized
+            content.body = "notification.no_photo_body".localized
+            content.sound = .default
+            content.badge = 1
+            content.userInfo = ["openCamera": true, "scheduledDate": targetDate]
+            
+            let request = UNNotificationRequest(
+                identifier: "missed-photo-day-\(dayOffset)",
+                content: content,
+                trigger: trigger
+            )
+            
+            notificationCenter.add(request) { error in
+                if let error = error {
+                    print("Error scheduling notification for day \(dayOffset): \(error)")
+                } else {
+                    print("Notification scheduled for day \(dayOffset) at 21:00")
+                }
             }
         }
+        
+        print("Daily photo check notifications scheduled for the next 7 days")
     }
     
-    func checkAndSendPhotoReminder() {
-        // Check if any photo was taken today across all categories
+    // Reschedule notifications when app becomes active
+    func rescheduleNotificationsIfNeeded() {
+        // Check if any photo was taken today
         let hasPhotoToday = PhotoStorageService.shared.hasAnyPhotoForToday()
         
-        guard !hasPhotoToday else {
-            print("Photo already taken today, skipping reminder")
-            return
+        if hasPhotoToday {
+            // Cancel today's notification if photo was taken
+            cancelTodaysMissedPhotoNotification()
         }
         
-        // Send missed photo notification
-        let content = UNMutableNotificationContent()
-        content.title = "notification.no_photo_title".localized
-        content.body = "notification.no_photo_body".localized
-        content.sound = .default
-        content.badge = 1
-        content.userInfo = ["openCamera": true]
-        
-        // Send immediately
-        let request = UNNotificationRequest(
-            identifier: missedPhotoIdentifier,
-            content: content,
-            trigger: nil // nil trigger means send immediately
-        )
-        
-        notificationCenter.add(request) { error in
-            if let error = error {
-                print("Error sending photo reminder: \(error)")
-            } else {
-                print("Photo reminder sent")
-            }
-        }
+        // Reschedule notifications for next 7 days
+        scheduleDailyCheck()
     }
     
     func cancelDailyReminder() {
-        notificationCenter.removePendingNotificationRequests(withIdentifiers: [reminderIdentifier, missedPhotoIdentifier, "daily-photo-check"])
+        var identifiersToRemove = [reminderIdentifier, missedPhotoIdentifier]
+        // Add all missed photo day identifiers
+        for day in 0..<7 {
+            identifiersToRemove.append("missed-photo-day-\(day)")
+        }
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiersToRemove)
         notificationCenter.removeDeliveredNotifications(withIdentifiers: [reminderIdentifier, missedPhotoIdentifier])
     }
     
@@ -195,15 +225,8 @@ extension NotificationService: UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        // Check if this is a photo check notification
-        if let isPhotoCheck = notification.request.content.userInfo["isPhotoCheck"] as? Bool, isPhotoCheck {
-            // Don't show the check notification, just perform the check
-            checkAndSendPhotoReminder()
-            completionHandler([])
-        } else {
-            // Show other notifications normally
-            completionHandler([.banner, .list, .sound, .badge])
-        }
+        // Show all notifications normally
+        completionHandler([.banner, .list, .sound, .badge])
     }
     
     // Handle notification tap
