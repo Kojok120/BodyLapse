@@ -20,6 +20,7 @@ struct UserSettings: Codable {
     var showDateInVideo: Bool = true
     
     // Reminder Settings
+    var isReminderEnabled: Bool = false
     var reminderHour: Int = 19  // Default to 7 PM (Note: missed photo check is at 9 PM)
     var reminderMinute: Int = 0
     

@@ -169,29 +169,40 @@ struct SettingsView: View {
                         }
                     } else {
                         // Daily reminder time setting
-                        DatePicker(
-                            "settings.reminder_time".localized,
-                            selection: Binding(
-                                get: {
-                                    Calendar.current.date(from: DateComponents(
-                                        hour: userSettings.settings.reminderHour,
-                                        minute: userSettings.settings.reminderMinute
-                                    )) ?? Date()
-                                },
-                                set: { newDate in
-                                    let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
-                                    userSettings.settings.reminderHour = components.hour ?? 19
-                                    userSettings.settings.reminderMinute = components.minute ?? 0
-                                    // Reschedule the daily reminder with new time
+                        Toggle("settings.daily_reminder".localized, isOn: $userSettings.settings.isReminderEnabled)
+                            .onChange(of: userSettings.settings.isReminderEnabled) { _, isEnabled in
+                                if isEnabled {
                                     NotificationService.shared.scheduleDailyReminder()
+                                } else {
+                                    NotificationService.shared.cancelDailyReminder()
                                 }
-                            ),
-                            displayedComponents: .hourAndMinute
-                        )
-                        
-                        Text("settings.reminder_time_description".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            }
+
+                        if userSettings.settings.isReminderEnabled {
+                            DatePicker(
+                                "settings.reminder_time".localized,
+                                selection: Binding(
+                                    get: {
+                                        Calendar.current.date(from: DateComponents(
+                                            hour: userSettings.settings.reminderHour,
+                                            minute: userSettings.settings.reminderMinute
+                                        )) ?? Date()
+                                    },
+                                    set: { newDate in
+                                        let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                        userSettings.settings.reminderHour = components.hour ?? 19
+                                        userSettings.settings.reminderMinute = components.minute ?? 0
+                                        // Reschedule the daily reminder with new time
+                                        NotificationService.shared.scheduleDailyReminder()
+                                    }
+                                ),
+                                displayedComponents: .hourAndMinute
+                            )
+                            
+                            Text("settings.reminder_time_description".localized)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
                 

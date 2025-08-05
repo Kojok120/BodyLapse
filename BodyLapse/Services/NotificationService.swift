@@ -88,6 +88,12 @@ class NotificationService: NSObject {
                 // Get user settings
                 let settings = UserSettingsManager.shared.settings
                 
+                // Only schedule if the reminder is enabled
+                guard settings.isReminderEnabled else {
+                    print("Daily reminder is disabled. Skipping scheduling.")
+                    return
+                }
+                
                 // Schedule daily reminder at user-configured time
                 var dateComponents = DateComponents()
                 dateComponents.hour = settings.reminderHour
