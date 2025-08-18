@@ -161,15 +161,17 @@
 "settings.daily_reminder" = "일일 알림";
 "settings.reminder_time" = "알림 시간";
 "settings.reminder_time_description" = "매일 사진 알림을 받을 시간을 선택하세요";
-"settings.premium_features" = "프리미엄 기능";
-"settings.premium_active" = "프리미엄 활성화";
+"settings.premium_features" = "광고 제거 구독";
+"settings.premium_active" = "광고 제거 활성화";
 "settings.manage_subscription" = "구독 관리";
 "settings.sync_health" = "건강 앱과 동기화";
 "settings.auto_import" = "체중 및 체지방 자동 가져오기";
 "settings.sync_now" = "지금 동기화";
-"settings.upgrade_premium" = "프리미엄으로 업그레이드";
-"settings.premium_description" = "광고 및 워터마크 제거, 체중 추적";
-"settings.premium_price" = "₩6,600/월";
+"settings.upgrade_premium" = "광고 제거";
+"settings.premium_description" = "광고 없는 경험을 즐겨보세요";
+"settings.no_ads_only" = "광고 제거 - 다른 모든 기능은 무료";
+"settings.health_integration" = "건강 앱 연동";
+"settings.premium_price" = "$0.99/월";
 "settings.data" = "데이터";
 "settings.export_photos" = "사진 내보내기";
 "settings.clear_all_data" = "모든 데이터 삭제";
@@ -221,8 +223,8 @@
 "compare.select_photo" = "사진 선택";
 "compare.weight" = "체중";
 "compare.body_fat" = "체지방";
-"compare.upgrade_premium" = "프리미엄으로 업그레이드";
-"compare.premium_feature" = "체중 및 체지방 변화 비교";
+"compare.upgrade_premium" = "광고 제거";
+"compare.premium_feature" = "모든 기능이 무료 버전에서 사용 가능";
 "compare.instruction" = "진행 상황 비교";
 "compare.select_two_photos" = "두 장의 사진을 선택하여 변화를 확인하세요";
 "compare.select_date" = "날짜 선택";
@@ -262,8 +264,8 @@
 "onboarding.passcode_mismatch" = "암호가 일치하지 않습니다";
 
 /* Onboarding Premium Features */
-"onboarding.premium.title" = "BodyLapse Premium\n프리미엄 기능 잠금 해제";
-"onboarding.premium.subtitle" = "독점 도구로 피트니스 여정을 한 단계 업그레이드하세요";
+"onboarding.premium.title" = "BodyLapse 광고 제거\n광고 없이 이용";
+"onboarding.premium.subtitle" = "모든 기능은 무료! 광고를 제거하려면 구독하세요";
 "onboarding.premium.metrics.title" = "측정값 추적";
 "onboarding.premium.metrics.description" = "상세한 차트로 체중과 체지방률 모니터링";
 "onboarding.premium.advanced_tracking.title" = "고급 사진 추적";
@@ -274,7 +276,7 @@
 "onboarding.premium.noads.description" = "방해받지 않고 진행 상황에 집중";
 "onboarding.premium.price" = "프리미엄 플랜";
 "onboarding.premium.price.detail" = "언제든지 취소 가능 • 무료 체험 제공";
-"onboarding.premium.price.fallback" = "₩6,600 / 월";
+"onboarding.premium.price.fallback" = "$0.99 / 월";
 "onboarding.premium.trial" = "1개월 무료 체험";
 "onboarding.premium.cancel_anytime" = "언제든지 취소 가능";
 
@@ -290,18 +292,18 @@
 "auth.tap_touchid" = "탭하여 Touch ID로 잠금 해제";
 
 /* Premium View */
-"premium.title" = "BodyLapse 프리미엄";
-"premium.subtitle" = "모든 기능을 잠금 해제하고 여정을 추적하세요";
-"premium.feature.tracking" = "체중 & 체지방 추적";
-"premium.feature.tracking_desc" = "상세한 차트로 진행 상황 추적";
-"premium.feature.advanced_tracking" = "고급 사진 추적";
-"premium.feature.advanced_tracking_desc" = "4개 각도에서 일일 다중 사진 추적";
+"premium.title" = "BodyLapse 광고 제거";
+"premium.subtitle" = "더 나은 경험을 위해 광고를 제거하세요";
+"premium.feature.tracking" = "모든 기능 사용 가능";
+"premium.feature.tracking_desc" = "체중 추적, 차트 등 - 모두 무료";
+"premium.feature.advanced_tracking" = "다중 카테고리";
+"premium.feature.advanced_tracking_desc" = "여러 각도 추적 - 모든 사용자 사용 가능";
 "premium.feature.no_ads" = "광고 없음";
 "premium.feature.no_ads_desc" = "광고 없는 경험을 즐기세요";
-"premium.feature.no_watermark" = "워터마크 없음";
-"premium.feature.no_watermark_desc" = "워터마크 없이 비디오 내보내기";
-"premium.feature.reminders" = "고급 알림";
-"premium.feature.reminders_desc" = "알림 시간 맞춤 설정";
+"premium.feature.no_watermark" = "워터마크 없는 비디오";
+"premium.feature.no_watermark_desc" = "워터마크 없이 비디오 제작 - 모두 무료";
+"premium.feature.reminders" = "일일 알림";
+"premium.feature.reminders_desc" = "매일 사진 알림 받기 - 모두 무료";
 "premium.restore" = "구매 복원";
 "premium.auto_renew" = "구독은 취소하지 않는 한 자동으로 갱신됩니다";
 "premium.terms" = "이용 약관";
@@ -309,7 +311,7 @@
 "premium.purchase_error" = "구매 오류";
 "premium.per" = "당";
 "premium.subscribe" = "지금 구독";
-"premium.price.fallback" = "₩6,600";
+"premium.price.fallback" = "$0.99";
 "premium.price.period" = "/월";
 "premium.first_month_free" = "첫 달 무료!";
 "premium.after_trial" = "무료 체험 후:";
@@ -317,7 +319,7 @@
 "premium.then_per_month" = "이후 정상 가격";
 "premium.subscription_length" = "월간 구독 (자동 갱신)";
 "premium.subscription_details" = "1개월 구독 (자동 갱신)";
-"premium.includes_all_features" = "1개월간 모든 프리미엄 기능 포함:";
+"premium.includes_all_features" = "광고 없이 즈기기:";
 "premium.start_with_free_month" = "1개월 무료로 시작";
 "premium.subscribe_now" = "지금 구독하기";
 

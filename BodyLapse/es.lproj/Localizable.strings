@@ -161,15 +161,17 @@
 "settings.daily_reminder" = "Recordatorio Diario";
 "settings.reminder_time" = "Hora del Recordatorio";
 "settings.reminder_time_description" = "Elige cuándo recibir tu recordatorio diario de fotos";
-"settings.premium_features" = "Funciones Premium";
-"settings.premium_active" = "Premium Activo";
+"settings.premium_features" = "Suscripción Sin Anuncios";
+"settings.premium_active" = "Sin Anuncios Activo";
 "settings.manage_subscription" = "Gestionar Suscripción";
 "settings.sync_health" = "Sincronizar con Salud";
 "settings.auto_import" = "Importar peso y grasa corporal automáticamente";
 "settings.sync_now" = "Sincronizar Ahora";
-"settings.upgrade_premium" = "Actualizar a Premium";
-"settings.premium_description" = "Elimina anuncios, marca de agua y rastrea peso";
-"settings.premium_price" = "$4.99 al mes";
+"settings.upgrade_premium" = "Eliminar Anuncios";
+"settings.premium_description" = "Disfruta de una experiencia sin anuncios";
+"settings.no_ads_only" = "Eliminar anuncios - Todas las demás funciones son gratuitas";
+"settings.health_integration" = "Integración con Salud";
+"settings.premium_price" = "$0.99 al mes";
 "settings.data" = "Datos";
 "settings.export_photos" = "Exportar Fotos";
 "settings.clear_all_data" = "Borrar Todos los Datos";
@@ -221,8 +223,8 @@
 "compare.select_photo" = "Seleccionar foto";
 "compare.weight" = "peso";
 "compare.body_fat" = "grasa corporal";
-"compare.upgrade_premium" = "Actualizar a Premium";
-"compare.premium_feature" = "Compara cambios de peso y grasa corporal";
+"compare.upgrade_premium" = "Eliminar Anuncios";
+"compare.premium_feature" = "Todas las funciones están disponibles en la versión gratuita";
 "compare.instruction" = "Compara Tu Progreso";
 "compare.select_two_photos" = "Selecciona dos fotos para ver tu transformación";
 "compare.select_date" = "Seleccionar Fecha";
@@ -262,8 +264,8 @@
 "onboarding.passcode_mismatch" = "Los códigos de acceso no coinciden";
 
 /* Onboarding Premium Features */
-"onboarding.premium.title" = "BodyLapse Premium\nDesbloquear Funciones Premium";
-"onboarding.premium.subtitle" = "Lleva tu viaje fitness al siguiente nivel con herramientas exclusivas";
+"onboarding.premium.title" = "BodyLapse Sin Anuncios\nDisfruta sin anuncios";
+"onboarding.premium.subtitle" = "¡Todas las funciones son gratis! Suscríbete solo para eliminar anuncios";
 "onboarding.premium.metrics.title" = "Rastrea Tus Métricas";
 "onboarding.premium.metrics.description" = "Monitorea peso y porcentaje de grasa corporal con gráficos detallados";
 "onboarding.premium.advanced_tracking.title" = "Seguimiento Fotográfico Avanzado";
@@ -274,7 +276,7 @@
 "onboarding.premium.noads.description" = "Concéntrate en tu progreso sin interrupciones";
 "onboarding.premium.price" = "Plan Premium";
 "onboarding.premium.price.detail" = "Cancela cuando quieras • Prueba gratuita disponible";
-"onboarding.premium.price.fallback" = "$4.99 / mes";
+"onboarding.premium.price.fallback" = "$0.99 / mes";
 "onboarding.premium.trial" = "Prueba gratuita de 1 mes";
 "onboarding.premium.cancel_anytime" = "Cancela cuando quieras";
 
@@ -290,18 +292,18 @@
 "auth.tap_touchid" = "Toque para desbloquear con Touch ID";
 
 /* Premium View */
-"premium.title" = "BodyLapse Premium";
-"premium.subtitle" = "Desbloquea todas las funciones y rastrea tu viaje";
-"premium.feature.tracking" = "Seguimiento de Peso y Grasa Corporal";
-"premium.feature.tracking_desc" = "Rastrea tu progreso con gráficos detallados";
-"premium.feature.advanced_tracking" = "Seguimiento Fotográfico Avanzado";
-"premium.feature.advanced_tracking_desc" = "Rastrea 4 ángulos con múltiples fotos diarias";
+"premium.title" = "BodyLapse Sin Anuncios";
+"premium.subtitle" = "Elimina anuncios para una mejor experiencia";
+"premium.feature.tracking" = "Todas las Funciones Disponibles";
+"premium.feature.tracking_desc" = "Seguimiento de peso, gráficos y más - todo gratis";
+"premium.feature.advanced_tracking" = "Múltiples Categorías";
+"premium.feature.advanced_tracking_desc" = "Rastrea múltiples ángulos - disponible para todos";
 "premium.feature.no_ads" = "Sin Anuncios";
 "premium.feature.no_ads_desc" = "Disfruta de una experiencia sin anuncios";
-"premium.feature.no_watermark" = "Sin Marca de Agua";
-"premium.feature.no_watermark_desc" = "Exporta videos sin marca de agua";
-"premium.feature.reminders" = "Recordatorios Avanzados";
-"premium.feature.reminders_desc" = "Personaliza los horarios de notificación";
+"premium.feature.no_watermark" = "Videos Sin Marca de Agua";
+"premium.feature.no_watermark_desc" = "Crea videos sin marca de agua - gratis para todos";
+"premium.feature.reminders" = "Recordatorios Diarios";
+"premium.feature.reminders_desc" = "Recibe recordatorios diarios de fotos - gratis para todos";
 "premium.restore" = "Restaurar Compras";
 "premium.auto_renew" = "Las suscripciones se renovarán automáticamente a menos que se cancelen";
 "premium.terms" = "Términos de Uso";
@@ -309,7 +311,7 @@
 "premium.purchase_error" = "Error de Compra";
 "premium.per" = "por";
 "premium.subscribe" = "Suscribirse Ahora";
-"premium.price.fallback" = "$4.99";
+"premium.price.fallback" = "$0.99";
 "premium.price.period" = "al mes";
 "premium.first_month_free" = "¡Primer Mes GRATIS!";
 "premium.after_trial" = "Después del período de prueba:";
@@ -317,7 +319,7 @@
 "premium.then_per_month" = "luego precio regular";
 "premium.subscription_length" = "Suscripción Mensual (Renovación automática)";
 "premium.subscription_details" = "Suscripción de 1 mes con renovación automática";
-"premium.includes_all_features" = "Incluye todas las funciones premium durante 1 mes:";
+"premium.includes_all_features" = "Disfruta sin anuncios:";
 "premium.start_with_free_month" = "Comienza con 1 mes gratis";
 "premium.subscribe_now" = "Suscribirse Ahora";
 

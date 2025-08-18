@@ -321,12 +321,11 @@ class CameraViewModel: NSObject, ObservableObject {
                 self.tempBodyFat = nil
                 self.capturedImage = nil // Clear the captured image to close the sheet
                 
-                // Check if user is premium and there are more categories to capture
-                let isPremium = SubscriptionManagerService.shared.isPremium
-                if isPremium, let nextCategory = CategoryStorageService.shared.getNextUncapturedCategory(
+                // Check if there are more categories to capture (now available for all users)
+                if let nextCategory = CategoryStorageService.shared.getNextUncapturedCategory(
                     for: saveDate,
                     currentCategoryId: self.selectedCategory.id,
-                    isPremium: isPremium
+                    isPremium: true // All users can now access multiple categories
                 ) {
                     // Show transition to next category
                     self.nextCategory = nextCategory
@@ -339,7 +338,7 @@ class CameraViewModel: NSObject, ObservableObject {
                         }
                     }
                 } else {
-                    // No more categories or free user - navigate to Calendar
+                    // No more categories - navigate to Calendar
                     // Force reload photos from disk before navigating
                     PhotoStorageService.shared.reloadPhotosFromDisk()
                     
@@ -492,8 +491,8 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
     
     @MainActor
     private func loadCategories() {
-        let isPremium = SubscriptionManagerService.shared.isPremium
-        availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+        // All users can now access all categories
+        availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: true)
         
         // Update the selected category with fresh data from storage
         if let updatedCategory = availableCategories.first(where: { $0.id == selectedCategory.id }) {

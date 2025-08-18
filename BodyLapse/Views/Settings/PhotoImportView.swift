@@ -13,7 +13,8 @@ struct PhotoImportView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     
-    private let isPremium: Bool = SubscriptionManagerService.shared.isPremium
+    // All features now available to all users
+    private let isPremium: Bool = true
     
     var body: some View {
         NavigationView {
@@ -63,8 +64,8 @@ struct PhotoImportView: View {
                     Text("import_export.photo_details".localized)
                 }
                 
-                // Weight Data (Premium only)
-                if isPremium {
+                // Weight Data - Now available for all users
+                // Always show weight section {
                     Section {
                         HStack {
                             Text("weight_tracking.weight".localized)
@@ -93,7 +94,7 @@ struct PhotoImportView: View {
                         Text("import_export.weight_data_optional".localized)
                             .font(.caption)
                     }
-                }
+                // }
                 
                 // Import Button
                 Section {

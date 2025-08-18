@@ -93,29 +93,29 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "4.99",
+          "displayPrice" : "0.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6443589120",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Monthly subscription (1 month, auto-renewing) providing full access to all premium features: no ads, no watermark on videos, weight & body fat tracking with charts, up to 4 photo categories, and advanced reminders. First month free for new subscribers.",
+              "description" : "Monthly subscription for ad-free experience. All features are available in the free version.",
               "displayName" : "BodyLapse Premium Monthly",
               "locale" : "en_US"
             },
             {
-              "description" : "月額サブスクリプション（1ヶ月、自動更新）。すべてのプレミアム機能を利用可能：広告なし、動画の透かしなし、体重・体脂肪率トラッキングとチャート、最大4つの写真カテゴリ、高度なリマインダー。新規登録者は初月無料。",
+              "description" : "月額サブスクリプション（広告非表示）。すべての機能は無料版でご利用いただけます。",
               "displayName" : "BodyLapse プレミアム 月額",
               "locale" : "ja"
             },
             {
-              "description" : "Suscripción mensual (1 mes, renovación automática) con acceso completo a todas las funciones premium: sin anuncios, sin marca de agua en videos, seguimiento de peso y grasa corporal con gráficos, hasta 4 categorías de fotos y recordatorios avanzados. Primer mes gratis para nuevos suscriptores.",
+              "description" : "Suscripción mensual para una experiencia sin anuncios. Todas las funciones están disponibles en la versión gratuita.",
               "displayName" : "BodyLapse Premium Mensual",
               "locale" : "es"
             },
             {
-              "description" : "월간 구독 (1개월, 자동 갱신). 모든 프리미엄 기능 이용 가능: 광고 없음, 동영상 워터마크 없음, 체중 및 체지방률 추적과 차트, 최대 4개의 사진 카테고리, 고급 알림. 신규 가입자 첫 달 무료.",
+              "description" : "광고 없는 경험을 위한 월간 구독. 모든 기능은 무료 버전에서 사용할 수 있습니다.",
               "displayName" : "BodyLapse 프리미엄 월간",
               "locale" : "ko"
             }

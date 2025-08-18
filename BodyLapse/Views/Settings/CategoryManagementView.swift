@@ -20,7 +20,7 @@ struct CategoryManagementView: View {
     @State private var alertMessage = ""
     
     var body: some View {
-        if subscriptionManager.isPremium {
+        // Categories now available for all users
         List {
             Section {
                 ForEach(categories) { category in
@@ -49,7 +49,8 @@ struct CategoryManagementView: View {
                     .font(.caption)
             }
             
-            if subscriptionManager.isPremium && CategoryStorageService.shared.canAddMoreCategories() {
+            // Add category button now available for all users
+            if CategoryStorageService.shared.canAddMoreCategories() {
                 Section {
                     Button(action: {
                         showingAddCategory = true
@@ -112,52 +113,6 @@ struct CategoryManagementView: View {
             Button("common.ok".localized) {}
         } message: {
             Text(alertMessage)
-        }
-        } else {
-            // Premium upgrade prompt view
-            VStack(spacing: 24) {
-                Spacer()
-                
-                Image(systemName: "folder.badge.plus")
-                    .font(.system(size: 60))
-                    .foregroundColor(.bodyLapseTurquoise)
-                
-                VStack(spacing: 12) {
-                    Text("category.premium.title".localized)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    Text("category.premium.description".localized)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                
-                VStack(alignment: .leading, spacing: 16) {
-                    Label("category.premium.feature1".localized, systemImage: "camera.on.rectangle")
-                    Label("category.premium.feature2".localized, systemImage: "person.crop.rectangle")
-                    Label("category.premium.feature3".localized, systemImage: "square.split.2x2")
-                    Label("category.premium.feature4".localized, systemImage: "line.3.horizontal.decrease.circle")
-                }
-                .font(.subheadline)
-                .padding(.horizontal, 40)
-                
-                NavigationLink(destination: PremiumView()) {
-                    Text("category.premium.upgrade".localized)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.bodyLapseTurquoise)
-                        .cornerRadius(12)
-                        .padding(.horizontal, 40)
-                }
-                
-                Spacer()
-            }
-            .navigationTitle("category.management.title".localized)
-            .navigationBarTitleDisplayMode(.inline)
         }
     }
     

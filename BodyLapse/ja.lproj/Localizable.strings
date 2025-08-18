@@ -161,15 +161,17 @@
 "settings.daily_reminder" = "毎日のリマインダー";
 "settings.reminder_time" = "リマインダー時刻";
 "settings.reminder_time_description" = "毎日の写真リマインダーを受け取る時刻を選択";
-"settings.premium_features" = "プレミアム機能";
-"settings.premium_active" = "プレミアムアクティブ";
+"settings.premium_features" = "広告非表示サブスクリプション";
+"settings.premium_active" = "広告非表示アクティブ";
 "settings.manage_subscription" = "サブスクリプションを管理";
 "settings.sync_health" = "ヘルスと同期";
 "settings.auto_import" = "体重と体脂肪を自動インポート";
 "settings.sync_now" = "今すぐ同期";
-"settings.upgrade_premium" = "プレミアムにアップグレード";
-"settings.premium_description" = "広告とウォーターマークを削除し、体重を追跡";
-"settings.premium_price" = "¥600/月";
+"settings.upgrade_premium" = "広告を非表示にする";
+"settings.premium_description" = "広告なしで快適に利用";
+"settings.no_ads_only" = "広告を削除 - その他の機能はすべて無料";
+"settings.health_integration" = "ヘルス連携";
+"settings.premium_price" = "¥100/月";
 "settings.data" = "データ";
 "settings.export_photos" = "写真をエクスポート";
 "settings.clear_all_data" = "すべてのデータを消去";
@@ -219,8 +221,8 @@
 "compare.select_photo" = "写真を選択";
 "compare.weight" = "体重";
 "compare.body_fat" = "体脂肪";
-"compare.upgrade_premium" = "プレミアムにアップグレード";
-"compare.premium_feature" = "体重と体脂肪の変化を比較";
+"compare.upgrade_premium" = "広告を非表示にする";
+"compare.premium_feature" = "すべての機能が無料版で利用可能";
 "compare.instruction" = "進捗を比較";
 "compare.select_two_photos" = "2枚の写真を選択して変化を確認";
 "compare.select_date" = "日付を選択";
@@ -260,8 +262,8 @@
 "onboarding.passcode_mismatch" = "パスコードが一致しません";
 
 /* Onboarding Premium Features */
-"onboarding.premium.title" = "BodyLapse Premium\nプレミアム機能をアンロック";
-"onboarding.premium.subtitle" = "専用ツールでフィットネスの旅を次のレベルへ";
+"onboarding.premium.title" = "BodyLapse 広告非表示\n広告なしで利用";
+"onboarding.premium.subtitle" = "すべての機能は無料！広告を非表示にするには登録";
 "onboarding.premium.metrics.title" = "メトリクスを追跡";
 "onboarding.premium.metrics.description" = "詳細なチャートで体重と体脂肪率をモニター";
 "onboarding.premium.advanced_tracking.title" = "高度な写真追跡";
@@ -272,7 +274,7 @@
 "onboarding.premium.noads.description" = "中断なく進捗に集中";
 "onboarding.premium.price" = "プレミアムプラン";
 "onboarding.premium.price.detail" = "いつでもキャンセル可能 • 無料トライアルあり";
-"onboarding.premium.price.fallback" = "¥600 / 月";
+"onboarding.premium.price.fallback" = "¥100 / 月";
 "onboarding.premium.trial" = "1ヶ月無料トライアル";
 "onboarding.premium.cancel_anytime" = "いつでもキャンセル可能";
 
@@ -288,18 +290,18 @@
 "auth.tap_touchid" = "タップしてTouch IDでロック解除";
 
 /* Premium View */
-"premium.title" = "BodyLapse プレミアム";
-"premium.subtitle" = "すべての機能をアンロックして進捗を追跡";
-"premium.feature.tracking" = "体重&体脂肪追跡";
-"premium.feature.tracking_desc" = "詳細なチャートで進捗を追跡";
-"premium.feature.advanced_tracking" = "高度な写真追跡";
-"premium.feature.advanced_tracking_desc" = "4アングルで1日複数枚の写真を追跡";
+"premium.title" = "BodyLapse 広告非表示";
+"premium.subtitle" = "広告を非表示にして快適に利用";
+"premium.feature.tracking" = "すべての機能が利用可能";
+"premium.feature.tracking_desc" = "体重追跡、チャートなど - すべて無料";
+"premium.feature.advanced_tracking" = "複数カテゴリ";
+"premium.feature.advanced_tracking_desc" = "複数アングルの追跡 - すべてのユーザーが利用可能";
 "premium.feature.no_ads" = "広告なし";
 "premium.feature.no_ads_desc" = "広告のない体験を楽しむ";
-"premium.feature.no_watermark" = "ウォーターマークなし";
-"premium.feature.no_watermark_desc" = "ウォーターマークなしで動画をエクスポート";
-"premium.feature.reminders" = "高度なリマインダー";
-"premium.feature.reminders_desc" = "通知時間をカスタマイズ";
+"premium.feature.no_watermark" = "ウォーターマークなしの動画";
+"premium.feature.no_watermark_desc" = "ウォーターマークなしで動画作成 - すべて無料";
+"premium.feature.reminders" = "毎日のリマインダー";
+"premium.feature.reminders_desc" = "毎日の写真リマインダー - すべて無料";
 "premium.restore" = "購入を復元";
 "premium.auto_renew" = "サブスクリプションはキャンセルされない限り自動的に更新されます";
 "premium.terms" = "利用規約";
@@ -307,7 +309,7 @@
 "premium.purchase_error" = "購入エラー";
 "premium.per" = "毎";
 "premium.subscribe" = "今すぐ登録";
-"premium.price.fallback" = "¥600";
+"premium.price.fallback" = "¥100";
 "premium.price.period" = "/月";
 "premium.first_month_free" = "初月無料！";
 "premium.after_trial" = "無料期間後：";
@@ -315,7 +317,7 @@
 "premium.then_per_month" = "その後は通常料金";
 "premium.subscription_length" = "月額サブスクリプション（自動更新）";
 "premium.subscription_details" = "1ヶ月間のサブスクリプション（自動更新）";
-"premium.includes_all_features" = "1ヶ月間すべてのプレミアム機能が利用可能：";
+"premium.includes_all_features" = "広告非表示で快適に利用：";
 "premium.start_with_free_month" = "1ヶ月無料で始める";
 "premium.subscribe_now" = "今すぐ登録";
 

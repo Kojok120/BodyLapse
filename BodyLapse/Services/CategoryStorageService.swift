@@ -145,11 +145,7 @@ class CategoryStorageService {
     func getActiveCategoriesForUser(isPremium: Bool) -> [PhotoCategory] {
         let categories = loadCategories()
         
-        // For free users, return only default category
-        if !isPremium {
-            return categories.filter { $0.isDefault }
-        }
-        
+        // All categories are now available for all users
         return categories
     }
     

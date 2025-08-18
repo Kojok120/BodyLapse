@@ -108,22 +108,22 @@ class SubscriptionManagerService: ObservableObject {
     
     /// Check if user can access weight tracking feature
     func canAccessWeightTracking() -> Bool {
-        return isPremium
+        return true // Now available for all users
     }
     
     /// Check if watermark should be removed from videos
     func canRemoveWatermark() -> Bool {
-        return isPremium
+        return true // No watermark for all users
     }
     
     /// Check if ads should be shown
     func shouldShowAds() -> Bool {
-        return !isPremium
+        return !isPremium // Only premium feature is ad removal
     }
     
     /// Check if user can access advanced chart features
     func canAccessAdvancedCharts() -> Bool {
-        return isPremium
+        return true // Now available for all users
     }
     
     // MARK: - Private Methods

@@ -30,31 +30,29 @@ struct WeightInputSheet: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
-                    // HealthKit Integration Indicator - Show if premium and HealthKit available
-                    if subscriptionManager.isPremium {
-                        HStack(spacing: 6) {
-                            Image(systemName: "heart.fill")
-                                .foregroundColor(.red)
+                    // HealthKit Integration Indicator - Now available for all users
+                    HStack(spacing: 6) {
+                        Image(systemName: "heart.fill")
+                            .foregroundColor(.red)
+                            .font(.caption)
+                        if userSettings.settings.healthKitEnabled && isLoadingHealthData {
+                            Text("weight.syncing_with_health".localized)
                                 .font(.caption)
-                            if userSettings.settings.healthKitEnabled && isLoadingHealthData {
-                                Text("weight.syncing_with_health".localized)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            } else if userSettings.settings.healthKitEnabled {
-                                Text("settings.apple_health_integration".localized)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            } else {
-                                Text("weight.enable_health_sync".localized)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+                                .foregroundColor(.secondary)
+                        } else if userSettings.settings.healthKitEnabled {
+                            Text("settings.apple_health_integration".localized)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("weight.enable_health_sync".localized)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.red.opacity(0.1))
-                        .cornerRadius(12)
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(12)
                 }
                 .padding(.top, 30)
                 .padding(.bottom, 40)
@@ -157,7 +155,8 @@ struct WeightInputSheet: View {
             }
             
             // Then try to fetch from HealthKit if enabled and no values set
-            if subscriptionManager.isPremium && userSettings.settings.healthKitEnabled && weight == nil {
+            // HealthKit now available for all users
+            if userSettings.settings.healthKitEnabled && weight == nil {
                 fetchHealthKitData()
             }
         }

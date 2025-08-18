@@ -93,7 +93,7 @@ struct CalendarView: View {
         let spacing = calculateSpacing()
         return VStack(spacing: spacing) {
             CalendarHeaderView(
-                isPremium: subscriptionManager.isPremium,
+                isPremium: false, // No longer used, keeping for backward compatibility
                 availableCategories: viewModel.availableCategories,
                 selectedCategory: viewModel.selectedCategory,
                 selectedPeriod: $selectedPeriod,
@@ -116,7 +116,7 @@ struct CalendarView: View {
             
             PhotoPreviewSection(
                 selectedDate: selectedDate,
-                isPremium: subscriptionManager.isPremium,
+                isPremium: true, // All users now have premium features
                 currentPhoto: $currentPhoto,
                 currentMemo: $currentMemo,
                 showingMemoEditor: $showingMemoEditor,
@@ -134,25 +134,16 @@ struct CalendarView: View {
                 }
             )
             
-            if subscriptionManager.isPremium {
-                DataGraphSection(
-                    selectedPeriod: selectedPeriod,
-                    weightViewModel: weightViewModel,
-                    dateRange: dateRange,
-                    selectedChartDate: $selectedChartDate,
-                    onEditWeight: {
-                        showingWeightInput = true
-                    }
-                )
-            } else {
-                ProgressBarSection(
-                    dateRange: dateRange,
-                    viewModel: viewModel,
-                    selectedIndex: $selectedIndex,
-                    selectedDate: $selectedDate,
-                    selectedChartDate: $selectedChartDate
-                )
-            }
+            // Weight tracking now available for all users
+            DataGraphSection(
+                selectedPeriod: selectedPeriod,
+                weightViewModel: weightViewModel,
+                dateRange: dateRange,
+                selectedChartDate: $selectedChartDate,
+                onEditWeight: {
+                    showingWeightInput = true
+                }
+            )
         }
         .withBannerAd()
         .navigationTitle("calendar.title".localized)
@@ -207,8 +198,8 @@ struct CalendarView: View {
                 showingDatePicker: $showingDatePicker,
                 dateRange: dateRange,
                 photoDates: getPhotoDates(),
-                dataDates: subscriptionManager.isPremium ? getDataDates() : Set<Date>(),
-                isPremium: subscriptionManager.isPremium,
+                dataDates: getDataDates(), // All users can see data dates
+                isPremium: true, // All users now have premium features
                 onDateSelected: updateCurrentPhoto
             )
         }
@@ -372,7 +363,8 @@ extension CalendarView {
     func updateCurrentPhoto() {
         photosForSelectedDate = viewModel.allPhotosForDate(selectedDate)
         
-        if subscriptionManager.isPremium && viewModel.availableCategories.count > 1 {
+        // Categories now available for all users
+        if viewModel.availableCategories.count > 1 {
             categoriesForSelectedDate = viewModel.availableCategories
             
             if let index = categoriesForSelectedDate.firstIndex(where: { $0.id == viewModel.selectedCategory.id }) {
@@ -407,9 +399,8 @@ extension CalendarView {
         viewModel.selectCategory(category)
         currentPhoto = photosForSelectedDate.first { $0.categoryId == category.id }
         
-        if subscriptionManager.isPremium {
-            weightViewModel.loadEntries()
-        }
+        // Weight data now available for all users
+        weightViewModel.loadEntries()
     }
     
     private func handleWeightSave(weight: Double?, bodyFat: Double?) {

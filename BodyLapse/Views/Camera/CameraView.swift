@@ -45,8 +45,8 @@ struct CameraView: View {
                 }
                 
                 VStack {
-                    // Category selection - Premium feature
-                    if subscriptionManager.isPremium && (viewModel.availableCategories.count > 1 || CategoryStorageService.shared.canAddMoreCategories()) {
+                    // Category selection - Available for all users
+                    if viewModel.availableCategories.count > 1 || CategoryStorageService.shared.canAddMoreCategories() {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
                                 ForEach(viewModel.availableCategories) { category in
@@ -146,7 +146,7 @@ struct CameraView: View {
                         }
                         .padding(.trailing, 20)
                     }
-                    .padding(.top, (subscriptionManager.isPremium && viewModel.availableCategories.count > 1) ? 0 : 60)
+                    .padding(.top, (viewModel.availableCategories.count > 1) ? 0 : 60)
                     
                     if userSettings.settings.showBodyGuidelines == true {
                         BodyGuidelineView(isBodyDetected: viewModel.bodyDetected)

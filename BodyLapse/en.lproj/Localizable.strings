@@ -161,15 +161,17 @@
 "settings.daily_reminder" = "Daily Reminder";
 "settings.reminder_time" = "Reminder Time";
 "settings.reminder_time_description" = "Choose when to receive your daily photo reminder";
-"settings.premium_features" = "Premium Features";
-"settings.premium_active" = "Premium Active";
+"settings.premium_features" = "Ad-Free Subscription";
+"settings.premium_active" = "Ad-Free Active";
 "settings.manage_subscription" = "Manage Subscription";
 "settings.sync_health" = "Sync with Health";
 "settings.auto_import" = "Auto-import weight & body fat";
 "settings.sync_now" = "Sync Now";
-"settings.upgrade_premium" = "Upgrade to Premium";
-"settings.premium_description" = "Remove ads, watermark & track weight";
-"settings.premium_price" = "$4.99(USD)/month";
+"settings.upgrade_premium" = "Remove Ads";
+"settings.premium_description" = "Enjoy an ad-free experience";
+"settings.no_ads_only" = "Remove ads - All other features are free";
+"settings.health_integration" = "Health Integration";
+"settings.premium_price" = "$0.99(USD)/month";
 "settings.data" = "Data";
 "settings.export_photos" = "Export Photos";
 "settings.clear_all_data" = "Clear All Data";
@@ -221,8 +223,8 @@
 "compare.select_photo" = "Select photo";
 "compare.weight" = "weight";
 "compare.body_fat" = "body fat";
-"compare.upgrade_premium" = "Upgrade to Premium";
-"compare.premium_feature" = "Compare weight and body fat changes";
+"compare.upgrade_premium" = "Remove Ads";
+"compare.premium_feature" = "All features are available in the free version";
 "compare.instruction" = "Compare Your Progress";
 "compare.select_two_photos" = "Select two photos to see your transformation";
 "compare.select_date" = "Select Date";
@@ -262,8 +264,8 @@
 "onboarding.passcode_mismatch" = "Passcodes do not match";
 
 /* Onboarding Premium Features */
-"onboarding.premium.title" = "BodyLapse Premium\nUnlock Premium Features";
-"onboarding.premium.subtitle" = "Take your fitness journey to the next level with exclusive tools";
+"onboarding.premium.title" = "BodyLapse Ad-Free\nEnjoy without ads";
+"onboarding.premium.subtitle" = "All features are free! Subscribe only to remove ads";
 "onboarding.premium.metrics.title" = "Track Your Metrics";
 "onboarding.premium.metrics.description" = "Monitor weight and body fat percentage with detailed charts";
 "onboarding.premium.advanced_tracking.title" = "Advanced Photo Tracking";
@@ -274,7 +276,7 @@
 "onboarding.premium.noads.description" = "Focus on your progress without interruptions";
 "onboarding.premium.price" = "Premium Plan";
 "onboarding.premium.price.detail" = "Cancel anytime • Free trial available";
-"onboarding.premium.price.fallback" = "$4.99(USD) / month";
+"onboarding.premium.price.fallback" = "$0.99(USD) / month";
 "onboarding.premium.trial" = "1-month free trial";
 "onboarding.premium.cancel_anytime" = "Cancel anytime";
 
@@ -290,18 +292,18 @@
 "auth.tap_touchid" = "Tap to unlock with Touch ID";
 
 /* Premium View */
-"premium.title" = "BodyLapse Premium";
-"premium.subtitle" = "Unlock all features and track your journey";
-"premium.feature.tracking" = "Weight & Body Fat Tracking";
-"premium.feature.tracking_desc" = "Track your progress with detailed charts";
-"premium.feature.advanced_tracking" = "Advanced Photo Tracking";
-"premium.feature.advanced_tracking_desc" = "Track 4 angles with multiple photos daily";
+"premium.title" = "BodyLapse Ad-Free";
+"premium.subtitle" = "Remove ads for a better experience";
+"premium.feature.tracking" = "All Features Available";
+"premium.feature.tracking_desc" = "Weight tracking, charts, and more - all free";
+"premium.feature.advanced_tracking" = "Multiple Categories";
+"premium.feature.advanced_tracking_desc" = "Track multiple angles - available for all users";
 "premium.feature.no_ads" = "No Ads";
 "premium.feature.no_ads_desc" = "Enjoy an ad-free experience";
-"premium.feature.no_watermark" = "No Watermark";
-"premium.feature.no_watermark_desc" = "Export videos without watermark";
-"premium.feature.reminders" = "Advanced Reminders";
-"premium.feature.reminders_desc" = "Customize notification times";
+"premium.feature.no_watermark" = "Watermark-Free Videos";
+"premium.feature.no_watermark_desc" = "Create videos without watermark - free for all";
+"premium.feature.reminders" = "Daily Reminders";
+"premium.feature.reminders_desc" = "Get daily photo reminders - free for all";
 "premium.restore" = "Restore Purchases";
 "premium.auto_renew" = "Subscriptions will automatically renew unless cancelled";
 "premium.terms" = "Terms of Use";
@@ -309,7 +311,7 @@
 "premium.purchase_error" = "Purchase Error";
 "premium.per" = "per";
 "premium.subscribe" = "Subscribe Now";
-"premium.price.fallback" = "$4.99(USD)";
+"premium.price.fallback" = "$0.99(USD)";
 "premium.price.period" = "per month";
 "premium.first_month_free" = "First Month FREE!";
 "premium.after_trial" = "After trial:";

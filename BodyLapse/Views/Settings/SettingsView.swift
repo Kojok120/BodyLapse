@@ -44,28 +44,16 @@ struct SettingsView: View {
     private var mainContent: some View {
         Form {
                 Section("settings.photo_settings".localized) {
-                    if subscriptionManager.isPremium {
-                        NavigationLink(destination: CategoryManagementView()) {
-                            Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
+                    // Category management now available for all users
+                    NavigationLink(destination: CategoryManagementView()) {
+                        Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
+                    }
+                    .withGuidanceBadge(for: .categoryManagement, size: 10, offset: CGPoint(x: 8, y: -8))
+                    .onTapGesture {
+                        if tooltipManager.needsGuidance(for: .categoryManagement) && !tooltipManager.hasShownTooltip(for: .categoryManagement) {
+                            showingCategoryManagementGuidance = true
+                            tooltipManager.markTooltipShown(for: .categoryManagement)
                         }
-                        .withGuidanceBadge(for: .categoryManagement, size: 10, offset: CGPoint(x: 8, y: -8))
-                        .onTapGesture {
-                            if tooltipManager.needsGuidance(for: .categoryManagement) && !tooltipManager.hasShownTooltip(for: .categoryManagement) {
-                                showingCategoryManagementGuidance = true
-                                tooltipManager.markTooltipShown(for: .categoryManagement)
-                            }
-                        }
-                    } else {
-                        Button(action: { showingPremiumUpgrade = true }) {
-                            HStack {
-                                Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
-                                Spacer()
-                                Image(systemName: "lock.fill")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .foregroundColor(.primary)
                     }
                     
                     Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
@@ -77,32 +65,28 @@ struct SettingsView: View {
                         }
                     }
                     
-                    // Only show guideline button for free users
-                    if !subscriptionManager.isPremium {
-                        Button(action: {
-                            if GuidelineStorageService.shared.hasGuideline() {
-                                showingResetGuidelineConfirmation = true
-                            } else {
-                                // If no guideline exists, directly show the guideline setup
-                                showingResetGuideline = true
-                            }
-                        }) {
-                            if GuidelineStorageService.shared.hasGuideline() {
-                                Label("settings.reset_guideline".localized, systemImage: "arrow.uturn.backward")
-                                    .foregroundColor(.red)
-                            } else {
-                                Label("settings.set_guideline".localized, systemImage: "person.fill.viewfinder")
-                                    .foregroundColor(.blue)
-                            }
+                    // Guideline button available for all users
+                    Button(action: {
+                        if GuidelineStorageService.shared.hasGuideline() {
+                            showingResetGuidelineConfirmation = true
+                        } else {
+                            // If no guideline exists, directly show the guideline setup
+                            showingResetGuideline = true
+                        }
+                    }) {
+                        if GuidelineStorageService.shared.hasGuideline() {
+                            Label("settings.reset_guideline".localized, systemImage: "arrow.uturn.backward")
+                                .foregroundColor(.red)
+                        } else {
+                            Label("settings.set_guideline".localized, systemImage: "person.fill.viewfinder")
+                                .foregroundColor(.blue)
                         }
                     }
                     
-                    // Weight Unit - only for premium users
-                    if subscriptionManager.isPremium {
-                        Picker("settings.weight_unit".localized, selection: $userSettings.settings.weightUnit) {
-                            ForEach(UserSettings.WeightUnit.allCases, id: \.self) { unit in
-                                Text(unit.rawValue).tag(unit)
-                            }
+                    // Weight Unit - now available for all users
+                    Picker("settings.weight_unit".localized, selection: $userSettings.settings.weightUnit) {
+                        ForEach(UserSettings.WeightUnit.allCases, id: \.self) { unit in
+                            Text(unit.rawValue).tag(unit)
                         }
                     }
                     
@@ -206,6 +190,56 @@ struct SettingsView: View {
                     }
                 }
                 
+                // HealthKit Integration - Now available for all users
+                Section("settings.health_integration".localized) {
+                    VStack(spacing: 12) {
+                        HStack {
+                            Image(systemName: "heart.text.square.fill")
+                                .font(.title2)
+                                .foregroundColor(.red)
+                            Text("settings.apple_health_integration".localized)
+                                .font(.headline)
+                            Spacer()
+                        }
+                        
+                        Toggle(isOn: $healthKitEnabled) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("settings.sync_health".localized)
+                                    .font(.subheadline)
+                                Text("settings.auto_import".localized)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color.red.opacity(0.05))
+                    .cornerRadius(12)
+                    .onChange(of: healthKitEnabled) { _, newValue in
+                        if newValue {
+                            requestHealthKitPermission()
+                        } else {
+                            userSettings.settings.healthKitEnabled = false
+                        }
+                    }
+                    
+                    if healthKitEnabled {
+                        Button(action: syncHealthData) {
+                            HStack {
+                                if healthKitSyncInProgress {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                }
+                                Text("settings.sync_now".localized)
+                            }
+                        }
+                        .disabled(healthKitSyncInProgress)
+                    }
+                }
+                
+                // Premium section for ads removal only
                 Section("settings.premium_features".localized) {
                     if subscriptionManager.isPremium {
                         HStack {
@@ -232,53 +266,6 @@ struct SettingsView: View {
                             }
                         }
                         .foregroundColor(.primary)
-                        
-                        // HealthKit Integration - Clear Apple Health Branding
-                        VStack(spacing: 12) {
-                            HStack {
-                                Image(systemName: "heart.text.square.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.red)
-                                Text("settings.apple_health_integration".localized)
-                                    .font(.headline)
-                                Spacer()
-                            }
-                            
-                            Toggle(isOn: $healthKitEnabled) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("settings.sync_health".localized)
-                                        .font(.subheadline)
-                                    Text("settings.auto_import".localized)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                        .padding()
-                        .background(Color.red.opacity(0.05))
-                        .cornerRadius(12)
-                        .onChange(of: healthKitEnabled) { _, newValue in
-                            if newValue {
-                                requestHealthKitPermission()
-                            } else {
-                                userSettings.settings.healthKitEnabled = false
-                            }
-                        }
-                        
-                        if healthKitEnabled {
-                            Button(action: syncHealthData) {
-                                HStack {
-                                    if healthKitSyncInProgress {
-                                        ProgressView()
-                                            .scaleEffect(0.8)
-                                    } else {
-                                        Image(systemName: "arrow.triangle.2.circlepath")
-                                    }
-                                    Text("settings.sync_now".localized)
-                                }
-                            }
-                            .disabled(healthKitSyncInProgress)
-                        }
                     } else {
                         Button(action: { 
                             showingPremiumUpgrade = true 
@@ -289,7 +276,7 @@ struct SettingsView: View {
                                 VStack(alignment: .leading) {
                                     Text("settings.upgrade_premium".localized)
                                         .font(.headline)
-                                    Text("settings.premium_description".localized)
+                                    Text("settings.no_ads_only".localized) // Update text to mention only ad removal
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }

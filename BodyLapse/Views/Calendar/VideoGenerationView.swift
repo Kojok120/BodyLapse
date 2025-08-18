@@ -108,13 +108,11 @@ struct VideoGenerationView: View {
                     
                     Toggle("calendar.show_date".localized, isOn: $showDateInVideo)
                     
-                    // Show graph toggle - Premium feature
-                    if subscriptionManager.isPremium {
-                        Toggle("calendar.show_graph".localized, isOn: $showGraphInVideo)
-                    }
+                    // Show graph toggle - Available for all users
+                    Toggle("calendar.show_graph".localized, isOn: $showGraphInVideo)
                     
-                    // Video layout selection - Premium feature
-                    if subscriptionManager.isPremium && availableCategories.count > 1 {
+                    // Video layout selection - Available for all users
+                    if availableCategories.count > 1 {
                         // Always use side-by-side layout for multiple categories
                         // Category selection for side-by-side
                         if videoLayout == .sideBySide {
@@ -142,17 +140,7 @@ struct VideoGenerationView: View {
                     }
                 }
                 
-                if !subscriptionManager.isPremium {
-                    Section {
-                        HStack {
-                            Image(systemName: "info.circle")
-                                .foregroundColor(.blue)
-                            Text("calendar.watermark_notice".localized)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
+                // Watermark notice removed - no watermark for any users
                 
             }
             .navigationTitle("calendar.generate_video".localized)
@@ -170,13 +158,13 @@ struct VideoGenerationView: View {
                         let options = VideoGenerationService.VideoGenerationOptions(
                             frameDuration: selectedSpeed.frameDuration,
                             videoSize: selectedQuality.videoSize,
-                            addWatermark: !subscriptionManager.isPremium,
+                            addWatermark: false, // No watermark for any users
                             transitionStyle: .fade,
                             blurFaces: enableFaceBlur,
                             layout: videoLayout,
                             selectedCategories: Array(selectedCategories),
                             showDate: showDateInVideo,
-                            showGraph: showGraphInVideo && subscriptionManager.isPremium,
+                            showGraph: showGraphInVideo, // Available for all users
                             isWeightInLbs: userSettings.settings.weightUnit == .lbs
                         )
                         
@@ -235,11 +223,10 @@ struct VideoGenerationView: View {
             }
             
             // Load available categories
-            let isPremium = subscriptionManager.isPremium
-            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: true) // All users get full categories
             
             // Set layout based on available categories
-            if isPremium && availableCategories.count > 1 {
+            if availableCategories.count > 1 {
                 // Multiple categories: use side-by-side
                 videoLayout = .sideBySide
                 // Select all categories by default (up to 4)

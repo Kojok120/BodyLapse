@@ -215,10 +215,7 @@ class HealthKitService {
     
     func syncHealthDataToApp(completion: @escaping (Bool, Error?) -> Void) {
         Task { @MainActor in
-            guard SubscriptionManagerService.shared.isPremium else {
-                completion(false, NSError(domain: "HealthKit", code: 2, userInfo: [NSLocalizedDescriptionKey: "Health sync is only available for premium users"]))
-                return
-            }
+            // Health sync is now available for all users
             
             // Fetch all available data from HealthKit (start from August 1, 2024)
             let startDate = Calendar.current.date(from: DateComponents(year: 2024, month: 8, day: 1))!
