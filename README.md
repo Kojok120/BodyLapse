@@ -256,7 +256,7 @@ BodyLapse/
 - Weight and body fat tracking with unit conversion
 - Multiple photo categories
 - Import/Export functionality
-- Daily memo system (100 character limit)
+- Daily memo system (500 character limit)
 - Complete localization (4 languages)
 - Premium subscription system (1-month free trial)
 - Ad integration (AdMob)
