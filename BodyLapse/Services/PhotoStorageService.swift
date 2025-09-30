@@ -1,11 +1,23 @@
 import Foundation
 import UIKit
 import StoreKit
+import ImageIO
 
 class PhotoStorageService {
     static let shared = PhotoStorageService()
-    
-    private init() {}
+
+    private let imageCache = NSCache<NSString, UIImage>()
+
+    private init() {
+        // Rough limit: ~200MB of cached pixel data (4 bytes per pixel)
+        imageCache.totalCostLimit = 200 * 1024 * 1024
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleMemoryWarning),
+            name: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil
+        )
+    }
     
     var documentsDirectory: URL? {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -272,28 +284,36 @@ class PhotoStorageService {
         savePhotosMetadata()
     }
     
-    func loadImage(for photo: Photo) -> UIImage? {
-        guard let photosDirectory = photosDirectory else {
+    func loadImage(for photo: Photo, targetSize: CGSize? = nil, scale: CGFloat = UIScreen.main.scale) -> UIImage? {
+        guard let imageURL = imageURL(for: photo) else {
             // Error: Could not access photos directory
             return nil
         }
-        
-        let categoryDir = photosDirectory.appendingPathComponent(photo.categoryId)
-        let fileURL = categoryDir.appendingPathComponent(photo.fileName)
-        
-        // Try new path first
-        if let imageData = try? Data(contentsOf: fileURL) {
-            return UIImage(data: imageData)
+
+        let cacheKey = cacheKey(for: photo, targetSize: targetSize, scale: scale)
+        if let cached = imageCache.object(forKey: cacheKey) {
+            return cached
         }
-        
-        // Fallback to old path for backward compatibility
-        let oldFileURL = photosDirectory.appendingPathComponent(photo.fileName)
-        guard let imageData = try? Data(contentsOf: oldFileURL) else { return nil }
-        return UIImage(data: imageData)
+
+        if let targetSize = targetSize,
+           targetSize.width > 0,
+           targetSize.height > 0,
+           let downsampled = downsampleImage(at: imageURL, to: targetSize, scale: scale) {
+            imageCache.setObject(downsampled, forKey: cacheKey, cost: downsampled.cacheCost)
+            return downsampled
+        }
+
+        guard let imageData = try? Data(contentsOf: imageURL),
+              let image = UIImage(data: imageData, scale: scale) else {
+            return nil
+        }
+        imageCache.setObject(image, forKey: cacheKey, cost: image.cacheCost)
+        return image
     }
     
     func reloadPhotosFromDisk() {
         // Reloading photos metadata from disk
+        imageCache.removeAllObjects()
         loadPhotosMetadata()
     }
     
@@ -345,7 +365,7 @@ class PhotoStorageService {
             // Error: Could not access metadata URL
             return
         }
-        
+
         do {
             let encoded = try JSONEncoder().encode(photos)
             try encoded.write(to: metadataURL)
@@ -353,6 +373,48 @@ class PhotoStorageService {
         } catch {
             // Failed to save metadata
         }
+    }
+
+    private func imageURL(for photo: Photo) -> URL? {
+        guard let photosDirectory = photosDirectory else { return nil }
+        let categoryDir = photosDirectory.appendingPathComponent(photo.categoryId)
+        let newURL = categoryDir.appendingPathComponent(photo.fileName)
+        if FileManager.default.fileExists(atPath: newURL.path) {
+            return newURL
+        }
+        let legacyURL = photosDirectory.appendingPathComponent(photo.fileName)
+        if FileManager.default.fileExists(atPath: legacyURL.path) {
+            return legacyURL
+        }
+        return nil
+    }
+
+    private func cacheKey(for photo: Photo, targetSize: CGSize?, scale: CGFloat) -> NSString {
+        if let targetSize = targetSize, targetSize.width > 0, targetSize.height > 0 {
+            let width = Int(targetSize.width * scale)
+            let height = Int(targetSize.height * scale)
+            return NSString(string: "\(photo.id.uuidString)_\(width)x\(height)")
+        }
+        return NSString(string: "\(photo.id.uuidString)_full")
+    }
+
+    private func downsampleImage(at url: URL, to size: CGSize, scale: CGFloat) -> UIImage? {
+        guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let maxDimension = max(size.width, size.height) * scale
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceThumbnailMaxPixelSize: max(1, Int(maxDimension))
+        ]
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) else {
+            return nil
+        }
+        return UIImage(cgImage: cgImage, scale: scale, orientation: .up)
+    }
+
+    @objc private func handleMemoryWarning() {
+        imageCache.removeAllObjects()
     }
     
     func photosGroupedByDate() -> [(Date, [Photo])] {
@@ -549,6 +611,14 @@ class PhotoStorageService {
         } catch {
             print("[PhotoStorage] Failed to sync weight data: \(error)")
         }
+    }
+}
+
+private extension UIImage {
+    var cacheCost: Int {
+        let pixelWidth = size.width * scale
+        let pixelHeight = size.height * scale
+        return Int(pixelWidth * pixelHeight * 4)
     }
 }
 

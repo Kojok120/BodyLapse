@@ -11,6 +11,7 @@ struct PhotoGridItem: View {
     let onSave: () -> Void
     let onShare: () -> Void
     @State private var image: UIImage?
+    @State private var lastLoadedSize: CGSize = .zero
     
     var body: some View {
         GeometryReader { geometry in
@@ -68,7 +69,12 @@ struct PhotoGridItem: View {
                 onTap()
             }
             .onAppear {
-                loadImage()
+                loadImage(for: geometry.size)
+            }
+            .onDisappear {
+                if !isSelectionMode {
+                    image = nil
+                }
             }
         }
         .aspectRatio(1, contentMode: .fit)
@@ -118,9 +124,14 @@ struct PhotoGridItem: View {
         }
     }
     
-    private func loadImage() {
+    private func loadImage(for size: CGSize) {
+        let clampedSize = CGSize(width: max(size.width, 1), height: max(size.height, 1))
+        if image != nil && abs(clampedSize.width - lastLoadedSize.width) < 1 && abs(clampedSize.height - lastLoadedSize.height) < 1 {
+            return
+        }
+        lastLoadedSize = clampedSize
         DispatchQueue.global(qos: .userInitiated).async {
-            let loadedImage = PhotoStorageService.shared.loadImage(for: photo)
+            let loadedImage = PhotoStorageService.shared.loadImage(for: photo, targetSize: clampedSize)
             DispatchQueue.main.async {
                 self.image = loadedImage
             }
