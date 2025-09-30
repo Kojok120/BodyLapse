@@ -270,10 +270,12 @@ struct OnboardingView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 10) {
-                        OnboardingPremiumFeatureRow(text: "onboarding.premium_feature1".localized)
-                        OnboardingPremiumFeatureRow(text: "onboarding.premium_feature2".localized)
-                        OnboardingPremiumFeatureRow(text: "onboarding.premium_feature3".localized)
-                        OnboardingPremiumFeatureRow(text: "onboarding.premium_feature4".localized)
+                        ForEach([
+                            "onboarding.premium.noads.description".localized,
+                            "onboarding.premium.all_features_free".localized
+                        ], id: \.self) { feature in
+                            OnboardingPremiumFeatureRow(text: feature)
+                        }
                     }
                     
                     Button(action: {

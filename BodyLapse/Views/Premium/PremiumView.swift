@@ -36,16 +36,10 @@ struct PremiumView: View {
                                 .foregroundColor(.white)
                         }
                         
-                        // Subscription length and trial info (subordinate)
-                        VStack(spacing: 4) {
-                            Text("premium.subscription_length".localized)
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.9))
-                            
-                            Text("premium.start_with_free_month".localized)
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.9))
-                        }
+                        // Subscription length (subordinate)
+                        Text("premium.subscription_length".localized)
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.9))
                         
                         // Links (REQUIRED by App Store)
                         HStack(spacing: 20) {
@@ -72,27 +66,15 @@ struct PremiumView: View {
                             // Features list
                             VStack(alignment: .leading, spacing: 10) {
                                 CompactPremiumFeatureRowView(
-                                    icon: "chart.line.uptrend.xyaxis",
-                                    title: "premium.feature.tracking".localized,
-                                    description: "premium.feature.tracking_desc".localized
-                                )
-                                
-                                CompactPremiumFeatureRowView(
-                                    icon: "photo.stack",
-                                    title: "premium.feature.advanced_tracking".localized,
-                                    description: "premium.feature.advanced_tracking_desc".localized
-                                )
-                                
-                                CompactPremiumFeatureRowView(
                                     icon: "xmark.circle.fill",
                                     title: "premium.feature.no_ads".localized,
                                     description: "premium.feature.no_ads_desc".localized
                                 )
-                                
+
                                 CompactPremiumFeatureRowView(
-                                    icon: "drop.fill",
-                                    title: "premium.feature.no_watermark".localized,
-                                    description: "premium.feature.no_watermark_desc".localized
+                                    icon: "hand.thumbsup.fill",
+                                    title: "premium.feature.support".localized,
+                                    description: "premium.feature.support_desc".localized
                                 )
                             }
                             .padding(.horizontal)
