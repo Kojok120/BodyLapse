@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct MemoEditorView: View {
     let date: Date
@@ -38,30 +39,47 @@ struct MemoEditorView: View {
                             .foregroundColor(.primary)
                             .padding(.horizontal)
                         
-                        TextEditor(text: $memoText)
-                            .font(.body)
-                            .padding(8)
-                            .frame(height: 150)
-                            .background(Color(UIColor.secondarySystemBackground))
-                            .cornerRadius(10)
-                            .padding(.horizontal)
-                            .focused($isTextFieldFocused)
-                            .scrollContentBackground(.hidden)
-                            .onChange(of: memoText) { _, newValue in
-                                if newValue.count > 200 {
-                                    memoText = String(newValue.prefix(200))
-                                }
-                            }
-                            .toolbar {
-                                ToolbarItemGroup(placement: .keyboard) {
-                                    Spacer()
-                                    Button("common.done".localized) {
-                                        isTextFieldFocused = false
+                        ZStack(alignment: .bottomTrailing) {
+                            TextEditor(text: $memoText)
+                                .font(.body)
+                                .padding(8)
+                                .frame(height: 150)
+                                .background(Color(UIColor.secondarySystemBackground))
+                                .cornerRadius(10)
+                                .focused($isTextFieldFocused)
+                                .scrollContentBackground(.hidden)
+                                .onChange(of: memoText) { _, newValue in
+                                    if newValue.count > 500 {
+                                        memoText = String(newValue.prefix(500))
                                     }
                                 }
+                                .toolbar {
+                                    ToolbarItemGroup(placement: .keyboard) {
+                                        Spacer()
+                                        Button("common.done".localized) {
+                                            isTextFieldFocused = false
+                                        }
+                                    }
+                                }
+                            
+                            Button {
+                                copyMemo()
+                            } label: {
+                                Image(systemName: "doc.on.doc")
+                                    .font(.body)
+                                    .foregroundColor(.white)
+                                    .padding(10)
+                                    .background(copyButtonBackground)
+                                    .clipShape(Circle())
                             }
+                            .disabled(!canCopyMemo)
+                            .opacity(canCopyMemo ? 1 : 0.4)
+                            .padding(12)
+                            .accessibilityLabel(Text("common.copy".localized))
+                        }
+                        .padding(.horizontal)
                         
-                        Text("\(memoText.count)/200")
+                        Text("\(memoText.count)/500")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
@@ -84,7 +102,7 @@ struct MemoEditorView: View {
                                 .background(Color.accentColor)
                                 .cornerRadius(12)
                         }
-                        .disabled(memoText.isEmpty || memoText.count > 200)
+                        .disabled(memoText.isEmpty || memoText.count > 500)
                         
                         if !initialContent.isEmpty {
                             Button(action: delete) {
@@ -130,6 +148,22 @@ struct MemoEditorView: View {
     private func delete() {
         onDelete()
         dismiss()
+    }
+    
+    private func copyMemo() {
+        let trimmed = memoText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        UIPasteboard.general.string = trimmed
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+    }
+    
+    private var canCopyMemo: Bool {
+        !memoText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
+    private var copyButtonBackground: Color {
+        canCopyMemo ? .bodyLapseTurquoise : Color(UIColor.systemGray4)
     }
     
     private func formatDate(_ date: Date) -> String {
