@@ -52,9 +52,9 @@ const translations = {
         "slide9.subtitle": "Join thousands who are transforming their bodies with BodyLapse",
         "slide9.feature1": "Free to start",
         "slide9.feature2": "100% private & secure",
-        "slide9.feature3": "Premium features available",
+        "slide9.feature3": "Go ad-free with Premium (no free trial)",
         
-        "premium": "PREMIUM",
+        "premium": "Ad-Free Upgrade",
         "cta.text": "Start your transformation today",
         "cta.button": "Download BodyLapse"
     },
@@ -82,7 +82,7 @@ const translations = {
         "slide4.subtitle": "任意の2つの日付を並べて比較",
         "slide4.feature1": "即座にBefore/After表示",
         "slide4.feature2": "任意の日付を選択して比較",
-        "slide4.feature3": "BeforeとAfterの体重と体脂肪率も比較（プレミアム）",
+        "slide4.feature3": "BeforeとAfterの体重と体脂肪率も比較可能",
         
         "slide5.title": "ガイドラインで<br>撮影をサポート",
         "slide5.subtitle": "タイムラプス動画を見応えのあるものに",
@@ -112,9 +112,9 @@ const translations = {
         "slide9.subtitle": "BodyLapseで体を変えている何千人もの仲間に加わろう",
         "slide9.feature1": "無料で開始",
         "slide9.feature2": "100%プライベート＆安全",
-        "slide9.feature3": "プレミアム機能も利用可能",
+        "slide9.feature3": "広告非表示プレミアム（無料期間なし）",
         
-        "premium": "プレミアム",
+        "premium": "広告非表示プラン",
         "cta.text": "今日から変化を始めよう",
         "cta.button": "BodyLapseをダウンロード"
     },
@@ -172,9 +172,9 @@ const translations = {
         "slide9.subtitle": "BodyLapse로 몸을 변화시키고 있는 수천 명과 함께하세요",
         "slide9.feature1": "무료로 시작",
         "slide9.feature2": "100% 비공개 및 안전",
-        "slide9.feature3": "프리미엄 기능 제공",
+        "slide9.feature3": "프리미엄으로 광고 제거 (무료 체험 없음)",
         
-        "premium": "프리미엄",
+        "premium": "광고 제거",
         "cta.text": "오늘부터 변화를 시작하세요",
         "cta.button": "BodyLapse 다운로드"
     },
@@ -232,9 +232,9 @@ const translations = {
         "slide9.subtitle": "Únete a miles que están transformando sus cuerpos con BodyLapse",
         "slide9.feature1": "Gratis para empezar",
         "slide9.feature2": "100% privado y seguro",
-        "slide9.feature3": "Funciones premium disponibles",
+        "slide9.feature3": "Elimina los anuncios con Premium (sin prueba gratuita)",
         
-        "premium": "PREMIUM",
+        "premium": "Sin Anuncios",
         "cta.text": "Comienza tu transformación hoy",
         "cta.button": "Descarga BodyLapse"
     }
