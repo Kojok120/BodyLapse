@@ -345,6 +345,11 @@ struct SettingsView: View {
                     ))
                     
                     Toggle("settings.debug.past_photos".localized, isOn: $userSettings.settings.debugAllowPastDatePhotos)
+
+                    Button(action: openDebugOnboarding) {
+                        Label("settings.debug.launch_onboarding".localized, systemImage: "sparkles")
+                            .foregroundColor(.accentColor)
+                    }
                     
                     HStack {
                         Text("settings.subscription_status".localized)
@@ -409,13 +414,7 @@ struct SettingsView: View {
             }
             .alert("common.done".localized, isPresented: $showingLanguageChangeAlert) {
                 Button("common.ok".localized) {
-                    // Force app refresh
-                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                        windowScene.windows.first?.rootViewController = UIHostingController(
-                            rootView: ContentView()
-                                .environmentObject(languageManager)
-                        )
-                    }
+                    resetRootToContentView()
                 }
             } message: {
                 Text("settings.language_changed".localized)
@@ -502,6 +501,26 @@ struct SettingsView: View {
                 showingNotificationPermissionAlert = true
             }
         }
+    }
+
+#if DEBUG
+    private func openDebugOnboarding() {
+        userSettings.settings.hasCompletedOnboarding = false
+        authService.isAuthenticated = false
+        resetRootToContentView()
+    }
+#endif
+
+    private func resetRootToContentView() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else { return }
+
+        window.rootViewController = UIHostingController(
+            rootView: ContentView()
+                .environmentObject(languageManager)
+                .tint(.bodyLapseTurquoise)
+        )
+        window.makeKeyAndVisible()
     }
 }
 
@@ -704,5 +723,3 @@ struct ExportView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-
