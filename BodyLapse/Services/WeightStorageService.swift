@@ -102,8 +102,12 @@ actor WeightStorageService {
     // MARK: - Get Entries in Date Range
     func getEntries(from startDate: Date, to endDate: Date) throws -> [WeightEntry] {
         let entries = try loadEntries()
+        let calendar = Calendar.current
+        let normalizedStart = calendar.startOfDay(for: startDate)
+        let normalizedEnd = calendar.startOfDay(for: endDate)
         return entries.filter { entry in
-            entry.date >= startDate && entry.date <= endDate
+            let entryDay = calendar.startOfDay(for: entry.date)
+            return entryDay >= normalizedStart && entryDay <= normalizedEnd
         }
     }
     
