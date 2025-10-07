@@ -266,18 +266,19 @@
 /* Onboarding Premium Features */
 "onboarding.premium.title" = "BodyLapse 광고 제거\n광고 없이 이용";
 "onboarding.premium.subtitle" = "모든 기능은 무료! 광고를 제거하려면 구독하세요";
-"onboarding.premium.metrics.title" = "측정값 추적";
-"onboarding.premium.metrics.description" = "상세한 차트로 체중과 체지방률 모니터링";
-"onboarding.premium.advanced_tracking.title" = "고급 사진 추적";
-"onboarding.premium.advanced_tracking.description" = "4개의 다른 각도에서 일일 다중 사진 촬영";
+"onboarding.premium.metrics.title" = "모두 포함";
+"onboarding.premium.metrics.description" = "추적, 카테고리, 내보내기는 이미 무료 플랜에 포함되어 있습니다";
+"onboarding.premium.advanced_tracking.title" = "항상 이용 가능";
+"onboarding.premium.advanced_tracking.description" = "고급 도구도 계속 무료로 제공됩니다";
 "onboarding.premium.nowatermark.title" = "워터마크 없는 비디오";
-"onboarding.premium.nowatermark.description" = "워터마크 없이 전문적인 타임랩스 비디오 제작";
+"onboarding.premium.nowatermark.description" = "워터마크 없는 타임랩스도 그대로 무료";
 "onboarding.premium.noads.title" = "광고 없는 경험";
-"onboarding.premium.noads.description" = "방해받지 않고 진행 상황에 집중";
+"onboarding.premium.noads.description" = "광고를 완전히 제거해 끊김 없이 집중하세요";
+"onboarding.premium.all_features_free" = "다른 모든 기능은 모든 사용자에게 무료입니다";
 "onboarding.premium.price" = "프리미엄 플랜";
-"onboarding.premium.price.detail" = "언제든지 취소 가능 • 무료 체험 제공";
+"onboarding.premium.price.detail" = "언제든지 취소 가능 • 무료 체험 없음";
 "onboarding.premium.price.fallback" = "$0.99 / 월";
-"onboarding.premium.trial" = "1개월 무료 체험";
+"onboarding.premium.trial" = "무료 체험이 제공되지 않습니다";
 "onboarding.premium.cancel_anytime" = "언제든지 취소 가능";
 
 /* Authentication */
@@ -293,13 +294,15 @@
 
 /* Premium View */
 "premium.title" = "BodyLapse 광고 제거";
-"premium.subtitle" = "더 나은 경험을 위해 광고를 제거하세요";
+"premium.subtitle" = "광고만 제거하고 다른 기능은 그대로 무료입니다";
 "premium.feature.tracking" = "모든 기능 사용 가능";
-"premium.feature.tracking_desc" = "체중 추적, 차트 등 - 모두 무료";
-"premium.feature.advanced_tracking" = "다중 카테고리";
-"premium.feature.advanced_tracking_desc" = "여러 각도 추적 - 모든 사용자 사용 가능";
+"premium.feature.tracking_desc" = "체중 추적과 차트는 이미 무료 플랜에 포함되어 있습니다";
+"premium.feature.advanced_tracking" = "항상 포함";
+"premium.feature.advanced_tracking_desc" = "다중 카테고리와 각도 추적도 모든 사용자가 무료로 이용";
 "premium.feature.no_ads" = "광고 없음";
-"premium.feature.no_ads_desc" = "광고 없는 경험을 즐기세요";
+"premium.feature.no_ads_desc" = "이 구독은 광고만 제거하며 나머지 기능은 이미 무료입니다";
+"premium.feature.support" = "BodyLapse 후원";
+"premium.feature.support_desc" = "광고 없는 경험을 즐기며 향후 개발을 지원하세요";
 "premium.feature.no_watermark" = "워터마크 없는 비디오";
 "premium.feature.no_watermark_desc" = "워터마크 없이 비디오 제작 - 모두 무료";
 "premium.feature.reminders" = "일일 알림";
@@ -313,14 +316,13 @@
 "premium.subscribe" = "지금 구독";
 "premium.price.fallback" = "$0.99";
 "premium.price.period" = "/월";
-"premium.first_month_free" = "첫 달 무료!";
-"premium.after_trial" = "무료 체험 후:";
-"premium.start_free_trial" = "무료 체험 시작";
-"premium.then_per_month" = "이후 정상 가격";
+"premium.first_month_free" = "첫 달 무료 혜택이 없습니다";
+"premium.after_trial" = "과금 안내:";
+"premium.start_free_trial" = "지금 구독하기";
+"premium.then_per_month" = "매월 청구됩니다";
 "premium.subscription_length" = "월간 구독 (자동 갱신)";
 "premium.subscription_details" = "1개월 구독 (자동 갱신)";
-"premium.includes_all_features" = "광고 없이 즈기기:";
-"premium.start_with_free_month" = "1개월 무료로 시작";
+"premium.includes_all_features" = "광고 없이 즐기기:";
 "premium.subscribe_now" = "지금 구독하기";
 
 /* Weight Input */
@@ -524,6 +526,7 @@
 /* Debug Options */
 "settings.debug.premium_mode" = "프리미엄 모드";
 "settings.debug.past_photos" = "과거 날짜 사진 허용";
+"settings.debug.launch_onboarding" = "온보딩 플로우 시작";
 
 /* Weight View */
 "weight.percentage_format" = "%.1f%%";
@@ -702,11 +705,11 @@
 "onboarding.reminder_subtitle" = "오후 9시 알림 (잊지 않도록)";
 "onboarding.privacy_lock_title" = "프라이버시 보호";
 "onboarding.privacy_lock_subtitle" = "Face ID/암호";
-"onboarding.premium_features_title" = "프리미엄 기능";
-"onboarding.premium_feature1" = "체중 및 체지방률을 차트로 기록 (HealthKit 호환)";
-"onboarding.premium_feature2" = "다중 사진 카테고리";
-"onboarding.premium_feature3" = "광고 없음";
-"onboarding.premium_feature4" = "비디오에 워터마크 없음";
+"onboarding.premium_features_title" = "광고 제거 플랜";
+"onboarding.premium_feature1" = "광고를 제거해 끊김 없는 경험";
+"onboarding.premium_feature2" = "다른 기능은 모두 무료로 제공";
+"onboarding.premium_feature3" = "지속적인 개발을 응원";
+"onboarding.premium_feature4" = "무료 체험 없이 즉시 과금";
 "onboarding.learn_more" = "자세히 보기";
 "onboarding.start_now" = "지금 시작";
 "onboarding.complete" = "완료";
@@ -717,8 +720,8 @@
 "guidance.video_generation.description" = "진행 상황 사진으로 놀라운 타임랩스 동영상을 만들어보세요. 여기를 탭하여 시간의 흐름에 따른 변화를 확인하세요!";
 "guidance.category_adding.title" = "사진 카테고리 추가";
 "guidance.category_adding.description" = "'전면', '측면', '후면'과 같은 커스텀 카테고리를 만들어 진행 상황을 다양한 각도에서 추적하세요.";
-"guidance.premium_features.title" = "프리미엄 기능";
-"guidance.premium_features.description" = "여러 카테고리, 체중 추적, 광고 없는 경험 등 고급 기능을 잠금 해제하세요.";
+"guidance.premium_features.title" = "광고 제거 플랜";
+"guidance.premium_features.description" = "광고를 없애고 싶을 때만 구독하세요. 다른 기능은 모두 무료입니다.";
 "guidance.category_management.title" = "카테고리 관리";
 "guidance.category_management.description" = "사진 카테고리를 생성, 편집 및 정리하세요. 포괄적인 추적을 위해 다양한 각도와 포즈를 설정하세요.";
 

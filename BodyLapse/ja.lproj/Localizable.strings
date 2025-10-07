@@ -264,18 +264,19 @@
 /* Onboarding Premium Features */
 "onboarding.premium.title" = "BodyLapse 広告非表示\n広告なしで利用";
 "onboarding.premium.subtitle" = "すべての機能は無料！広告を非表示にするには登録";
-"onboarding.premium.metrics.title" = "メトリクスを追跡";
-"onboarding.premium.metrics.description" = "詳細なチャートで体重と体脂肪率をモニター";
-"onboarding.premium.advanced_tracking.title" = "高度な写真追跡";
-"onboarding.premium.advanced_tracking.description" = "4つの異なるアングルで1日複数枚の写真を撮影";
+"onboarding.premium.metrics.title" = "すべて無料";
+"onboarding.premium.metrics.description" = "追跡、カテゴリ、エクスポートは無料プランのまま利用できます";
+"onboarding.premium.advanced_tracking.title" = "常に利用可能";
+"onboarding.premium.advanced_tracking.description" = "高度なツールも追加料金なしで使えます";
 "onboarding.premium.nowatermark.title" = "ウォーターマークなしの動画";
-"onboarding.premium.nowatermark.description" = "ウォーターマークなしでプロフェッショナルなタイムラプス動画を作成";
+"onboarding.premium.nowatermark.description" = "ウォーターマークなしのタイムラプス動画も引き続き無料";
 "onboarding.premium.noads.title" = "広告なしの体験";
-"onboarding.premium.noads.description" = "中断なく進捗に集中";
+"onboarding.premium.noads.description" = "広告を完全に削除して中断なく進捗に集中";
+"onboarding.premium.all_features_free" = "その他の機能はすべて無料で利用できます";
 "onboarding.premium.price" = "プレミアムプラン";
-"onboarding.premium.price.detail" = "いつでもキャンセル可能 • 無料トライアルあり";
+"onboarding.premium.price.detail" = "いつでもキャンセル可能 • 無料期間はありません";
 "onboarding.premium.price.fallback" = "¥100 / 月";
-"onboarding.premium.trial" = "1ヶ月無料トライアル";
+"onboarding.premium.trial" = "無料トライアルはありません";
 "onboarding.premium.cancel_anytime" = "いつでもキャンセル可能";
 
 /* Authentication */
@@ -291,13 +292,15 @@
 
 /* Premium View */
 "premium.title" = "BodyLapse 広告非表示";
-"premium.subtitle" = "広告を非表示にして快適に利用";
+"premium.subtitle" = "広告だけを取り除いて快適に利用できます";
 "premium.feature.tracking" = "すべての機能が利用可能";
-"premium.feature.tracking_desc" = "体重追跡、チャートなど - すべて無料";
-"premium.feature.advanced_tracking" = "複数カテゴリ";
-"premium.feature.advanced_tracking_desc" = "複数アングルの追跡 - すべてのユーザーが利用可能";
+"premium.feature.tracking_desc" = "体重追跡やチャートなどは無料プランのまま使えます";
+"premium.feature.advanced_tracking" = "常に含まれています";
+"premium.feature.advanced_tracking_desc" = "複数カテゴリや多角度撮影も全ユーザーが無料で利用可能";
 "premium.feature.no_ads" = "広告なし";
-"premium.feature.no_ads_desc" = "広告のない体験を楽しむ";
+"premium.feature.no_ads_desc" = "このサブスクリプションで広告だけが削除され、その他の機能は無料のままです";
+"premium.feature.support" = "BodyLapseを応援";
+"premium.feature.support_desc" = "広告なしで楽しみながら、今後の開発をサポートしましょう";
 "premium.feature.no_watermark" = "ウォーターマークなしの動画";
 "premium.feature.no_watermark_desc" = "ウォーターマークなしで動画作成 - すべて無料";
 "premium.feature.reminders" = "毎日のリマインダー";
@@ -311,14 +314,13 @@
 "premium.subscribe" = "今すぐ登録";
 "premium.price.fallback" = "¥100";
 "premium.price.period" = "/月";
-"premium.first_month_free" = "初月無料！";
-"premium.after_trial" = "無料期間後：";
-"premium.start_free_trial" = "無料トライアルを開始";
-"premium.then_per_month" = "その後は通常料金";
+"premium.first_month_free" = "初月無料特典はありません";
+"premium.after_trial" = "請求について：";
+"premium.start_free_trial" = "今すぐ購読";
+"premium.then_per_month" = "以降は月額で請求";
 "premium.subscription_length" = "月額サブスクリプション（自動更新）";
 "premium.subscription_details" = "1ヶ月間のサブスクリプション（自動更新）";
 "premium.includes_all_features" = "広告非表示で快適に利用：";
-"premium.start_with_free_month" = "1ヶ月無料で始める";
 "premium.subscribe_now" = "今すぐ登録";
 
 /* Weight Input */
@@ -522,6 +524,7 @@
 /* Debug Options */
 "settings.debug.premium_mode" = "プレミアムモード";
 "settings.debug.past_photos" = "過去の日付の写真を許可";
+"settings.debug.launch_onboarding" = "オンボーディングを再表示";
 
 /* Weight View */
 "weight.percentage_format" = "%.1f%%";
@@ -710,11 +713,11 @@
 "onboarding.reminder_subtitle" = "21時に通知（撮り忘れ防止）";
 "onboarding.privacy_lock_title" = "プライバシー保護";
 "onboarding.privacy_lock_subtitle" = "Face ID/パスコード";
-"onboarding.premium_features_title" = "プレミアム機能";
-"onboarding.premium_feature1" = "体重・体脂肪率をグラフで記録（ヘルスケアと連携可能）";
-"onboarding.premium_feature2" = "複数の写真カテゴリー";
-"onboarding.premium_feature3" = "広告なし";
-"onboarding.premium_feature4" = "ウォーターマークなし";
+"onboarding.premium_features_title" = "広告非表示プラン";
+"onboarding.premium_feature1" = "広告を削除して中断のない体験";
+"onboarding.premium_feature2" = "その他の機能はすべて無料で利用可能";
+"onboarding.premium_feature3" = "開発継続をサポート";
+"onboarding.premium_feature4" = "無料トライアルはありません";
 "onboarding.learn_more" = "詳しく見る";
 "onboarding.start_now" = "今すぐ始める";
 "onboarding.complete" = "完了";
@@ -725,8 +728,8 @@
 "guidance.video_generation.description" = "毎日撮影した写真でタイムラプス動画を作成しましょう。";
 "guidance.category_adding.title" = "写真カテゴリーの追加";
 "guidance.category_adding.description" = "「正面」「側面」「背面」などのカスタムカテゴリーを作成して、様々な角度から進捗を記録できます。";
-"guidance.premium_features.title" = "プレミアム機能";
-"guidance.premium_features.description" = "複数カテゴリー、体重追跡、広告なしエクスペリエンスなどの高度な機能を解放できます。";
+"guidance.premium_features.title" = "広告非表示プラン";
+"guidance.premium_features.description" = "広告をなくしたい場合だけ購読してください。他の機能はすべて無料です。";
 "guidance.category_management.title" = "カテゴリー管理";
 "guidance.category_management.description" = "写真カテゴリーの作成、編集、整理ができます。様々な角度&ポーズを設定しましょう。";
 

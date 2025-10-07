@@ -266,18 +266,19 @@
 /* Onboarding Premium Features */
 "onboarding.premium.title" = "BodyLapse Ad-Free\nEnjoy without ads";
 "onboarding.premium.subtitle" = "All features are free! Subscribe only to remove ads";
-"onboarding.premium.metrics.title" = "Track Your Metrics";
-"onboarding.premium.metrics.description" = "Monitor weight and body fat percentage with detailed charts";
-"onboarding.premium.advanced_tracking.title" = "Advanced Photo Tracking";
-"onboarding.premium.advanced_tracking.description" = "Capture multiple photos daily across 4 different angles";
+"onboarding.premium.metrics.title" = "Everything Included";
+"onboarding.premium.metrics.description" = "Tracking, categories, and exports are already part of the free plan";
+"onboarding.premium.advanced_tracking.title" = "Always Free";
+"onboarding.premium.advanced_tracking.description" = "All advanced tools remain available at no cost";
 "onboarding.premium.nowatermark.title" = "Watermark-Free Videos";
-"onboarding.premium.nowatermark.description" = "Create professional time-lapse videos without watermarks";
+"onboarding.premium.nowatermark.description" = "Create professional time-lapse videos without watermarks—still free";
 "onboarding.premium.noads.title" = "Ad-Free Experience";
-"onboarding.premium.noads.description" = "Focus on your progress without interruptions";
+"onboarding.premium.noads.description" = "Premium removes every ad so you can focus without interruptions";
+"onboarding.premium.all_features_free" = "All other BodyLapse features stay free for everyone";
 "onboarding.premium.price" = "Premium Plan";
-"onboarding.premium.price.detail" = "Cancel anytime • Free trial available";
+"onboarding.premium.price.detail" = "Cancel anytime • No free trial";
 "onboarding.premium.price.fallback" = "$0.99(USD) / month";
-"onboarding.premium.trial" = "1-month free trial";
+"onboarding.premium.trial" = "No free trial included";
 "onboarding.premium.cancel_anytime" = "Cancel anytime";
 
 /* Authentication */
@@ -293,13 +294,15 @@
 
 /* Premium View */
 "premium.title" = "BodyLapse Ad-Free";
-"premium.subtitle" = "Remove ads for a better experience";
+"premium.subtitle" = "Remove ads while every other feature stays free";
 "premium.feature.tracking" = "All Features Available";
-"premium.feature.tracking_desc" = "Weight tracking, charts, and more - all free";
-"premium.feature.advanced_tracking" = "Multiple Categories";
-"premium.feature.advanced_tracking_desc" = "Track multiple angles - available for all users";
+"premium.feature.tracking_desc" = "Weight tracking, charts, and more are already included in the free plan";
+"premium.feature.advanced_tracking" = "Always Included";
+"premium.feature.advanced_tracking_desc" = "Multiple categories and angles remain free for everyone";
 "premium.feature.no_ads" = "No Ads";
-"premium.feature.no_ads_desc" = "Enjoy an ad-free experience";
+"premium.feature.no_ads_desc" = "This subscription removes ads—everything else is already free";
+"premium.feature.support" = "Support BodyLapse";
+"premium.feature.support_desc" = "Keep development going while enjoying an ad-free experience";
 "premium.feature.no_watermark" = "Watermark-Free Videos";
 "premium.feature.no_watermark_desc" = "Create videos without watermark - free for all";
 "premium.feature.reminders" = "Daily Reminders";
@@ -313,14 +316,13 @@
 "premium.subscribe" = "Subscribe Now";
 "premium.price.fallback" = "$0.99(USD)";
 "premium.price.period" = "per month";
-"premium.first_month_free" = "First Month FREE!";
-"premium.after_trial" = "After trial:";
-"premium.start_free_trial" = "Start Free Trial";
-"premium.then_per_month" = "then regular price";
+"premium.first_month_free" = "No introductory free month";
+"premium.after_trial" = "Billing:";
+"premium.start_free_trial" = "Subscribe Now";
+"premium.then_per_month" = "Billed monthly";
 "premium.subscription_length" = "Monthly Subscription (Auto-renewing)";
 "premium.subscription_details" = "1 month subscription with automatic renewal";
-"premium.includes_all_features" = "Includes all premium features for 1 month:";
-"premium.start_with_free_month" = "Start with 1 month free";
+"premium.includes_all_features" = "Enjoy BodyLapse without ads:";
 "premium.subscribe_now" = "Subscribe Now";
 
 /* Weight Input */
@@ -539,11 +541,11 @@
 "onboarding.reminder_subtitle" = "Notification at 9 PM (prevent forgetting)";
 "onboarding.privacy_lock_title" = "Privacy Protection";
 "onboarding.privacy_lock_subtitle" = "Face ID/Passcode";
-"onboarding.premium_features_title" = "Premium Features";
-"onboarding.premium_feature1" = "Record weight & body fat with charts (HealthKit compatible)";
-"onboarding.premium_feature2" = "Multiple photo categories";
-"onboarding.premium_feature3" = "No ads";
-"onboarding.premium_feature4" = "No watermark on videos";
+"onboarding.premium_features_title" = "Go Ad-Free";
+"onboarding.premium_feature1" = "Remove ads for an uninterrupted experience";
+"onboarding.premium_feature2" = "All other BodyLapse features remain free";
+"onboarding.premium_feature3" = "Support continued development";
+"onboarding.premium_feature4" = "No free trial—billing starts immediately";
 "onboarding.learn_more" = "Learn More";
 "onboarding.start_now" = "Start Now";
 "onboarding.complete" = "Complete";
@@ -551,6 +553,7 @@
 /* Debug Options */
 "settings.debug.premium_mode" = "Premium Mode";
 "settings.debug.past_photos" = "Allow Past Date Photos";
+"settings.debug.launch_onboarding" = "Launch Onboarding Flow";
 
 /* Weight View */
 "weight.percentage_format" = "%.1f%%";
@@ -717,8 +720,8 @@
 "guidance.video_generation.description" = "Generate your own time-lapse videos from your progress photos. Tap here to see your transformation over time!";
 "guidance.category_adding.title" = "Add Photo Categories";
 "guidance.category_adding.description" = "Create custom categories like 'Front', 'Side', 'Back' to track different angles of your progress.";
-"guidance.premium_features.title" = "Premium Features";
-"guidance.premium_features.description" = "Unlock advanced features like multiple categories, weight tracking, and ad-free experience.";
+"guidance.premium_features.title" = "Go Ad-Free";
+"guidance.premium_features.description" = "Subscribe only if you want to remove ads—everything else is already free.";
 "guidance.category_management.title" = "Manage Categories";
 "guidance.category_management.description" = "Create, edit, and organize your photo categories. Set up different angles and poses for comprehensive tracking.";
 

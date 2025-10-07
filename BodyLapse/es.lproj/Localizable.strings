@@ -266,18 +266,19 @@
 /* Onboarding Premium Features */
 "onboarding.premium.title" = "BodyLapse Sin Anuncios\nDisfruta sin anuncios";
 "onboarding.premium.subtitle" = "¡Todas las funciones son gratis! Suscríbete solo para eliminar anuncios";
-"onboarding.premium.metrics.title" = "Rastrea Tus Métricas";
-"onboarding.premium.metrics.description" = "Monitorea peso y porcentaje de grasa corporal con gráficos detallados";
-"onboarding.premium.advanced_tracking.title" = "Seguimiento Fotográfico Avanzado";
-"onboarding.premium.advanced_tracking.description" = "Captura múltiples fotos diarias en 4 ángulos diferentes";
+"onboarding.premium.metrics.title" = "Todo Incluido";
+"onboarding.premium.metrics.description" = "Seguimiento, categorías y exportaciones ya están en el plan gratuito";
+"onboarding.premium.advanced_tracking.title" = "Siempre Disponible";
+"onboarding.premium.advanced_tracking.description" = "Las herramientas avanzadas siguen siendo gratuitas";
 "onboarding.premium.nowatermark.title" = "Videos Sin Marca de Agua";
-"onboarding.premium.nowatermark.description" = "Crea videos time-lapse profesionales sin marcas de agua";
+"onboarding.premium.nowatermark.description" = "Los videos sin marca de agua siguen siendo gratuitos";
 "onboarding.premium.noads.title" = "Experiencia Sin Anuncios";
-"onboarding.premium.noads.description" = "Concéntrate en tu progreso sin interrupciones";
+"onboarding.premium.noads.description" = "Elimina todos los anuncios para disfrutar sin interrupciones";
+"onboarding.premium.all_features_free" = "Todas las demás funciones siguen siendo gratuitas para todos";
 "onboarding.premium.price" = "Plan Premium";
-"onboarding.premium.price.detail" = "Cancela cuando quieras • Prueba gratuita disponible";
+"onboarding.premium.price.detail" = "Cancela cuando quieras • Sin prueba gratuita";
 "onboarding.premium.price.fallback" = "$0.99 / mes";
-"onboarding.premium.trial" = "Prueba gratuita de 1 mes";
+"onboarding.premium.trial" = "No incluye prueba gratuita";
 "onboarding.premium.cancel_anytime" = "Cancela cuando quieras";
 
 /* Authentication */
@@ -293,13 +294,15 @@
 
 /* Premium View */
 "premium.title" = "BodyLapse Sin Anuncios";
-"premium.subtitle" = "Elimina anuncios para una mejor experiencia";
+"premium.subtitle" = "Elimina solo los anuncios; todo lo demás sigue siendo gratis";
 "premium.feature.tracking" = "Todas las Funciones Disponibles";
-"premium.feature.tracking_desc" = "Seguimiento de peso, gráficos y más - todo gratis";
-"premium.feature.advanced_tracking" = "Múltiples Categorías";
-"premium.feature.advanced_tracking_desc" = "Rastrea múltiples ángulos - disponible para todos";
+"premium.feature.tracking_desc" = "Seguimiento de peso, gráficos y más ya están incluidos en el plan gratuito";
+"premium.feature.advanced_tracking" = "Siempre Incluidas";
+"premium.feature.advanced_tracking_desc" = "Las categorías y ángulos múltiples siguen siendo gratuitas para todos";
 "premium.feature.no_ads" = "Sin Anuncios";
-"premium.feature.no_ads_desc" = "Disfruta de una experiencia sin anuncios";
+"premium.feature.no_ads_desc" = "Esta suscripción quita los anuncios; el resto de funciones ya es gratuito";
+"premium.feature.support" = "Apoya BodyLapse";
+"premium.feature.support_desc" = "Apoya el desarrollo continuo y disfruta de la app sin anuncios";
 "premium.feature.no_watermark" = "Videos Sin Marca de Agua";
 "premium.feature.no_watermark_desc" = "Crea videos sin marca de agua - gratis para todos";
 "premium.feature.reminders" = "Recordatorios Diarios";
@@ -313,14 +316,13 @@
 "premium.subscribe" = "Suscribirse Ahora";
 "premium.price.fallback" = "$0.99";
 "premium.price.period" = "al mes";
-"premium.first_month_free" = "¡Primer Mes GRATIS!";
-"premium.after_trial" = "Después del período de prueba:";
-"premium.start_free_trial" = "Comenzar Prueba Gratuita";
-"premium.then_per_month" = "luego precio regular";
+"premium.first_month_free" = "No incluye primer mes gratis";
+"premium.after_trial" = "Facturación:";
+"premium.start_free_trial" = "Suscribirse ahora";
+"premium.then_per_month" = "Se cobra mensualmente";
 "premium.subscription_length" = "Suscripción Mensual (Renovación automática)";
 "premium.subscription_details" = "Suscripción de 1 mes con renovación automática";
 "premium.includes_all_features" = "Disfruta sin anuncios:";
-"premium.start_with_free_month" = "Comienza con 1 mes gratis";
 "premium.subscribe_now" = "Suscribirse Ahora";
 
 /* Weight Input */
@@ -524,6 +526,7 @@
 /* Debug Options */
 "settings.debug.premium_mode" = "Modo Premium";
 "settings.debug.past_photos" = "Permitir Fotos de Fechas Pasadas";
+"settings.debug.launch_onboarding" = "Iniciar flujo de onboarding";
 
 /* Weight View */
 "weight.percentage_format" = "%.1f%%";
@@ -702,11 +705,11 @@
 "onboarding.reminder_subtitle" = "Notificación a las 9 PM (evita olvidar)";
 "onboarding.privacy_lock_title" = "Protección de Privacidad";
 "onboarding.privacy_lock_subtitle" = "Face ID/Código de acceso";
-"onboarding.premium_features_title" = "Características Premium";
-"onboarding.premium_feature1" = "Registra peso y grasa corporal con gráficos (compatible con HealthKit)";
-"onboarding.premium_feature2" = "Múltiples categorías de fotos";
-"onboarding.premium_feature3" = "Sin anuncios";
-"onboarding.premium_feature4" = "Sin marca de agua en videos";
+"onboarding.premium_features_title" = "Experiencia sin anuncios";
+"onboarding.premium_feature1" = "Elimina los anuncios para una experiencia sin interrupciones";
+"onboarding.premium_feature2" = "El resto de funciones ya están incluidas gratis";
+"onboarding.premium_feature3" = "Apoya el desarrollo continuo";
+"onboarding.premium_feature4" = "Sin prueba gratuita: la facturación inicia de inmediato";
 "onboarding.learn_more" = "Más información";
 "onboarding.start_now" = "Comenzar ahora";
 "onboarding.complete" = "Completar";
@@ -717,8 +720,8 @@
 "guidance.video_generation.description" = "Genera videos time-lapse desde tus fotos de progreso. ¡Toca aquí para ver tu transformación a lo largo del tiempo!";
 "guidance.category_adding.title" = "Agregar Categorías de Fotos";
 "guidance.category_adding.description" = "Crea categorías personalizadas como 'Frontal', 'Lateral', 'Trasera' para rastrear diferentes ángulos de tu progreso.";
-"guidance.premium_features.title" = "Funciones Premium";
-"guidance.premium_features.description" = "Desbloquea funciones avanzadas como múltiples categorías, seguimiento de peso y experiencia sin anuncios.";
+"guidance.premium_features.title" = "Experiencia sin anuncios";
+"guidance.premium_features.description" = "Suscríbete solo si quieres eliminar los anuncios; todas las demás funciones ya están gratis.";
 "guidance.category_management.title" = "Gestión de Categorías";
 "guidance.category_management.description" = "Crea, edita y organiza tus categorías de fotos. Configura diferentes ángulos y poses para un seguimiento completo.";
 
