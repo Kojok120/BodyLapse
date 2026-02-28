@@ -48,6 +48,7 @@ platform :ios do
 
   private_lane :sync_code_signing_if_configured do |options|
     api_key = options[:api_key]
+    UI.user_error!("api_key is required for sync_code_signing_if_configured") if api_key.nil?
 
     if ENV["MATCH_GIT_URL"].to_s.empty?
       UI.important("MATCH_GIT_URL is not set. Skipping match; expecting signing assets on runner.")
