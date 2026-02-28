@@ -2,14 +2,14 @@ import Foundation
 import StoreKit
 import Combine
 
-/// Centralized subscription management service for production use
-/// This service handles all premium subscription state management and provides
-/// a single source of truth for premium status throughout the app
+/// 本番用の一元管理サブスクリプションサービス
+/// このサービスは全てのプレミアムサブスクリプション状態管理を処理し、
+/// アプリ全体でプレミアムステータスの単一の真実の情報源を提供
 @MainActor
 class SubscriptionManagerService: ObservableObject {
     static let shared = SubscriptionManagerService()
     
-    // MARK: - Published Properties
+    // MARK: - 公開プロパティ
     #if DEBUG
     @Published var isPremium: Bool = false
     #else
@@ -21,25 +21,25 @@ class SubscriptionManagerService: ObservableObject {
     @Published private(set) var isInTrialPeriod: Bool = false
     @Published private(set) var subscriptionError: String?
     
-    // MARK: - Private Properties
+    // MARK: - プライベートプロパティ
     private let storeManager = StoreManager.shared
     private var cancellables = Set<AnyCancellable>()
     private var statusUpdateTask: Task<Void, Never>?
     
-    // MARK: - Initialization
+    // MARK: - 初期化
     private init() {
         // Initializing SubscriptionManagerService...
         #if DEBUG
-        // In debug mode, check if premium was manually enabled
+        // デバッグモードではプレミアムが手動で有効化されたか確認
         self.isPremium = UserDefaults.standard.bool(forKey: "debug_isPremium")
         #endif
         
-        // Initial setup
+        // 初期セットアップ
         Task {
             await initializeSubscriptionStatus()
         }
         
-        // Observe StoreManager changes
+        // StoreManagerの変更を監視
         observeStoreManagerChanges()
     }
     
@@ -47,23 +47,23 @@ class SubscriptionManagerService: ObservableObject {
         statusUpdateTask?.cancel()
     }
     
-    // MARK: - Public Methods
+    // MARK: - 公開メソッド
     
-    /// Load products from App Store
+    /// App Storeから製品を読み込み
     func loadProducts() async {
         // Loading products...
         await storeManager.loadProducts()
         // Products loaded
     }
     
-    /// Purchase a subscription product
+    /// サブスクリプション製品を購入
     func purchase(_ product: Product) async throws {
         subscriptionError = nil
         do {
             try await storeManager.purchase(product)
             await updateSubscriptionStatus()
             
-            // Send notification for successful purchase
+            // 購入成功の通知を送信
             NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
         } catch {
             subscriptionError = error.localizedDescription
@@ -71,7 +71,7 @@ class SubscriptionManagerService: ObservableObject {
         }
     }
     
-    /// Restore previous purchases
+    /// 過去の購入を復元
     func restorePurchases() async throws {
         subscriptionError = nil
         await storeManager.restorePurchases()
@@ -85,48 +85,48 @@ class SubscriptionManagerService: ObservableObject {
             throw error
         }
         
-        // Send notification for restored purchases
+        // 復元された購入の通知を送信
         NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
     }
     
-    /// Refresh subscription status from App Store
+    /// App Storeからサブスクリプションステータスを更新
     func refreshSubscriptionStatus() async {
         await updateSubscriptionStatus()
     }
     
-    /// Get available subscription products
+    /// 利用可能なサブスクリプション製品を取得
     var products: [Product] {
         storeManager.products
     }
     
-    /// Check if products are being loaded
+    /// 製品が読み込み中か確認
     var isLoadingProducts: Bool {
         storeManager.isLoadingProducts
     }
     
-    // MARK: - Premium Features Check
+    // MARK: - プレミアム機能確認
     
-    /// Check if user can access weight tracking feature
+    /// ユーザーが体重記録機能にアクセスできるか確認
     func canAccessWeightTracking() -> Bool {
         return true // Now available for all users
     }
     
-    /// Check if watermark should be removed from videos
+    /// 動画からウォーターマークを削除すべきか確認
     func canRemoveWatermark() -> Bool {
         return true // No watermark for all users
     }
     
-    /// Check if ads should be shown
+    /// 広告を表示すべきか確認
     func shouldShowAds() -> Bool {
         return !isPremium // Only premium feature is ad removal
     }
     
-    /// Check if user can access advanced chart features
+    /// ユーザーが高度なチャート機能にアクセスできるか確認
     func canAccessAdvancedCharts() -> Bool {
         return true // Now available for all users
     }
     
-    // MARK: - Private Methods
+    // MARK: - プライベートメソッド
     
     private func initializeSubscriptionStatus() async {
         // Initializing subscription status...
@@ -138,7 +138,7 @@ class SubscriptionManagerService: ObservableObject {
     }
     
     private func observeStoreManagerChanges() {
-        // Observe purchasedProductIDs changes
+        // purchasedProductIDsの変更を監視
         storeManager.$purchasedProductIDs
             .sink { [weak self] _ in
                 Task {
@@ -150,7 +150,7 @@ class SubscriptionManagerService: ObservableObject {
     
     private func updateSubscriptionStatus() async {
         #if DEBUG
-        // In debug mode, check UserDefaults for manually set premium status
+        // デバッグモードでは手動設定のプレミアムステータスをUserDefaultsで確認
         let debugPremium = UserDefaults.standard.bool(forKey: "debug_isPremium")
         if debugPremium {
             await MainActor.run {
@@ -169,7 +169,7 @@ class SubscriptionManagerService: ObservableObject {
         #endif
         
         // Updating subscription status...
-        // Get current transaction status
+        // 現在のトランザクションステータスを取得
         var hasActiveSubscription = false
         var latestTransaction: Transaction?
         var subscriptionID: String?
@@ -178,39 +178,39 @@ class SubscriptionManagerService: ObservableObject {
         for await result in Transaction.currentEntitlements {
             transactionCount += 1
             guard case .verified(let transaction) = result else { 
-                // Unverified transaction found
+                // 未検証のトランザクションが見つかりました
                 continue 
             }
             
-            // Checking transaction
-            // Check if this is a subscription product
+            // トランザクションを確認
+            // サブスクリプション製品か確認
             if transaction.productID == StoreProducts.premiumMonthly {
                 // Found premium monthly subscription
                 
-                // Check if subscription is not revoked
+                // サブスクリプションが取り消されていないか確認
                 if transaction.revocationDate == nil {
                     hasActiveSubscription = true
                     subscriptionID = transaction.productID
-                    // Active subscription found
+                    // アクティブなサブスクリプションが見つかりました
                     
-                    // Keep the latest transaction
+                    // 最新のトランザクションを保持
                     if latestTransaction == nil || transaction.purchaseDate > latestTransaction!.purchaseDate {
                         latestTransaction = transaction
                     }
                 } else {
-                    // Subscription revoked
+                    // サブスクリプションが取り消された
                 }
             }
         }
         // Total transactions checked: \(transactionCount)
         
-        // Update properties on main thread
+        // メインスレッドでプロパティを更新
         await MainActor.run {
             let previousStatus = self.isPremium
             self.isPremium = hasActiveSubscription
             self.activeSubscriptionID = subscriptionID
             
-            // Update expiration date and trial status if we have a transaction
+            // トランザクションがある場合、有効期限とトライアルステータスを更新
             if let transaction = latestTransaction {
                 self.expirationDate = transaction.expirationDate
                 self.isInTrialPeriod = transaction.offerType == .introductory
@@ -219,17 +219,17 @@ class SubscriptionManagerService: ObservableObject {
                 self.isInTrialPeriod = false
             }
             
-            // Send notification if status changed
+            // ステータスが変更された場合、通知を送信
             if previousStatus != self.isPremium {
                 NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
             }
         }
     }
     
-    // MARK: - Debug Support
+    // MARK: - デバッグサポート
     
     #if DEBUG
-    /// Toggle premium status for debugging
+    /// デバッグ用にプレミアムステータスをトグル
     func toggleDebugPremium() {
         let newStatus = !isPremium
         UserDefaults.standard.set(newStatus, forKey: "debug_isPremium")
@@ -247,7 +247,7 @@ class SubscriptionManagerService: ObservableObject {
         NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
     }
     
-    /// Reset debug premium status
+    /// デバッグプレミアムステータスをリセット
     func resetDebugPremium() {
         UserDefaults.standard.removeObject(forKey: "debug_isPremium")
         UserDefaults.standard.synchronize()
@@ -259,9 +259,9 @@ class SubscriptionManagerService: ObservableObject {
     #endif
 }
 
-// MARK: - Convenience Methods
+// MARK: - コンビニエンスメソッド
 extension SubscriptionManagerService {
-    /// Get human-readable subscription status
+    /// 人間が読みやすいサブスクリプションステータスを取得
     var subscriptionStatusDescription: String {
         guard isPremium else { return "Free" }
         
@@ -276,7 +276,7 @@ extension SubscriptionManagerService {
         return "Premium"
     }
     
-    /// Check if subscription is about to expire (within 3 days)
+    /// サブスクリプションが期限切れ間近か確認（3日以内）
     var isAboutToExpire: Bool {
         guard let expirationDate = expirationDate else { return false }
         let daysUntilExpiration = Calendar.current.dateComponents([.day], 

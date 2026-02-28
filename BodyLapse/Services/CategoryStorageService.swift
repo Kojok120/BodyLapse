@@ -83,7 +83,7 @@ class CategoryStorageService {
         
         createCategoryDirectory(for: category)
         
-        // Post notification for category change
+        // カテゴリ変更の通知を送信
         NotificationCenter.default.post(name: Notification.Name("CategoriesUpdated"), object: nil)
         
         return true
@@ -105,24 +105,24 @@ class CategoryStorageService {
             categories[index].isActive = false
             saveCategories(categories)
             
-            // Delete all photos associated with this category
+            // このカテゴリに関連する全写真を削除
             deletePhotosForCategory(id: id)
             
-            // Remove guideline for this category
+            // このカテゴリのガイドラインを削除
             removeGuideline(for: id)
             
-            // Post notification for category change
+            // カテゴリ変更の通知を送信
             NotificationCenter.default.post(name: Notification.Name("CategoriesUpdated"), object: nil)
         }
     }
     
     private func deletePhotosForCategory(id: String) {
-        // Get the documents directory
+        // ドキュメントディレクトリを取得
         guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
         
         let categoryFolderPath = documentsPath.appendingPathComponent("Photos").appendingPathComponent(id)
         
-        // Remove the entire category folder if it exists
+        // カテゴリフォルダが存在する場合は削除
         if FileManager.default.fileExists(atPath: categoryFolderPath.path) {
             try? FileManager.default.removeItem(at: categoryFolderPath)
         }
@@ -145,7 +145,7 @@ class CategoryStorageService {
     func getActiveCategoriesForUser(isPremium: Bool) -> [PhotoCategory] {
         let categories = loadCategories()
         
-        // All categories are now available for all users
+        // 全ユーザーが全カテゴリを利用可能
         return categories
     }
     
@@ -164,12 +164,12 @@ class CategoryStorageService {
     func getNextUncapturedCategory(for date: Date, currentCategoryId: String, isPremium: Bool) -> PhotoCategory? {
         let availableCategories = getActiveCategoriesForUser(isPremium: isPremium)
         
-        // Find the current category's index
+        // 現在のカテゴリのインデックスを検出
         guard let currentIndex = availableCategories.firstIndex(where: { $0.id == currentCategoryId }) else {
             return nil
         }
         
-        // Check categories after the current one
+        // 現在のカテゴリ以降を確認
         for i in (currentIndex + 1)..<availableCategories.count {
             let category = availableCategories[i]
             if !PhotoStorageService.shared.hasPhotoForDate(date, categoryId: category.id) {
@@ -177,7 +177,7 @@ class CategoryStorageService {
             }
         }
         
-        // Check categories before the current one (wrap around)
+        // 現在のカテゴリ以前を確認（ラップアラウンド）
         for i in 0..<currentIndex {
             let category = availableCategories[i]
             if !PhotoStorageService.shared.hasPhotoForDate(date, categoryId: category.id) {
@@ -220,7 +220,7 @@ class CategoryStorageService {
             saveCategories(categories)
             print("CategoryStorageService: Guideline saved successfully")
             
-            // Verify it was saved
+            // 保存されたことを検証
             let verifyCategories = loadAllCategories()
             if let savedCategory = verifyCategories.first(where: { $0.id == categoryId }) {
                 print("CategoryStorageService: Verification - Category \(savedCategory.name) has guideline: \(savedCategory.guideline != nil)")

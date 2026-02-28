@@ -97,14 +97,14 @@ struct DateSliderView: View {
                             let threshold: CGFloat = 50
                             
                             if value.translation.width > threshold {
-                                // Swipe right - go to previous day
+                                // 右スワイプ - 前日へ
                                 changeToPreviousDay()
                             } else if value.translation.width < -threshold {
-                                // Swipe left - go to next day
+                                // 左スワイプ - 翌日へ
                                 changeToNextDay()
                             }
                             
-                            // Reset offset
+                            // オフセットをリセット
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                 dragOffset = 0
                             }
@@ -119,7 +119,7 @@ struct DateSliderView: View {
         
         let calendar = Calendar.current
         if let previousDay = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: currentDate)) {
-            // Check if the previous day is within the allowed range
+            // 前日が許可範囲内か確認
             if let range = dateRange, range.contains(previousDay) {
                 onDateChange(previousDay)
                 triggerHapticFeedback()
@@ -132,7 +132,7 @@ struct DateSliderView: View {
         
         let calendar = Calendar.current
         if let nextDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: currentDate)) {
-            // Check if the next day is within the allowed range and not in the future
+            // 翌日が許可範囲内で未来でないか確認
             let today = calendar.startOfDay(for: Date())
             if let range = dateRange, range.contains(nextDay) && nextDay <= today {
                 onDateChange(nextDay)
@@ -156,7 +156,7 @@ struct DateSliderView: View {
     }()
     
     private func formatDate(_ date: Date) -> String {
-        // Check current language and set appropriate format
+        // 現在の言語を確認して適切なフォーマットを設定
         let currentLanguage = LanguageManager.shared.currentLanguage
         switch currentLanguage {
         case "ja":

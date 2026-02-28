@@ -56,7 +56,7 @@ struct PhotoCategory: Codable, Identifiable, Equatable {
                lhs.isDefault == rhs.isDefault && 
                lhs.isActive == rhs.isActive &&
                lhs.createdDate == rhs.createdDate &&
-               // Compare guideline existence
+               // ガイドラインの有無を比較
                (lhs.guideline != nil) == (rhs.guideline != nil)
     }
 }

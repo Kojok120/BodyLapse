@@ -10,11 +10,11 @@ struct ContourConfirmationView: View {
     
     var body: some View {
         ZStack {
-            // Background
+            // 背景
             Color.black.edgesIgnoringSafeArea(.all)
             
             VStack {
-                // Title
+                // タイトル
                 Text(NSLocalizedString("contour.confirm_title", comment: "Confirm body outline title"))
                     .font(.title2)
                     .fontWeight(.bold)
@@ -93,14 +93,14 @@ struct ContourOverlay: View {
         // Use aspect fit logic to match camera preview
         let scaleX = viewSize.width / imageSize.width
         let scaleY = viewSize.height / imageSize.height
-        // Use the smaller scale to ensure the content fits within the view
+        // コンテンツがビュー内に収まるように小さい方のスケールを使用
         let scale = min(scaleX, scaleY)
         
-        // Calculate the size after scaling
+        // スケーリング後のサイズを計算
         let scaledWidth = imageSize.width * scale
         let scaledHeight = imageSize.height * scale
         
-        // Calculate offset to center the scaled content
+        // スケーリングされたコンテンツを中央に配置するオフセットを計算
         let offsetX = (viewSize.width - scaledWidth) / 2
         let offsetY = (viewSize.height - scaledHeight) / 2
         
@@ -126,7 +126,7 @@ struct ContourOverlay: View {
                 .fill(.ultraThinMaterial)
                 .opacity(0.6)
                 
-                // Draw the contour outline
+                // コンターアウトラインを描画
                 Path { path in
                     path.move(to: scaledContour[0])
                     for i in 1..<scaledContour.count {

@@ -1,0 +1,74 @@
+fastlane_version "2.220.0"
+
+default_platform :ios
+
+require "json"
+
+platform :ios do
+  desc "Build and submit BodyLapse to App Store with localized release notes."
+  lane :submit_from_ci do
+    release_notes = load_release_notes(ENV.fetch("RELEASE_NOTES_JSON_PATH", "fastlane/release_notes.json"))
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+      key_content: ENV.fetch("APP_STORE_CONNECT_PRIVATE_KEY"),
+      is_key_content_base64: true,
+      duration: 1200
+    )
+
+    sync_code_signing_if_configured(api_key)
+
+    build_ios_app(
+      workspace: "BodyLapse.xcworkspace",
+      scheme: "BodyLapse",
+      configuration: "Release",
+      clean: true,
+      export_method: "app-store",
+      output_directory: "build",
+      output_name: "BodyLapse.ipa",
+      include_bitcode: false,
+      include_symbols: true
+    )
+
+    upload_to_app_store(
+      api_key: api_key,
+      ipa: "build/BodyLapse.ipa",
+      release_notes: release_notes,
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: true,
+      automatic_release: false,
+      run_precheck_before_submit: false,
+      force: true,
+      submission_information: {
+        export_compliance_uses_encryption: false
+      }
+    )
+  end
+
+  private_lane :sync_code_signing_if_configured do |api_key|
+    if ENV["MATCH_GIT_URL"].to_s.empty?
+      UI.important("MATCH_GIT_URL is not set. Skipping match; expecting signing assets on runner.")
+      return
+    end
+
+    match(
+      type: "appstore",
+      readonly: true,
+      api_key: api_key,
+      app_identifier: [ENV.fetch("APP_IDENTIFIER", "com.J.BodyLapse")]
+    )
+  end
+
+  private_lane :load_release_notes do |path|
+    UI.user_error!("Release notes file not found: #{path}") unless File.exist?(path)
+
+    data = JSON.parse(File.read(path))
+    required_locales = ["ja", "en-US", "es-ES", "ko"]
+    missing = required_locales.reject { |locale| data.key?(locale) && !data[locale].to_s.strip.empty? }
+    UI.user_error!("Missing locales in release notes JSON: #{missing.join(', ')}") unless missing.empty?
+
+    data
+  end
+end

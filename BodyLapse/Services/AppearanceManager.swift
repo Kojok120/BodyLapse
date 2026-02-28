@@ -32,13 +32,13 @@ class AppearanceManager: ObservableObject {
             userInterfaceStyle = .unspecified
         }
         
-        // Apply to all windows in the scene
+        // シーン内の全ウィンドウに適用
         windowScene.windows.forEach { window in
             window.overrideUserInterfaceStyle = userInterfaceStyle
         }
     }
     
-    // Call this when settings are loaded or changed externally
+    // 設定が読み込まれたか外部から変更された場合に呼び出す
     func syncWithSettings() {
         currentAppearance = UserSettingsManager.shared.settings.appearanceMode
         applyAppearance()

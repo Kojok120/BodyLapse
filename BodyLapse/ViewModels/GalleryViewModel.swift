@@ -11,22 +11,28 @@ class GalleryViewModel: ObservableObject {
     @Published var sortOrder: SortOrder = .newest
     @Published var showingFilterOptions = false
     
-    // Selection mode properties
+    // 選択モードプロパティ
     @Published var isSelectionMode = false
     @Published var selectedPhotoIds: Set<String> = []
     @Published var selectedVideoIds: Set<String> = []
     
-    // Grid configuration
+    // グリッド設定
     @Published var gridColumns: Int = 3 {
         didSet {
-            // Save preference
+            // 設定を保存
             UserDefaults.standard.set(gridColumns, forKey: "galleryGridColumns")
         }
     }
     
-    // Date filtering
+    // 日付フィルタリング
     @Published var selectedDates: Set<Date> = []
     @Published var showingDatePicker = false
+
+    private static let monthYearFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter
+    }()
     
     enum GallerySection: String, CaseIterable {
         case videos = "Videos"
@@ -46,14 +52,14 @@ class GalleryViewModel: ObservableObject {
     }
     
     init() {
-        // Load saved grid columns preference
+        // 保存されたグリッド列数の設定を読み込み
         let savedColumns = UserDefaults.standard.integer(forKey: "galleryGridColumns")
         if savedColumns >= 2 && savedColumns <= 5 {
             gridColumns = savedColumns
         }
         loadData()
         
-        // Listen for category updates
+        // カテゴリー更新を監視
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleCategoriesUpdated),
@@ -140,12 +146,12 @@ class GalleryViewModel: ObservableObject {
     var filteredPhotos: [Photo] {
         var result = photos
         
-        // Apply category filter
+        // カテゴリーフィルターを適用
         if !selectedCategories.isEmpty {
             result = result.filter { selectedCategories.contains($0.categoryId) }
         }
         
-        // Apply date filter
+        // 日付フィルターを適用
         if !selectedDates.isEmpty {
             result = result.filter { photo in
                 let calendar = Calendar.current
@@ -155,7 +161,7 @@ class GalleryViewModel: ObservableObject {
             }
         }
         
-        // Apply sort order
+        // ソート順を適用
         switch sortOrder {
         case .newest:
             result.sort { $0.captureDate > $1.captureDate }
@@ -182,7 +188,7 @@ class GalleryViewModel: ObservableObject {
                 return false
             }
             
-            // Sort months based on the current sort order
+            // 現在のソート順に基づいて月をソート
             switch sortOrder {
             case .newest:
                 return lhsDate > rhsDate
@@ -232,18 +238,14 @@ class GalleryViewModel: ObservableObject {
     }
     
     private func formatMonthYear(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: date)
+        Self.monthYearFormatter.string(from: date)
     }
     
     private func dateFromMonthYear(_ monthYear: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter.date(from: monthYear)
+        Self.monthYearFormatter.date(from: monthYear)
     }
     
-    // MARK: - Selection Mode Methods
+    // MARK: - 選択モードメソッド
     
     func enterSelectionMode() {
         isSelectionMode = true
@@ -294,7 +296,7 @@ class GalleryViewModel: ObservableObject {
         selectedSection == .photos ? selectedPhotoIds.count : selectedVideoIds.count
     }
     
-    // MARK: - Bulk Operations
+    // MARK: - 一括操作
     
     func bulkDeletePhotos() {
         let photosToDelete = photos.filter { selectedPhotoIds.contains($0.id.uuidString) }
@@ -388,21 +390,21 @@ class GalleryViewModel: ObservableObject {
         return selectedVideos.map { $0.fileURL }
     }
     
-    // MARK: - Notification Handlers
+    // MARK: - 通知ハンドラー
     
     @objc private func handleCategoriesUpdated() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             print("GalleryViewModel: Received CategoriesUpdated notification")
             
-            // Reload photos as categories might have changed
+            // カテゴリーが変更された可能性があるため写真を再読み込み
             self.loadPhotos()
             
-            // Clear category filters if any selected categories are no longer available
+            // 選択中のカテゴリーが利用不可になった場合フィルターをクリア
             let availableIds = self.availableCategories.map { $0.id }
             self.selectedCategories = self.selectedCategories.filter { availableIds.contains($0) }
             
-            // Force UI update
+            // UIを強制更新
             self.objectWillChange.send()
         }
     }

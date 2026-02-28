@@ -24,7 +24,7 @@ struct ResetGuidelineView: View {
     
     var body: some View {
         ZStack {
-            // Black background
+            // 黒背景
             Color.black
                 .edgesIgnoringSafeArea(.all)
             
@@ -58,7 +58,7 @@ struct ResetGuidelineView: View {
             
             if shouldShowCamera && !showingContourConfirmation {
                 VStack {
-                    // X button at the top right
+                    // 右上のXボタン
                     HStack {
                         Spacer()
                         
@@ -76,9 +76,9 @@ struct ResetGuidelineView: View {
                         .padding(.top, 60)
                     }
                     
-                    // Timer and Camera switch buttons on the same horizontal level
+                    // タイマーとカメラ切り替えボタンを同じ水平ライン上に配置
                     HStack {
-                        // Timer button on the left
+                        // 左側のタイマーボタン
                         Menu {
                             Button(action: { 
                                 timerDuration = 0
@@ -124,7 +124,7 @@ struct ResetGuidelineView: View {
                         
                         Spacer()
                         
-                        // Camera switch button on the right
+                        // カメラ切り替え button on the right
                         Button(action: {
                             guard let controller = cameraController else { return }
                             controller.switchCamera()
@@ -141,7 +141,7 @@ struct ResetGuidelineView: View {
                         .padding(.trailing, 20)
                     }
                     
-                    // Countdown display
+                    // カウントダウン表示
                     if isCountingDown {
                         Text("\(countdownValue)")
                             .font(.system(size: 120, weight: .bold, design: .rounded))
@@ -223,7 +223,7 @@ struct ResetGuidelineView: View {
         }
         .onChange(of: showingSuccessAlert) { _, newValue in
             if newValue {
-                // Auto-dismiss after successful save
+                // 保存成功後に自動で閉じる
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     dismiss()
                 }
@@ -274,7 +274,7 @@ struct ResetGuidelineView: View {
         isProcessing = true
         
         DispatchQueue.global(qos: .userInitiated).async {
-            // Save guideline if contour exists
+            // コンターが存在する場合ガイドラインを保存
             if !contour.isEmpty {
                 let isFrontCamera = self.cameraController?.currentPosition == .front
                 var finalContour = contour
@@ -292,7 +292,7 @@ struct ResetGuidelineView: View {
                     GuidelineStorageService.shared.saveGuideline(guideline)
                 }
                 
-                // Notify that guideline has been updated
+                // ガイドラインが更新されたことを通知
                 DispatchQueue.main.async {
                     let userInfo: [String: Any] = ["categoryId": self.categoryId ?? PhotoCategory.defaultCategory.id]
                     NotificationCenter.default.post(name: Notification.Name("GuidelineUpdated"), object: nil, userInfo: userInfo)
@@ -300,12 +300,12 @@ struct ResetGuidelineView: View {
                 }
             }
             
-            // Save photo with force overwrite if exists for today
+            // 今日の写真が存在する場合は強制上書きで保存
             do {
                 let targetCategoryId = self.categoryId ?? PhotoCategory.defaultCategory.id
                 let today = Date()
                 
-                // Use replacePhoto to force overwrite any existing photo for today in this category
+                // このカテゴリーの今日の既存写真を強制上書きするためreplacePhotoを使用
                 let photo = try PhotoStorageService.shared.replacePhoto(
                     for: today,
                     categoryId: targetCategoryId,
@@ -316,7 +316,7 @@ struct ResetGuidelineView: View {
                 
                 print("ResetGuidelineView: Saved photo for category: \(targetCategoryId), photo ID: \(photo.id)")
                 
-                // Post notification that a photo was saved
+                // 写真が保存されたことを通知
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(
                         name: Notification.Name("PhotosUpdated"),

@@ -9,8 +9,8 @@ class GuidelineStorageService {
     
     private init() {}
     
-    // MARK: - Legacy Support (Default Category)
-    // These methods now delegate to CategoryStorageService for the default category
+    // MARK: - レガシーサポート（デフォルトカテゴリ）
+    // これらのメソッドはデフォルトカテゴリ用にCategoryStorageServiceに委譲
     
     func saveGuideline(_ guideline: BodyGuideline) {
         saveGuideline(guideline, for: PhotoCategory.defaultCategory.id)
@@ -28,7 +28,7 @@ class GuidelineStorageService {
         return hasGuideline(for: PhotoCategory.defaultCategory.id)
     }
     
-    // MARK: - Category-based Methods
+    // MARK: - カテゴリベースのメソッド
     
     func saveGuideline(_ guideline: BodyGuideline, for categoryId: String) {
         CategoryStorageService.shared.saveGuideline(for: categoryId, guideline: guideline)

@@ -145,7 +145,7 @@ struct CalendarHeaderView: View {
         )
     }
     
-    // MARK: - Helper Methods
+    // MARK: - ヘルパーメソッド
     private func handleVideoGenerationTap() {
         // Check if guidance is needed
         if tooltipManager.needsGuidance(for: .videoGeneration) && !tooltipManager.hasShownTooltip(for: .videoGeneration) {

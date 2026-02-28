@@ -8,7 +8,7 @@ class HealthKitService {
     
     private init() {}
     
-    // MARK: - Health Data Types
+    // MARK: - ヘルスデータタイプ
     
     private var bodyMassType: HKQuantityType {
         return HKQuantityType.quantityType(forIdentifier: .bodyMass)!
@@ -18,7 +18,7 @@ class HealthKitService {
         return HKQuantityType.quantityType(forIdentifier: .bodyFatPercentage)!
     }
     
-    // MARK: - Authorization
+    // MARK: - 認証
     
     func requestAuthorization(completion: @escaping (Bool, Error?) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
@@ -46,7 +46,7 @@ class HealthKitService {
         return weightStatus == .sharingAuthorized && bodyFatStatus == .sharingAuthorized
     }
     
-    // MARK: - Read Data
+    // MARK: - データ取得
     
     func fetchLatestWeight(completion: @escaping (Double?, Error?) -> Void) {
         let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
@@ -93,7 +93,7 @@ class HealthKitService {
             let percentage = bodyFat?.quantity.doubleValue(for: HKUnit.percent())
             
             DispatchQueue.main.async {
-                // Convert from decimal (0.197) to percentage (19.7)
+                // 小数（0.197）からパーセンテージ（19.7）に変換
                 completion(percentage != nil ? percentage! * 100 : nil, nil)
             }
         }
@@ -121,7 +121,7 @@ class HealthKitService {
             let weightSamples = samples as? [HKQuantitySample] ?? []
             var entries: [WeightEntry] = []
             
-            // Group samples by date and get body fat for each date
+            // サンプルを日付別にグループ化し、各日付の体脂肪率を取得
             let calendar = Calendar.current
             let groupedSamples = Dictionary(grouping: weightSamples) { sample in
                 calendar.startOfDay(for: sample.startDate)
@@ -175,7 +175,7 @@ class HealthKitService {
         healthStore.execute(query)
     }
     
-    // MARK: - Write Data
+    // MARK: - データ書き込み
     
     func saveWeight(_ weight: Double, date: Date = Date(), completion: @escaping (Bool, Error?) -> Void) {
         let weightQuantity = HKQuantity(unit: HKUnit.gramUnit(with: .kilo), doubleValue: weight)
@@ -194,7 +194,7 @@ class HealthKitService {
     }
     
     func saveBodyFatPercentage(_ percentage: Double, date: Date = Date(), completion: @escaping (Bool, Error?) -> Void) {
-        // Convert percentage (19.7) to decimal (0.197)
+        // パーセンテージ（19.7）から小数（0.197）に変換
         let bodyFatQuantity = HKQuantity(unit: HKUnit.percent(), doubleValue: percentage / 100)
         let bodyFatSample = HKQuantitySample(
             type: bodyFatPercentageType,
@@ -211,13 +211,13 @@ class HealthKitService {
     }
     
     
-    // MARK: - Sync
+    // MARK: - 同期
     
     func syncHealthDataToApp(completion: @escaping (Bool, Error?) -> Void) {
         Task { @MainActor in
-            // Health sync is now available for all users
+            // ヘルス同期は全ユーザーが利用可能
             
-            // Fetch all available data from HealthKit (start from August 1, 2024)
+            // HealthKitから全利用可能なデータを取得（2024年8月1日から）
             let startDate = Calendar.current.date(from: DateComponents(year: 2024, month: 8, day: 1))!
             
             fetchWeightData(from: startDate, to: Date()) { entries, error in
@@ -228,7 +228,7 @@ class HealthKitService {
                 
                 print("HealthKit sync: Retrieved \(entries.count) entries from all available data")
                 
-                // Save entries to WeightStorageService
+                // エントリをWeightStorageServiceに保存
                 Task {
                     for entry in entries {
                         try? await WeightStorageService.shared.saveEntry(entry)

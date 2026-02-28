@@ -49,7 +49,7 @@ struct PhotoCaptureView: View {
     private var controlPanel: some View {
         VStack(spacing: 20) {
             HStack(spacing: 40) {
-                // Guidelines toggle
+                // ガイドライントグル
                 Button(action: {
                     showGuidelines.toggle()
                 }) {
@@ -63,7 +63,7 @@ struct PhotoCaptureView: View {
                     }
                 }
                 
-                // Camera switch
+                // カメラ切り替え
                 Button(action: {
                     cameraController?.switchCamera()
                 }) {
@@ -78,7 +78,7 @@ struct PhotoCaptureView: View {
                 }
             }
             
-            // Capture button
+            // 撮影ボタン
             Button(action: {
                 cameraController?.capturePhoto()
             }) {
@@ -128,7 +128,7 @@ struct PhotoCaptureView: View {
             
             capturedPhoto = photo
             
-            // Auto-display of weight input sheet is disabled
+            // 体重入力シートの自動表示は無効
             
         } catch {
             print("Failed to save photo: \(error)")
@@ -192,7 +192,7 @@ struct PhotoWeightInputView: View {
                     Button("common.save".localized) {
                         var weightInKg: Double? = nil
                         if let weight = Double(weightText) {
-                            // Convert to kg if user is using lbs
+                            // ユーザーがlbs使用の場合kgに変換
                             weightInKg = userSettings.settings.weightUnit == .kg ? weight : weight / 2.20462
                         }
                         let bodyFat = Double(bodyFatText)
@@ -212,7 +212,7 @@ struct GuidelineOverlay: View {
     var body: some View {
         GeometryReader { geometry in
             if let guideline = guideline {
-                // Show saved body contour with aspect fit scaling to match camera preview
+                // カメラプレビューに合わせたアスペクトフィットスケーリングで保存済みボディコンターを表示
                 let scaledPoints = aspectFitScaledPoints(
                     guideline: guideline,
                     viewSize: geometry.size
@@ -230,13 +230,13 @@ struct GuidelineOverlay: View {
                 .stroke(Color.yellow.opacity(0.6), lineWidth: 2)
                 .shadow(color: .black, radius: 2)
             } else {
-                // No saved guideline, show generic body outline
+                // 保存済みガイドラインなし、汎用ボディアウトラインを表示
                 Path { path in
                     let width = geometry.size.width
                     let height = geometry.size.height
                     let centerX = width / 2
                     
-                    // Head circle
+                    // 頭部の円
                     path.addEllipse(in: CGRect(
                         x: centerX - 30,
                         y: height * 0.15 - 30,
@@ -244,7 +244,7 @@ struct GuidelineOverlay: View {
                         height: 60
                     ))
                     
-                    // Body outline
+                    // ボディアウトライン
                     path.move(to: CGPoint(x: centerX - 50, y: height * 0.25))
                     path.addLine(to: CGPoint(x: centerX - 40, y: height * 0.35))
                     path.addLine(to: CGPoint(x: centerX - 60, y: height * 0.55))
@@ -257,7 +257,7 @@ struct GuidelineOverlay: View {
                     path.addLine(to: CGPoint(x: centerX + 40, y: height * 0.75))
                     path.addLine(to: CGPoint(x: centerX + 30, y: height * 0.85))
                     
-                    // Arms
+                    // 腕
                     path.move(to: CGPoint(x: centerX - 40, y: height * 0.3))
                     path.addLine(to: CGPoint(x: centerX - 70, y: height * 0.45))
                     
@@ -269,21 +269,21 @@ struct GuidelineOverlay: View {
         }
     }
     
-    // Helper function to scale guideline points with aspect fit logic to match camera preview
+    // カメラプレビューに合わせたアスペクトフィットロジックでガイドラインポイントをスケーリングするヘルパー関数
     private func aspectFitScaledPoints(guideline: BodyGuideline, viewSize: CGSize) -> [CGPoint] {
         let originalSize = guideline.imageSize
         
-        // Calculate scale factors for aspect fit
+        // アスペクトフィットのスケール係数を計算
         let scaleX = viewSize.width / originalSize.width
         let scaleY = viewSize.height / originalSize.height
-        // Use the smaller scale to ensure the content fits within the view
+        // コンテンツがビュー内に収まるように小さい方のスケールを使用
         let scale = min(scaleX, scaleY)
         
-        // Calculate the size after scaling
+        // スケーリング後のサイズを計算
         let scaledWidth = originalSize.width * scale
         let scaledHeight = originalSize.height * scale
         
-        // Calculate offset to center the scaled content
+        // スケーリングされたコンテンツを中央に配置するオフセットを計算
         let offsetX = (viewSize.width - scaledWidth) / 2
         let offsetY = (viewSize.height - scaledHeight) / 2
         

@@ -78,7 +78,7 @@ class ImportExportViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self?.isImporting = false
                     
-                    // Clean up temporary file
+                    // 一時ファイルをクリーンアップ
                     if let url = self?.pendingImportURL {
                         try? FileManager.default.removeItem(at: url)
                     }
@@ -124,7 +124,7 @@ class ImportExportViewModel: ObservableObject {
     }
 }
 
-// Import Options Sheet
+// インポートオプションシート
 struct ImportOptionsSheet: View {
     @ObservedObject var viewModel: ImportExportViewModel
     @Environment(\.dismiss) private var dismiss

@@ -192,8 +192,12 @@ extension GalleryView {
                 } else if viewModel.filteredPhotos.isEmpty {
                     emptyStateView(message: "gallery.no_photos_matching_filter".localized, icon: "photo.on.rectangle.angled")
                 } else {
+                    let groupedPhotos = viewModel.photosGroupedByMonth()
                     LazyVStack(pinnedViews: .sectionHeaders) {
-                        ForEach(viewModel.photosGroupedByMonth(), id: \.0) { month, photos in
+                        ForEach(Array(groupedPhotos.enumerated()), id: \.offset) { group in
+                            let index = group.offset
+                            let month = group.element.0
+                            let photos = group.element.1
                             Section(header: sectionHeader(title: month)) {
                                 LazyVGrid(columns: columns, spacing: 2) {
                                     ForEach(photos) { photo in
@@ -223,7 +227,7 @@ extension GalleryView {
                                 }
                                 .padding(.horizontal, 2)
                                 
-                                if viewModel.photosGroupedByMonth().last?.0 != month {
+                                if index < groupedPhotos.count - 1 {
                                     Divider()
                                         .background(Color.bodyLapseLightGray)
                                         .padding(.vertical, 8)
@@ -250,8 +254,12 @@ extension GalleryView {
             if viewModel.videos.isEmpty {
                 emptyStateView(message: "gallery.no_videos".localized, icon: "video")
             } else {
+                let groupedVideos = viewModel.videosGroupedByMonth()
                 LazyVStack(pinnedViews: .sectionHeaders) {
-                    ForEach(viewModel.videosGroupedByMonth(), id: \.0) { month, videos in
+                    ForEach(Array(groupedVideos.enumerated()), id: \.offset) { group in
+                        let index = group.offset
+                        let month = group.element.0
+                        let videos = group.element.1
                         Section(header: sectionHeader(title: month)) {
                             LazyVGrid(columns: columns, spacing: 2) {
                                 ForEach(videos) { video in
@@ -281,7 +289,7 @@ extension GalleryView {
                             }
                             .padding(.horizontal, 2)
                             
-                            if viewModel.videosGroupedByMonth().last?.0 != month {
+                            if index < groupedVideos.count - 1 {
                                 Divider()
                                     .background(Color.bodyLapseLightGray)
                                     .padding(.vertical, 8)

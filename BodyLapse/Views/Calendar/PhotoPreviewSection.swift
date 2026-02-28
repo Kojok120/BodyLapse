@@ -140,9 +140,14 @@ struct PhotoPreviewSection: View {
             ForEach(0..<categoriesForSelectedDate.count, id: \.self) { index in
                 GeometryReader { geometry in
                     let categoryId = categoriesForSelectedDate[index].id
-                    if let photo = photosForSelectedDate.first(where: { $0.categoryId == categoryId }),
-                       let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
-                        photoImage(uiImage: uiImage, photo: photo, geometry: geometry)
+                    if let photo = photosForSelectedDate.first(where: { $0.categoryId == categoryId }) {
+                        StoredPhotoImageView(photo: photo, contentMode: .fit) {
+                            categoryPlaceholder(categoryId: categoryId, geometry: geometry)
+                        }
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .contextMenu {
+                            photoContextMenu(photo: photo)
+                        }
                             .tag(index)
                     } else {
                         categoryPlaceholder(categoryId: categoriesForSelectedDate[index].id, geometry: geometry)
@@ -169,9 +174,14 @@ struct PhotoPreviewSection: View {
     
     private var singleCategoryView: some View {
         GeometryReader { geometry in
-            if let photo = currentPhoto,
-               let uiImage = PhotoStorageService.shared.loadImage(for: photo) {
-                photoImage(uiImage: uiImage, photo: photo, geometry: geometry)
+            if let photo = currentPhoto {
+                StoredPhotoImageView(photo: photo, contentMode: .fit) {
+                    categoryPlaceholder(categoryId: viewModel.selectedCategory.id, geometry: geometry)
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .contextMenu {
+                    photoContextMenu(photo: photo)
+                }
             } else {
                 categoryPlaceholder(categoryId: viewModel.selectedCategory.id, geometry: geometry)
             }
@@ -179,17 +189,6 @@ struct PhotoPreviewSection: View {
         .frame(height: calculatePhotoHeight())
         .background(Color.black)
         .cornerRadius(12)
-    }
-    
-    @ViewBuilder
-    private func photoImage(uiImage: UIImage, photo: Photo, geometry: GeometryProxy) -> some View {
-        Image(uiImage: uiImage)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: geometry.size.width, height: geometry.size.height)
-            .contextMenu {
-                photoContextMenu(photo: photo)
-            }
     }
     
     @ViewBuilder
@@ -269,7 +268,7 @@ struct PhotoPreviewSection: View {
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         
-        // Check current language and set appropriate format
+        // 現在の言語を確認して適切なフォーマットを設定
         let currentLanguage = LanguageManager.shared.currentLanguage
         switch currentLanguage {
         case "ja":

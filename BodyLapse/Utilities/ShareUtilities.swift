@@ -1,7 +1,7 @@
 import UIKit
 import SwiftUI
 
-// MARK: - Share Configuration
+// MARK: - 共有設定
 
 struct ShareConfiguration {
     var excludeProblematicExtensions: Bool = false
@@ -10,14 +10,14 @@ struct ShareConfiguration {
     
     static let `default` = ShareConfiguration()
     
-    // Known problematic activity types that may cause "Connection to plugin invalidated" errors
+    // "Connection to plugin invalidated"エラーを引き起こす可能性のある既知の問題のあるアクティビティタイプ
     static let problematicActivityTypes: [UIActivity.ActivityType] = [
-        // Add specific activity types here if needed
-        // UIActivity.ActivityType("jp.naver.line.Share") // This doesn't work as it's not a public constant
+        // 必要に応じて特定のアクティビティタイプをここに追加
+        // UIActivity.ActivityType("jp.naver.line.Share") // これはパブリック定数ではないため動作しません
     ]
 }
 
-// MARK: - Share Manager
+// MARK: - 共有マネージャー
 
 class ShareManager {
     static let shared = ShareManager()
@@ -54,7 +54,7 @@ class ShareManager {
         let errorMessage = "ShareSheet Error \(context): \(error.localizedDescription)"
         print("🚨 \(errorMessage)")
         
-        // Check if it's the specific LINE plugin error
+        // 特定のLINEプラグインエラーか確認
         if error.localizedDescription.contains("plugin invalidated") ||
            error.localizedDescription.contains("Connection to plugin") {
             print("📱 This appears to be a known iOS share extension issue. The sharing may still work despite this error.")
@@ -62,7 +62,7 @@ class ShareManager {
     }
 }
 
-// MARK: - Share Error Types
+// MARK: - 共有エラータイプ
 
 enum ShareError: LocalizedError {
     case pluginConnectionInvalidated
@@ -81,7 +81,7 @@ enum ShareError: LocalizedError {
     }
 }
 
-// MARK: - Share Debug Helper
+// MARK: - 共有デバッグヘルパー
 
 struct ShareDebugHelper {
     static func logShareAttempt(activityItems: [Any]) {
@@ -95,7 +95,7 @@ struct ShareDebugHelper {
         if let activityType = activityType {
             print("📤 ShareSheet: Selected activity type: \(activityType.rawValue)")
             
-            // Check if it's a potentially problematic extension
+            // 問題のある拡張機能か確認
             if activityType.rawValue.contains("line") ||
                activityType.rawValue.contains("LINE") {
                 print("⚠️ ShareSheet: LINE sharing detected - monitoring for plugin connection issues")
@@ -104,7 +104,7 @@ struct ShareDebugHelper {
     }
 }
 
-// MARK: - SwiftUI Helper Extensions
+// MARK: - SwiftUIヘルパー拡張
 
 extension View {
     func shareSheet(

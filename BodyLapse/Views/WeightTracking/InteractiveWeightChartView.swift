@@ -18,17 +18,17 @@ struct InteractiveWeightChartView: View {
         sortedEntries.filter { $0.bodyFatPercentage != nil }
     }
     
-    // Constrained date range - never go beyond today
+    // 制約付き日付範囲 - 今日を超えない
     private var constrainedDateRange: ClosedRange<Date> {
         let today = Date()
         
         if let fullRange = fullDateRange {
-            // Use fullDateRange but cap at today
+            // fullDateRangeを使用するが今日が上限
             let upperBound = min(fullRange.upperBound, today)
             return fullRange.lowerBound...upperBound
         }
         
-        // Fall back to entries-based range
+        // エントリーベースの範囲にフォールバック
         guard let first = sortedEntries.first?.date,
               let last = sortedEntries.last?.date else {
             return today...today
@@ -38,21 +38,21 @@ struct InteractiveWeightChartView: View {
         return first...upperBound
     }
     
-    // Calculate Y-axis ranges with proper normalization
+    // 適切な正規化でY軸範囲を計算
     private var weightRange: ClosedRange<Double> {
         let weights = sortedEntries.map { convertedWeight($0.weight) }
         guard let min = weights.min(), let max = weights.max() else {
             return 70...80 // Default range
         }
         
-        // Ensure minimum range for single data point
+        // 単一データポイントの最小範囲を確保
         let range = max - min
         if range < 5 {
             let center = (min + max) / 2
             return (center - 5)...(center + 5)
         }
         
-        // Add 10% padding
+        // 10%のパディングを追加
         let padding = range * 0.1
         return (min - padding)...(max + padding)
     }
@@ -63,19 +63,19 @@ struct InteractiveWeightChartView: View {
             return 15...25 // Default range
         }
         
-        // Ensure minimum range for single data point
+        // 単一データポイントの最小範囲を確保
         let range = max - min
         if range < 5 {
             let center = (min + max) / 2
             return (center - 5)...(center + 5)
         }
         
-        // Add 10% padding
+        // 10%のパディングを追加
         let padding = range * 0.1
         return (min - padding)...(max + padding)
     }
     
-    // Normalize value to 0-1 range for accurate positioning
+    // 正確な位置決めのため値を0-1範囲に正規化
     private func normalizeWeight(_ weight: Double) -> Double {
         let range = weightRange.upperBound - weightRange.lowerBound
         return (weight - weightRange.lowerBound) / range
@@ -88,11 +88,11 @@ struct InteractiveWeightChartView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Chart with normalized Y-axes
+            // 正規化Y軸付きチャート
             HStack(spacing: 0) {
-                // Left Y-axis labels for weight
+                // 体重用の左Y軸ラベル
                 VStack(alignment: .trailing, spacing: 0) {
-                    // Create 4 evenly spaced labels
+                    // 4つの等間隔ラベルを作成
                     ForEach(0..<4) { index in
                         let fraction = Double(3 - index) / 3.0
                         let value = weightRange.lowerBound + (weightRange.upperBound - weightRange.lowerBound) * fraction
@@ -106,13 +106,13 @@ struct InteractiveWeightChartView: View {
                 .frame(width: 40, height: 160)
                 .padding(.trailing, 4)
                 
-                // Main chart area
+                // メインチャートエリア
                 ZStack {
-                    // Background
+                    // 背景
                     RoundedRectangle(cornerRadius: 15)
                         .fill(Color(UIColor.secondarySystemGroupedBackground))
                     
-                    // Chart content
+                    // チャートコンテンツ
                     GeometryReader { geometry in
                         let chartWidth = geometry.size.width
                         let chartHeight = geometry.size.height
@@ -251,7 +251,7 @@ struct InteractiveWeightChartView: View {
                 // Right Y-axis labels for body fat
                 if !bodyFatEntries.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
-                        // Create 4 evenly spaced labels
+                        // 4つの等間隔ラベルを作成
                         ForEach(0..<4) { index in
                             let fraction = Double(3 - index) / 3.0
                             let value = bodyFatRange.lowerBound + (bodyFatRange.upperBound - bodyFatRange.lowerBound) * fraction

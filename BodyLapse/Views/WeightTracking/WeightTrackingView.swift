@@ -9,7 +9,7 @@ struct WeightTrackingView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Time range picker
+            // 時間範囲ピッカー
             Picker("Time Range", selection: $selectedTimeRange) {
                 ForEach(WeightTimeRange.allCases, id: \.self) { range in
                     Text(range.rawValue).tag(range)
@@ -19,7 +19,7 @@ struct WeightTrackingView: View {
             .padding()
             
             if viewModel.weightEntries.isEmpty {
-                // Empty state
+                // 空の状態
                 VStack(spacing: 20) {
                     Spacer()
                     
@@ -52,7 +52,7 @@ struct WeightTrackingView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 20) {
-                        // Interactive combined chart
+                        // インタラクティブ複合チャート
                         if !viewModel.weightEntries.isEmpty {
                             if #available(iOS 16.0, *) {
                                 InteractiveWeightChartView(
@@ -62,7 +62,7 @@ struct WeightTrackingView: View {
                                 )
                                 .padding(.horizontal)
                             } else {
-                                // Fallback for iOS < 16
+                                // iOS 16未満のフォールバック
                                 VStack(spacing: 20) {
                                     WeightChartView(
                                         entries: viewModel.filteredEntries(for: selectedTimeRange),
@@ -82,7 +82,7 @@ struct WeightTrackingView: View {
                             }
                         }
                         
-                        // Recent entries
+                        // 最近のエントリー
                         RecentEntriesView(viewModel: viewModel)
                             .padding(.horizontal)
                     }
@@ -110,7 +110,7 @@ struct WeightTrackingView: View {
     }
 }
 
-// MARK: - Current Stats View
+// MARK: - 現在の統計ビュー
 struct CurrentStatsView: View {
     @ObservedObject var viewModel: WeightTrackingViewModel
     
@@ -134,7 +134,7 @@ struct CurrentStatsView: View {
     }
 }
 
-// MARK: - Stat Card
+// MARK: - 統計カード
 struct StatCard: View {
     let title: String
     let value: String
@@ -165,7 +165,7 @@ struct StatCard: View {
 }
 
 
-// MARK: - Weight Chart View
+// MARK: - 体重チャートビュー
 struct WeightChartView: View {
     let entries: [WeightEntry]
     let title: String
@@ -214,7 +214,7 @@ struct WeightChartView: View {
     }
 }
 
-// MARK: - Body Fat Chart View
+// MARK: - 体脂肪率チャートビュー
 struct BodyFatChartView: View {
     let entries: [WeightEntry]
     let title: String
@@ -264,7 +264,7 @@ struct BodyFatChartView: View {
     }
 }
 
-// MARK: - Recent Entries View
+// MARK: - 最近のエントリービュー
 struct RecentEntriesView: View {
     @ObservedObject var viewModel: WeightTrackingViewModel
     
@@ -280,7 +280,7 @@ struct RecentEntriesView: View {
     }
 }
 
-// MARK: - Weight Entry Row
+// MARK: - 体重エントリー行
 struct WeightEntryRow: View {
     let entry: WeightEntry
     let weightUnit: UserSettings.WeightUnit
@@ -324,7 +324,7 @@ struct WeightEntryRow: View {
     }
 }
 
-// MARK: - Add Weight Entry View
+// MARK: - 体重エントリー追加ビュー
 struct AddWeightEntryView: View {
     @ObservedObject var viewModel: WeightTrackingViewModel
     let onDismiss: () -> Void

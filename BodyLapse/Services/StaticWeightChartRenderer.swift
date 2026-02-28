@@ -33,35 +33,35 @@ class StaticWeightChartRenderer {
         )
     }
     
-    // Helper to convert weight based on unit preference
+    // 単位設定に基づいて体重を変換するヘルパー
     private func convertedWeight(_ weight: Double, isLbs: Bool) -> Double {
         return isLbs ? weight * 2.20462 : weight
     }
     
-    // Helper to normalize values to 0-1 range (matching InteractiveWeightChartView)
+    // 値を0-1範囲に正規化するヘルパー（InteractiveWeightChartViewと一致）
     private func normalizeValue(_ value: Double, in range: ClosedRange<Double>) -> Double {
         let rangeSize = range.upperBound - range.lowerBound
         guard rangeSize > 0 else { return 0.5 }
         return (value - range.lowerBound) / rangeSize
     }
     
-    // Calculate X position based on date (matching InteractiveWeightChartView logic)
+    // 日付に基づいてX位置を計算（InteractiveWeightChartViewのロジックと一致）
     private func xPosition(for date: Date, in width: CGFloat, dateRange: ClosedRange<Date>) -> CGFloat {
         let calendar = Calendar.current
         let startDate = calendar.startOfDay(for: dateRange.lowerBound)
         let targetDate = calendar.startOfDay(for: date)
         let endDate = calendar.startOfDay(for: dateRange.upperBound)
         
-        // Calculate total days in range
+        // 範囲内の総日数を計算
         let totalDays = calendar.dateComponents([.day], from: startDate, to: endDate).day ?? 0
         
-        // Calculate index of target date
+        // 対象日付のインデックスを計算
         let dayIndex = calendar.dateComponents([.day], from: startDate, to: targetDate).day ?? 0
         
-        // Ensure we have at least 1 day range
+        // 少なくとも1日の範囲を確保
         let safeTotalDays = max(1, totalDays)
         
-        // Calculate position with even spacing
+        // 均等な間隔で位置を計算
         let fraction = CGFloat(dayIndex) / CGFloat(safeTotalDays)
         
         return width * fraction
@@ -80,11 +80,11 @@ class StaticWeightChartRenderer {
         
         guard let context = UIGraphicsGetCurrentContext() else { return nil }
         
-        // Draw background
+        // 背景を描画
         context.setFillColor(options.backgroundColor.cgColor)
         context.fill(CGRect(origin: .zero, size: options.size))
         
-        // Calculate chart area (with padding)
+        // チャートエリアを計算（パディング付き）
         let padding: CGFloat = 20
         let leftPadding = padding * 3  // Space for weight labels
         let rightPadding = padding * 3  // Increased space for body fat percentage labels
@@ -95,7 +95,7 @@ class StaticWeightChartRenderer {
             height: options.size.height - padding * 3
         )
         
-        // Filter entries within date range
+        // 日付範囲内のエントリをフィルター
         let calendar = Calendar.current
         let filteredEntries = entries.filter { entry in
             let entryDate = calendar.startOfDay(for: entry.date)
@@ -106,28 +106,28 @@ class StaticWeightChartRenderer {
         
         guard !filteredEntries.isEmpty else { return nil }
         
-        // Draw grid
+        // グリッドを描画
         drawGrid(in: context, rect: chartRect, options: options)
         
-        // Calculate Y-axis ranges with proper normalization (matching InteractiveWeightChartView)
+        // 適切な正規化でY軸範囲を計算（InteractiveWeightChartViewと一致）
         let weights = filteredEntries.map { convertedWeight($0.weight, isLbs: options.isWeightInLbs) }
         guard let minWeight = weights.min(), let maxWeight = weights.max() else {
             return nil
         }
         
-        // Calculate weight range with padding
+        // パディング付きで体重範囲を計算
         let weightRange: ClosedRange<Double>
         let range = maxWeight - minWeight
         if range < 5 {
             let center = (minWeight + maxWeight) / 2
             weightRange = (center - 5)...(center + 5)
         } else {
-            // Add 10% padding
+            // 10%のパディングを追加
             let padding = range * 0.1
             weightRange = (minWeight - padding)...(maxWeight + padding)
         }
         
-        // Calculate body fat range
+        // 体脂肪範囲を計算
         let bodyFatRange: ClosedRange<Double>
         if options.showBodyFat {
             let bodyFats = filteredEntries.compactMap { $0.bodyFatPercentage }
@@ -137,7 +137,7 @@ class StaticWeightChartRenderer {
                     let center = (minBodyFat + maxBodyFat) / 2
                     bodyFatRange = (center - 5)...(center + 5)
                 } else {
-                    // Add 10% padding
+                    // 10%のパディングを追加
                     let padding = bfRange * 0.1
                     bodyFatRange = (minBodyFat - padding)...(maxBodyFat + padding)
                 }
@@ -148,7 +148,7 @@ class StaticWeightChartRenderer {
             bodyFatRange = 15...25 // Default range
         }
         
-        // Draw axes labels
+        // 軸ラベルを描画
         drawAxesLabels(
             in: context,
             rect: chartRect,
@@ -158,7 +158,7 @@ class StaticWeightChartRenderer {
             options: options
         )
         
-        // Draw data lines
+        // データ線を描画
         drawWeightLine(
             entries: filteredEntries,
             in: context,
@@ -179,7 +179,7 @@ class StaticWeightChartRenderer {
             )
         }
         
-        // Draw progress bar
+        // プログレスバーを描画
         drawProgressBar(
             in: context,
             rect: chartRect,
@@ -197,14 +197,14 @@ class StaticWeightChartRenderer {
         context.setStrokeColor(options.gridColor.cgColor)
         context.setLineWidth(1)
         
-        // Horizontal lines - 4 lines like InteractiveWeightChartView
+        // 水平線 - InteractiveWeightChartViewと同様に4本
         for i in 0...3 {
             let y = rect.minY + (rect.height / 3.0) * CGFloat(i)
             context.move(to: CGPoint(x: rect.minX, y: y))
             context.addLine(to: CGPoint(x: rect.maxX, y: y))
         }
         
-        // Vertical lines
+        // 垂直線
         let verticalLines = 6
         for i in 0...verticalLines {
             let x = rect.minX + (rect.width / CGFloat(verticalLines)) * CGFloat(i)
@@ -233,7 +233,7 @@ class StaticWeightChartRenderer {
             .paragraphStyle: paragraphStyle
         ]
         
-        // Weight labels (left axis) - 4 labels like InteractiveWeightChartView
+        // 体重ラベル（左軸）- InteractiveWeightChartViewと同様に4つ
         let weightUnit = options.isWeightInLbs ? "lbs" : "kg"
         for i in 0..<4 {
             let fraction = Double(3 - i) / 3.0
@@ -245,7 +245,7 @@ class StaticWeightChartRenderer {
             text.draw(in: textRect, withAttributes: attributes)
         }
         
-        // Body fat labels (right axis)
+        // 体脂肪ラベル（右軸）
         if showBodyFat {
             let rightAttributes: [NSAttributedString.Key: Any] = [
                 .font: options.font,
@@ -298,7 +298,7 @@ class StaticWeightChartRenderer {
         context.addPath(path.cgPath)
         context.strokePath()
         
-        // Draw points
+        // ポイントを描画
         context.setFillColor(options.weightLineColor.cgColor)
         for entry in entries {
             let x = rect.minX + xPosition(for: entry.date, in: rect.width, dateRange: dateRange)
@@ -348,7 +348,7 @@ class StaticWeightChartRenderer {
         context.addPath(path.cgPath)
         context.strokePath()
         
-        // Draw points
+        // ポイントを描画
         context.setFillColor(options.bodyFatLineColor.cgColor)
         for entry in bodyFatEntries {
             guard let bodyFat = entry.bodyFatPercentage else { continue }
@@ -372,17 +372,17 @@ class StaticWeightChartRenderer {
     ) {
         context.saveGState()
         
-        // Calculate progress position using the same logic as data points
+        // データポイントと同じロジックでプログレス位置を計算
         let x = rect.minX + xPosition(for: currentDate, in: rect.width, dateRange: dateRange)
         
-        // Draw vertical line
+        // 垂直線を描画
         context.setStrokeColor(options.progressBarColor.cgColor)
         context.setLineWidth(3)
         context.move(to: CGPoint(x: x, y: rect.minY))
         context.addLine(to: CGPoint(x: x, y: rect.maxY))
         context.strokePath()
         
-        // Draw circle at top
+        // 上部に円を描画
         context.setFillColor(options.progressBarColor.cgColor)
         context.fillEllipse(in: CGRect(x: x - 6, y: rect.minY - 6, width: 12, height: 12))
         

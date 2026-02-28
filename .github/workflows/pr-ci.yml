@@ -1,0 +1,49 @@
+name: PR CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    if: ${{ github.event.pull_request.draft == false }}
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+
+      - name: Install CocoaPods dependencies
+        run: pod install
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -workspace BodyLapse.xcworkspace \
+            -scheme BodyLapse \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            build
+
+      - name: Test
+        run: |
+          xcodebuild \
+            -workspace BodyLapse.xcworkspace \
+            -scheme BodyLapse \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -only-testing:BodyLapseTests \
+            test

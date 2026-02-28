@@ -255,7 +255,7 @@ class SimpleCameraViewController: UIViewController {
         captureSession.commitConfiguration()
     }
     
-    // MARK: - Zoom Support
+    // MARK: - ズームサポート
     
     private func setupZoomFactors(for device: AVCaptureDevice) {
         minZoomFactor = device.minAvailableVideoZoomFactor

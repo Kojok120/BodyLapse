@@ -67,7 +67,7 @@ struct CategoryGuidelineSetupView: View {
                 .foregroundColor(.secondary)
         })
         .fullScreenCover(isPresented: $showingCamera, onDismiss: {
-            // Auto-dismiss this view when ResetGuidelineView is closed
+            // ResetGuidelineViewが閉じられた時にこのビューを自動で閉じる
             dismiss()
         }) {
             ResetGuidelineView(categoryId: category.id, categoryName: category.name)

@@ -6,15 +6,15 @@ class NotificationService: NSObject {
     static let shared = NotificationService()
     
     private let notificationCenter = UNUserNotificationCenter.current()
-    private let reminderIdentifier = "daily-photo-reminder"  // User-configured daily reminder
-    private let missedPhotoIdentifier = "missed-photo-reminder"  // 21:00 automatic check
+    private let reminderIdentifier = "daily-photo-reminder"  // ユーザー設定の毎日リマインダー
+    private let missedPhotoIdentifier = "missed-photo-reminder"  // 21:00の自動チェック
     
     private override init() {
         super.init()
         notificationCenter.delegate = self
     }
     
-    // MARK: - Permission Management
+    // MARK: - 権限管理
     
     func requestNotificationPermission(completion: @escaping (Bool) -> Void) {
         notificationCenter.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
@@ -37,10 +37,10 @@ class NotificationService: NSObject {
         }
     }
     
-    // MARK: - Reminder Scheduling
+    // MARK: - リマインダーのスケジューリング
     
     func setupDailyPhotoCheck() {
-        // Cancel any existing reminders
+        // 既存のリマインダーをキャンセル
         cancelDailyReminder()
         
         // Check permission status first
@@ -52,12 +52,12 @@ class NotificationService: NSObject {
         }
     }
     
-    // Cancel today's 21:00 notification if photo was taken
+    // 写真が撮影された場合、今日の21:00通知をキャンセル
     func cancelTodaysMissedPhotoNotification() {
         let calendar = Calendar.current
         let today = Date()
         
-        // Find and cancel today's notification
+        // 今日の通知を検索してキャンセル
         for dayOffset in 0..<7 {
             let identifier = "missed-photo-day-\(dayOffset)"
             
@@ -75,33 +75,33 @@ class NotificationService: NSObject {
         }
     }
     
-    // Schedule user-configured daily reminder
+    // ユーザー設定の毎日リマインダーをスケジュール
     func scheduleDailyReminder() {
-        // Cancel existing user reminder
+        // 既存のユーザーリマインダーをキャンセル
         notificationCenter.removePendingNotificationRequests(withIdentifiers: [reminderIdentifier])
         
-        // Check permission status first
+        // 権限ステータスをまず確認
         checkNotificationPermission { [weak self] authorized in
             guard authorized else { return }
             
             Task { @MainActor in
-                // Get user settings
+                // ユーザー設定を取得
                 let settings = UserSettingsManager.shared.settings
                 
-                // Only schedule if the reminder is enabled
+                // リマインダーが有効な場合のみスケジュール
                 guard settings.isReminderEnabled else {
                     print("Daily reminder is disabled. Skipping scheduling.")
                     return
                 }
                 
-                // Schedule daily reminder at user-configured time
+                // ユーザー設定の時刻に毎日リマインダーをスケジュール
                 var dateComponents = DateComponents()
                 dateComponents.hour = settings.reminderHour
                 dateComponents.minute = settings.reminderMinute
                 
                 let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
                 
-                // Create reminder content
+                // リマインダーコンテンツを作成
                 let content = UNMutableNotificationContent()
                 content.title = "notification.daily_reminder_title".localized
                 content.body = "notification.daily_reminder_body".localized
@@ -127,18 +127,18 @@ class NotificationService: NSObject {
     }
     
     private func scheduleDailyCheck() {
-        // Schedule notifications for the next 7 days at 21:00
+        // 次の7日間の21:00に通知をスケジュール
         let calendar = Calendar.current
         let now = Date()
         
-        // Cancel all existing missed photo notifications
+        // 既存の未撮影通知を全てキャンセル
         var identifiersToRemove = [String]()
         for day in 0..<7 {
             identifiersToRemove.append("missed-photo-day-\(day)")
         }
         notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiersToRemove)
         
-        // Schedule notifications for the next 7 days
+        // 次の7日間の通知をスケジュール
         for dayOffset in 0..<7 {
             guard let targetDate = calendar.date(byAdding: .day, value: dayOffset, to: now) else { continue }
             
@@ -146,7 +146,7 @@ class NotificationService: NSObject {
             dateComponents.hour = 21
             dateComponents.minute = 0
             
-            // Skip if the time has already passed today
+            // 今日既に時刻が過ぎている場合はスキップ
             if let notificationDate = calendar.date(from: dateComponents), notificationDate <= now {
                 continue
             }
@@ -178,23 +178,23 @@ class NotificationService: NSObject {
         print("Daily photo check notifications scheduled for the next 7 days")
     }
     
-    // Reschedule notifications when app becomes active
+    // アプリがアクティブになったときに通知を再スケジュール
     func rescheduleNotificationsIfNeeded() {
-        // Check if any photo was taken today
+        // 今日写真が撮影されたか確認
         let hasPhotoToday = PhotoStorageService.shared.hasAnyPhotoForToday()
         
         if hasPhotoToday {
-            // Cancel today's notification if photo was taken
+            // 写真が撮影された場合、今日の通知をキャンセル
             cancelTodaysMissedPhotoNotification()
         }
         
-        // Reschedule notifications for next 7 days
+        // 次の7日間の通知を再スケジュール
         scheduleDailyCheck()
     }
     
     func cancelDailyReminder() {
         var identifiersToRemove = [reminderIdentifier, missedPhotoIdentifier]
-        // Add all missed photo day identifiers
+        // 全ての未撮影日識別子を追加
         for day in 0..<7 {
             identifiersToRemove.append("missed-photo-day-\(day)")
         }
@@ -202,7 +202,7 @@ class NotificationService: NSObject {
         notificationCenter.removeDeliveredNotifications(withIdentifiers: [reminderIdentifier, missedPhotoIdentifier])
     }
     
-    // MARK: - Badge Management
+    // MARK: - バッジ管理
     
     func clearBadge() {
         Task {
@@ -214,41 +214,41 @@ class NotificationService: NSObject {
         }
     }
     
-    // MARK: - Delivered Notifications
+    // MARK: - 配信済み通知
     
     func clearDeliveredNotifications() {
         notificationCenter.removeAllDeliveredNotifications()
     }
 }
 
-// MARK: - UNUserNotificationCenterDelegate
+// MARK: - UNUserNotificationCenterデリゲート
 
 extension NotificationService: UNUserNotificationCenterDelegate {
     
-    // Handle notification when app is in foreground
+    // アプリがフォアグラウンドのときの通知処理
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        // Show all notifications normally
+        // 全ての通知を通常通り表示
         completionHandler([.banner, .list, .sound, .badge])
     }
     
-    // Handle notification tap
+    // 通知タップ時の処理
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        // Clear badge when notification is tapped
+        // 通知タップ時にバッジをクリア
         clearBadge()
         
-        // Check if this is any type of photo reminder or has openCamera flag
+        // 写真リマインダーまたはopenCameraフラグがあるか確認
         if response.notification.request.identifier == reminderIdentifier ||
            response.notification.request.identifier == missedPhotoIdentifier ||
            (response.notification.request.content.userInfo["openCamera"] as? Bool == true) {
-            // Post notification to navigate to camera tab with camera launch
+            // カメラタブにナビゲートしてカメラを起動する通知を送信
             NotificationCenter.default.post(
                 name: Notification.Name("NavigateToCameraAndLaunch"),
                 object: nil

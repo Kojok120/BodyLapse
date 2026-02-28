@@ -5,12 +5,12 @@ import Photos
 
 extension UIImage {
     func fixedOrientation() -> UIImage {
-        // No-op if the orientation is already correct
+        // 方向が既に正しい場合は何もしない
         if imageOrientation == .up {
             return self
         }
         
-        // We need to calculate the proper transformation to make the image upright.
+        // 画像を正位にするための適切な変換を計算する必要がある
         var transform = CGAffineTransform.identity
         
         switch imageOrientation {
@@ -42,7 +42,7 @@ extension UIImage {
             break
         }
         
-        // Now we draw the underlying CGImage into a new context, applying the transform
+        // 基礎となるCGImageを新しいコンテキストに描画し、変換を適用
         guard let cgImage = cgImage,
               let colorSpace = cgImage.colorSpace,
               let context = CGContext(data: nil,
@@ -64,7 +64,7 @@ extension UIImage {
             context.draw(cgImage, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
         }
         
-        // And now we just create a new UIImage from the drawing context
+        // 描画コンテキストから新しいUIImageを作成
         guard let newCGImage = context.makeImage() else {
             return self
         }
@@ -145,11 +145,11 @@ class VideoGenerationService {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             
-            // Filter photos within date range
+            // 日付範囲内の写真をフィルター
             let filteredPhotos: [Photo]
             
             if options.layout == .single || options.selectedCategories.isEmpty {
-                // Single category video - filter by first selected category or all photos
+                // 単一カテゴリー動画 - 最初の選択カテゴリーまたは全写真でフィルター
                 let categoryId = options.selectedCategories.first
                 let calendar = Calendar.current
                 filteredPhotos = photos.filter { photo in
@@ -160,7 +160,7 @@ class VideoGenerationService {
                     (categoryId == nil || photo.categoryId == categoryId)
                 }.sorted { $0.captureDate < $1.captureDate }
             } else {
-                // Side-by-side video - filter by selected categories only
+                // サイドバイサイド動画 - 選択カテゴリーのみでフィルター
                 let calendar = Calendar.current
                 filteredPhotos = photos.filter { photo in
                     let photoDate = calendar.startOfDay(for: photo.captureDate)
@@ -189,7 +189,7 @@ class VideoGenerationService {
                         progress: progress
                     )
                     
-                    // Save video to storage
+                    // 動画をストレージに保存
                     let video = try await VideoStorageService.shared.saveVideo(
                         videoURL,
                         startDate: dateRange.lowerBound,
@@ -197,7 +197,7 @@ class VideoGenerationService {
                         frameCount: filteredPhotos.count
                     )
                     
-                    // Clean up temporary file
+                    // 一時ファイルをクリーンアップ
                     try? FileManager.default.removeItem(at: videoURL)
                     
                     await MainActor.run {
@@ -221,36 +221,36 @@ class VideoGenerationService {
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("mp4")
         
-        // Remove any existing file
+        // 既存のファイルを削除
         try? FileManager.default.removeItem(at: outputURL)
         
-        // Load weight entries if graph is enabled
+        // グラフが有効な場合、体重エントリを読み込み
         var weightEntries: [WeightEntry] = []
         var dateRange: ClosedRange<Date>? = nil
         
         if options.showGraph && !photos.isEmpty {
-            // Calculate date range from photos
+            // 写真から日付範囲を計算
             let sortedDates = photos.map { $0.captureDate }.sorted()
             if let startDate = sortedDates.first, let endDate = sortedDates.last {
                 dateRange = startDate...endDate
                 
-                // Load weight entries for the date range
+                // 日付範囲の体重エントリを読み込み
                 do {
                     weightEntries = try await WeightStorageService.shared.getEntries(
                         from: startDate,
                         to: endDate
                     )
                 } catch {
-                    // Continue without weight data if loading fails
+                    // 読み込みに失敗しても体重データなしで続行
                     print("Failed to load weight entries: \(error)")
                 }
             }
         }
         
-        // Create video writer
+        // ビデオライターを作成
         let videoWriter = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
         
-        // Configure video settings
+        // ビデオ設定を構成
         let videoSettings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: options.videoSize.width,
@@ -274,21 +274,21 @@ class VideoGenerationService {
         
         videoWriter.add(videoWriterInput)
         
-        // Start writing
+        // 書き込みを開始
         videoWriter.startWriting()
         videoWriter.startSession(atSourceTime: .zero)
         
-        // Process photos
+        // 写真を処理
         var currentTime = CMTime.zero
         
         if options.layout == .single || options.selectedCategories.count <= 1 {
-            // Single category video processing
+            // 単一カテゴリー動画の処理
             let totalPhotos = photos.count
             
             for (index, photo) in photos.enumerated() {
                 guard let image = PhotoStorageService.shared.loadImage(for: photo) else { continue }
                 
-                // Apply face blur if enabled
+                // 有効な場合、顔のぼかしを適用
                 let imageToProcess: UIImage
                 if options.blurFaces {
                     let userSettings = await UserSettingsManager.shared
@@ -298,7 +298,7 @@ class VideoGenerationService {
                     imageToProcess = image
                 }
                 
-                // Convert to pixel buffer
+                // ピクセルバッファに変換
                 if let pixelBuffer = autoreleasepool(invoking: { () -> CVPixelBuffer? in
                     createPixelBuffer(
                         from: imageToProcess,
@@ -312,25 +312,25 @@ class VideoGenerationService {
                         isWeightInLbs: options.isWeightInLbs
                     )
                 }) {
-                    // Wait for input to be ready using async
+                    // 非同期で入力の準備ができるまで待機
                     while !videoWriterInput.isReadyForMoreMediaData {
                         try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                     }
                     
-                    // Append pixel buffer
+                    // ピクセルバッファを追加
                     pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: currentTime)
                     currentTime = CMTimeAdd(currentTime, options.frameDuration)
                 }
                 
-                // Update progress
+                // 進捗を更新
                 let progressValue = Float(index + 1) / Float(totalPhotos)
                 await MainActor.run {
                     progress(progressValue)
                 }
             }
         } else {
-            // Side-by-side video processing
-            // Photos are already filtered by selected categories
+            // サイドバイサイド動画の処理
+            // 写真は既に選択カテゴリーでフィルター済み
             let photosByDate = Dictionary(grouping: photos) { photo in
                 Calendar.current.startOfDay(for: photo.captureDate)
             }
@@ -341,12 +341,12 @@ class VideoGenerationService {
             for (index, date) in sortedDates.enumerated() {
                 let photosForDate = photosByDate[date] ?? []
                 
-                // Get photos for each selected category
+                // 各選択カテゴリーの写真を取得
                 var categoryPhotos: [String: UIImage] = [:]
                 for categoryId in options.selectedCategories {
                     if let photo = photosForDate.first(where: { $0.categoryId == categoryId }),
                        let image = PhotoStorageService.shared.loadImage(for: photo) {
-                        // Apply face blur if enabled
+                        // 有効な場合、顔のぼかしを適用
                         if options.blurFaces {
                             let userSettings = await UserSettingsManager.shared
                             let blurMethod = await userSettings.settings.faceBlurMethod.toServiceMethod
@@ -357,9 +357,9 @@ class VideoGenerationService {
                     }
                 }
                 
-                // Only create frame if we have at least one photo
+                // 少なくとも1枚の写真がある場合のみフレームを作成
                 if !categoryPhotos.isEmpty {
-                    // Convert to pixel buffer
+                    // ピクセルバッファに変換
                     if let pixelBuffer = autoreleasepool(invoking: { () -> CVPixelBuffer? in
                         createSideBySidePixelBuffer(
                             from: categoryPhotos,
@@ -374,18 +374,18 @@ class VideoGenerationService {
                             isWeightInLbs: options.isWeightInLbs
                         )
                     }) {
-                        // Wait for input to be ready using async
+                        // 非同期で入力の準備ができるまで待機
                         while !videoWriterInput.isReadyForMoreMediaData {
                             try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                         }
                         
-                        // Append pixel buffer
+                        // ピクセルバッファを追加
                         pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: currentTime)
                         currentTime = CMTimeAdd(currentTime, options.frameDuration)
                     }
                 }
                 
-                // Update progress
+                // 進捗を更新
                 let progressValue = Float(index + 1) / Float(totalFrames)
                 await MainActor.run {
                     progress(progressValue)
@@ -393,7 +393,7 @@ class VideoGenerationService {
             }
         }
         
-        // Finish writing
+        // 書き込みを完了
         videoWriterInput.markAsFinished()
         
         await withCheckedContinuation { continuation in
@@ -412,7 +412,7 @@ class VideoGenerationService {
     
     
     private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, weightEntries: [WeightEntry]? = nil, dateRange: ClosedRange<Date>? = nil, isWeightInLbs: Bool = false) -> CVPixelBuffer? {
-        // Fix orientation if needed
+        // 必要に応じて方向を修正
         let orientedImage = image.fixedOrientation()
         
         let options: [String: Any] = [
@@ -452,14 +452,14 @@ class VideoGenerationService {
             return nil
         }
         
-        // Fill background with black
+        // 背景を黒で塗りつぶす
         context.setFillColor(UIColor.black.cgColor)
         context.fill(CGRect(origin: .zero, size: size))
         
-        // Calculate aspect fit rect
+        // アスペクトフィットの矩形を計算
         let imageSize = orientedImage.size
         
-        // Reserve space for graph if needed
+        // グラフが必要な場合、スペースを予約
         let availableHeight = showGraph ? size.height * 0.75 : size.height // Reserve 25% for graph
         let availableSize = CGSize(width: size.width, height: availableHeight)
         
@@ -472,7 +472,7 @@ class VideoGenerationService {
             height: imageSize.height * scale
         )
         
-        // Position image in the lower portion if graph is shown
+        // グラフ表示時は画像を下部に配置
         let yOffset = showGraph ? size.height * 0.20 : (size.height - scaledSize.height) / 2
         let drawRect = CGRect(
             x: (size.width - scaledSize.width) / 2,
@@ -481,7 +481,7 @@ class VideoGenerationService {
             height: scaledSize.height
         )
         
-        // Draw the image
+        // 画像を描画
         if let cgImage = orientedImage.cgImage {
             context.draw(cgImage, in: drawRect)
         }
@@ -773,21 +773,21 @@ class VideoGenerationService {
         context.setFillColor(UIColor.black.cgColor)
         context.fill(CGRect(origin: .zero, size: size))
         
-        // Calculate layout based on total selected categories (not just categories with photos)
+        // 全選択カテゴリー数に基づいてレイアウトを計算（写真があるカテゴリーだけでなく）
         let totalCategories = categories.count
         
-        // Calculate grid layout (max 2x2)
+        // グリッドレイアウトを計算（最大2x2）
         let columns = min(totalCategories, 2)
         let rows = (totalCategories + 1) / 2
         
-        // Reserve space for graph if needed
+        // グラフが必要な場合、スペースを予約
         let availableHeight = showGraph ? size.height * 0.75 : size.height
         let yOffset: CGFloat = showGraph ? size.height * 0.20 : 0
         
         let cellWidth = size.width / CGFloat(columns)
         let cellHeight = availableHeight / CGFloat(rows)
         
-        // Draw each category slot (with or without photo)
+        // 各カテゴリースロットを描画（写真の有無に関わらず）
         for (index, categoryId) in categories.enumerated() {
             let col = index % columns
             let row = index / columns
@@ -800,10 +800,10 @@ class VideoGenerationService {
             )
             
             if let image = categoryPhotos[categoryId] {
-                // Fix orientation
+                // 方向を修正
                 let orientedImage = image.fixedOrientation()
                 
-                // Calculate aspect fit rect within cell
+                // セル内のアスペクトフィット矩形を計算
                 let imageSize = orientedImage.size
                 let widthRatio = (cellWidth - 4) / imageSize.width  // 4pt padding
                 let heightRatio = (cellHeight - 4) / imageSize.height
@@ -821,32 +821,32 @@ class VideoGenerationService {
                     height: scaledSize.height
                 )
                 
-                // Draw the image
+                // 画像を描画
                 if let cgImage = orientedImage.cgImage {
                     context.draw(cgImage, in: drawRect)
                 }
             } else {
-                // Draw placeholder for missing photo
+                // 写真がない場合のプレースホルダーを描画
                 drawNoPhotoPlaceholder(in: cellRect, context: context)
             }
             
-            // Draw category label
+            // カテゴリーラベルを描画
             drawCategoryLabel(categoryId: categoryId, in: cellRect, context: context)
         }
         
-        // Add divider lines
+        // 分割線を追加
         context.setStrokeColor(UIColor.white.withAlphaComponent(0.3).cgColor)
         context.setLineWidth(2)
         
         if columns > 1 {
-            // Vertical divider
+            // 垂直分割線
             context.move(to: CGPoint(x: cellWidth, y: yOffset))
             context.addLine(to: CGPoint(x: cellWidth, y: yOffset + availableHeight))
             context.strokePath()
         }
         
         if rows > 1 {
-            // Horizontal divider
+            // 水平分割線
             context.move(to: CGPoint(x: 0, y: yOffset + cellHeight))
             context.addLine(to: CGPoint(x: size.width, y: yOffset + cellHeight))
             context.strokePath()
@@ -871,7 +871,7 @@ class VideoGenerationService {
     }
     
     private func drawCategoryLabel(categoryId: String, in rect: CGRect, context: CGContext) {
-        // Get category name
+        // カテゴリー名を取得
         let categoryName = CategoryStorageService.shared.getCategoryById(categoryId)?.name ?? "Unknown"
         
         let fontSize: CGFloat = min(rect.width, rect.height) * 0.06

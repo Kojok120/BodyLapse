@@ -8,7 +8,7 @@ struct ImportExportHelpView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Overview
+                    // 概要
                     VStack(alignment: .leading, spacing: 12) {
                         Text("import_export.help_overview_title".localized)
                             .font(.headline)
@@ -19,7 +19,7 @@ struct ImportExportHelpView: View {
                     }
                     .padding(.horizontal)
                     
-                    // Export Section
+                    // エクスポートセクション
                     VStack(alignment: .leading, spacing: 0) {
                         Button(action: {
                             withAnimation {
@@ -47,7 +47,7 @@ struct ImportExportHelpView: View {
                         
                         if expandedSection == "export" {
                             VStack(alignment: .leading, spacing: 16) {
-                                // What gets exported
+                                // エクスポートされる内容
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("import_export.help_export_what".localized)
                                         .font(.subheadline)
@@ -60,7 +60,7 @@ struct ImportExportHelpView: View {
                                     }
                                 }
                                 
-                                // Export options
+                                // エクスポートオプション
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("import_export.help_export_options".localized)
                                         .font(.subheadline)
@@ -71,7 +71,7 @@ struct ImportExportHelpView: View {
                                         .foregroundColor(.secondary)
                                 }
                                 
-                                // File format
+                                // ファイル形式
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("import_export.help_export_format".localized)
                                         .font(.subheadline)
@@ -88,7 +88,7 @@ struct ImportExportHelpView: View {
                     }
                     .padding(.horizontal)
                     
-                    // Import Section
+                    // インポートセクション
                     VStack(alignment: .leading, spacing: 0) {
                         Button(action: {
                             withAnimation {
@@ -116,7 +116,7 @@ struct ImportExportHelpView: View {
                         
                         if expandedSection == "import" {
                             VStack(alignment: .leading, spacing: 16) {
-                                // Import types
+                                // インポートタイプ
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("import_export.help_import_types".localized)
                                         .font(.subheadline)
@@ -145,7 +145,7 @@ struct ImportExportHelpView: View {
                                     }
                                 }
                                 
-                                // Merge strategies
+                                // マージ戦略
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("import_export.help_merge_strategies".localized)
                                         .font(.subheadline)
@@ -170,7 +170,7 @@ struct ImportExportHelpView: View {
                     }
                     .padding(.horizontal)
                     
-                    // FAQ Section
+                    // FAQセクション
                     VStack(alignment: .leading, spacing: 0) {
                         Button(action: {
                             withAnimation {
@@ -215,7 +215,7 @@ struct ImportExportHelpView: View {
                     }
                     .padding(.horizontal)
                     
-                    // Tips
+                    // ヒント
                     VStack(alignment: .leading, spacing: 12) {
                         Text("import_export.help_tips_title".localized)
                             .font(.headline)

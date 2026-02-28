@@ -33,23 +33,23 @@ class DataMigrationService {
     private func performMigrationToVersion1() {
         print("Performing migration to version 1: Multiple categories support")
         
-        // 1. Ensure default category exists
+        // 1. デフォルトカテゴリが存在することを確認
         let categories = CategoryStorageService.shared.loadCategories()
         if categories.isEmpty {
             _ = CategoryStorageService.shared.addCategory(PhotoCategory.defaultCategory)
         }
         
-        // 2. Migrate existing guideline to default category
+        // 2. 既存のガイドラインをデフォルトカテゴリに移行
         migrateExistingGuideline()
         
-        // 3. Photo file migration is handled by PhotoStorageService.migratePhotosToCategory()
-        // which is called during initialization
+        // 3. 写真ファイルの移行はPhotoStorageService.migratePhotosToCategory()が処理
+        // 初期化時に呼び出される
         
         print("Migration to version 1 completed")
     }
     
     private func migrateExistingGuideline() {
-        // Check if there's an existing guideline in old format
+        // 旧フォーマットの既存ガイドラインがあるか確認
         let oldGuidelineKey = "BodyLapseGuideline"
         
         if let guidelineData = UserDefaults.standard.data(forKey: oldGuidelineKey),
@@ -57,13 +57,13 @@ class DataMigrationService {
             
             print("Found existing guideline, migrating to default category")
             
-            // Save guideline to default category
+            // ガイドラインをデフォルトカテゴリに保存
             CategoryStorageService.shared.saveGuideline(
                 for: PhotoCategory.defaultCategory.id,
                 guideline: guideline
             )
             
-            // Remove old guideline key
+            // 旧ガイドラインキーを削除
             UserDefaults.standard.removeObject(forKey: oldGuidelineKey)
             
             print("Guideline migration completed")
@@ -71,7 +71,7 @@ class DataMigrationService {
     }
     
     func resetMigrationStatus() {
-        // For debugging purposes
+        // デバッグ目的
         UserDefaults.standard.removeObject(forKey: migrationVersionKey)
         print("Migration status reset")
     }

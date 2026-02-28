@@ -10,10 +10,10 @@ class LanguageManager: ObservableObject {
             UserDefaults.standard.set([currentLanguage], forKey: "AppleLanguages")
             UserDefaults.standard.synchronize()
             
-            // Force update bundle
+            // バンドルを強制更新
             Bundle.setLanguage(currentLanguage)
             
-            // Notify app to refresh
+            // アプリに更新を通知
             NotificationCenter.default.post(name: .languageChanged, object: nil)
         }
     }
@@ -33,21 +33,21 @@ class LanguageManager: ObservableObject {
     ]
     
     private init() {
-        // Check if user has set a language preference
+        // ユーザーが言語設定を行ったか確認
         if let savedLanguage = UserDefaults.standard.string(forKey: "AppLanguage"),
            supportedLanguages.contains(savedLanguage) {
             self.currentLanguage = savedLanguage
         } else {
-            // Use system language if supported, otherwise default to English
+            // サポートされている場合はシステム言語を使用、それ以外は英語をデフォルトに使用
             let preferredLanguage = Locale.preferredLanguages.first?.components(separatedBy: "-").first ?? "en"
             self.currentLanguage = supportedLanguages.contains(preferredLanguage) ? preferredLanguage : "en"
             
-            // Save the initial language
+            // 初期言語を保存
             UserDefaults.standard.set(currentLanguage, forKey: "AppLanguage")
             UserDefaults.standard.set([currentLanguage], forKey: "AppleLanguages")
         }
         
-        // Apply the language
+        // 言語を適用
         Bundle.setLanguage(currentLanguage)
     }
     
@@ -61,7 +61,7 @@ class LanguageManager: ObservableObject {
     }
 }
 
-// Extension to support dynamic language switching
+// 動的言語切り替えをサポートする拡張
 extension Bundle {
     static var languageBundle: Bundle!
     
@@ -81,7 +81,7 @@ extension Bundle {
     }
 }
 
-// Custom Bundle class to override localization
+// ローカライゼーションをオーバーライドするカスタムBundleクラス
 private class AnyLanguageBundle: Bundle {
     override func localizedString(forKey key: String, value: String?, table tableName: String?) -> String {
         if let bundle = Bundle.languageBundle {
@@ -91,12 +91,12 @@ private class AnyLanguageBundle: Bundle {
     }
 }
 
-// Notification for language change
+// 言語変更の通知
 extension Notification.Name {
     static let languageChanged = Notification.Name("languageChanged")
 }
 
-// Helper for localized strings
+// ローカライズ文字列のヘルパー
 extension String {
     var localized: String {
         if let bundle = Bundle.languageBundle {

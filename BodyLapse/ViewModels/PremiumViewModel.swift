@@ -34,9 +34,9 @@ class PremiumViewModel: ObservableObject {
     }
     
     func loadProducts() async {
-        // Loading products...
+        // プロダクトを読み込み中...
         await subscriptionManager.loadProducts()
-        // Products loaded
+        // プロダクト読み込み完了
     }
     
     func purchase(_ product: Product) async {
@@ -67,7 +67,7 @@ class PremiumViewModel: ObservableObject {
         isPurchasing = false
     }
     
-    // MARK: - Premium Features Check
+    // MARK: - プレミアム機能チェック
     func canAccessWeightTracking() -> Bool {
         return subscriptionManager.canAccessWeightTracking()
     }
