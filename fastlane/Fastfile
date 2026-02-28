@@ -9,6 +9,7 @@ require "uri"
 platform :ios do
   desc "Build and submit BodyLapse to App Store with localized release notes."
   lane :submit_from_ci do
+    ENV["BODYLAPSE_SIGNING_MODE"] = ""
     release_notes = load_release_notes(path: ENV.fetch("RELEASE_NOTES_JSON_PATH", "fastlane/release_notes.json"))
 
     api_key = app_store_connect_api_key(
@@ -21,7 +22,7 @@ platform :ios do
 
     sync_code_signing_if_configured(api_key: api_key)
 
-    build_ios_app(
+    build_options = {
       project: "BodyLapse.xcodeproj",
       scheme: "BodyLapse",
       configuration: "Release",
@@ -31,7 +32,23 @@ platform :ios do
       output_name: "BodyLapse.ipa",
       include_bitcode: false,
       include_symbols: true
-    )
+    }
+
+    if ENV["BODYLAPSE_SIGNING_MODE"] == "asc_fallback"
+      profile_name = ENV["SIGH_NAME"].to_s.strip
+      team_id = ENV.fetch("APP_STORE_CONNECT_TEAM_ID", "PG5P26J3W2")
+      app_identifier = ENV.fetch("APP_IDENTIFIER", "com.J.BodyLapse")
+      unless profile_name.empty?
+        build_options[:xcargs] = "CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER='#{profile_name}' DEVELOPMENT_TEAM='#{team_id}' CODE_SIGN_IDENTITY='Apple Distribution'"
+        build_options[:export_options] = {
+          provisioningProfiles: {
+            app_identifier => profile_name
+          }
+        }
+      end
+    end
+
+    build_ios_app(**build_options)
 
     upload_to_app_store(
       api_key: api_key,
@@ -142,7 +159,8 @@ platform :ios do
       api_key: api_key,
       development: false,
       generate_apple_certs: true,
-      team_id: team_id
+      team_id: team_id,
+      skip_set_partition_list: true
     )
 
     sigh(
@@ -151,6 +169,8 @@ platform :ios do
       team_id: team_id,
       skip_install: false
     )
+
+    ENV["BODYLAPSE_SIGNING_MODE"] = "asc_fallback"
   end
 
   private_lane :load_release_notes do |options|
