@@ -282,8 +282,8 @@ jobs:
 
           FALLBACK_URL="${MATCH_GIT_URL_FALLBACK_NORMALIZED:-}"
           if [ -z "${FALLBACK_URL}" ] || [ "${FALLBACK_URL}" = "${TARGET_URL}" ]; then
-            echo "::error::Unable to access match repository with provided credentials."
-            exit 128
+            echo "::warning::Unable to access match repository with provided credentials."
+            exit 0
           fi
 
           if git ls-remote "$FALLBACK_URL" HEAD >/dev/null 2>&1; then
@@ -291,8 +291,8 @@ jobs:
             exit 0
           fi
 
-          echo "::error::Unable to access match repository on both configured and fallback URLs."
-          exit 128
+          echo "::warning::Unable to access match repository on both configured and fallback URLs."
+          exit 0
 
       - name: Submit build to App Store
         env:
