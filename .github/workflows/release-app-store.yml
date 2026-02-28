@@ -158,6 +158,7 @@ jobs:
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_URL_FALLBACK: https://github.com/Kojok120/bodylapse-signing.git
         run: |
           set -euo pipefail
 
@@ -213,14 +214,22 @@ jobs:
             username, token = "x-access-token", raw
 
           normalized = base64.b64encode(f"{username}:{token}".encode("utf-8")).decode("utf-8")
-          match_git_url = (os.environ.get("MATCH_GIT_URL", "") or "").strip()
-          normalized_url = ""
-          if match_git_url:
-            parsed = urlsplit(match_git_url)
+          user_escaped = quote(username, safe="")
+          token_escaped = quote(token, safe="")
+
+          def build_authenticated_url(base_url: str):
+            if not base_url:
+              return ""
+            parsed = urlsplit(base_url)
             netloc = parsed.netloc.split("@", 1)[-1]
-            user_escaped = quote(username, safe="")
-            token_escaped = quote(token, safe="")
-            normalized_url = urlunsplit((parsed.scheme, f"{user_escaped}:{token_escaped}@{netloc}", parsed.path, parsed.query, parsed.fragment))
+            if not parsed.scheme or not netloc:
+              return ""
+            return urlunsplit((parsed.scheme, f"{user_escaped}:{token_escaped}@{netloc}", parsed.path, parsed.query, parsed.fragment))
+
+          match_git_url = (os.environ.get("MATCH_GIT_URL", "") or "").strip()
+          fallback_git_url = (os.environ.get("MATCH_GIT_URL_FALLBACK", "") or "").strip()
+          normalized_url = build_authenticated_url(match_git_url)
+          normalized_fallback_url = build_authenticated_url(fallback_git_url)
 
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
             env_file.write(f"MATCH_GIT_AUTH_USERNAME={username}\n")
@@ -228,11 +237,15 @@ jobs:
             env_file.write(f"MATCH_GIT_BASIC_AUTHORIZATION_NORMALIZED={normalized}\n")
             if normalized_url:
               env_file.write(f"MATCH_GIT_URL_NORMALIZED={normalized_url}\n")
+            if normalized_fallback_url:
+              env_file.write(f"MATCH_GIT_URL_FALLBACK_NORMALIZED={normalized_fallback_url}\n")
 
           print(f"::add-mask::{token}")
           print(f"::add-mask::{normalized}")
           if normalized_url:
             print(f"::add-mask::{normalized_url}")
+          if normalized_fallback_url:
+            print(f"::add-mask::{normalized_fallback_url}")
           PY
 
       - name: Configure git credentials for match clone (optional)
@@ -263,7 +276,23 @@ jobs:
             exit 0
           fi
 
-          git ls-remote "$TARGET_URL" HEAD >/dev/null
+          if git ls-remote "$TARGET_URL" HEAD >/dev/null 2>&1; then
+            exit 0
+          fi
+
+          FALLBACK_URL="${MATCH_GIT_URL_FALLBACK_NORMALIZED:-}"
+          if [ -z "${FALLBACK_URL}" ] || [ "${FALLBACK_URL}" = "${TARGET_URL}" ]; then
+            echo "::error::Unable to access match repository with provided credentials."
+            exit 128
+          fi
+
+          if git ls-remote "$FALLBACK_URL" HEAD >/dev/null 2>&1; then
+            echo "MATCH_GIT_URL_NORMALIZED=${FALLBACK_URL}" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          echo "::error::Unable to access match repository on both configured and fallback URLs."
+          exit 128
 
       - name: Submit build to App Store
         env:
