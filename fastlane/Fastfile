@@ -67,25 +67,37 @@ platform :ios do
 
     match_git_auth = ENV["MATCH_GIT_BASIC_AUTHORIZATION"].to_s.strip
     unless match_git_auth.empty?
+      token_prefixes = ["ghp_", "gho_", "ghu_", "ghs_", "github_pat_"]
       encode_basic = lambda { |credential| Base64.strict_encode64(credential) }
+      classify_token = lambda do |value|
+        token_prefixes.any? { |prefix| value.start_with?(prefix) }
+      end
 
       # 互換対応:
       # - Base64済みの "username:token" 文字列
       # - 生の "username:token" 文字列
       # - 生のGitHub PAT
-      if match_git_auth.start_with?("ghp_", "gho_", "ghu_", "ghs_", "github_pat_")
+      # - PATのみをBase64化してしまった値
+      if classify_token.call(match_git_auth)
+        UI.important("MATCH_GIT_BASIC_AUTHORIZATION detected as raw GitHub token.")
         match_options[:git_basic_authorization] = encode_basic.call("x-access-token:#{match_git_auth}")
       elsif match_git_auth.include?(":")
+        UI.important("MATCH_GIT_BASIC_AUTHORIZATION detected as plain username:token.")
         match_options[:git_basic_authorization] = encode_basic.call(match_git_auth)
       else
         begin
           decoded = Base64.strict_decode64(match_git_auth)
           user, token = decoded.split(":", 2)
-          if user.to_s.empty? || token.to_s.empty?
-            UI.important("MATCH_GIT_BASIC_AUTHORIZATION decoded but not in 'username:token' format. Treating as raw token.")
-            match_options[:git_basic_authorization] = encode_basic.call("x-access-token:#{match_git_auth}")
-          else
+
+          if !user.to_s.empty? && !token.to_s.empty?
+            UI.important("MATCH_GIT_BASIC_AUTHORIZATION detected as Base64 username:token.")
             match_options[:git_basic_authorization] = match_git_auth
+          elsif classify_token.call(decoded)
+            UI.important("MATCH_GIT_BASIC_AUTHORIZATION detected as Base64 raw token.")
+            match_options[:git_basic_authorization] = encode_basic.call("x-access-token:#{decoded}")
+          else
+            UI.important("MATCH_GIT_BASIC_AUTHORIZATION decoded but format is unknown. Treating as raw token.")
+            match_options[:git_basic_authorization] = encode_basic.call("x-access-token:#{match_git_auth}")
           end
         rescue ArgumentError
           UI.important("MATCH_GIT_BASIC_AUTHORIZATION is not valid Base64. Treating as raw token.")
