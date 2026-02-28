@@ -3,6 +3,7 @@ fastlane_version "2.220.0"
 default_platform :ios
 
 require "json"
+require "base64"
 
 platform :ios do
   desc "Build and submit BodyLapse to App Store with localized release notes."
@@ -50,17 +51,33 @@ platform :ios do
     api_key = options[:api_key]
     UI.user_error!("api_key is required for sync_code_signing_if_configured") if api_key.nil?
 
-    if ENV["MATCH_GIT_URL"].to_s.empty?
+    match_git_url = ENV["MATCH_GIT_URL"].to_s.strip
+    if match_git_url.empty?
       UI.important("MATCH_GIT_URL is not set. Skipping match; expecting signing assets on runner.")
       return
     end
 
-    match(
+    match_options = {
       type: "appstore",
       readonly: true,
       api_key: api_key,
+      git_url: match_git_url,
       app_identifier: [ENV.fetch("APP_IDENTIFIER", "com.J.BodyLapse")]
-    )
+    }
+
+    match_git_auth = ENV["MATCH_GIT_BASIC_AUTHORIZATION"].to_s.strip
+    unless match_git_auth.empty?
+      # 互換対応:
+      # - Base64済みの "username:token" 文字列
+      # - 生のGitHub PAT
+      if match_git_auth.start_with?("ghp_", "gho_", "ghu_", "ghs_", "github_pat_")
+        match_options[:git_basic_authorization] = Base64.strict_encode64("x-access-token:#{match_git_auth}")
+      else
+        match_options[:git_basic_authorization] = match_git_auth
+      end
+    end
+
+    match(**match_options)
   end
 
   private_lane :load_release_notes do |options|
