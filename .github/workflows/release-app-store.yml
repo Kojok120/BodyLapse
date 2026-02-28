@@ -154,6 +154,89 @@ jobs:
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles"
 
+      - name: Normalize match git credentials (optional)
+        env:
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
+            echo "MATCH_GIT_BASIC_AUTHORIZATION is not set. Skipping normalization."
+            exit 0
+          fi
+
+          python3 - <<'PY'
+          import base64
+          import os
+          import re
+
+          raw = os.environ.get("MATCH_GIT_BASIC_AUTHORIZATION", "")
+          raw = re.sub(r"\s+", "", raw)
+          if raw.lower().startswith("basic"):
+            raw = raw[5:].lstrip()
+
+          token_prefixes = ("ghp_", "gho_", "ghu_", "ghs_", "github_pat_")
+
+          def parse_userpass(value: str):
+            if ":" not in value:
+              return None, None
+            user, token = value.split(":", 1)
+            if not user or not token:
+              return None, None
+            return user, token
+
+          username = None
+          token = None
+
+          if raw.startswith(token_prefixes):
+            username, token = "x-access-token", raw
+          else:
+            username, token = parse_userpass(raw)
+
+          if not username:
+            decoded = None
+            try:
+              decoded = base64.b64decode(raw, validate=True).decode("utf-8")
+            except Exception:
+              decoded = None
+
+            if decoded:
+              decoded = decoded.strip()
+              username, token = parse_userpass(decoded)
+              if not username and decoded.startswith(token_prefixes):
+                username, token = "x-access-token", decoded
+
+          if not username:
+            # Final fallback: treat sanitized raw value as token-like credential.
+            username, token = "x-access-token", raw
+
+          normalized = base64.b64encode(f"{username}:{token}".encode("utf-8")).decode("utf-8")
+
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
+            env_file.write(f"MATCH_GIT_AUTH_USERNAME={username}\n")
+            env_file.write(f"MATCH_GIT_AUTH_TOKEN={token}\n")
+            env_file.write(f"MATCH_GIT_BASIC_AUTHORIZATION_NORMALIZED={normalized}\n")
+
+          print(f"::add-mask::{token}")
+          print(f"::add-mask::{normalized}")
+          PY
+
+      - name: Configure git credentials for match clone (optional)
+        run: |
+          set -euo pipefail
+
+          if [ -z "${MATCH_GIT_AUTH_USERNAME:-}" ] || [ -z "${MATCH_GIT_AUTH_TOKEN:-}" ]; then
+            echo "Normalized match credentials are unavailable. Skipping netrc setup."
+            exit 0
+          fi
+
+          cat > "$HOME/.netrc" <<EOF
+          machine github.com
+            login ${MATCH_GIT_AUTH_USERNAME}
+            password ${MATCH_GIT_AUTH_TOKEN}
+          EOF
+          chmod 600 "$HOME/.netrc"
+
       - name: Submit build to App Store
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -161,8 +244,8 @@ jobs:
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
           RELEASE_NOTES_JSON_PATH: release_notes.json
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD || secrets.MATCH_GIT_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ env.MATCH_GIT_BASIC_AUTHORIZATION_NORMALIZED || secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 180
           FASTLANE_DISABLE_COLORS: "1"
         run: bundle exec fastlane ios submit_from_ci
