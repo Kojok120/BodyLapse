@@ -7,7 +7,7 @@ require "json"
 platform :ios do
   desc "Build and submit BodyLapse to App Store with localized release notes."
   lane :submit_from_ci do
-    release_notes = load_release_notes(ENV.fetch("RELEASE_NOTES_JSON_PATH", "fastlane/release_notes.json"))
+    release_notes = load_release_notes(path: ENV.fetch("RELEASE_NOTES_JSON_PATH", "fastlane/release_notes.json"))
 
     api_key = app_store_connect_api_key(
       key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
@@ -17,7 +17,7 @@ platform :ios do
       duration: 1200
     )
 
-    sync_code_signing_if_configured(api_key)
+    sync_code_signing_if_configured(api_key: api_key)
 
     build_ios_app(
       project: "BodyLapse.xcodeproj",
@@ -46,7 +46,10 @@ platform :ios do
     )
   end
 
-  private_lane :sync_code_signing_if_configured do |api_key|
+  private_lane :sync_code_signing_if_configured do |options|
+    api_key = options[:api_key]
+    UI.user_error!("api_key is required for sync_code_signing_if_configured") if api_key.nil?
+
     if ENV["MATCH_GIT_URL"].to_s.empty?
       UI.important("MATCH_GIT_URL is not set. Skipping match; expecting signing assets on runner.")
       return
@@ -60,7 +63,9 @@ platform :ios do
     )
   end
 
-  private_lane :load_release_notes do |path|
+  private_lane :load_release_notes do |options|
+    path = options[:path].to_s
+    UI.user_error!("Release notes path is missing.") if path.empty?
     UI.user_error!("Release notes file not found: #{path}") unless File.exist?(path)
 
     data = JSON.parse(File.read(path))
