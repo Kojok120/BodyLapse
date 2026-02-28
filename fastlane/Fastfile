@@ -65,7 +65,10 @@ platform :ios do
       app_identifier: [ENV.fetch("APP_IDENTIFIER", "com.J.BodyLapse")]
     }
 
-    match_git_auth = ENV["MATCH_GIT_BASIC_AUTHORIZATION"].to_s.strip
+    match_git_auth = ENV["MATCH_GIT_BASIC_AUTHORIZATION"].to_s.gsub(/\s+/, "").strip
+    if match_git_auth.downcase.start_with?("basic")
+      match_git_auth = match_git_auth[5..].to_s.strip
+    end
     unless match_git_auth.empty?
       token_prefixes = ["ghp_", "gho_", "ghu_", "ghs_", "github_pat_"]
       encode_basic = lambda { |credential| Base64.strict_encode64(credential) }
