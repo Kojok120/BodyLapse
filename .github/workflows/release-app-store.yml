@@ -107,7 +107,12 @@ jobs:
           bundler-cache: true
 
       - name: Install CocoaPods dependencies
-        run: pod install
+        run: |
+          if [ -f Podfile ]; then
+            pod install
+          else
+            echo "Podfile not found, skipping pod install."
+          fi
 
       - name: Install signing certificate and provisioning profile (optional)
         env:

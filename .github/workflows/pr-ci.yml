@@ -29,7 +29,12 @@ jobs:
           ruby-version: "3.2"
 
       - name: Install CocoaPods dependencies
-        run: pod install
+        run: |
+          if [ -f Podfile ]; then
+            pod install
+          else
+            echo "Podfile not found, skipping pod install."
+          fi
 
       - name: Build
         run: |
