@@ -22,12 +22,12 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var countdownValue: Int = 0
     @Published var isCountingDown = false
     
-    // Zoom functionality
+    // ズーム機能
     @Published var zoomFactor: CGFloat = 1.0
     @Published var minZoomFactor: CGFloat = 1.0
     @Published var maxZoomFactor: CGFloat = 10.0
     
-    // Multi-category flow
+    // マルチカテゴリーフロー
     @Published var showingCategoryTransition = false
     @Published var nextCategory: PhotoCategory?
     @Published var shouldAutoTransition = true
@@ -47,16 +47,16 @@ class CameraViewModel: NSObject, ObservableObject {
         super.init()
         setupBodyDetection()
         
-        // Load saved guideline for default category
+        // デフォルトカテゴリーの保存済みガイドラインを読み込み
         loadGuidelineForCurrentCategory()
         
-        // Always use Task for initialization to ensure proper actor isolation
+        // 適切なアクター分離を確保するため常にTaskを使用して初期化
         initializationTask = Task { @MainActor in
             guard !Task.isCancelled else { return }
             self.loadCategories()
         }
         
-        // Listen for guideline updates
+        // ガイドライン更新を監視
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(reloadGuideline(_:)),
@@ -64,7 +64,7 @@ class CameraViewModel: NSObject, ObservableObject {
             object: nil
         )
         
-        // Listen for category updates
+        // カテゴリー更新を監視
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(reloadCategories),
@@ -108,22 +108,22 @@ class CameraViewModel: NSObject, ObservableObject {
             guard let self = self else { return }
             print("CameraViewModel: Received GuidelineUpdated notification")
             
-            // Check if the notification is for a specific category
+            // 通知が特定のカテゴリー向けか確認
             if let userInfo = notification.userInfo,
                let categoryId = userInfo["categoryId"] as? String {
                 print("CameraViewModel: Guideline updated for category: \(categoryId)")
                 
-                // Reload categories in case a new guideline was set
+                // 新しいガイドラインが設定された可能性があるためカテゴリーを再読み込み
                 self.loadCategories()
                 
-                // If the updated category is the current one, reload the guideline
+                // 更新されたカテゴリーが現在のものであればガイドラインを再読み込み
                 if categoryId == self.selectedCategory.id {
                     print("CameraViewModel: Current category matches, reloading guideline")
                     self.savedGuideline = nil
                     self.loadGuidelineForCurrentCategory()
                 }
             } else {
-                // No specific category, reload for current category
+                // 特定のカテゴリーなし、現在のカテゴリーで再読み込み
                 print("CameraViewModel: No category specified, reloading for current category")
                 self.savedGuideline = nil
                 self.loadGuidelineForCurrentCategory()
@@ -134,16 +134,16 @@ class CameraViewModel: NSObject, ObservableObject {
                 print("CameraViewModel: Guideline has \(guideline.points.count) points")
             }
             
-            // Force UI update
+            // UIを強制更新
             self.objectWillChange.send()
         }
     }
     
     private func setupCamera() {
-        // Clean up any existing configuration
+        // 既存の構成をクリーンアップ
         session.beginConfiguration()
         
-        // Remove existing inputs and outputs
+        // 既存の入力と出力を削除
         for input in session.inputs {
             session.removeInput(input)
         }
@@ -153,7 +153,7 @@ class CameraViewModel: NSObject, ObservableObject {
         
         session.sessionPreset = .photo
         
-        // Try to get the back wide-angle camera first. If that fails (e.g. on Simulator), fall back to front camera or any available video device.
+        // まず背面広角カメラを試行。失敗した場合（例: シミュレータ）、前面カメラまたは利用可能なビデオデバイスにフォールバック。
         let device: AVCaptureDevice
         if let back = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
             device = back
@@ -175,7 +175,7 @@ class CameraViewModel: NSObject, ObservableObject {
                 currentInput = input
                 currentCameraPosition = device.position
                 
-                // Set up zoom factors
+                // ズーム係数を設定
                 setupZoomFactors(for: device)
             }
             
@@ -187,7 +187,7 @@ class CameraViewModel: NSObject, ObservableObject {
             
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 self?.session.startRunning()
-                // Session started running
+                // セッションが開始された
             }
         } catch {
             session.commitConfiguration()
@@ -215,11 +215,11 @@ class CameraViewModel: NSObject, ObservableObject {
     }
     
     func capturePhoto() {
-        // If timer is set, start countdown
+        // タイマーが設定されている場合、カウントダウンを開始
         if timerDuration > 0 {
             startCountdown()
         } else {
-            // Capture immediately
+            // 即座に撮影
             capturePhotoNow()
         }
     }
@@ -236,7 +236,7 @@ class CameraViewModel: NSObject, ObservableObject {
             
             if self.countdownValue > 1 {
                 self.countdownValue -= 1
-                // Haptic feedback for each count
+                // 各カウントで触覚フィードバック
                 let impactFeedback = UIImpactFeedbackGenerator(style: .light)
                 impactFeedback.impactOccurred()
             } else {
@@ -266,7 +266,7 @@ class CameraViewModel: NSObject, ObservableObject {
             }
         } else {
             Task { @MainActor [weak self] in
-                // Auto-display of weight input sheet disabled - all cases now simply save the photo
+                // 体重入力シートの自動表示は無効 - 全ケースで単純に写真を保存
                 self?.savePhoto(image)
                 self?.capturedImage = nil
             }

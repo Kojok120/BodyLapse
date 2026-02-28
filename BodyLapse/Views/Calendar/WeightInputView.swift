@@ -266,7 +266,7 @@ struct WeightInputView: View {
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         
-        // Check current language and set appropriate format
+        // 現在の言語を確認して適切なフォーマットを設定
         let currentLanguage = LanguageManager.shared.currentLanguage
         switch currentLanguage {
         case "ja":

@@ -1,12 +1,12 @@
 import SwiftUI
 
 extension Color {
-    // Primary colors for the new design
+    // 新デザインのプライマリーカラー
     static let bodyLapseTurquoise = Color(red: 0.0, green: 0.686, blue: 0.8) // #00AFCC
     static let bodyLapseYellow = Color(red: 1.0, green: 0.843, blue: 0.0) // #FFD700
     static let bodyLapseLightGray = Color(red: 0.961, green: 0.961, blue: 0.961) // #F5F5F5
     
-    // Legacy colors (kept for compatibility)
+    // レガシーカラー（互換性のため保持）
     static let bodyLapseTeal = Color(red: 0.0, green: 0.5, blue: 0.5)
     static let bodyLapseGreen = Color(red: 0.4, green: 0.7, blue: 0.4)
     static let bodyLapseOrange = Color(red: 1.0, green: 0.6, blue: 0.2)

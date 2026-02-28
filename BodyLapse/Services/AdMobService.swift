@@ -32,17 +32,17 @@ class AdMobService: NSObject {
         super.init()
     }
     
-    // Public method to check ad status
+    // 広告ステータスを確認する公開メソッド
     func checkAdStatus() {
-        // Ad status check removed for production
+        // 本番環境では広告ステータスチェックを削除
     }
     
     func initializeAdMob() {
         Task {
             await MobileAds.shared.start()
-            // SDK initialized
+            // SDK初期化完了
             
-            // Load interstitial ad immediately after initialization
+            // 初期化直後にインタースティシャル広告を読み込み
             await MainActor.run {
                 self.loadInterstitialAd()
             }
@@ -51,11 +51,11 @@ class AdMobService: NSObject {
     
     func loadInterstitialAd() {
         guard !isLoadingInterstitial else { 
-            // Already loading interstitial ad, skipping
+            // インタースティシャル広告は既に読み込み中、スキップ
             return 
         }
         
-        // Starting to load interstitial ad
+        // インタースティシャル広告の読み込みを開始
         
         isLoadingInterstitial = true
         let request = Request()
@@ -65,32 +65,32 @@ class AdMobService: NSObject {
             self?.isLoadingInterstitial = false
             
             if error != nil {
-                // Failed to load interstitial ad
+                // インタースティシャル広告の読み込みに失敗
                 return
             }
             
             self?.interstitialAd = ad
             self?.interstitialAd?.fullScreenContentDelegate = self
-            // Interstitial ad loaded successfully
+            // インタースティシャル広告の読み込み成功
         }
     }
     
     func showInterstitialAd(from viewController: UIViewController, completion: (() -> Void)? = nil) {
-        // Attempting to show interstitial ad
+        // インタースティシャル広告の表示を試行
         
         if let ad = interstitialAd {
-            // Presenting interstitial ad
+            // インタースティシャル広告を表示
             interstitialCompletion = completion
             
-            // Ensure we're on the main thread
+            // メインスレッドで実行を保証
             DispatchQueue.main.async {
                 ad.present(from: viewController)
-                // Ad presentation called successfully
+                // 広告表示呼び出し成功
             }
         } else {
-            // Interstitial ad not ready
+            // インタースティシャル広告が未準備
             if !isLoadingInterstitial {
-                // Loading new interstitial ad
+                // 新しいインタースティシャル広告を読み込み
                 loadInterstitialAd()
             }
             completion?()
@@ -100,20 +100,20 @@ class AdMobService: NSObject {
 
 extension AdMobService: FullScreenContentDelegate {
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        // Interstitial ad dismissed
+        // インタースティシャル広告が閉じられた
         interstitialCompletion?()
         interstitialCompletion = nil
         loadInterstitialAd()
     }
     
     func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
-        // Failed to present interstitial ad
+        // インタースティシャル広告の表示に失敗
         interstitialCompletion?()
         interstitialCompletion = nil
         loadInterstitialAd()
     }
     
     func adWillPresentFullScreenContent(_ ad: FullScreenPresentingAd) {
-        // Interstitial ad will present
+        // インタースティシャル広告が表示される
     }
 }

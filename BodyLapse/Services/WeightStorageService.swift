@@ -8,12 +8,12 @@ actor WeightStorageService {
     private let weightsFile: URL
     
     private init() {
-        // Get documents directory
+        // ドキュメントディレクトリを取得
         guard let documentsDir = FileManager.default.urls(
             for: .documentDirectory,
             in: .userDomainMask
         ).first else {
-            // This should never happen, but we'll use temporary directory as fallback
+            // これは発生しないはずだが、フォールバックとして一時ディレクトリを使用
             documentsDirectory = FileManager.default.temporaryDirectory
             weightsDirectory = documentsDirectory.appendingPathComponent("WeightData")
             weightsFile = weightsDirectory.appendingPathComponent("entries.json")
@@ -21,18 +21,18 @@ actor WeightStorageService {
         }
         documentsDirectory = documentsDir
         
-        // Create weights directory
+        // 体重ディレクトリを作成
         weightsDirectory = documentsDirectory.appendingPathComponent("WeightData")
         weightsFile = weightsDirectory.appendingPathComponent("entries.json")
         
-        // Create directory if needed
+        // 必要に応じてディレクトリを作成
         try? FileManager.default.createDirectory(
             at: weightsDirectory,
             withIntermediateDirectories: true
         )
     }
     
-    // MARK: - Load Entries
+    // MARK: - エントリ読み込み
     func loadEntries() throws -> [WeightEntry] {
         print("[WeightStorage] Loading entries from: \(weightsFile.path)")
         
@@ -52,36 +52,36 @@ actor WeightStorageService {
         return entries.sorted { $0.date > $1.date }
     }
     
-    // MARK: - Save Entry
+    // MARK: - エントリ保存
     func saveEntry(_ entry: WeightEntry) throws {
         print("[WeightStorage] Saving entry for date: \(entry.date), weight: \(entry.weight)")
         var entries = try loadEntries()
         
-        // Check if there's already an entry for this date
+        // この日付に既存のエントリがあるか確認
         if let existingIndex = entries.firstIndex(where: { 
             Calendar.current.isDate($0.date, inSameDayAs: entry.date) 
         }) {
-            // Replace existing entry
+            // 既存のエントリを置換
             entries[existingIndex] = entry
         } else {
-            // Add new entry
+            // 新しいエントリを追加
             entries.append(entry)
         }
         
-        // Sort and save
+        // ソートして保存
         entries.sort { $0.date > $1.date }
         try saveEntries(entries)
         print("[WeightStorage] Total entries after save: \(entries.count)")
     }
     
-    // MARK: - Delete Entry
+    // MARK: - エントリ削除
     func deleteEntry(_ entry: WeightEntry) throws {
         var entries = try loadEntries()
         entries.removeAll { $0.id == entry.id }
         try saveEntries(entries)
     }
     
-    // MARK: - Update Entry
+    // MARK: - エントリ更新
     func updateEntry(_ entry: WeightEntry) throws {
         var entries = try loadEntries()
         guard let index = entries.firstIndex(where: { $0.id == entry.id }) else {
@@ -91,7 +91,7 @@ actor WeightStorageService {
         try saveEntries(entries)
     }
     
-    // MARK: - Get Entry for Date
+    // MARK: - 日付別エントリ取得
     func getEntry(for date: Date) throws -> WeightEntry? {
         let entries = try loadEntries()
         return entries.first { 
@@ -99,7 +99,7 @@ actor WeightStorageService {
         }
     }
     
-    // MARK: - Get Entries in Date Range
+    // MARK: - 日付範囲内のエントリ取得
     func getEntries(from startDate: Date, to endDate: Date) throws -> [WeightEntry] {
         let entries = try loadEntries()
         let calendar = Calendar.current
@@ -111,7 +111,7 @@ actor WeightStorageService {
         }
     }
     
-    // MARK: - Private Methods
+    // MARK: - プライベートメソッド
     private func saveEntries(_ entries: [WeightEntry]) throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -121,7 +121,7 @@ actor WeightStorageService {
         print("[WeightStorage] Saved \(entries.count) entries to file")
     }
     
-    // MARK: - Export/Import
+    // MARK: - エクスポート/インポート
     func exportData() throws -> Data {
         guard FileManager.default.fileExists(atPath: weightsFile.path) else {
             return Data()
@@ -130,14 +130,14 @@ actor WeightStorageService {
     }
     
     func importData(_ data: Data) throws {
-        // Validate the data
+        // データを検証
         let _ = try JSONDecoder().decode([WeightEntry].self, from: data)
         
-        // Save the data
+        // データを保存
         try data.write(to: weightsFile, options: .atomic)
     }
     
-    // MARK: - Statistics
+    // MARK: - 統計
     func getStatistics() throws -> WeightStatistics {
         let entries = try loadEntries()
         
@@ -168,7 +168,7 @@ actor WeightStorageService {
     }
 }
 
-// MARK: - Error Types
+// MARK: - エラータイプ
 enum WeightStorageError: LocalizedError {
     case entryNotFound
     case invalidData
@@ -183,7 +183,7 @@ enum WeightStorageError: LocalizedError {
     }
 }
 
-// MARK: - Statistics Model
+// MARK: - 統計モデル
 struct WeightStatistics {
     let totalEntries: Int
     let averageWeight: Double?

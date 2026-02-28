@@ -8,29 +8,47 @@
 import SwiftUI
 
 struct ContentView: View {
+    enum RootDestination: Equatable {
+        case onboarding
+        case authentication
+        case main
+    }
+
     @StateObject private var userSettings = UserSettingsManager.shared
     @StateObject private var authService = AuthenticationService.shared
-    @State private var hasAppeared = false
     
+    static func destination(
+        hasCompletedOnboarding: Bool,
+        isAuthenticationEnabled: Bool,
+        isAuthenticated: Bool
+    ) -> RootDestination {
+        if !hasCompletedOnboarding {
+            return .onboarding
+        }
+        if isAuthenticationEnabled && !isAuthenticated {
+            return .authentication
+        }
+        return .main
+    }
+
     var body: some View {
         Group {
-            if !userSettings.settings.hasCompletedOnboarding {
+            switch Self.destination(
+                hasCompletedOnboarding: userSettings.settings.hasCompletedOnboarding,
+                isAuthenticationEnabled: authService.isAuthenticationEnabled,
+                isAuthenticated: authService.isAuthenticated
+            ) {
+            case .onboarding:
                 // Always show onboarding first if not completed
                 OnboardingView()
                     .environmentObject(userSettings)
-            } else if !authService.isAuthenticated && authService.isAuthenticationEnabled && hasAppeared {
+            case .authentication:
                 // Only show authentication after onboarding is complete
                 AuthenticationView {
                     // Authentication successful
                 }
-            } else {
+            case .main:
                 MainTabView()
-            }
-        }
-        .onAppear {
-            // Small delay to prevent flashing of content before auth screen
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                hasAppeared = true
             }
         }
     }

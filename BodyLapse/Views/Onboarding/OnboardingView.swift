@@ -6,7 +6,7 @@ struct OnboardingView: View {
     @EnvironmentObject var userSettings: UserSettingsManager
     @State private var currentStep = 1
     
-    // App lock
+    // アプリロック
     @State private var showingAppLockSetup = false
     @State private var selectedLockMethod = UserSettings.AppLockMethod.biometric
     @State private var passcode = ""
@@ -14,24 +14,24 @@ struct OnboardingView: View {
     @State private var showingPasscodeError = false
     @State private var passcodeErrorMessage = ""
     
-    // Premium
+    // プレミアム
     @State private var showingPremiumView = false
     @StateObject private var premiumViewModel = PremiumViewModel()
     
-    // Permissions
+    // 権限
     @State private var notificationsEnabled = false
     @State private var appLockEnabled = false
     
-    // Skip photo capture
+    // 写真撮影をスキップ
     @State private var didCapturePhoto = false
     
     var body: some View {
         NavigationView {
             VStack {
-                // Progress indicator
+                // 進捗インジケーター
                 progressIndicator
                 
-                // Main content
+                // メインコンテンツ
                 TabView(selection: $currentStep) {
                     welcomeStep
                         .tag(1)
@@ -45,7 +45,7 @@ struct OnboardingView: View {
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.3), value: currentStep)
                 
-                // Navigation buttons
+                // ナビゲーションボタン
                 navigationButtons
             }
             .navigationBarHidden(currentStep == 2 && !didCapturePhoto) // Hide nav bar during camera
@@ -55,7 +55,7 @@ struct OnboardingView: View {
             PremiumView()
         }
         .sheet(isPresented: $showingAppLockSetup, onDismiss: {
-            // If passcode is empty, user cancelled - turn off app lock
+            // パスコードが空の場合、ユーザーがキャンセル - アプリロックをオフ
             if passcode.isEmpty {
                 appLockEnabled = false
             }
@@ -66,7 +66,7 @@ struct OnboardingView: View {
                 onComplete: {
                     saveAppLockSettings(enableLock: true)
                     appLockEnabled = true
-                    // Mark as authenticated during onboarding to prevent auth screen from showing
+                    // オンボーディング中に認証済みとしてマークし、認証画面の表示を防止
                     if AuthenticationService.shared.isAuthenticationEnabled {
                         AuthenticationService.shared.isAuthenticated = true
                     }
@@ -80,7 +80,7 @@ struct OnboardingView: View {
         }
     }
     
-    // MARK: - Progress Indicator
+    // MARK: - 進捗インジケーター
     private var progressIndicator: some View {
         HStack(spacing: 8) {
             ForEach(1...3, id: \.self) { step in
@@ -92,18 +92,18 @@ struct OnboardingView: View {
         .padding()
     }
     
-    // MARK: - Step 1: Welcome
+    // MARK: - ステップ1: ようこそ
     private var welcomeStep: some View {
         VStack(spacing: 30) {
             Spacer()
             
-            // App icon
+            // アプリアイコン
             Image(systemName: "figure.arms.open")
                 .font(.system(size: 80))
                 .foregroundColor(.accentColor)
                 .padding(.bottom, 10)
             
-            // Title
+            // タイトル
             Text("onboarding.main_title".localized)
                 .font(.title)
                 .fontWeight(.bold)
@@ -112,7 +112,7 @@ struct OnboardingView: View {
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
             
-            // Value propositions
+            // バリュープロポジション
             VStack(alignment: .leading, spacing: 20) {
                 ValuePropositionRow(
                     icon: "camera.fill",
@@ -131,7 +131,7 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, 40)
             
-            // Privacy detail
+            // プライバシー詳細
             Text("onboarding.privacy_detail".localized)
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -258,7 +258,7 @@ struct OnboardingView: View {
                 }
                 .padding(.horizontal)
                 
-                // Premium section
+                // プレミアム section
                 VStack(spacing: 15) {
                     HStack {
                         Image(systemName: "star.fill")
@@ -358,7 +358,7 @@ struct OnboardingView: View {
         .padding(.horizontal)
     }
     
-    // MARK: - Helper Methods
+    // MARK: - ヘルパーメソッド
     
     private var biometricIcon: String {
         let context = LAContext()
@@ -682,7 +682,7 @@ struct BaselinePhotoCaptureViewWithSkip: View {
                         
                         Spacer()
                         
-                        // Camera switch button (matching CameraView size)
+                        // カメラ切り替え button (matching CameraView size)
                         Button(action: {
                             guard let controller = cameraController else { return }
                             controller.switchCamera()
@@ -702,7 +702,7 @@ struct BaselinePhotoCaptureViewWithSkip: View {
                     
                     Spacer()
                     
-                    // Countdown display
+                    // カウントダウン表示
                     if isCountingDown {
                         Text("\(countdownValue)")
                             .font(.system(size: 120, weight: .bold, design: .rounded))
@@ -761,7 +761,7 @@ struct BaselinePhotoCaptureViewWithSkip: View {
                             }
                         }
                         
-                        // Capture button
+                        // 撮影ボタン
                         Button(action: {
                             guard let controller = cameraController, !isProcessing else { return }
                             controller.capturePhoto()

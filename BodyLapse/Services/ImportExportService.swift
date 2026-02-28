@@ -103,7 +103,7 @@ class ImportExportService {
         }
     }
     
-    // MARK: - Export
+    // MARK: - エクスポート
     
     func exportData(
         options: ExportOptions,
@@ -122,15 +122,16 @@ class ImportExportService {
     ) async {
             
             do {
-                // Create temporary directory
+                // 一時ディレクトリを作成
                 let tempDir = FileManager.default.temporaryDirectory
                     .appendingPathComponent("BodyLapseExport_\(UUID().uuidString)")
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+                defer { try? FileManager.default.removeItem(at: tempDir) }
                 
                 var totalSteps: Float = 0
                 var currentStep: Float = 0
                 
-                // Calculate total steps
+                // 総ステップ数を計算
                 if options.includePhotos {
                     totalSteps += Float(PhotoStorageService.shared.photos.count)
                 }
@@ -139,7 +140,7 @@ class ImportExportService {
                 }
                 totalSteps += 5 // For other operations
                 
-                // Create folder structure
+                // フォルダ構造を作成
                 let photosDir = tempDir.appendingPathComponent("photos")
                 let videosDir = tempDir.appendingPathComponent("videos")
                 let dataDir = tempDir.appendingPathComponent("data")
@@ -151,7 +152,7 @@ class ImportExportService {
                 currentStep += 1
                 progress(currentStep / totalSteps)
                 
-                // Export photos
+                // 写真をエクスポート
                 var exportedPhotos: [Photo] = []
                 if options.includePhotos {
                     exportedPhotos = try self.exportPhotos(
@@ -165,7 +166,7 @@ class ImportExportService {
                     currentStep += Float(PhotoStorageService.shared.photos.count)
                 }
                 
-                // Export videos
+                // 動画をエクスポート
                 var exportedVideos: [Video] = []
                 if options.includeVideos {
                     exportedVideos = try self.exportVideos(
@@ -179,7 +180,7 @@ class ImportExportService {
                     currentStep += Float(VideoStorageService.shared.videos.count)
                 }
                 
-                // Export categories
+                // カテゴリーをエクスポート
                 let categories = CategoryStorageService.shared.getActiveCategories()
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .iso8601
@@ -189,7 +190,7 @@ class ImportExportService {
                 currentStep += 1
                 progress(currentStep / totalSteps)
                 
-                // Export weight data
+                // 体重データをエクスポート
                 if options.includeWeightData {
                     let weightEntries = try await WeightStorageService.shared.loadEntries()
                     let filteredEntries = self.filterWeightEntries(weightEntries, options: options)
@@ -202,7 +203,7 @@ class ImportExportService {
                 currentStep += 1
                 progress(currentStep / totalSteps)
                 
-                // Export notes
+                // ノートをエクスポート
                 if options.includeNotes {
                     let notes = await DailyNoteStorageService.shared.getAllNotes()
                     let filteredNotes = self.filterNotes(notes, options: options)
@@ -215,7 +216,7 @@ class ImportExportService {
                 currentStep += 1
                 progress(currentStep / totalSteps)
                 
-                // Export settings if requested
+                // リクエストに応じて設定をエクスポート
                 if options.includeSettings {
                     let settings = await MainActor.run {
                         UserSettingsManager.shared.settings
@@ -226,7 +227,7 @@ class ImportExportService {
                     try settingsData.write(to: dataDir.appendingPathComponent("settings.json"))
                 }
                 
-                // Create manifest
+                // マニフェストを作成
                 let manifest = self.createManifest(
                     photos: exportedPhotos,
                     videos: exportedVideos,
@@ -241,7 +242,7 @@ class ImportExportService {
                 currentStep += 1
                 progress(currentStep / totalSteps)
                 
-                // Create ZIP file
+                // ZIPファイルを作成
                 let zipPath = FileManager.default.temporaryDirectory
                     .appendingPathComponent("BodyLapse_Export_\(Date().timeIntervalSince1970).bodylapse")
                 
@@ -250,9 +251,6 @@ class ImportExportService {
                     withContentsOfDirectory: tempDir.path,
                     keepParentDirectory: false
                 )
-                
-                // Clean up temp directory
-                try? FileManager.default.removeItem(at: tempDir)
                 
                 if success {
                     DispatchQueue.main.async {
@@ -269,7 +267,7 @@ class ImportExportService {
             }
     }
     
-    // MARK: - Import
+    // MARK: - インポート
     
     func importData(
         from url: URL,
@@ -291,12 +289,13 @@ class ImportExportService {
         print("[ImportExport] Starting import from: \(url.path)")
         
         do {
-                // Create temporary directory for extraction
+                // 展開用の一時ディレクトリを作成
                 let tempDir = FileManager.default.temporaryDirectory
                     .appendingPathComponent("BodyLapseImport_\(UUID().uuidString)")
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+                defer { try? FileManager.default.removeItem(at: tempDir) }
                 
-                // Validate file size before extraction
+                // 展開前にファイルサイズを検証
                 print("[ImportExport] Validating file size...")
                 let fileSize = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64 ?? 0
                 print("[ImportExport] File size: \(fileSize) bytes")
@@ -304,7 +303,7 @@ class ImportExportService {
                     throw ImportExportError.invalidFormat
                 }
                 
-                // Extract ZIP with validation
+                // 検証付きでZIPを展開
                 print("[ImportExport] Extracting archive...")
                 guard SimpleZipArchive.unzipFile(
                     atPath: url.path,
@@ -315,13 +314,13 @@ class ImportExportService {
                 }
                 print("[ImportExport] Archive extracted successfully")
                 
-                // Read manifest
+                // マニフェストを読み取り
                 let manifestPath = tempDir.appendingPathComponent("manifest.json")
                 guard FileManager.default.fileExists(atPath: manifestPath.path) else {
                     throw ImportExportError.invalidFormat
                 }
                 
-                // Read and validate manifest data safely
+                // マニフェストデータを安全に読み取り・検証
                 print("[ImportExport] Reading manifest...")
                 let manifest = try safelyDecodeJSON(ExportManifest.self, from: manifestPath)
                 print("[ImportExport] Manifest loaded successfully")
@@ -331,7 +330,7 @@ class ImportExportService {
                 print("[ImportExport] - Videos: \(manifest.dataInfo.videoCount)")
                 print("[ImportExport] - Categories: \(manifest.dataInfo.categoryCount)")
                 
-                // Debug: List extracted files
+                // デバッグ: 展開されたファイルを一覧表示
                 print("[ImportExport] Temp directory structure:")
                 if let enumerator = FileManager.default.enumerator(atPath: tempDir.path) {
                     while let element = enumerator.nextObject() as? String {
@@ -343,7 +342,7 @@ class ImportExportService {
                 var totalSteps: Float = 0
                 var currentStep: Float = 0
                 
-                // Debug import options
+                // デバッグ: インポートオプション
                 print("[ImportExport] Import options:")
                 print("[ImportExport] - Merge strategy: \(options.mergeStrategy)")
                 print("[ImportExport] - Import photos: \(options.importPhotos)")
@@ -352,7 +351,7 @@ class ImportExportService {
                 print("[ImportExport] - Import weight data: \(options.importWeightData)")
                 print("[ImportExport] - Import notes: \(options.importNotes)")
                 
-                // Calculate total steps
+                // 総ステップ数を計算
                 if options.importPhotos {
                     totalSteps += Float(manifest.dataInfo.photoCount)
                 }
@@ -361,7 +360,7 @@ class ImportExportService {
                 }
                 totalSteps += 5 // For other operations
                 
-                // Import categories first
+                // 最初にカテゴリーをインポート
                 let categoriesPath = tempDir.appendingPathComponent("data/categories.json")
                 print("[ImportExport] Checking for categories at: \(categoriesPath.path)")
                 if FileManager.default.fileExists(atPath: categoriesPath.path) {
@@ -377,7 +376,7 @@ class ImportExportService {
                 currentStep += 1
                 progress(currentStep / totalSteps)
                 
-                // Import photos
+                // 写真をインポート
                 if options.importPhotos {
                     let photosDir = tempDir.appendingPathComponent("photos")
                     print("[ImportExport] Starting photo import from: \(photosDir.path)")
@@ -400,7 +399,7 @@ class ImportExportService {
                     currentStep += Float(manifest.dataInfo.photoCount)
                 }
                 
-                // Import videos
+                // 動画をインポート
                 if options.importVideos {
                     let videosDir = tempDir.appendingPathComponent("videos")
                     print("[ImportExport] Starting video import from: \(videosDir.path)")
@@ -423,7 +422,7 @@ class ImportExportService {
                     currentStep += Float(manifest.dataInfo.videoCount)
                 }
                 
-                // Import weight data
+                // 体重データをインポート
                 if options.importWeightData {
                     let weightPath = tempDir.appendingPathComponent("data/weight_data.json")
                     if FileManager.default.fileExists(atPath: weightPath.path) {
@@ -435,7 +434,7 @@ class ImportExportService {
                 currentStep += 1
                 progress(currentStep / totalSteps)
                 
-                // Import notes
+                // ノートをインポート
                 if options.importNotes {
                     let notesPath = tempDir.appendingPathComponent("data/notes.json")
                     if FileManager.default.fileExists(atPath: notesPath.path) {
@@ -447,7 +446,7 @@ class ImportExportService {
                 currentStep += 1
                 progress(currentStep / totalSteps)
                 
-                // Import settings if requested
+                // リクエストに応じて設定をインポート
                 if options.importSettings {
                     let settingsPath = tempDir.appendingPathComponent("data/settings.json")
                     if FileManager.default.fileExists(atPath: settingsPath.path) {
@@ -458,9 +457,6 @@ class ImportExportService {
                         summary.settingsImported = true
                     }
                 }
-                
-                // Clean up temp directory
-                try? FileManager.default.removeItem(at: tempDir)
                 
                 print("[ImportExport] Import completed - Summary:")
                 print("[ImportExport] - Photos imported: \(summary.photosImported)")
@@ -481,10 +477,10 @@ class ImportExportService {
             }
     }
     
-    // MARK: - Helper Methods
+    // MARK: - ヘルパーメソッド
     
     private func safelyDecodeJSON<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {
-        // Validate file exists and size
+        // ファイルの存在とサイズを検証
         guard FileManager.default.fileExists(atPath: url.path) else {
             throw ImportExportError.fileNotFound
         }
@@ -494,21 +490,21 @@ class ImportExportService {
             throw ImportExportError.invalidFormat
         }
         
-        // Read file data safely
+        // ファイルデータを安全に読み取り
         let data = try Data(contentsOf: url, options: [.mappedIfSafe])
         guard data.count > 0 else {
             throw ImportExportError.invalidFormat
         }
         
-        // Create decoder with proper settings
+        // 適切な設定でデコーダーを作成
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         
-        // Try to decode with ISO8601 first
+        // まずISO8601でデコードを試行
         do {
             return try decoder.decode(type, from: data)
         } catch {
-            // If ISO8601 fails, try with timestamp (for backward compatibility)
+            // ISO8601が失敗した場合、タイムスタンプで試行（後方互換性のため）
             print("ISO8601 decode failed, trying timestamp strategy: \(error)")
             decoder.dateDecodingStrategy = .secondsSince1970
             do {
@@ -528,14 +524,14 @@ class ImportExportService {
         var exportedPhotos: [Photo] = []
         let photos = PhotoStorageService.shared.photos
         
-        // Filter photos based on options
+        // オプションに基づいて写真をフィルター
         let filteredPhotos = photos.filter { photo in
-            // Check date range
+            // 日付範囲を確認
             if let dateRange = options.dateRange {
                 guard dateRange.contains(photo.captureDate) else { return false }
             }
             
-            // Check categories
+            // カテゴリーを確認
             if let categories = options.categories {
                 guard categories.contains(photo.categoryId) else { return false }
             }
@@ -543,7 +539,7 @@ class ImportExportService {
             return true
         }
         
-        // Create category directories
+        // カテゴリーディレクトリを作成
         var categoryDirs: [String: URL] = [:]
         for photo in filteredPhotos {
             if categoryDirs[photo.categoryId] == nil {
@@ -553,11 +549,11 @@ class ImportExportService {
             }
         }
         
-        // Export photos
+        // 写真をエクスポート
         for (index, photo) in filteredPhotos.enumerated() {
             guard let categoryDir = categoryDirs[photo.categoryId] else { continue }
             
-            // Copy image file
+            // 画像ファイルをコピー
             if let sourceImagePath = photo.fileURL {
                 let destImagePath = categoryDir.appendingPathComponent(photo.fileName)
                 
@@ -566,7 +562,7 @@ class ImportExportService {
                 }
             }
             
-            // Save metadata as JSON
+            // メタデータをJSONとして保存
             let metadataFileName = photo.id.uuidString + ".json"
             let destMetadataPath = categoryDir.appendingPathComponent(metadataFileName)
             
@@ -592,7 +588,7 @@ class ImportExportService {
         VideoStorageService.shared.initialize()
         let videos = VideoStorageService.shared.videos
         
-        // Filter videos based on date range
+        // 日付範囲に基づいて動画をフィルター
         let filteredVideos = videos.filter { video in
             if let dateRange = options.dateRange {
                 return dateRange.overlaps(video.startDate...video.endDate)
@@ -600,9 +596,9 @@ class ImportExportService {
             return true
         }
         
-        // Export videos
+        // 動画をエクスポート
         for (index, video) in filteredVideos.enumerated() {
-            // Copy video file
+            // 動画ファイルをコピー
             let sourceVideoPath = video.fileURL
             let destVideoPath = directory.appendingPathComponent(video.fileName)
             
@@ -610,7 +606,7 @@ class ImportExportService {
                 try FileManager.default.copyItem(at: sourceVideoPath, to: destVideoPath)
             }
             
-            // Save metadata as JSON
+            // メタデータをJSONとして保存
             let metadataFileName = video.id.uuidString + ".json"
             let destMetadataPath = directory.appendingPathComponent(metadataFileName)
             
@@ -620,7 +616,7 @@ class ImportExportService {
             let metadataData = try encoder.encode(video)
             try metadataData.write(to: destMetadataPath)
             
-            // Copy thumbnail if exists
+            // サムネイルがあればコピー
             if let thumbnailURL = video.thumbnailURL,
                FileManager.default.fileExists(atPath: thumbnailURL.path) {
                 let destThumbnailPath = directory.appendingPathComponent(thumbnailURL.lastPathComponent)
@@ -803,10 +799,10 @@ class ImportExportService {
                                         let attrs = try FileManager.default.attributesOfItem(atPath: sourceImagePath.path)
                                         let fileSize = attrs[.size] as? Int64 ?? 0
                                         if fileSize > 0 && fileSize < 50_000_000 { // Max 50MB per image
-                                            // Load image data with memory mapping
+                                            // メモリマッピングで画像データを読み込み
                                             let imageData = try Data(contentsOf: sourceImagePath, options: [.mappedIfSafe])
                                             
-                                            // Create image
+                                            // 画像を作成
                                             if let image = UIImage(data: imageData) {
                                                 print("[ImportExport] Created UIImage successfully")
                                                 do {
@@ -868,7 +864,7 @@ class ImportExportService {
                 decoder.dateDecodingStrategy = .iso8601
                 let video = try decoder.decode(Video.self, from: metadataData)
                 
-                // Check if video already exists
+                // 動画が既に存在するか確認
                 VideoStorageService.shared.initialize()
                 let existing = VideoStorageService.shared.videos.first { $0.id == video.id }
                 print("[ImportExport] Video \(video.id) exists: \(existing != nil)")

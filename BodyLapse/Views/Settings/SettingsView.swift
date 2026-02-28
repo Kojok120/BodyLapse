@@ -19,12 +19,12 @@ struct SettingsView: View {
     @State private var showingLanguageChangeAlert = false
     @State private var isNotificationEnabled = false
     
-    // Category Management Guidance
+    // カテゴリー管理ガイダンス
     @StateObject private var tooltipManager = TooltipManager.shared
     @State private var showingCategoryManagementGuidance = false
     
     
-    // App Store ID - replace with actual ID when app is published
+    // App Store ID - アプリ公開時に実際のIDに置き換え
     private let appStoreID = "6747956750"
     
     var body: some View {
@@ -32,7 +32,7 @@ struct SettingsView: View {
             ZStack {
                 mainContent
                 
-                // Category Management guidance overlay
+                // カテゴリー管理ガイダンスオーバーレイ
                 if showingCategoryManagementGuidance {
                     categoryManagementGuidanceOverlay
                 }
@@ -44,7 +44,7 @@ struct SettingsView: View {
     private var mainContent: some View {
         Form {
                 Section("settings.photo_settings".localized) {
-                    // Category management now available for all users
+                    // カテゴリー管理は全ユーザーに利用可能
                     NavigationLink(destination: CategoryManagementView()) {
                         Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
                     }
@@ -58,19 +58,19 @@ struct SettingsView: View {
                     
                     Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
                     
-                    // Face Blur Method Selection
+                    // 顔ぼかし方式選択
                     Picker("settings.face_blur_method".localized, selection: $userSettings.settings.faceBlurMethod) {
                         ForEach(UserSettings.FaceBlurMethod.allCases, id: \.self) { method in
                             Text(method.displayName).tag(method)
                         }
                     }
                     
-                    // Guideline button available for all users
+                    // ガイドラインボタンは全ユーザーに利用可能
                     Button(action: {
                         if GuidelineStorageService.shared.hasGuideline() {
                             showingResetGuidelineConfirmation = true
                         } else {
-                            // If no guideline exists, directly show the guideline setup
+                            // ガイドラインが存在しない場合、直接ガイドライン設定を表示
                             showingResetGuideline = true
                         }
                     }) {
@@ -83,14 +83,14 @@ struct SettingsView: View {
                         }
                     }
                     
-                    // Weight Unit - now available for all users
+                    // 体重単位 - 全ユーザーに利用可能
                     Picker("settings.weight_unit".localized, selection: $userSettings.settings.weightUnit) {
                         ForEach(UserSettings.WeightUnit.allCases, id: \.self) { unit in
                             Text(unit.rawValue).tag(unit)
                         }
                     }
                     
-                    // Language Selection
+                    // 言語選択
                     Picker("settings.language".localized, selection: $languageManager.currentLanguage) {
                         ForEach(languageManager.supportedLanguages, id: \.self) { language in
                             Text(languageManager.getLanguageName(for: language))
@@ -152,7 +152,7 @@ struct SettingsView: View {
                             .foregroundColor(.blue)
                         }
                     } else {
-                        // Daily reminder time setting
+                        // デイリーリマインダー時刻設定
                         Toggle("settings.daily_reminder".localized, isOn: $userSettings.settings.isReminderEnabled)
                             .onChange(of: userSettings.settings.isReminderEnabled) { _, isEnabled in
                                 if isEnabled {
@@ -176,7 +176,7 @@ struct SettingsView: View {
                                         let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
                                         userSettings.settings.reminderHour = components.hour ?? 19
                                         userSettings.settings.reminderMinute = components.minute ?? 0
-                                        // Reschedule the daily reminder with new time
+                                        // 新しい時刻でデイリーリマインダーを再スケジュール
                                         NotificationService.shared.scheduleDailyReminder()
                                     }
                                 ),
@@ -190,7 +190,7 @@ struct SettingsView: View {
                     }
                 }
                 
-                // HealthKit Integration - Now available for all users
+                // HealthKit連携 - 全ユーザーに利用可能
                 Section("settings.health_integration".localized) {
                     VStack(spacing: 12) {
                         HStack {
@@ -239,7 +239,7 @@ struct SettingsView: View {
                     }
                 }
                 
-                // Premium section for ads removal only
+                // プレミアム section for ads removal only
                 Section("settings.premium_features".localized) {
                     if subscriptionManager.isPremium {
                         HStack {
@@ -249,7 +249,7 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                         
-                        // Manage Subscription Button
+                        // サブスクリプション管理ボタン
                         Button(action: {
                             if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
                                 UIApplication.shared.open(url)
@@ -269,7 +269,7 @@ struct SettingsView: View {
                     } else {
                         Button(action: { 
                             showingPremiumUpgrade = true 
-                            // Mark premium features guidance as completed when button is tapped
+                            // ボタンタップ時にプレミアム機能ガイダンスを完了済みとしてマーク
                             tooltipManager.markFeatureCompleted(for: .premiumFeatures)
                         }) {
                             HStack {
@@ -642,7 +642,7 @@ struct PremiumUpgradeView: View {
                     
                     Button(action: {
                         // TODO: Implement in-app purchase
-                        // Premium status is managed by SubscriptionManagerService
+                        // プレミアム status is managed by SubscriptionManagerService
                         dismiss()
                     }) {
                         Text("premium.subscribe".localized)

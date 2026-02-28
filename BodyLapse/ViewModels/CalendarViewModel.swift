@@ -25,7 +25,7 @@ class CalendarViewModel: ObservableObject {
             }
             .store(in: &cancellables)
         
-        // Listen for category updates
+        // カテゴリー更新を監視
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleCategoriesUpdated),
@@ -33,7 +33,7 @@ class CalendarViewModel: ObservableObject {
             object: nil
         )
         
-        // Listen for guideline updates
+        // ガイドライン更新を監視
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleGuidelineUpdated),
@@ -100,14 +100,14 @@ class CalendarViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Daily Notes
+    // MARK: - デイリーノート
     
     func loadDailyNotes() {
         Task {
             do {
                 let notesArray = try await DailyNoteStorageService.shared.getAllNotes()
                 await MainActor.run {
-                    // Convert array to dictionary keyed by date
+                    // 配列を日付をキーとした辞書に変換
                     var notesDict: [Date: DailyNote] = [:]
                     for note in notesArray {
                         let startOfDay = Calendar.current.startOfDay(for: note.date)
@@ -132,10 +132,10 @@ class CalendarViewModel: ObservableObject {
         Task {
             do {
                 try await DailyNoteStorageService.shared.saveNote(for: date, content: content)
-                // Reload notes to get the updated data
+                // 更新データを取得するためノートを再読み込み
                 let notesArray = try await DailyNoteStorageService.shared.getAllNotes()
                 await MainActor.run {
-                    // Convert array to dictionary keyed by date
+                    // 配列を日付をキーとした辞書に変換
                     var notesDict: [Date: DailyNote] = [:]
                     for note in notesArray {
                         let startOfDay = Calendar.current.startOfDay(for: note.date)
@@ -163,17 +163,17 @@ class CalendarViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Notification Handlers
+    // MARK: - 通知ハンドラー
     
     @objc private func handleCategoriesUpdated() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             print("CalendarViewModel: Received CategoriesUpdated notification")
             
-            // Reload categories
+            // カテゴリーを再読み込み
             self.loadCategories()
             
-            // Force UI update
+            // UIを強制更新
             self.objectWillChange.send()
         }
     }
@@ -183,10 +183,10 @@ class CalendarViewModel: ObservableObject {
             guard let self = self else { return }
             print("CalendarViewModel: Received GuidelineUpdated notification")
             
-            // Reload categories in case guidelines affect category state
+            // ガイドラインがカテゴリー状態に影響する可能性があるため再読み込み
             self.loadCategories()
             
-            // Force UI update
+            // UIを強制更新
             self.objectWillChange.send()
         }
     }

@@ -1,0 +1,168 @@
+name: Release to App Store
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      from_sha:
+        description: "Release note diff start SHA (optional)"
+        required: false
+        type: string
+      to_sha:
+        description: "Release note diff end SHA (optional)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-store-release
+  cancel-in-progress: false
+
+jobs:
+  generate-release-notes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      from_sha: ${{ steps.range.outputs.from_sha }}
+      to_sha: ${{ steps.range.outputs.to_sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve commit range
+        id: range
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            FROM_SHA="${{ inputs.from_sha }}"
+            TO_SHA="${{ inputs.to_sha }}"
+            if [ -z "$TO_SHA" ]; then
+              TO_SHA="${GITHUB_SHA}"
+            fi
+          else
+            FROM_SHA="${{ github.event.before }}"
+            TO_SHA="${{ github.sha }}"
+          fi
+
+          ZERO_SHA="0000000000000000000000000000000000000000"
+          if [ -z "$FROM_SHA" ] || [ "$FROM_SHA" = "$ZERO_SHA" ]; then
+            FROM_SHA="$(git rev-list --max-count=1 "${TO_SHA}^" 2>/dev/null || true)"
+          fi
+
+          if [ -z "$FROM_SHA" ]; then
+            FROM_SHA="$(git rev-list --max-count=1 "$TO_SHA")"
+          fi
+
+          echo "from_sha=$FROM_SHA" >> "$GITHUB_OUTPUT"
+          echo "to_sha=$TO_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Generate localized release notes (ja/en/es/ko)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+        run: |
+          set -euo pipefail
+          python3 scripts/generate_release_notes.py \
+            --from-sha "${{ steps.range.outputs.from_sha }}" \
+            --to-sha "${{ steps.range.outputs.to_sha }}" \
+            --output fastlane/release_notes.json
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: fastlane/release_notes.json
+          if-no-files-found: error
+
+  submit-to-app-store:
+    needs: generate-release-notes
+    runs-on: macos-15
+    timeout-minutes: 90
+    environment: app-store-production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download release notes artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: fastlane
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Install CocoaPods dependencies
+        run: |
+          if [ -f Podfile ]; then
+            pod install
+          else
+            echo "Podfile not found, skipping pod install."
+          fi
+
+      - name: Install signing certificate and provisioning profile (optional)
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          CERT_PATH: ${{ runner.temp }}/build_certificate.p12
+          PROFILE_PATH: ${{ runner.temp }}/build_profile.mobileprovision
+        run: |
+          set -euo pipefail
+
+          if [ -z "${BUILD_CERTIFICATE_BASE64}" ] || [ -z "${P12_PASSWORD}" ] || [ -z "${BUILD_PROVISION_PROFILE_BASE64}" ] || [ -z "${KEYCHAIN_PASSWORD}" ]; then
+            echo "Manual signing secrets are not fully set. Proceeding; fastlane match can still be used."
+            exit 0
+          fi
+
+          CERT_PATH="$RUNNER_TEMP/build_certificate.p12"
+          PROFILE_PATH="$RUNNER_TEMP/build_profile.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+
+          python3 - <<'PY'
+          import base64, os
+          cert = base64.b64decode(os.environ["BUILD_CERTIFICATE_BASE64"])
+          profile = base64.b64decode(os.environ["BUILD_PROVISION_PROFILE_BASE64"])
+          with open(os.environ["CERT_PATH"], "wb") as f:
+              f.write(cert)
+          with open(os.environ["PROFILE_PATH"], "wb") as f:
+              f.write(profile)
+          PY
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles"
+
+      - name: Submit build to App Store
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          RELEASE_NOTES_JSON_PATH: fastlane/release_notes.json
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 180
+          FASTLANE_DISABLE_COLORS: "1"
+        run: bundle exec fastlane ios submit_from_ci

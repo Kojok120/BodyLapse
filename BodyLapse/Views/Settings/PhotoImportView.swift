@@ -13,13 +13,13 @@ struct PhotoImportView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     
-    // All features now available to all users
+    // 全機能が全ユーザーに利用可能
     private let isPremium: Bool = true
     
     var body: some View {
         NavigationView {
             Form {
-                // Instructions Section
+                // 説明セクション
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
                         Label("import_export.photo_import_instruction1".localized, systemImage: "1.circle.fill")
@@ -32,7 +32,7 @@ struct PhotoImportView: View {
                     Text("import_export.how_to_import_photos".localized)
                 }
                 
-                // Photo Selection
+                // 写真選択
                 Section {
                     PhotosPicker(
                         selection: $selectedItems,
@@ -64,8 +64,8 @@ struct PhotoImportView: View {
                     Text("import_export.photo_details".localized)
                 }
                 
-                // Weight Data - Now available for all users
-                // Always show weight section {
+                // 体重データ - 全ユーザーに利用可能
+                // 体重セクションを常に表示 {
                     Section {
                         HStack {
                             Text("weight_tracking.weight".localized)
@@ -96,7 +96,7 @@ struct PhotoImportView: View {
                     }
                 // }
                 
-                // Import Button
+                // インポートボタン
                 Section {
                     Button(action: importPhoto) {
                         HStack {
@@ -173,13 +173,13 @@ class PhotoImportViewModel: ObservableObject {
         importSuccessful = false
         
         do {
-            // Load the image data
+            // 画像データを読み込み
             guard let data = try await item.loadTransferable(type: Data.self),
                   let image = UIImage(data: data) else {
                 throw NSError(domain: "PhotoImport", code: 1, userInfo: [NSLocalizedDescriptionKey: "import_export.invalid_image".localized])
             }
             
-            // Check if photo already exists for this date and category
+            // この日付とカテゴリーの写真が既に存在するか確認
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
             let dateString = dateFormatter.string(from: date)
@@ -187,7 +187,7 @@ class PhotoImportViewModel: ObservableObject {
                 throw NSError(domain: "PhotoImport", code: 2, userInfo: [NSLocalizedDescriptionKey: "import_export.photo_already_exists".localized])
             }
             
-            // Save the photo with weight data if provided
+            // 体重データが提供されていれば写真と共に保存
             _ = try PhotoStorageService.shared.savePhoto(
                 image,
                 captureDate: date,
@@ -196,9 +196,9 @@ class PhotoImportViewModel: ObservableObject {
                 bodyFatPercentage: bodyFat
             )
             
-            // Save weight data if provided (through HealthKit if enabled)
+            // 体重データが提供されていれば保存（HealthKit有効時はHealthKit経由）
             if let weight = weight, weight > 0 {
-                // Try to save through HealthKit
+                // HealthKit経由での保存を試行
                 HealthKitService.shared.saveWeight(weight, date: date) { _, _ in }
                 if let bodyFat = bodyFat, bodyFat > 0 {
                     HealthKitService.shared.saveBodyFatPercentage(bodyFat / 100.0, date: date) { _, _ in }

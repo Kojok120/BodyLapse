@@ -31,7 +31,7 @@ class WeightTrackingViewModel: ObservableObject {
         userSettings.settings.weightUnit
     }
     
-    // MARK: - Computed Properties
+    // MARK: - 計算プロパティ
     var currentWeight: Double? {
         weightEntries.sorted { $0.date > $1.date }.first?.weight
     }
@@ -57,7 +57,7 @@ class WeightTrackingViewModel: ObservableObject {
         weightEntries.sorted { $0.date > $1.date }
     }
     
-    // MARK: - Trend Calculation
+    // MARK: - トレンド計算
     enum Trend {
         case up(Double)
         case down(Double)
@@ -151,7 +151,7 @@ class WeightTrackingViewModel: ObservableObject {
         var current: Double?
         var previous: Double?
         
-        // Find the most recent value
+        // 最新の値を検索
         for entry in sortedEntries {
             if let value = entry[keyPath: keyPath] {
                 current = value
@@ -159,7 +159,7 @@ class WeightTrackingViewModel: ObservableObject {
             }
         }
         
-        // Find the previous value
+        // 前回の値を検索
         var foundCurrent = false
         for entry in sortedEntries {
             if let value = entry[keyPath: keyPath] {
@@ -185,7 +185,7 @@ class WeightTrackingViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Filtering
+    // MARK: - フィルタリング
     func filteredEntries(for timeRange: WeightTimeRange) -> [WeightEntry] {
         guard timeRange != .all else { return weightEntries }
         
@@ -201,7 +201,7 @@ class WeightTrackingViewModel: ObservableObject {
     init() {
         loadEntries()
         
-        // Listen for HealthKit sync notifications
+        // HealthKit同期通知を監視
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(healthKitDataSynced),
@@ -214,7 +214,7 @@ class WeightTrackingViewModel: ObservableObject {
         loadEntries()
     }
     
-    // MARK: - Data Management
+    // MARK: - データ管理
     func loadEntries() {
         print("[WeightViewModel] Starting to load entries")
         isLoading = true

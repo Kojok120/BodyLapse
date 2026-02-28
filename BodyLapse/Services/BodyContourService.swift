@@ -9,6 +9,13 @@ class BodyContourService {
     static let shared = BodyContourService()
     
     private init() {}
+
+    #if DEBUG
+    private var isDebugMaskSavingEnabled: Bool {
+        ProcessInfo.processInfo.environment["BODYLAPSE_SAVE_DEBUG_MASKS"] == "1" ||
+        UserDefaults.standard.bool(forKey: "BODYLAPSE_SAVE_DEBUG_MASKS")
+    }
+    #endif
     
     enum ContourError: LocalizedError {
         case noPersonDetected
@@ -35,7 +42,7 @@ class BodyContourService {
         }
         
         if #available(iOS 17.0, *) {
-            // Use the new foreground instance mask for iOS 17+
+            // iOS 17以降では新しいフォアグラウンドインスタンスマスクを使用
             let request = VNGenerateForegroundInstanceMaskRequest { [weak self] request, error in
                 if let error = error {
                     DispatchQueue.main.async {
@@ -51,10 +58,10 @@ class BodyContourService {
                     return
                 }
                 
-                // Create a handler for the original image
+                // 元画像用のハンドラーを作成
                 let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
                 
-                // Extract contour from the foreground mask
+                // フォアグラウンドマスクから輪郭を抽出
                 self?.extractContourFromForegroundMask(observation: observation, handler: handler, imageSize: CGSize(width: cgImage.width, height: cgImage.height), originalImage: image) { result in
                     DispatchQueue.main.async {
                         completion(result)
@@ -62,7 +69,7 @@ class BodyContourService {
                 }
             }
             
-            // Perform request
+            // リクエストを実行
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
@@ -74,7 +81,7 @@ class BodyContourService {
                 }
             }
         } else {
-            // Fallback to saliency detection for older iOS versions
+            // 古いiOSバージョンではサリエンシー検出にフォールバック
             let request = VNGenerateAttentionBasedSaliencyImageRequest { [weak self] request, error in
                 if let error = error {
                     DispatchQueue.main.async {
@@ -90,7 +97,7 @@ class BodyContourService {
                     return
                 }
                 
-                // Extract contour from saliency heat map
+                // サリエンシーヒートマップから輪郭を抽出
                 self?.extractContourFromSaliency(observation: observation, imageSize: CGSize(width: cgImage.width, height: cgImage.height)) { result in
                     DispatchQueue.main.async {
                         completion(result)
@@ -98,7 +105,7 @@ class BodyContourService {
                 }
             }
             
-            // Perform request
+            // リクエストを実行
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
@@ -119,14 +126,14 @@ class BodyContourService {
             return
         }
         
-        // Get all instances
+        // 全インスタンスを取得
         let instances = instanceMask.allInstances
         guard !instances.isEmpty else {
             completion(.failure(ContourError.noPersonDetected))
             return
         }
         
-        // Use the first instance (usually the most prominent)
+        // 最初のインスタンスを使用（通常最も目立つもの）
         guard let firstInstance = instances.first else {
             completion(.failure(ContourError.noPersonDetected))
             return
@@ -134,47 +141,50 @@ class BodyContourService {
         
         print("Detected \(instances.count) instances, using instance: \(firstInstance)")
         
-        // Generate a mask for the specific instance
+        // 特定のインスタンス用のマスクを生成
         do {
-            // Generate scaled mask for the selected instance
+            // 選択したインスタンス用のスケーリングマスクを生成
             let maskedPixelBuffer = try instanceMask.generateScaledMaskForImage(
                 forInstances: IndexSet(integer: firstInstance),
                 from: handler
             )
             
-            // Debug: Print mask information
+            // デバッグ: マスク情報を出力
             let maskWidth = CVPixelBufferGetWidth(maskedPixelBuffer)
             let maskHeight = CVPixelBufferGetHeight(maskedPixelBuffer)
             print("Mask size: \(maskWidth)x\(maskHeight)")
             
-            // Debug: Save mask as image for inspection
-            debugSaveMask(pixelBuffer: maskedPixelBuffer)
+            #if DEBUG
+            if isDebugMaskSavingEnabled {
+                debugSaveMask(pixelBuffer: maskedPixelBuffer)
+            }
+            #endif
             
-            // Convert mask to UIImage first
+            // マスクをUIImageに変換
             let ciImage = CIImage(cvPixelBuffer: maskedPixelBuffer)
             let context = CIContext()
             
             if let cgMask = context.createCGImage(ciImage, from: ciImage.extent) {
                 let maskImage = UIImage(cgImage: cgMask)
                 
-                // Use OpenCV for better contour extraction
+                // OpenCVを使用してより良い輪郭抽出を行う
                 if let cgImage = originalImage.cgImage {
-                    // Get the actual image size
+                    // 実際の画像サイズを取得
                     let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
                     
                     let contourPoints = OpenCVWrapper.processContour(from: originalImage, withMaskImage: maskImage)
                     
-                    // Convert NSArray<NSValue> to [CGPoint]
+                    // NSArray<NSValue>を[CGPoint]に変換
                     var points: [CGPoint] = []
                     for value in contourPoints {
                         points.append(value.cgPointValue)
                     }
                     
                     if points.isEmpty {
-                        // Fallback to original method
+                        // 元の方法にフォールバック
                         extractContourFromMask(pixelBuffer: maskedPixelBuffer, imageSize: imageSize, completion: completion)
                     } else {
-                        // Debug log
+                        // デバッグログ
                         print("OpenCV returned \(points.count) points")
                         if let firstPoint = points.first, let lastPoint = points.last {
                             print("First point: \(firstPoint), Last point: \(lastPoint)")
@@ -183,16 +193,16 @@ class BodyContourService {
                         completion(.success(points))
                     }
                 } else {
-                    // Fallback to original method
+                    // 元の方法にフォールバック
                     extractContourFromMask(pixelBuffer: maskedPixelBuffer, imageSize: imageSize, completion: completion)
                 }
             } else {
-                // Fallback to original method
+                // 元の方法にフォールバック
                 extractContourFromMask(pixelBuffer: maskedPixelBuffer, imageSize: imageSize, completion: completion)
             }
         } catch {
             print("Failed to generate scaled mask: \(error)")
-            // Try generating masked image instead
+            // マスク画像の生成を代わりに試行
             do {
                 let maskedImage = try instanceMask.generateMaskedImage(
                     ofInstances: IndexSet(integer: firstInstance),
@@ -202,7 +212,7 @@ class BodyContourService {
                 
                 print("Using masked image fallback")
                 
-                // Extract contour from the masked image
+                // マスク画像から輪郭を抽出
                 extractContourFromMask(pixelBuffer: maskedImage, imageSize: imageSize, completion: completion)
             } catch {
                 print("Failed to generate masked image: \(error)")
@@ -211,6 +221,7 @@ class BodyContourService {
         }
     }
     
+    #if DEBUG
     private func debugSaveMask(pixelBuffer: CVPixelBuffer) {
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
         let context = CIContext()
@@ -218,30 +229,25 @@ class BodyContourService {
         if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
             let uiImage = UIImage(cgImage: cgImage)
             
-            // Save to temporary directory for debugging
             if let data = uiImage.pngData() {
-                // Save to Documents directory for easier access
-                guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-                    print("Debug mask save failed: Could not get documents directory")
-                    return
-                }
-                let maskURL = documentsPath.appendingPathComponent("vision_mask_\(Date().timeIntervalSince1970).png")
-                try? data.write(to: maskURL)
-                print("Debug mask saved to Documents: \(maskURL.path)")
-                
-                // Also save to tmp
                 let tempDir = FileManager.default.temporaryDirectory
-                let tempURL = tempDir.appendingPathComponent("debug_mask_\(Date().timeIntervalSince1970).png")
-                try? data.write(to: tempURL)
+                let tempURL = tempDir.appendingPathComponent("vision_mask_\(Date().timeIntervalSince1970).png")
+                do {
+                    try data.write(to: tempURL, options: .atomic)
+                    print("Debug mask saved to tmp: \(tempURL.path)")
+                } catch {
+                    print("Failed to save debug mask at \(tempURL.path): \(error)")
+                }
             }
         }
     }
+    #endif
     
     private func extractContourFromMask(pixelBuffer: CVPixelBuffer, imageSize: CGSize, completion: @escaping (Result<[CGPoint], Error>) -> Void) {
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
         
-        // Check pixel format
+        // ピクセルフォーマットを確認
         let pixelFormat = CVPixelBufferGetPixelFormatType(pixelBuffer)
         print("Pixel format: \(pixelFormat)")
         
@@ -255,17 +261,17 @@ class BodyContourService {
         
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
         
-        // Check if it's float format
+        // floatフォーマットか確認
         let isFloatFormat = pixelFormat == kCVPixelFormatType_DepthFloat32
         
         if isFloatFormat {
-            // Handle float pixel format
+            // floatピクセルフォーマットを処理
             extractContourFromFloatMask(baseAddress: baseAddress, width: width, height: height, bytesPerRow: bytesPerRow, imageSize: imageSize, completion: completion)
         } else {
-            // Handle byte pixel format
+            // byteピクセルフォーマットを処理
             let pixelData = baseAddress.assumingMemoryBound(to: UInt8.self)
         
-        // Debug: Check pixel value range
+        // デバッグ: ピクセル値の範囲を確認
         var minPixelValue: UInt8 = 255
         var maxPixelValue: UInt8 = 0
         var foregroundPixelCount = 0
@@ -285,24 +291,24 @@ class BodyContourService {
         print("Pixel value range: \(minPixelValue) - \(maxPixelValue)")
         print("Foreground pixels: \(foregroundPixelCount) out of \(width * height)")
         
-        // Determine threshold based on the pixel value range
+        // ピクセル値の範囲に基づいて閾値を決定
         let threshold: UInt8 = maxPixelValue > 1 ? maxPixelValue / 2 : 0
         print("Using threshold: \(threshold)")
         
-        // Step 1: Find all edge pixels
+        // ステップ1: 全エッジピクセルを検出
         var edgePixels: [(x: Int, y: Int)] = []
         
-        // Scan the image to find edge pixels
+        // 画像をスキャンしてエッジピクセルを検出
         for y in 1..<height-1 {
             for x in 1..<width-1 {
                 let pixelIndex = y * bytesPerRow + x
                 let currentPixel = pixelData[pixelIndex]
                 
                 if currentPixel > threshold {
-                    // Check if this is an edge pixel (has at least one background neighbor)
+                    // このピクセルがエッジピクセルか確認（背景の隣接ピクセルが少なくとも1つあるか）
                     var hasBackgroundNeighbor = false
                     
-                    // Check 8-connected neighbors
+                    // 8方向の隣接ピクセルを確認
                     let neighbors = [
                         (-1, -1), (0, -1), (1, -1),
                         (-1, 0),            (1, 0),
@@ -319,7 +325,7 @@ class BodyContourService {
                                 break
                             }
                         } else {
-                            // Image boundary counts as background
+                            // 画像境界は背景とみなす
                             hasBackgroundNeighbor = true
                             break
                         }
@@ -334,19 +340,19 @@ class BodyContourService {
         
         print("Found \(edgePixels.count) edge pixels")
         
-        // Step 2: Use chain code to trace the outer contour
+        // ステップ2: チェインコードで外側輪郭をトレース
         guard !edgePixels.isEmpty else {
             completion(.failure(ContourError.noPersonDetected))
             return
         }
         
-        // Create edge map for fast lookup
+        // 高速検索用のエッジマップを作成
         var edgeMap = [[Bool]](repeating: [Bool](repeating: false, count: width), count: height)
         for edge in edgePixels {
             edgeMap[edge.y][edge.x] = true
         }
         
-        // Find starting point (topmost, then leftmost)
+        // 開始点を検出（最上部、次に最左）
         guard let startPoint = edgePixels.min(by: { a, b in
             if a.y != b.y { return a.y < b.y }
             return a.x < b.x
@@ -355,20 +361,20 @@ class BodyContourService {
             return
         }
         
-        // Trace the contour using Moore neighborhood tracing
+        // Moore近傍トレースで輪郭をトレース
         var contourPoints: [CGPoint] = []
         var current = startPoint
         var visited = Set<String>()
         
-        // Direction codes: 0=E, 1=SE, 2=S, 3=SW, 4=W, 5=NW, 6=N, 7=NE
+        // 方向コード: 0=E, 1=SE, 2=S, 3=SW, 4=W, 5=NW, 6=N, 7=NE
         let directions = [(1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1)]
-        var dir = 0 // Start direction
+        var dir = 0 // 開始方向
         
         let maxSteps = edgePixels.count * 2
         var steps = 0
         
         repeat {
-            // Add current point to contour
+            // 現在のポイントを輪郭に追加
             let scaledX = CGFloat(current.x) * imageSize.width / CGFloat(width)
             let scaledY = CGFloat(current.y) * imageSize.height / CGFloat(height)
             contourPoints.append(CGPoint(x: scaledX, y: scaledY))
@@ -376,9 +382,9 @@ class BodyContourService {
             let key = "\(current.x),\(current.y)"
             visited.insert(key)
             
-            // Find next point
+            // 次のポイントを検出
             var found = false
-            let startDir = (dir + 5) % 8 // Start search from 90 degrees counter-clockwise
+            let startDir = (dir + 5) % 8 // 反時計回りに90度から探索開始
             
             for i in 0..<8 {
                 let searchDir = (startDir + i) % 8
@@ -397,12 +403,12 @@ class BodyContourService {
             
             steps += 1
             
-            // Stop conditions
+            // 停止条件
             if !found || steps >= maxSteps {
                 break
             }
             
-            // Check if we've returned to start
+            // 開始点に戻ったか確認
             if current.x == startPoint.x && current.y == startPoint.y && steps > 8 {
                 break
             }
@@ -411,7 +417,7 @@ class BodyContourService {
         
         print("Traced contour with \(contourPoints.count) points")
         
-        // If contour tracing didn't work well, use all edge pixels
+        // 輪郭トレースがうまくいかなかった場合、全エッジピクセルを使用
         if contourPoints.count < 50 {
             print("Contour tracing produced too few points, using all edge pixels")
             contourPoints = []
@@ -427,19 +433,19 @@ class BodyContourService {
             return
         }
         
-        // Step 3: Sort edge points by angle to create ordered contour
-        // Find center point of all edge pixels
+        // ステップ3: 輪郭を順序付けるためにエッジポイントを角度でソート
+        // 全エッジピクセルの中心点を検出
         let centerX = contourPoints.reduce(0) { $0 + $1.x } / CGFloat(contourPoints.count)
         let centerY = contourPoints.reduce(0) { $0 + $1.y } / CGFloat(contourPoints.count)
         
-        // Sort points by angle from center
+        // 中心からの角度でポイントをソート
         let sortedContour = contourPoints.sorted { point1, point2 in
             let angle1 = atan2(point1.y - centerY, point1.x - centerX)
             let angle2 = atan2(point2.y - centerY, point2.x - centerX)
             return angle1 < angle2
         }
         
-        // Sample points if too many
+        // 多すぎる場合はポイントをサンプリング
         var finalContour = sortedContour
         if sortedContour.count > 500 {
             let step = sortedContour.count / 360
@@ -452,7 +458,7 @@ class BodyContourService {
         print("Sorted contour has \(finalContour.count) points")
         print("Final contour has \(finalContour.count) points")
         
-        // Step 4: Apply smoothing
+        // ステップ4: スムージングを適用
         let smoothedContour = smoothContourAggressive(finalContour)
         completion(.success(smoothedContour))
         }
@@ -461,7 +467,7 @@ class BodyContourService {
     private func extractContourFromFloatMask(baseAddress: UnsafeRawPointer, width: Int, height: Int, bytesPerRow: Int, imageSize: CGSize, completion: @escaping (Result<[CGPoint], Error>) -> Void) {
         let pixelData = baseAddress.assumingMemoryBound(to: Float32.self)
         
-        // Debug: Check pixel value range
+        // デバッグ: ピクセル値の範囲を確認
         var minPixelValue: Float32 = Float.infinity
         var maxPixelValue: Float32 = -Float.infinity
         var foregroundPixelCount = 0
@@ -481,11 +487,11 @@ class BodyContourService {
         print("Float pixel value range: \(minPixelValue) - \(maxPixelValue)")
         print("Foreground pixels: \(foregroundPixelCount) out of \(width * height)")
         
-        // Determine threshold based on the pixel value range
+        // ピクセル値の範囲に基づいて閾値を決定
         let threshold: Float32 = maxPixelValue > 0 ? maxPixelValue * 0.5 : 0
         print("Using float threshold: \(threshold)")
         
-        // Find edge pixels
+        // エッジピクセルを検出
         var edgePixels: [(x: Int, y: Int)] = []
         
         for y in 1..<height-1 {
@@ -527,7 +533,7 @@ class BodyContourService {
             return
         }
         
-        // Convert edge pixels to contour points
+        // エッジピクセルを輪郭ポイントに変換
         var contourPoints: [CGPoint] = []
         for edge in edgePixels {
             let scaledX = CGFloat(edge.x) * imageSize.width / CGFloat(width)
@@ -535,7 +541,7 @@ class BodyContourService {
             contourPoints.append(CGPoint(x: scaledX, y: scaledY))
         }
         
-        // Sort by angle from center for better ordering
+        // 中心からの角度でソートして順序を改善
         let centerX = imageSize.width / 2
         let centerY = imageSize.height / 2
         
@@ -560,8 +566,8 @@ class BodyContourService {
             return
         }
         
-        // Convert saliency map to binary mask
-        // Create a threshold filter to convert grayscale saliency to binary
+        // サリエンシーマップをバイナリマスクに変換
+        // グレースケールのサリエンシーをバイナリに変換するための閾値フィルターを作成
         guard let thresholdFilter = CIFilter(name: "CIColorMonochrome") else {
             completion(.failure(ContourError.imageProcessingFailed))
             return
@@ -569,7 +575,7 @@ class BodyContourService {
         
         thresholdFilter.setValue(ciImage, forKey: kCIInputImageKey)
         thresholdFilter.setValue(CIColor(red: 1, green: 1, blue: 1), forKey: "inputColor")
-        thresholdFilter.setValue(0.3, forKey: "inputIntensity") // Adjust threshold as needed
+        thresholdFilter.setValue(0.3, forKey: "inputIntensity") // 必要に応じて閾値を調整
         
         guard let outputImage = thresholdFilter.outputImage,
               let binaryImage = context.createCGImage(outputImage, from: outputImage.extent) else {
@@ -577,10 +583,10 @@ class BodyContourService {
             return
         }
         
-        // Extract contour points from binary image
+        // バイナリ画像から輪郭ポイントを抽出
         var contourPoints = extractBoundaryPoints(from: binaryImage, originalSize: imageSize)
         
-        // If we don't have enough points, try a different approach
+        // 十分なポイントがない場合、別のアプローチを試行
         if contourPoints.count < 20 {
             contourPoints = extractContourUsingEdgeDetection(from: cgImage, originalSize: imageSize)
         }
@@ -592,7 +598,7 @@ class BodyContourService {
         let width = cgImage.width
         let height = cgImage.height
         
-        // Get pixel data
+        // ピクセルデータを取得
         guard let data = cgImage.dataProvider?.data,
               let pixels = CFDataGetBytePtr(data) else {
             return []
@@ -603,7 +609,7 @@ class BodyContourService {
         
         var boundaryPoints: [CGPoint] = []
         
-        // Scan from multiple directions to find boundary
+        // 複数方向からスキャンして境界を検出
         let scanAngles = stride(from: 0, to: 360, by: 5)
         let centerX = CGFloat(width) / 2
         let centerY = CGFloat(height) / 2
@@ -612,7 +618,7 @@ class BodyContourService {
             let radians = CGFloat(angle) * .pi / 180
             let maxRadius = min(centerX, centerY) * 1.5
             
-            // Scan outward from center
+            // 中心から外側にスキャン
             for radius in stride(from: 0, to: maxRadius, by: 2) {
                 let x = Int(centerX + radius * cos(radians))
                 let y = Int(centerY + radius * sin(radians))
@@ -621,9 +627,9 @@ class BodyContourService {
                     let pixelIndex = y * bytesPerRow + x * bytesPerPixel
                     let pixelValue = pixels[pixelIndex]
                     
-                    // Check if this is a salient pixel (bright in the saliency map)
+                    // サリエンシーマップで特徴的なピクセル（明るい）か確認
                     if pixelValue > 100 {
-                        // Scale to original image size
+                        // 元の画像サイズにスケーリング
                         let scaledX = CGFloat(x) * originalSize.width / CGFloat(width)
                         let scaledY = CGFloat(y) * originalSize.height / CGFloat(height)
                         boundaryPoints.append(CGPoint(x: scaledX, y: scaledY))
@@ -637,11 +643,11 @@ class BodyContourService {
     }
     
     private func extractContourUsingEdgeDetection(from cgImage: CGImage, originalSize: CGSize) -> [CGPoint] {
-        // Alternative approach using edge detection
+        // エッジ検出を使用した代替アプローチ
         let ciImage = CIImage(cgImage: cgImage)
         let context = CIContext()
         
-        // Apply edge detection
+        // エッジ検出を適用
         guard let edgeFilter = CIFilter(name: "CIEdges") else {
             return []
         }
@@ -666,15 +672,15 @@ class BodyContourService {
             return
         }
         
-        // Convert to binary image and find contour
+        // バイナリ画像に変換して輪郭を検出
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
         
         print("Extracting contour from mask of size: \(width)x\(height)")
         
-        // Edge detection approach - trace the outline
+        // エッジ検出アプローチ - アウトラインをトレース
         
-        // Find starting point from top
+        // 上から開始点を検出
         var startPoint: CGPoint?
         for y in 0..<height {
             for x in 0..<width {
@@ -692,7 +698,7 @@ class BodyContourService {
             return
         }
         
-        // Trace outline using edge following algorithm
+        // エッジ追跡アルゴリズムでアウトラインをトレース
         var visited = Set<String>()
         var current = start
         let directions = [
@@ -706,7 +712,7 @@ class BodyContourService {
             CGPoint(x: -1, y: -1)   // up-left
         ]
         
-        // Trace the edge
+        // エッジをトレース
         var edgePoints: [CGPoint] = []
         var lastDirection = 0
         
@@ -717,7 +723,7 @@ class BodyContourService {
             }
             visited.insert(key)
             
-            // Check if this is an edge point (has at least one non-person neighbor)
+            // このポイントがエッジポイントか確認（非人物の隣接ピクセルが少なくとも1つあるか）
             var isEdge = false
             for dir in directions {
                 let neighbor = CGPoint(x: current.x + dir.x, y: current.y + dir.y)
@@ -733,7 +739,7 @@ class BodyContourService {
                 edgePoints.append(current)
             }
             
-            // Find next edge point
+            // 次のエッジポイントを検出
             var foundNext = false
             for i in 0..<directions.count {
                 let dirIndex = (lastDirection + i) % directions.count
@@ -771,14 +777,14 @@ class BodyContourService {
         
         print("Found \(edgePoints.count) edge points")
         
-        // Sample edge points to reduce density
-        let targetPoints = 72  // One point every 5 degrees
+        // エッジポイントをサンプリングして密度を下げる
+        let targetPoints = 72  // 5度ごとに1ポイント
         let step = max(1, edgePoints.count / targetPoints)
         var sampledPoints: [CGPoint] = []
         
         for i in stride(from: 0, to: edgePoints.count, by: step) {
             let point = edgePoints[i]
-            // Scale to original image size
+            // 元の画像サイズにスケーリング
             let scaledX = point.x * imageSize.width / CGFloat(width)
             let scaledY = point.y * imageSize.height / CGFloat(height)
             sampledPoints.append(CGPoint(x: scaledX, y: scaledY))
@@ -786,7 +792,7 @@ class BodyContourService {
         
         print("Sampled to \(sampledPoints.count) contour points")
         
-        // Smooth the contour
+        // 輪郭をスムージング
         let smoothedContour = smoothContour(sampledPoints)
         completion(.success(smoothedContour))
     }
@@ -809,11 +815,11 @@ class BodyContourService {
         let pixel = baseAddress.assumingMemoryBound(to: UInt8.self)
         let offset = y * bytesPerRow + x
         
-        // Vision framework person segmentation uses confidence values
-        // Higher values indicate higher confidence that the pixel belongs to a person
+        // Visionフレームワークの人物セグメンテーションは信頼度値を使用
+        // 値が高いほどそのピクセルが人物に属する信頼度が高い
         let pixelValue = pixel[offset]
         
-        // Use a lower threshold for better detection
+        // より良い検出のために低い閾値を使用
         return pixelValue > 50
     }
     
@@ -845,10 +851,10 @@ class BodyContourService {
     private func smoothContourAggressive(_ points: [CGPoint]) -> [CGPoint] {
         guard points.count > 5 else { return points }
         
-        // First pass: basic smoothing
+        // 第1パス: 基本スムージング
         let smoothed = smoothContour(points)
         
-        // Second pass: apply Gaussian-like smoothing with larger window
+        // 第2パス: より大きなウィンドウでガウシアン風スムージングを適用
         let windowSize = 5
         var finalSmoothed: [CGPoint] = []
         
@@ -859,7 +865,7 @@ class BodyContourService {
             
             for j in -windowSize...windowSize {
                 let index = (i + j + smoothed.count) % smoothed.count
-                // Gaussian-like weighting - closer points have more influence
+                // ガウシアン風の重み付け - 近いポイントほど影響が大きい
                 let weight = exp(-pow(CGFloat(j), 2) / (2 * pow(CGFloat(windowSize) / 2, 2)))
                 sumX += smoothed[index].x * weight
                 sumY += smoothed[index].y * weight
@@ -869,7 +875,7 @@ class BodyContourService {
             finalSmoothed.append(CGPoint(x: sumX / totalWeight, y: sumY / totalWeight))
         }
         
-        // Third pass: remove outliers and re-smooth
+        // 第3パス: 外れ値を除去して再スムージング
         var filtered: [CGPoint] = []
         let maxDistanceRatio: CGFloat = 2.0
         
@@ -885,12 +891,12 @@ class BodyContourService {
             if deviationDistance < avgDistance * maxDistanceRatio {
                 filtered.append(current)
             } else {
-                // Replace outlier with interpolated point
+                // 外れ値を補間ポイントで置換
                 filtered.append(centerPoint)
             }
         }
         
-        // Final smoothing pass
+        // 最終スムージングパス
         return smoothContour(filtered)
     }
     
@@ -898,32 +904,32 @@ class BodyContourService {
         return sqrt(pow(point1.x - point2.x, 2) + pow(point1.y - point2.y, 2))
     }
     
-    // Convex hull using Graham scan algorithm
+    // Grahamスキャンアルゴリズムによる凸包
     private func convexHull(points: [CGPoint]) -> [CGPoint] {
         guard points.count >= 3 else { return points }
         
-        // Find the point with the lowest y-coordinate (and leftmost if tie)
+        // 最も低y座標のポイントを検出（同じ場合は最左）
         guard let start = points.min(by: { a, b in
             if a.y != b.y { return a.y < b.y }
             return a.x < b.x
         }) else { return points }
         
-        // Sort points by polar angle with respect to start point
+        // 開始点からの極角度でポイントをソート
         let sortedPoints = points.filter { $0 != start }.sorted { a, b in
             let angleA = atan2(a.y - start.y, a.x - start.x)
             let angleB = atan2(b.y - start.y, b.x - start.x)
             if angleA != angleB { return angleA < angleB }
-            // If angles are equal, closer point comes first
+            // 角度が等しい場合、近いポイントを先に
             let distA = distance(from: start, to: a)
             let distB = distance(from: start, to: b)
             return distA < distB
         }
         
-        // Build convex hull
+        // 凸包を構築
         var hull = [start]
         
         for point in sortedPoints {
-            // Remove points that make clockwise turn
+            // 時計回りのターンを作るポイントを除去
             while hull.count > 1 && crossProduct(hull[hull.count-2], hull[hull.count-1], point) <= 0 {
                 hull.removeLast()
             }
@@ -933,20 +939,20 @@ class BodyContourService {
         return hull
     }
     
-    // Cross product of vectors (p1->p2) and (p1->p3)
+    // ベクトル(p1->p2)と(p1->p3)の外積
     private func crossProduct(_ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint) -> CGFloat {
         return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x)
     }
     
-    // Create a preview image with the contour overlay
+    // 輪郭オーバーレイ付きのプレビュー画像を作成
     func createContourPreview(image: UIImage, contour: [CGPoint]) -> UIImage {
         UIGraphicsBeginImageContextWithOptions(image.size, false, image.scale)
         defer { UIGraphicsEndImageContext() }
         
-        // Draw original image
+        // 元画像を描画
         image.draw(at: .zero)
         
-        // Draw contour
+        // 輪郭を描画
         guard let context = UIGraphicsGetCurrentContext(), contour.count > 2 else {
             return image
         }

@@ -26,11 +26,11 @@ struct BodyGuideline: Codable {
         self.points = try container.decode([CGPoint].self, forKey: .points)
         self.imageSize = try container.decode(CGSize.self, forKey: .imageSize)
         self.createdDate = try container.decode(Date.self, forKey: .createdDate)
-        // Default to false for backward compatibility
+        // 後方互換性のためデフォルトはfalse
         self.isFrontCamera = try container.decodeIfPresent(Bool.self, forKey: .isFrontCamera) ?? false
     }
     
-    // Convert points to relative coordinates (0-1 range)
+    // ポイントを相対座標（0〜1の範囲）に変換
     var normalizedPoints: [CGPoint] {
         return points.map { point in
             CGPoint(
@@ -40,7 +40,7 @@ struct BodyGuideline: Codable {
         }
     }
     
-    // Get points scaled to a specific size
+    // 指定サイズにスケーリングしたポイントを取得
     func scaledPoints(for size: CGSize) -> [CGPoint] {
         return normalizedPoints.map { point in
             CGPoint(

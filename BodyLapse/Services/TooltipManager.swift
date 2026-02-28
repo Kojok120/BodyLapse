@@ -1,11 +1,11 @@
 import Foundation
 import SwiftUI
 
-// MARK: - Tooltip Manager Service
+// MARK: - ツールチップマネージャーサービス
 class TooltipManager: ObservableObject {
     static let shared = TooltipManager()
     
-    // MARK: - Feature IDs
+    // MARK: - 機能ID
     enum FeatureID: String, CaseIterable {
         case videoGeneration = "video_generation"
         case categoryAdding = "category_adding"
@@ -13,40 +13,40 @@ class TooltipManager: ObservableObject {
         case categoryManagement = "category_management"
     }
     
-    // MARK: - UserDefaults Keys
+    // MARK: - UserDefaultsキー
     private enum Keys {
         static let tooltipShownPrefix = "tooltip_shown_"
         static let tooltipCompletedPrefix = "tooltip_completed_"
     }
     
-    // MARK: - Published Properties
+    // MARK: - 公開プロパティ
     @Published private var shownFeatures: Set<FeatureID> = []
     @Published private var completedFeatures: Set<FeatureID> = []
     
-    // MARK: - Initialization
+    // MARK: - 初期化
     private init() {
         loadState()
     }
     
-    // MARK: - Public Methods
+    // MARK: - 公開メソッド
     
-    /// Check if a feature needs guidance (red dot)
+    /// 機能にガイダンス（赤いドット）が必要か確認
     func needsGuidance(for feature: FeatureID) -> Bool {
         return !completedFeatures.contains(feature)
     }
     
-    /// Check if tooltip has been shown for a feature
+    /// 機能のツールチップが表示済みか確認
     func hasShownTooltip(for feature: FeatureID) -> Bool {
         return shownFeatures.contains(feature)
     }
     
-    /// Mark tooltip as shown for a feature
+    /// 機能のツールチップを表示済みとマーク
     func markTooltipShown(for feature: FeatureID) {
         shownFeatures.insert(feature)
         saveTooltipShown(for: feature)
     }
     
-    /// Mark feature as completed (removes red dot permanently)
+    /// 機能を完了とマーク（赤いドットを永久的に削除）
     func markFeatureCompleted(for feature: FeatureID) {
         completedFeatures.insert(feature)
         shownFeatures.insert(feature) // Also mark as shown
@@ -54,7 +54,7 @@ class TooltipManager: ObservableObject {
         saveTooltipShown(for: feature)
     }
     
-    /// Reset all guidance state (for testing/debugging)
+    /// 全てのガイダンス状態をリセット（テスト/デバッグ用）
     func resetAllGuidance() {
         shownFeatures.removeAll()
         completedFeatures.removeAll()
@@ -65,19 +65,19 @@ class TooltipManager: ObservableObject {
         }
     }
     
-    /// Get total number of features requiring guidance
+    /// ガイダンスが必要な機能の総数を取得
     func getTotalGuidanceCount() -> Int {
         return FeatureID.allCases.count - completedFeatures.count
     }
     
-    /// Get completion percentage
+    /// 完了率を取得
     func getCompletionPercentage() -> Double {
         let totalFeatures = FeatureID.allCases.count
         let completedCount = completedFeatures.count
         return totalFeatures > 0 ? Double(completedCount) / Double(totalFeatures) : 0.0
     }
     
-    // MARK: - Private Methods
+    // MARK: - プライベートメソッド
     
     private func loadState() {
         for feature in FeatureID.allCases {
@@ -99,10 +99,10 @@ class TooltipManager: ObservableObject {
     }
 }
 
-// MARK: - Guidance Content Provider
+// MARK: - ガイダンスコンテンツプロバイダー
 extension TooltipManager {
     
-    /// Get localized title for a feature
+    /// 機能のローカライズされたタイトルを取得
     func getTitle(for feature: FeatureID) -> String {
         switch feature {
         case .videoGeneration:
@@ -116,7 +116,7 @@ extension TooltipManager {
         }
     }
     
-    /// Get localized description for a feature
+    /// 機能のローカライズされた説明を取得
     func getDescription(for feature: FeatureID) -> String {
         switch feature {
         case .videoGeneration:

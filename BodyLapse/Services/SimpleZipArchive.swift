@@ -1,36 +1,18 @@
 import Foundation
 
-// Simple file archive implementation for iOS
-// Note: This creates a custom .bodylapse archive format since iOS doesn't have
-// native ZIP support without external libraries
+// iOS用のシンプルなファイルアーカイブ実装
+// 注意: iOSには外部ライブラリなしのネイティブZIPサポートがないため、
+// カスタム.bodylapseアーカイブ形式を作成します
 class SimpleZipArchive {
-    
-    // Helper methods for safe binary reading
-    private static func readUInt16(from data: Data, at offset: Int) -> UInt16? {
-        guard offset + 2 <= data.count else { return nil }
-        var value: UInt16 = 0
-        for i in 0..<2 {
-            value |= UInt16(data[offset + i]) << (i * 8)
-        }
-        return value
-    }
-    
-    private static func readUInt32(from data: Data, at offset: Int) -> UInt32? {
-        guard offset + 4 <= data.count else { return nil }
-        var value: UInt32 = 0
-        for i in 0..<4 {
-            value |= UInt32(data[offset + i]) << (i * 8)
-        }
-        return value
-    }
-    
-    private static func readUInt64(from data: Data, at offset: Int) -> UInt64? {
-        guard offset + 8 <= data.count else { return nil }
-        var value: UInt64 = 0
-        for i in 0..<8 {
-            value |= UInt64(data[offset + i]) << (i * 8)
-        }
-        return value
+    private static let chunkSize = 1_048_576 // 1MB
+    private static let maxPathLength = 8_192
+    private static let magic = "BODY".data(using: .utf8)!
+
+    private enum ArchiveError: Error {
+        case unexpectedEOF
+        case invalidHeader
+        case invalidPath
+        case invalidLength
     }
     
     static func createZipFile(
@@ -42,54 +24,72 @@ class SimpleZipArchive {
             let fileManager = FileManager.default
             let directoryURL = URL(fileURLWithPath: directory)
             let zipURL = URL(fileURLWithPath: zipPath)
-            
-            // Create a simple archive format:
-            // [Magic Number][Version][File Count][Files...]
-            // File format: [Path Length][Path][Data Length][Data]
-            
-            var archiveData = Data()
-            
-            // Magic number and version
-            archiveData.append("BODY".data(using: .utf8)!) // Magic number
-            let version: UInt16 = 1
-            archiveData.append(contentsOf: withUnsafeBytes(of: version.littleEndian) { Array($0) })
-            
-            // Gather all files
-            var files: [(path: String, data: Data)] = []
-            let enumerator = fileManager.enumerator(at: directoryURL, includingPropertiesForKeys: [.isRegularFileKey])
-            
+
+            if fileManager.fileExists(atPath: zipURL.path) {
+                try fileManager.removeItem(at: zipURL)
+            }
+            _ = fileManager.createFile(atPath: zipURL.path, contents: nil)
+
+            let outputHandle = try FileHandle(forWritingTo: zipURL)
+            defer { try? outputHandle.close() }
+
+            let normalizedBasePath = directoryURL.standardizedFileURL.path.hasSuffix("/")
+                ? directoryURL.standardizedFileURL.path
+                : directoryURL.standardizedFileURL.path + "/"
+            let parentPrefix = keepParentDirectory ? directoryURL.lastPathComponent + "/" : ""
+            let enumerator = fileManager.enumerator(
+                at: directoryURL,
+                includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
+                options: [.skipsHiddenFiles]
+            )
+
+            var files: [(url: URL, path: String, size: UInt64)] = []
+
             while let fileURL = enumerator?.nextObject() as? URL {
-                let resourceValues = try fileURL.resourceValues(forKeys: [.isRegularFileKey])
-                
-                if resourceValues.isRegularFile == true {
-                    let relativePath = fileURL.path.replacingOccurrences(of: directory + "/", with: "")
-                    let fileData = try Data(contentsOf: fileURL)
-                    files.append((path: relativePath, data: fileData))
+                let values = try fileURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+                guard values.isRegularFile == true else { continue }
+
+                guard fileURL.path.hasPrefix(normalizedBasePath) else {
+                    throw ArchiveError.invalidPath
                 }
+                var relativePath = String(fileURL.path.dropFirst(normalizedBasePath.count))
+                if !parentPrefix.isEmpty {
+                    relativePath = parentPrefix + relativePath
+                }
+
+                guard let safePath = sanitizedRelativePath(relativePath) else {
+                    throw ArchiveError.invalidPath
+                }
+
+                guard let size = values.fileSize, size >= 0 else {
+                    throw ArchiveError.invalidLength
+                }
+
+                files.append((url: fileURL, path: safePath, size: UInt64(size)))
             }
-            
-            // Write file count
-            let fileCount = UInt32(files.count)
-            archiveData.append(contentsOf: withUnsafeBytes(of: fileCount.littleEndian) { Array($0) })
-            
-            // Write each file
+
+            try outputHandle.write(contentsOf: magic)
+            try write(UInt16(1), to: outputHandle)
+            guard files.count <= Int(UInt32.max) else {
+                throw ArchiveError.invalidLength
+            }
+            try write(UInt32(files.count), to: outputHandle)
+
             for file in files {
-                // Path length and path
-                let pathLength = UInt32(file.path.count)
-                archiveData.append(contentsOf: withUnsafeBytes(of: pathLength.littleEndian) { Array($0) })
-                if let pathData = file.path.data(using: .utf8) {
-                    archiveData.append(pathData)
+                guard let pathData = file.path.data(using: .utf8) else {
+                    throw ArchiveError.invalidPath
                 }
-                
-                // Data length and data
-                let dataLength = UInt64(file.data.count)
-                archiveData.append(contentsOf: withUnsafeBytes(of: dataLength.littleEndian) { Array($0) })
-                archiveData.append(file.data)
+
+                try write(UInt32(pathData.count), to: outputHandle)
+                try outputHandle.write(contentsOf: pathData)
+                try write(file.size, to: outputHandle)
+
+                let inputHandle = try FileHandle(forReadingFrom: file.url)
+                defer { try? inputHandle.close() }
+
+                try copyBytes(count: file.size, from: inputHandle, to: outputHandle)
             }
-            
-            // Write to file
-            try archiveData.write(to: zipURL)
-            
+
             return true
         } catch {
             print("Error creating archive: \(error)")
@@ -102,85 +102,162 @@ class SimpleZipArchive {
         toDestination destination: String
     ) -> Bool {
         do {
+            let fileManager = FileManager.default
             let zipURL = URL(fileURLWithPath: zipPath)
-            let destinationURL = URL(fileURLWithPath: destination)
-            
-            print("[SimpleZipArchive] Starting extraction from: \(zipPath)")
-            
-            // Read archive data
-            let archiveData = try Data(contentsOf: zipURL)
-            print("[SimpleZipArchive] Archive size: \(archiveData.count) bytes")
-            var offset = 0
-            
-            // Check magic number
-            print("[SimpleZipArchive] Checking magic number...")
-            guard offset + 4 <= archiveData.count else { 
-                print("[SimpleZipArchive] Not enough data for magic number")
-                return false 
+            let destinationRootURL = URL(fileURLWithPath: destination)
+
+            try fileManager.createDirectory(at: destinationRootURL, withIntermediateDirectories: true)
+
+            let archiveHandle = try FileHandle(forReadingFrom: zipURL)
+            defer { try? archiveHandle.close() }
+
+            let magicData = try readExact(magic.count, from: archiveHandle)
+            guard magicData == magic else {
+                throw ArchiveError.invalidHeader
             }
-            let magicData = archiveData.subdata(in: offset..<offset+4)
-            guard String(data: magicData, encoding: .utf8) == "BODY" else { 
-                print("[SimpleZipArchive] Invalid magic number")
-                return false 
+
+            let version = try readUInt16(from: archiveHandle)
+            guard version == 1 else {
+                throw ArchiveError.invalidHeader
             }
-            offset += 4
-            
-            // Read version
-            print("[SimpleZipArchive] Reading version...")
-            guard let version = readUInt16(from: archiveData, at: offset) else { 
-                print("[SimpleZipArchive] Failed to read version")
-                return false 
-            }
-            guard version == 1 else { 
-                print("[SimpleZipArchive] Unsupported version: \(version)")
-                return false 
-            }
-            offset += 2
-            
-            // Read file count
-            print("[SimpleZipArchive] Reading file count...")
-            guard let fileCount = readUInt32(from: archiveData, at: offset) else { 
-                print("[SimpleZipArchive] Failed to read file count")
-                return false 
-            }
-            print("[SimpleZipArchive] File count: \(fileCount)")
-            offset += 4
-            
-            // Read each file
-            for i in 0..<fileCount {
-                print("[SimpleZipArchive] Processing file \(i+1)/\(fileCount)...")
-                // Read path length
-                guard let pathLength = readUInt32(from: archiveData, at: offset) else { break }
-                offset += 4
-                
-                // Read path
-                guard offset + Int(pathLength) <= archiveData.count else { break }
-                let pathData = archiveData.subdata(in: offset..<(offset + Int(pathLength)))
-                guard let path = String(data: pathData, encoding: .utf8) else { break }
-                offset += Int(pathLength)
-                
-                // Read data length
-                guard let dataLength = readUInt64(from: archiveData, at: offset) else { break }
-                offset += 8
-                
-                // Read file data
-                guard offset + Int(dataLength) <= archiveData.count else { break }
-                let fileData = archiveData.subdata(in: offset..<(offset + Int(dataLength)))
-                offset += Int(dataLength)
-                
-                // Write file
-                let fileURL = destinationURL.appendingPathComponent(path)
-                try FileManager.default.createDirectory(
+
+            let fileCount = try readUInt32(from: archiveHandle)
+
+            for _ in 0..<fileCount {
+                let pathLength = try readUInt32(from: archiveHandle)
+                guard pathLength > 0, pathLength <= UInt32(maxPathLength) else {
+                    throw ArchiveError.invalidPath
+                }
+
+                let pathData = try readExact(Int(pathLength), from: archiveHandle)
+                guard let rawPath = String(data: pathData, encoding: .utf8),
+                      let safePath = sanitizedRelativePath(rawPath),
+                      let fileURL = destinationURL(for: safePath, under: destinationRootURL) else {
+                    throw ArchiveError.invalidPath
+                }
+
+                let dataLength = try readUInt64(from: archiveHandle)
+
+                try fileManager.createDirectory(
                     at: fileURL.deletingLastPathComponent(),
                     withIntermediateDirectories: true
                 )
-                try fileData.write(to: fileURL)
+                if fileManager.fileExists(atPath: fileURL.path) {
+                    try fileManager.removeItem(at: fileURL)
+                }
+                _ = fileManager.createFile(atPath: fileURL.path, contents: nil)
+
+                let outputHandle = try FileHandle(forWritingTo: fileURL)
+                do {
+                    try copyBytes(count: dataLength, from: archiveHandle, to: outputHandle)
+                    try outputHandle.close()
+                } catch {
+                    try? outputHandle.close()
+                    try? fileManager.removeItem(at: fileURL)
+                    throw error
+                }
             }
-            
+
             return true
         } catch {
             print("Error extracting archive: \(error)")
             return false
         }
+    }
+
+    // MARK: - バイナリIOヘルパー
+
+    private static func write(_ value: UInt16, to handle: FileHandle) throws {
+        var little = value.littleEndian
+        let data = withUnsafeBytes(of: &little) { Data($0) }
+        try handle.write(contentsOf: data)
+    }
+
+    private static func write(_ value: UInt32, to handle: FileHandle) throws {
+        var little = value.littleEndian
+        let data = withUnsafeBytes(of: &little) { Data($0) }
+        try handle.write(contentsOf: data)
+    }
+
+    private static func write(_ value: UInt64, to handle: FileHandle) throws {
+        var little = value.littleEndian
+        let data = withUnsafeBytes(of: &little) { Data($0) }
+        try handle.write(contentsOf: data)
+    }
+
+    private static func readExact(_ count: Int, from handle: FileHandle) throws -> Data {
+        var data = Data()
+        data.reserveCapacity(count)
+
+        while data.count < count {
+            let remaining = count - data.count
+            guard let chunk = try handle.read(upToCount: remaining), !chunk.isEmpty else {
+                throw ArchiveError.unexpectedEOF
+            }
+            data.append(chunk)
+        }
+
+        return data
+    }
+
+    private static func readUInt16(from handle: FileHandle) throws -> UInt16 {
+        let data = try readExact(2, from: handle)
+        return UInt16(data[0]) | (UInt16(data[1]) << 8)
+    }
+
+    private static func readUInt32(from handle: FileHandle) throws -> UInt32 {
+        let data = try readExact(4, from: handle)
+        return UInt32(data[0]) |
+            (UInt32(data[1]) << 8) |
+            (UInt32(data[2]) << 16) |
+            (UInt32(data[3]) << 24)
+    }
+
+    private static func readUInt64(from handle: FileHandle) throws -> UInt64 {
+        let data = try readExact(8, from: handle)
+        var value: UInt64 = 0
+        for (index, byte) in data.enumerated() {
+            value |= UInt64(byte) << (UInt64(index) * 8)
+        }
+        return value
+    }
+
+    private static func copyBytes(count: UInt64, from input: FileHandle, to output: FileHandle) throws {
+        var remaining = count
+        while remaining > 0 {
+            let readSize = Int(min(UInt64(chunkSize), remaining))
+            let chunk = try readExact(readSize, from: input)
+            try output.write(contentsOf: chunk)
+            remaining -= UInt64(chunk.count)
+        }
+    }
+
+    // MARK: - パス検証
+
+    private static func sanitizedRelativePath(_ path: String) -> String? {
+        let trimmed = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        let normalized = trimmed.replacingOccurrences(of: "\\", with: "/")
+        guard !normalized.hasPrefix("/") else { return nil }
+
+        let components = normalized.split(separator: "/", omittingEmptySubsequences: false)
+        guard !components.isEmpty else { return nil }
+        guard !components.contains(where: { $0 == ".." || $0 == "." || $0.isEmpty }) else {
+            return nil
+        }
+
+        return components.joined(separator: "/")
+    }
+
+    private static func destinationURL(for relativePath: String, under destinationRoot: URL) -> URL? {
+        let root = destinationRoot.standardizedFileURL.resolvingSymlinksInPath()
+        let candidate = root.appendingPathComponent(relativePath).standardizedFileURL.resolvingSymlinksInPath()
+
+        let rootPath = root.path.hasSuffix("/") ? root.path : root.path + "/"
+        guard candidate.path.hasPrefix(rootPath) else {
+            return nil
+        }
+        return candidate
     }
 }

@@ -5,32 +5,32 @@ struct UserSettings: Codable {
     var weightUnit: WeightUnit = .kg
     var healthKitEnabled: Bool = false
     
-    // Onboarding
+    // オンボーディング
     var hasCompletedOnboarding: Bool = false
     
-    // Security
+    // セキュリティ
     var isAppLockEnabled: Bool = false
     var appLockMethod: AppLockMethod = .biometric
-    // appPasscode removed - now stored securely in Keychain via AuthenticationService
+    // appPasscodeを削除 - AuthenticationService経由でKeychainに安全に保存するように変更
     
-    // App Rating
+    // アプリ評価
     var hasRatedApp: Bool = false
     
-    // Video Generation
+    // 動画生成
     var showDateInVideo: Bool = true
     
-    // Reminder Settings
+    // リマインダー設定
     var isReminderEnabled: Bool = false
-    var reminderHour: Int = 19  // Default to 7 PM (Note: missed photo check is at 9 PM)
+    var reminderHour: Int = 19  // デフォルトは19時（注: 未撮影チェックは21時）
     var reminderMinute: Int = 0
     
-    // Appearance
+    // 外観
     var appearanceMode: AppearanceMode = .system
     
-    // Face Blur Settings
+    // 顔ぼかし設定
     var faceBlurMethod: FaceBlurMethod = .strongBlur
     
-    // Debug settings
+    // デバッグ設定
     #if DEBUG
     var debugAllowPastDatePhotos: Bool = false
     #endif
@@ -114,7 +114,7 @@ class UserSettingsManager: ObservableObject {
            let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
             self.settings = decoded
             
-            // Migrate password from old UserSettings to AuthenticationService
+            // 旧UserSettingsからAuthenticationServiceへのパスワード移行
             migratePasswordIfNeeded()
         } else {
             self.settings = UserSettings.default
@@ -122,21 +122,21 @@ class UserSettingsManager: ObservableObject {
     }
     
     private func migratePasswordIfNeeded() {
-        // Check if there's an old password stored in UserDefaults that needs migration
-        // This handles users upgrading from the old version
+        // UserDefaultsに移行が必要な旧パスワードが保存されているか確認
+        // 旧バージョンからアップグレードするユーザーへの対応
         if let oldData = userDefaults.data(forKey: settingsKey),
            let jsonObject = try? JSONSerialization.jsonObject(with: oldData) as? [String: Any],
            let oldPasscode = jsonObject["appPasscode"] as? String,
            !oldPasscode.isEmpty {
             
-            // Migrate to AuthenticationService
+            // AuthenticationServiceへ移行
             if AuthenticationService.shared.setPassword(oldPasscode) {
                 AuthenticationService.shared.isAuthenticationEnabled = settings.isAppLockEnabled
                 if settings.appLockMethod == .biometric {
                     AuthenticationService.shared.isBiometricEnabled = true
                 }
                 
-                // Remove the old password from UserDefaults by re-saving settings
+                // 設定を再保存してUserDefaultsから旧パスワードを削除
                 save()
             }
         }
@@ -149,7 +149,7 @@ class UserSettingsManager: ObservableObject {
     }
     
     private func handleSettingsChange(oldValue: UserSettings) {
-        // Handle settings changes if needed
+        // 必要に応じて設定変更を処理
         if oldValue.appearanceMode != settings.appearanceMode {
             AppearanceManager.shared.syncWithSettings()
         }

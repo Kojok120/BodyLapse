@@ -23,10 +23,10 @@ class AuthenticationService: ObservableObject {
     private let biometricEnabledKey = "BiometricAuthenticationEnabled"
     
     private init() {
-        // Reset authentication state on app launch to prevent frozen state
+        // アプリ起動時に認証状態をリセットしてフリーズ状態を防止
         isAuthenticated = false
         authenticationError = nil
-        // Load saved settings
+        // 保存された設定を読み込み
         isAuthenticationEnabled = UserDefaults.standard.bool(forKey: authEnabledKey)
         isBiometricEnabled = UserDefaults.standard.bool(forKey: biometricEnabledKey)
     }
@@ -48,6 +48,8 @@ class AuthenticationService: ObservableObject {
             return "settings.face_id".localized
         case .touchID:
             return "settings.touch_id".localized
+        case .opticID:
+            return "settings.face_id".localized
         case .none:
             return "settings.biometric".localized
         @unknown default:
@@ -55,7 +57,7 @@ class AuthenticationService: ObservableObject {
         }
     }
     
-    // MARK: - Password Management
+    // MARK: - パスワード管理
     
     func setPassword(_ password: String) -> Bool {
         guard !password.isEmpty else { return false }
@@ -69,10 +71,10 @@ class AuthenticationService: ObservableObject {
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         ]
         
-        // Delete existing password first
+        // 既存のパスワードをまず削除
         SecItemDelete(query as CFDictionary)
         
-        // Add new password
+        // 新しいパスワードを追加
         let status = SecItemAdd(query as CFDictionary, nil)
         return status == errSecSuccess
     }
@@ -116,7 +118,7 @@ class AuthenticationService: ObservableObject {
         SecItemDelete(query as CFDictionary)
     }
     
-    // MARK: - Authentication Methods
+    // MARK: - 認証メソッド
     
     func authenticateWithBiometric(completion: @escaping (Bool, Error?) -> Void) {
         let context = LAContext()
@@ -153,25 +155,25 @@ class AuthenticationService: ObservableObject {
     }
     
     func authenticate(completion: @escaping (Bool) -> Void) {
-        // If authentication is not enabled, just mark as authenticated
+        // 認証が有効でない場合は認証済みとしてマーク
         guard isAuthenticationEnabled else {
             isAuthenticated = true
             completion(true)
             return
         }
         
-        // Try biometric first if enabled
+        // 生体認証が有効な場合はまず試行
         if isBiometricEnabled {
             authenticateWithBiometric { success, error in
                 if success {
                     completion(true)
                 } else {
-                    // Biometric failed, user needs to enter password
+                    // 生体認証失敗、パスワード入力が必要
                     completion(false)
                 }
             }
         } else {
-            // Biometric not enabled, user needs to enter password
+            // 生体認証が無効、パスワード入力が必要
             completion(false)
         }
     }

@@ -9,7 +9,7 @@ class PhotoStorageService {
     private let imageCache = NSCache<NSString, UIImage>()
 
     private init() {
-        // Rough limit: ~200MB of cached pixel data (4 bytes per pixel)
+        // 大まかな制限: キャッシュピクセルデータ約200MB（1ピクセル4バイト）
         imageCache.totalCostLimit = 200 * 1024 * 1024
         NotificationCenter.default.addObserver(
             self,
@@ -39,24 +39,24 @@ class PhotoStorageService {
         loadPhotosMetadata()
         // Initialized with photos
         
-        // Migrate existing photos to category structure
+        // 既存の写真をカテゴリ構造に移行
         migratePhotosToCategory()
     }
     
     private func createPhotosDirectoryIfNeeded() {
         guard let photosDirectory = photosDirectory else {
-            // Error: Could not access photos directory
+            // エラー: 写真ディレクトリにアクセスできません
             return
         }
         
         do {
             try FileManager.default.createDirectory(at: photosDirectory, withIntermediateDirectories: true)
             
-            // Create default category directory
+            // デフォルトカテゴリディレクトリを作成
             let defaultCategoryDir = photosDirectory.appendingPathComponent(PhotoCategory.defaultCategory.id)
             try FileManager.default.createDirectory(at: defaultCategoryDir, withIntermediateDirectories: true)
         } catch {
-            // Error creating photos directory
+            // 写真ディレクトリの作成エラー
         }
     }
     
@@ -65,13 +65,13 @@ class PhotoStorageService {
             throw PhotoStorageError.directoryAccessFailed
         }
         
-        // Create category directory if needed
+        // 必要に応じてカテゴリディレクトリを作成
         let categoryDir = photosDirectory.appendingPathComponent(categoryId)
         if !FileManager.default.fileExists(atPath: categoryDir.path) {
             try FileManager.default.createDirectory(at: categoryDir, withIntermediateDirectories: true)
         }
         
-        // Fix image orientation to ensure it's always saved in portrait
+        // 画像の向きを修正して常に縦向きで保存されるようにする
         let orientedImage = image.fixedOrientation()
         
         guard let imageData = orientedImage.jpegData(compressionQuality: 0.9) else {
@@ -83,12 +83,12 @@ class PhotoStorageService {
         
         try imageData.write(to: fileURL)
         
-        // If weight/bodyFat not provided, check if there's existing weight data for this date from other photos
+        // 体重/体脂肪が未提供の場合、同日の他の写真から既存の体重データを確認
         var finalWeight = weight
         var finalBodyFat = bodyFatPercentage
         
         if finalWeight == nil || finalBodyFat == nil {
-            // Check if any other photo on this date has weight data
+            // 同日の他の写真に体重データがあるか確認
             let photosOnSameDate = photos.filter { photo in
                 Calendar.current.isDate(photo.captureDate, inSameDayAs: captureDate)
             }
@@ -116,12 +116,12 @@ class PhotoStorageService {
             bodyFatPercentage: finalBodyFat
         )
         
-        // Created photo with metadata
+        // メタデータ付きで写真を作成
         
         photos.append(photo)
         photos.sort { $0.captureDate > $1.captureDate }
         
-        // If this photo has weight/body fat data, update all other photos on the same date
+        // この写真に体重/体脂肪データがある場合、同日の他の写真も更新
         if finalWeight != nil || finalBodyFat != nil {
             let photosOnSameDate = photos.enumerated().compactMap { (index, p) in
                 Calendar.current.isDate(p.captureDate, inSameDayAs: captureDate) && p.id != photo.id ? index : nil
@@ -141,16 +141,16 @@ class PhotoStorageService {
         
         savePhotosMetadata()
         
-        // Photo saved to metadata
+        // 写真をメタデータに保存
         
-        // Post notification that photos have been updated
+        // 写真が更新されたことを通知
         NotificationCenter.default.post(
             name: Notification.Name("PhotosUpdated"),
             object: nil,
             userInfo: ["photo": photo]
         )
         
-        // Check if we should request app review
+        // アプリレビューをリクエストすべきか確認
         checkAndRequestReviewIfNeeded()
         
         return photo
@@ -216,14 +216,14 @@ class PhotoStorageService {
     }
     
     func replacePhoto(for date: Date, categoryId: String = PhotoCategory.defaultCategory.id, with image: UIImage, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
-        // Replacing photo for date and category
+        // 日付とカテゴリの写真を置換
         
-        // If weight/bodyFat not provided, check existing photo for this date/category
+        // 体重/体脂肪が未提供の場合、この日付/カテゴリの既存写真を確認
         var finalWeight = weight
         var finalBodyFat = bodyFatPercentage
         
         if let existingPhoto = getPhotoForDate(date, categoryId: categoryId) {
-            // Use existing weight/body fat if not provided
+            // 未提供の場合は既存の体重/体脂肪を使用
             if finalWeight == nil {
                 finalWeight = existingPhoto.weight
             }
@@ -231,44 +231,62 @@ class PhotoStorageService {
                 finalBodyFat = existingPhoto.bodyFatPercentage
             }
             
-            // Found existing photo for date and category, deleting
+            // 日付とカテゴリの既存写真を検出、削除
             try deletePhoto(existingPhoto)
         }
         
         let newPhoto = try savePhoto(image, captureDate: date, categoryId: categoryId, isFaceBlurred: isFaceBlurred, bodyDetectionConfidence: bodyDetectionConfidence, weight: finalWeight, bodyFatPercentage: finalBodyFat)
-        // New photo saved
+        // 新しい写真を保存
         return newPhoto
     }
     
     func updatePhotoMetadata(_ photo: Photo, weight: Double?, bodyFatPercentage: Double?) {
         guard let index = photos.firstIndex(where: { $0.id == photo.id }) else {
-            // Photo not found for update
+            // 更新対象の写真が見つかりません
             return
         }
         
+        var hasChanges = false
         var updatedPhoto = photos[index]  // Use the photo from the array, not the parameter
-        updatedPhoto.weight = weight
-        updatedPhoto.bodyFatPercentage = bodyFatPercentage
+        if updatedPhoto.weight != weight {
+            updatedPhoto.weight = weight
+            hasChanges = true
+        }
+        if updatedPhoto.bodyFatPercentage != bodyFatPercentage {
+            updatedPhoto.bodyFatPercentage = bodyFatPercentage
+            hasChanges = true
+        }
         
-        // Updating photo metadata
+        // 写真メタデータを更新
         
         photos[index] = updatedPhoto
         
-        // Also update all other photos on the same date with the same weight/body fat
+        // 同日の他の写真も同じ体重/体脂肪で更新
         let photosOnSameDate = photos.enumerated().compactMap { (idx, p) in
             Calendar.current.isDate(p.captureDate, inSameDayAs: updatedPhoto.captureDate) && p.id != updatedPhoto.id ? idx : nil
         }
         
         for photoIndex in photosOnSameDate {
             var otherPhoto = photos[photoIndex]
-            otherPhoto.weight = weight
-            otherPhoto.bodyFatPercentage = bodyFatPercentage
-            photos[photoIndex] = otherPhoto
+            var updated = false
+            if otherPhoto.weight != weight {
+                otherPhoto.weight = weight
+                updated = true
+            }
+            if otherPhoto.bodyFatPercentage != bodyFatPercentage {
+                otherPhoto.bodyFatPercentage = bodyFatPercentage
+                updated = true
+            }
+            if updated {
+                photos[photoIndex] = otherPhoto
+                hasChanges = true
+            }
         }
         
+        guard hasChanges else { return }
         savePhotosMetadata()
         
-        // Successfully updated metadata
+        // メタデータの更新に成功
     }
     
     func deletePhoto(_ photo: Photo) throws {
@@ -286,7 +304,7 @@ class PhotoStorageService {
     
     func loadImage(for photo: Photo, targetSize: CGSize? = nil, scale: CGFloat = UIScreen.main.scale) -> UIImage? {
         guard let imageURL = imageURL(for: photo) else {
-            // Error: Could not access photos directory
+            // エラー: 写真ディレクトリにアクセスできません
             return nil
         }
 
@@ -311,23 +329,23 @@ class PhotoStorageService {
         return image
     }
     
-    func reloadPhotosFromDisk() {
-        // Reloading photos metadata from disk
+    func reloadPhotosFromDisk(syncWeightData: Bool = true) {
+        // ディスクから写真メタデータを再読み込み
         imageCache.removeAllObjects()
-        loadPhotosMetadata()
+        loadPhotosMetadata(syncWeightData: syncWeightData)
     }
     
-    private func loadPhotosMetadata() {
+    private func loadPhotosMetadata(syncWeightData: Bool = true) {
         guard let metadataURL = metadataURL else {
-            // Error: Could not access metadata URL
+            // エラー: メタデータURLにアクセスできません
             photos = []
             return
         }
         
-        // Loading metadata from disk
+        // ディスクからメタデータを読み込み
         
         guard let data = try? Data(contentsOf: metadataURL) else {
-            // No metadata file found
+            // メタデータファイルが見つかりません
             photos = []
             return
         }
@@ -335,43 +353,40 @@ class PhotoStorageService {
         do {
             let decoded = try JSONDecoder().decode([Photo].self, from: data)
             photos = decoded.sorted { $0.captureDate > $1.captureDate }
-            // Loaded photos from metadata
+            // メタデータから写真を読み込み済み
             
-            // Debug: Print first few photos with weight data
-            for (_, _) in photos.prefix(3).enumerated() {
-                // Photo loaded from metadata
-            }
-            
-            // Sync weight data from WeightStorageService immediately
-            Task {
-                await syncWeightDataFromStorage()
-                
-                // Post notification that sync is complete
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(
-                        name: Notification.Name("WeightDataSyncComplete"),
-                        object: nil
-                    )
+            if syncWeightData {
+                // WeightStorageServiceから体重データを即座に同期
+                Task { @MainActor in
+                    await syncWeightDataFromStorage()
+                    
+                    // 同期完了通知を送信
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(
+                            name: Notification.Name("WeightDataSyncComplete"),
+                            object: nil
+                        )
+                    }
                 }
             }
         } catch {
-            // Failed to decode metadata
+            // メタデータのデコードに失敗
             photos = []
         }
     }
     
     private func savePhotosMetadata() {
         guard let metadataURL = metadataURL else {
-            // Error: Could not access metadata URL
+            // エラー: メタデータURLにアクセスできません
             return
         }
 
         do {
             let encoded = try JSONEncoder().encode(photos)
             try encoded.write(to: metadataURL)
-            // Saved metadata
+            // メタデータを保存済み
         } catch {
-            // Failed to save metadata
+            // メタデータの保存に失敗
         }
     }
 
@@ -445,7 +460,7 @@ class PhotoStorageService {
         }?.id.uuidString
     }
     
-    // MARK: - Category Support Methods
+    // MARK: - カテゴリサポートメソッド
     
     func getPhotosForCategory(_ categoryId: String) -> [Photo] {
         return photos.filter { $0.categoryId == categoryId }
@@ -464,12 +479,12 @@ class PhotoStorageService {
     func photosGroupedByDateAndCategory() -> [(Date, [(String, [Photo])])] {
         let calendar = Calendar.current
         
-        // Group by date first
+        // まず日付別にグループ化
         let dateGrouped = Dictionary(grouping: photos) { photo in
             calendar.startOfDay(for: photo.captureDate)
         }
         
-        // Then group by category within each date
+        // 各日付内でカテゴリ別にグループ化
         let result = dateGrouped.map { (date, photosForDate) in
             let categoryGrouped = Dictionary(grouping: photosForDate) { $0.categoryId }
                 .sorted { $0.key < $1.key }
@@ -490,13 +505,13 @@ class PhotoStorageService {
     }
     
     func migratePhotosToCategory(_ categoryId: String = PhotoCategory.defaultCategory.id) {
-        // For migrating existing photos without categoryId
+        // categoryIdなしの既存写真を移行するため
         var needsSave = false
         
         for (_, photo) in photos.enumerated() {
-            // Photos loaded from old format won't have categoryId set properly
-            // This will be handled by the Photo's init(from decoder:) method
-            // but we need to move files to new location
+            // 古いフォーマットから読み込まれた写真はcategoryIdが適切に設定されていない
+            // Photoのinit(from decoder:)メソッドで処理されるが
+            // ファイルを新しい場所に移動する必要がある
             
             guard let photosDirectory = photosDirectory else { continue }
             
@@ -507,12 +522,12 @@ class PhotoStorageService {
             if FileManager.default.fileExists(atPath: oldPath.path) &&
                !FileManager.default.fileExists(atPath: newPath.path) {
                 do {
-                    // Create category directory if needed
+                    // 必要に応じてカテゴリディレクトリを作成
                     if !FileManager.default.fileExists(atPath: categoryDir.path) {
                         try FileManager.default.createDirectory(at: categoryDir, withIntermediateDirectories: true)
                     }
                     
-                    // Move file to new location
+                    // ファイルを新しい場所に移動
                     try FileManager.default.moveItem(at: oldPath, to: newPath)
                     needsSave = true
                     print("Migrated photo \(photo.fileName) to category \(photo.categoryId)")
@@ -527,7 +542,7 @@ class PhotoStorageService {
         }
     }
     
-    // MARK: - App Rating Support
+    // MARK: - アプリ評価サポート
     
     func getCumulativePhotoDays() -> Int {
         let calendar = Calendar.current
@@ -539,41 +554,44 @@ class PhotoStorageService {
         Task { @MainActor in
             let userSettings = UserSettingsManager.shared
             
-            // Skip if user has already rated the app
+            // ユーザーが既にアプリを評価済みの場合はスキップ
             if userSettings.settings.hasRatedApp {
                 return
             }
             
             let cumulativeDays = getCumulativePhotoDays()
             
-            // Check if cumulative days is a multiple of 30 (but not 0)
+            // 累積日数が30の倍数か確認（0を除く）
             if cumulativeDays > 0 && cumulativeDays % 30 == 0 {
-                // Request review
+                // レビューをリクエスト
                 if let windowScene = UIApplication.shared.connectedScenes
                     .filter({ $0.activationState == .foregroundActive })
                     .first as? UIWindowScene {
                     SKStoreReviewController.requestReview(in: windowScene)
                     
-                    // Mark as rated to avoid showing again
+                    // 再度表示しないように評価済みとマーク
                     userSettings.settings.hasRatedApp = true
                 }
             }
         }
     }
     
-    // MARK: - Weight Data Sync
+    // MARK: - 体重データ同期
     
+    @MainActor
     func syncWeightData() async {
         await syncWeightDataFromStorage()
     }
     
+    @MainActor
     private func syncWeightDataFromStorage() async {
         do {
             let weightEntries = try await WeightStorageService.shared.loadEntries()
             print("[PhotoStorage] Syncing weight data from \(weightEntries.count) weight entries")
+            var hasChanges = false
             
             for entry in weightEntries {
-                // Find ALL photos for the same date (not just the first one)
+                // 同日の全写真を検索（最初の1枚だけでなく）
                 let photosForDate = photos.enumerated().compactMap { (index, photo) in
                     Calendar.current.isDate(photo.captureDate, inSameDayAs: entry.date) ? index : nil
                 }
@@ -582,18 +600,18 @@ class PhotoStorageService {
                     continue
                 }
                 
-                // Update ALL photos for this date
+                // この日付の全写真を更新
                 for photoIndex in photosForDate {
                     var updatedPhoto = photos[photoIndex]
                     var needsUpdate = false
                     
-                    // Always sync weight data from WeightEntry if it exists
+                    // WeightEntryに体重データがある場合は常に同期
                     if entry.weight > 0 && updatedPhoto.weight != entry.weight {
                         updatedPhoto.weight = entry.weight
                         needsUpdate = true
                     }
                     
-                    // Always sync body fat data from WeightEntry if it exists
+                    // WeightEntryに体脂肪データがある場合は常に同期
                     if let bodyFat = entry.bodyFatPercentage, updatedPhoto.bodyFatPercentage != bodyFat {
                         updatedPhoto.bodyFatPercentage = bodyFat
                         needsUpdate = true
@@ -601,13 +619,16 @@ class PhotoStorageService {
                     
                     if needsUpdate {
                         photos[photoIndex] = updatedPhoto
-                        print("[PhotoStorage] Synced weight=\(entry.weight), bodyFat=\(entry.bodyFatPercentage ?? -1) to photo id=\(updatedPhoto.id)")
+                        hasChanges = true
+                        print("[PhotoStorage] Synced weight data to photo id=\(updatedPhoto.id)")
                     }
                 }
             }
             
-            // Save updated metadata
-            savePhotosMetadata()
+            if hasChanges {
+                // 全同期パス後に更新されたメタデータを一度だけ保存
+                savePhotosMetadata()
+            }
         } catch {
             print("[PhotoStorage] Failed to sync weight data: \(error)")
         }

@@ -14,7 +14,7 @@ struct ImportExportView: View {
     var body: some View {
         NavigationView {
             List {
-                // Export Section
+                // エクスポートセクション
                 Section {
                     Button(action: {
                         showingExportOptions = true
@@ -79,7 +79,7 @@ struct ImportExportView: View {
                     }
                 }
                 
-                // Import Section
+                // インポートセクション
                 Section {
                     Button(action: {
                         showingImportPicker = true
@@ -146,7 +146,7 @@ struct ImportExportView: View {
                     }
                 }
                 
-                // Progress Section
+                // 進捗セクション
                 if viewModel.isExporting || viewModel.isImporting {
                     Section {
                         VStack(spacing: 12) {
@@ -222,7 +222,7 @@ struct ImportExportView: View {
         case .success(let urls):
             guard let url = urls.first else { return }
             
-            // Start accessing the security-scoped resource
+            // セキュリティスコープリソースへのアクセスを開始
             guard url.startAccessingSecurityScopedResource() else {
                 showError(NSError(
                     domain: "ImportError",
@@ -232,23 +232,22 @@ struct ImportExportView: View {
                 return
             }
             
-            // Ensure we stop accessing the resource when done
+            // 完了時にリソースへのアクセスを確実に停止
             defer {
                 url.stopAccessingSecurityScopedResource()
             }
             
-            // Copy file to temporary location for access
+            // アクセス用に一時的な場所にファイルをコピー
             let tempURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent(url.lastPathComponent)
+                .appendingPathComponent("BodyLapseImport_\(UUID().uuidString)_\(url.lastPathComponent)")
             
             do {
                 if FileManager.default.fileExists(atPath: tempURL.path) {
                     try FileManager.default.removeItem(at: tempURL)
                 }
                 
-                // Read the file data while we have access
-                let fileData = try Data(contentsOf: url)
-                try fileData.write(to: tempURL)
+                // メモリへの全ファイルロードを避けるため、セキュリティスコープアクセスがアクティブな間にコピー
+                try FileManager.default.copyItem(at: url, to: tempURL)
                 
                 // Show import options
                 viewModel.showImportOptions(for: tempURL)
@@ -272,7 +271,7 @@ struct ImportExportView: View {
     
     private func handleExportCompletion() {
         if let exportURL = viewModel.exportedFileURL {
-            // Share the file immediately without showing alert
+            // アラートを表示せずにファイルを即座に共有
             shareFile(exportURL)
         }
     }

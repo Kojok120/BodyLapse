@@ -133,7 +133,7 @@ struct CameraView: View {
                         
                         Spacer()
                         
-                        // Camera switch button
+                        // カメラ切り替え button
                         Button(action: {
                             viewModel.switchCamera()
                         }) {
@@ -152,7 +152,7 @@ struct CameraView: View {
                         BodyGuidelineView(isBodyDetected: viewModel.bodyDetected)
                     }
                     
-                    // Countdown display
+                    // カウントダウン表示
                     if viewModel.isCountingDown {
                         Text("\(viewModel.countdownValue)")
                             .font(.system(size: 120, weight: .bold, design: .rounded))
@@ -164,7 +164,7 @@ struct CameraView: View {
                     
                     Spacer()
                     
-                    // Capture button above tab bar
+                    // 撮影ボタン above tab bar
                     VStack(spacing: 10) {
                         if viewModel.isCountingDown {
                             Button(action: {
@@ -266,7 +266,7 @@ struct CameraView: View {
         .alert("camera.one_photo_per_day".localized, isPresented: $viewModel.showingReplaceAlert) {
             Button("common.replace".localized, role: .destructive) {
                 if let image = viewModel.capturedImage {
-                    // Auto-display of weight input sheet is disabled - just replace the photo
+                    // 体重入力シートの自動表示は無効 - just replace the photo
                     viewModel.savePhoto(image, isReplacement: true)
                     viewModel.capturedImage = nil
                 }
@@ -474,17 +474,17 @@ struct GuidelineOverlayView: View {
     private var aspectScaledContour: [CGPoint] {
         let originalSize = guideline.imageSize
         
-        // Calculate scale factors for aspect fit
+        // アスペクトフィットのスケール係数を計算
         let scaleX = viewSize.width / originalSize.width
         let scaleY = viewSize.height / originalSize.height
-        // Use the smaller scale to ensure the content fits within the view
+        // コンテンツがビュー内に収まるように小さい方のスケールを使用
         let scale = min(scaleX, scaleY)
         
-        // Calculate the size after scaling
+        // スケーリング後のサイズを計算
         let scaledWidth = originalSize.width * scale
         let scaledHeight = originalSize.height * scale
         
-        // Calculate offset to center the scaled content
+        // スケーリングされたコンテンツを中央に配置するオフセットを計算
         let offsetX = (viewSize.width - scaledWidth) / 2
         let offsetY = (viewSize.height - scaledHeight) / 2
         
@@ -529,7 +529,7 @@ struct GuidelineOverlayView: View {
                 }
                 .fill(Color.white.opacity(0.1))
                 
-                // Draw the contour outline
+                // コンターアウトラインを描画
                 Path { path in
                     path.move(to: scaledContour[0])
                     for i in 1..<scaledContour.count {
@@ -585,7 +585,7 @@ struct CategoryTransitionOverlay: View {
     
     var body: some View {
         ZStack {
-            // Background
+            // 背景
             Color.black.opacity(0.8)
                 .ignoresSafeArea()
             

@@ -3,7 +3,7 @@ import Foundation
 struct WeightEntry: Identifiable, Codable, Equatable {
     let id: UUID
     let date: Date
-    let weight: Double // Always stored in kg
+    let weight: Double // 常にkgで保存
     let bodyFatPercentage: Double?
     let linkedPhotoID: String?
     let createdAt: Date
@@ -26,7 +26,7 @@ struct WeightEntry: Identifiable, Codable, Equatable {
 }
 
 extension WeightEntry {
-    // Convert weight based on user preference
+    // ユーザーの設定に基づいて体重を変換
     func displayWeight(unit: UserSettings.WeightUnit) -> Double {
         switch unit {
         case .kg:

@@ -9,7 +9,7 @@ class VideoStorageService {
     
     var documentsDirectory: URL {
         guard let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            // This should never happen, but we'll use temporary directory as fallback
+            // これは発生しないはずだが、フォールバックとして一時ディレクトリを使用
             return FileManager.default.temporaryDirectory
         }
         return url
@@ -73,7 +73,7 @@ class VideoStorageService {
             let duration = try await asset.load(.duration)
             return duration.seconds
         } catch {
-            // Failed to load duration
+            // 再生時間の読み込みに失敗
             return 0
         }
     }
@@ -113,7 +113,7 @@ class VideoStorageService {
                 try data.write(to: thumbnailURL)
             }
         } catch {
-            // Failed to generate thumbnail
+            // サムネイルの生成に失敗
         }
     }
     

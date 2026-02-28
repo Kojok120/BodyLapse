@@ -6,7 +6,7 @@ class GalleryActionService {
     
     private init() {}
     
-    // MARK: - Photo Actions
+    // MARK: - 写真アクション
     
     func sharePhoto(_ photo: Photo, activeSheet: Binding<GalleryActiveSheet?>) {
         activeSheet.wrappedValue = .shareOptions(photo)
@@ -27,7 +27,7 @@ class GalleryActionService {
         }, completionHandler: completion)
     }
     
-    // MARK: - Video Actions
+    // MARK: - 動画アクション
     
     func shareVideo(_ video: Video, activeSheet: Binding<GalleryActiveSheet?>) {
         activeSheet.wrappedValue = .share([video.fileURL])
@@ -39,7 +39,7 @@ class GalleryActionService {
         }, completionHandler: completion)
     }
     
-    // MARK: - Bulk Actions
+    // MARK: - 一括アクション
     
     @MainActor
     func getSelectedPhotosForSharing(from viewModel: GalleryViewModel) -> [UIImage] {
@@ -95,7 +95,7 @@ class GalleryActionService {
         }, completionHandler: completion)
     }
     
-    // MARK: - Utility Methods
+    // MARK: - ユーティリティメソッド
     
     func showSaveSuccess(message: String, showingSaveSuccess: Binding<Bool>, saveSuccessMessage: Binding<String>) {
         saveSuccessMessage.wrappedValue = message

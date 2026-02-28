@@ -20,7 +20,7 @@ struct CategoryManagementView: View {
     @State private var alertMessage = ""
     
     var body: some View {
-        // Categories now available for all users
+        // カテゴリーは全ユーザーに利用可能
         List {
             Section {
                 ForEach(categories) { category in
@@ -37,7 +37,7 @@ struct CategoryManagementView: View {
                             }
                         },
                         onResetGuideline: {
-                            // Navigation handled in CategoryRowView
+                            // ナビゲーションはCategoryRowViewで処理
                         }
                     )
                 }
@@ -49,7 +49,7 @@ struct CategoryManagementView: View {
                     .font(.caption)
             }
             
-            // Add category button now available for all users
+            // カテゴリー追加ボタンは全ユーザーに利用可能
             if CategoryStorageService.shared.canAddMoreCategories() {
                 Section {
                     Button(action: {
@@ -71,14 +71,14 @@ struct CategoryManagementView: View {
             loadCategories()
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { notification in
-            // Reload categories when guideline is updated
+            // ガイドライン更新時にカテゴリーを再読み込み
             print("CategoryManagementView: Received GuidelineUpdated notification")
             if let categoryId = notification.userInfo?["categoryId"] as? String {
                 print("CategoryManagementView: Updated category ID: \(categoryId)")
             }
             loadCategories()
             print("CategoryManagementView: Categories reloaded, count: \(categories.count)")
-            // Print guideline status for each category
+            // 各カテゴリーのガイドラインステータスを出力
             for category in categories {
                 print("CategoryManagementView: Category \(category.name) - has guideline: \(category.guideline != nil)")
             }
@@ -123,7 +123,7 @@ struct CategoryManagementView: View {
         for category in newCategories {
             print("CategoryManagementView: - \(category.name) (ID: \(category.id)), guideline: \(category.guideline != nil)")
         }
-        // Force a state update by clearing and resetting
+        // クリアとリセットで状態更新を強制
         categories = []
         DispatchQueue.main.async {
             self.categories = newCategories
@@ -133,7 +133,7 @@ struct CategoryManagementView: View {
     private func moveCategories(from source: IndexSet, to destination: Int) {
         categories.move(fromOffsets: source, toOffset: destination)
         
-        // Update order in storage
+        // ストレージの順序を更新
         for (index, category) in categories.enumerated() {
             var updatedCategory = category
             updatedCategory.order = index
@@ -222,7 +222,7 @@ struct CategoryRowView: View {
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { notification in
             if let categoryId = notification.userInfo?["categoryId"] as? String,
                categoryId == category.id {
-                // Reload this specific category's guideline status
+                // この特定カテゴリーのガイドラインステータスを再読み込み
                 if let updatedCategory = CategoryStorageService.shared.getCategoryById(categoryId) {
                     hasGuideline = updatedCategory.guideline != nil
                     print("CategoryRowView: Updated guideline status for \(category.name): \(hasGuideline)")

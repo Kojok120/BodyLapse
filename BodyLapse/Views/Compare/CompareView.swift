@@ -21,7 +21,7 @@ struct CompareView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Photo selection buttons
+                    // 写真選択 buttons
                     photoSelectionButtons
                     
                     // Divider
@@ -220,28 +220,7 @@ struct CompareView: View {
                     // First photo column
                     VStack(spacing: 0) {
                         // Photo container
-                        Group {
-                            if let photo = firstPhoto,
-                               let image = PhotoStorageService.shared.loadImage(for: photo) {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                    .clipped()
-                            } else {
-                                Rectangle()
-                                    .fill(Color(UIColor.systemGray5))
-                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                    .overlay(
-                                        // Placeholder image as background
-                                        Image("compare-placeholder-image")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                            .opacity(0.3)
-                                    )
-                            }
-                        }
+                        comparisonPhotoContent(photo: firstPhoto)
                         .frame(height: 250)
                         
                         // Weight and body fat display for premium users
@@ -303,28 +282,7 @@ struct CompareView: View {
                     // Second photo column
                     VStack(spacing: 0) {
                         // Photo container
-                        Group {
-                            if let photo = secondPhoto,
-                               let image = PhotoStorageService.shared.loadImage(for: photo) {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                    .clipped()
-                            } else {
-                                Rectangle()
-                                    .fill(Color(UIColor.systemGray5))
-                                    .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                    .overlay(
-                                        // Placeholder image as background
-                                        Image("compare-placeholder-image")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: (UIScreen.main.bounds.width - 6) / 2, height: 250)
-                                            .opacity(0.3)
-                                    )
-                            }
-                        }
+                        comparisonPhotoContent(photo: secondPhoto)
                         .frame(height: 250)
                         
                         // Weight and body fat display for premium users
@@ -616,6 +574,36 @@ struct CompareView: View {
         }
         .padding(.top)
     }
+
+    private var comparisonPhotoWidth: CGFloat {
+        (UIScreen.main.bounds.width - 6) / 2
+    }
+
+    @ViewBuilder
+    private func comparisonPhotoContent(photo: Photo?) -> some View {
+        if let photo {
+            StoredPhotoImageView(photo: photo, contentMode: .fill) {
+                comparisonPhotoPlaceholder
+            }
+            .frame(width: comparisonPhotoWidth, height: 250)
+            .clipped()
+        } else {
+            comparisonPhotoPlaceholder
+        }
+    }
+
+    private var comparisonPhotoPlaceholder: some View {
+        Rectangle()
+            .fill(Color(UIColor.systemGray5))
+            .frame(width: comparisonPhotoWidth, height: 250)
+            .overlay(
+                Image("compare-placeholder-image")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: comparisonPhotoWidth, height: 250)
+                    .opacity(0.3)
+            )
+    }
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
@@ -633,4 +621,3 @@ struct CompareView: View {
         userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
     }
 }
-

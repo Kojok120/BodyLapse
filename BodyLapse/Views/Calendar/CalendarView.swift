@@ -308,7 +308,7 @@ struct CalendarView: View {
     }
 }
 
-// MARK: - Helper Methods
+// MARK: - ヘルパーメソッド
 extension CalendarView {
     
     private func calculateSpacing() -> CGFloat {
@@ -363,7 +363,7 @@ extension CalendarView {
     func updateCurrentPhoto() {
         photosForSelectedDate = viewModel.allPhotosForDate(selectedDate)
         
-        // Categories now available for all users
+        // カテゴリーは全ユーザーに利用可能
         if viewModel.availableCategories.count > 1 {
             categoriesForSelectedDate = viewModel.availableCategories
             

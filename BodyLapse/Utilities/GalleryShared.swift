@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Shared Gallery Components
+// MARK: - 共通ギャラリーコンポーネント
 
 enum GalleryActiveSheet: Identifiable {
     case shareOptions(Photo)
@@ -14,7 +14,7 @@ enum GalleryActiveSheet: Identifiable {
     }
 }
 
-// MARK: - Gallery Utilities
+// MARK: - ギャラリーユーティリティ
 
 struct GalleryUtilities {
     static func formatDate(_ date: Date) -> String {
@@ -31,7 +31,7 @@ struct GalleryUtilities {
     }
 }
 
-// MARK: - Gallery Actions Protocol
+// MARK: - ギャラリーアクションプロトコル
 
 protocol GalleryItemActions {
     func onTap()
@@ -40,7 +40,7 @@ protocol GalleryItemActions {
     func onShare()
 }
 
-// MARK: - Save Success Toast
+// MARK: - 保存成功トースト
 
 struct SaveSuccessToast: View {
     let message: String

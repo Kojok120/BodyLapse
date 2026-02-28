@@ -8,7 +8,7 @@ struct PremiumView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Background gradient
+                // 背景グラデーション
                 LinearGradient(
                     gradient: Gradient(colors: [Color.bodyLapseTurquoise, Color.bodyLapseTurquoise.opacity(0.8)]),
                     startPoint: .topLeading,
@@ -17,15 +17,15 @@ struct PremiumView: View {
                 .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // REQUIRED App Store Information - Always visible at top
+                    // 必須 App Store情報 - 常に上部に表示
                     VStack(spacing: 10) {
-                        // Subscription title (REQUIRED by App Store) - Fixed for all languages
+                        // サブスクリプションタイトル（App Store必須） - 全言語で固定
                         Text("BodyLapse Premium")
                             .font(.title.bold())
                             .foregroundColor(.white)
                             .padding(.top, 20)
                         
-                        // Price (REQUIRED by App Store) - MOST PROMINENT
+                        // 価格（App Store必須） - 最も目立つ表示
                         if let product = viewModel.products.first {
                             Text(product.displayPrice + "/" + "date.month".localized)
                                 .font(.largeTitle.bold())
@@ -36,12 +36,12 @@ struct PremiumView: View {
                                 .foregroundColor(.white)
                         }
                         
-                        // Subscription length (subordinate)
+                        // サブスクリプション期間（従属的）
                         Text("premium.subscription_length".localized)
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.9))
                         
-                        // Links (REQUIRED by App Store)
+                        // リンク（App Store必須）
                         HStack(spacing: 20) {
                             Link("premium.terms".localized, destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
                                 .font(.footnote.bold())
@@ -63,7 +63,7 @@ struct PremiumView: View {
                                 .foregroundColor(.yellow)
                                 .padding(.top, 15)
                         
-                            // Features list
+                            // 機能リスト
                             VStack(alignment: .leading, spacing: 10) {
                                 CompactPremiumFeatureRowView(
                                     icon: "xmark.circle.fill",
@@ -81,7 +81,7 @@ struct PremiumView: View {
                             
                             Spacer(minLength: 10)
                             
-                            // Main Subscribe Button
+                            // メイン購読ボタン
                             Button(action: {
                                 Task {
                                     if let product = viewModel.products.first {
@@ -119,7 +119,7 @@ struct PremiumView: View {
                             .scaleEffect(viewModel.isPurchasing ? 0.95 : 1.0)
                             .animation(.easeInOut(duration: 0.1), value: viewModel.isPurchasing)
                             
-                            // Bottom links - compact but readable
+                            // 下部リンク - コンパクトだが読みやすく
                             VStack(spacing: 6) {
                                 Button(action: {
                                     Task {
@@ -179,7 +179,7 @@ struct PremiumView: View {
     }
 }
 
-// MARK: - Compact Premium Feature Row
+// MARK: - コンパクトプレミアム機能行
 struct CompactPremiumFeatureRowView: View {
     let icon: String
     let title: String
@@ -212,7 +212,7 @@ struct CompactPremiumFeatureRowView: View {
     }
 }
 
-// MARK: - Subscription Details View
+// MARK: - サブスクリプション詳細ビュー
 struct SubscriptionDetailsView: View {
     let product: Product
     let action: () -> Void
@@ -258,7 +258,7 @@ struct SubscriptionDetailsView: View {
     }
 }
 
-// MARK: - Preview
+// MARK: - プレビュー
 struct PremiumView_Previews: PreviewProvider {
     static var previews: some View {
         PremiumView()
