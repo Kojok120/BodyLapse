@@ -20,7 +20,7 @@ platform :ios do
     sync_code_signing_if_configured(api_key)
 
     build_ios_app(
-      workspace: "BodyLapse.xcworkspace",
+      project: "BodyLapse.xcodeproj",
       scheme: "BodyLapse",
       configuration: "Release",
       clean: true,

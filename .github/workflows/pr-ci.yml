@@ -39,7 +39,7 @@ jobs:
       - name: Build
         run: |
           xcodebuild \
-            -workspace BodyLapse.xcworkspace \
+            -project BodyLapse.xcodeproj \
             -scheme BodyLapse \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             build
@@ -47,7 +47,7 @@ jobs:
       - name: Test
         run: |
           xcodebuild \
-            -workspace BodyLapse.xcworkspace \
+            -project BodyLapse.xcodeproj \
             -scheme BodyLapse \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -only-testing:BodyLapseTests \
