@@ -215,14 +215,11 @@ class SimpleZipArchive {
 
     private static func readUInt64(from handle: FileHandle) throws -> UInt64 {
         let data = try readExact(8, from: handle)
-        return UInt64(data[0]) |
-            (UInt64(data[1]) << 8) |
-            (UInt64(data[2]) << 16) |
-            (UInt64(data[3]) << 24) |
-            (UInt64(data[4]) << 32) |
-            (UInt64(data[5]) << 40) |
-            (UInt64(data[6]) << 48) |
-            (UInt64(data[7]) << 56)
+        var value: UInt64 = 0
+        for (index, byte) in data.enumerated() {
+            value |= UInt64(byte) << (UInt64(index) * 8)
+        }
+        return value
     }
 
     private static func copyBytes(count: UInt64, from input: FileHandle, to output: FileHandle) throws {

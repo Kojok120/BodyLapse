@@ -28,7 +28,7 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const issue_number = context.issue.number;
-            const marker = "<!-- coderabbit-auto-trigger -->";
+            const marker = `<!-- coderabbit-auto-trigger:${context.sha} -->`;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner,
