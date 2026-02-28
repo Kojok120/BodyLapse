@@ -62,9 +62,6 @@ class SubscriptionManagerService: ObservableObject {
         do {
             try await storeManager.purchase(product)
             await updateSubscriptionStatus()
-            
-            // 購入成功の通知を送信
-            NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
         } catch {
             subscriptionError = error.localizedDescription
             throw error
@@ -84,9 +81,6 @@ class SubscriptionManagerService: ObservableObject {
             subscriptionError = error.localizedDescription
             throw error
         }
-        
-        // 復元された購入の通知を送信
-        NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
     }
     
     /// App Storeからサブスクリプションステータスを更新

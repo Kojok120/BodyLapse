@@ -40,7 +40,14 @@ def run_git(args: list[str]) -> str:
 
 
 def gather_context(from_sha: str, to_sha: str) -> tuple[str, str]:
-    range_expr = f"{from_sha}..{to_sha}" if from_sha != to_sha else to_sha
+    if from_sha == to_sha:
+        commits = run_git(["show", "--pretty=format:%h %s", "--no-patch", to_sha])
+        files = run_git(["diff-tree", "--no-commit-id", "--name-only", "-r", to_sha])
+        if not files:
+            files = "(no file path changes detected)"
+        return commits, files
+
+    range_expr = f"{from_sha}..{to_sha}"
     commits = run_git(["log", "--pretty=format:%h %s", range_expr, "--"])
     files = run_git(["diff", "--name-only", range_expr, "--"])
 
@@ -122,7 +129,10 @@ def call_openai(model: str, prompt: str, api_key: str) -> dict[str, str]:
         raise RuntimeError(f"OpenAI API error: {exc.code} {detail}") from exc
 
     data = json.loads(raw)
-    content = data["choices"][0]["message"]["content"]
+    try:
+        content = data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise RuntimeError(f"Unexpected OpenAI response shape: {raw[:500]}") from exc
     return extract_json_object(content)
 
 

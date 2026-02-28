@@ -48,6 +48,8 @@ class AuthenticationService: ObservableObject {
             return "settings.face_id".localized
         case .touchID:
             return "settings.touch_id".localized
+        case .opticID:
+            return "settings.face_id".localized
         case .none:
             return "settings.biometric".localized
         @unknown default:

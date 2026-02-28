@@ -96,6 +96,14 @@ struct BodyLapseTests {
                 isAuthenticated: false
             ) == .main
         )
+
+        #expect(
+            ContentView.destination(
+                hasCompletedOnboarding: true,
+                isAuthenticationEnabled: true,
+                isAuthenticated: true
+            ) == .main
+        )
     }
 
     private static func writeArchive(at url: URL, entryPath: String, payload: Data) throws {

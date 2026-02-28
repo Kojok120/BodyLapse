@@ -35,7 +35,6 @@ platform :ios do
       api_key: api_key,
       ipa: "build/BodyLapse.ipa",
       release_notes: release_notes,
-      skip_metadata: true,
       skip_screenshots: true,
       submit_for_review: true,
       automatic_release: false,

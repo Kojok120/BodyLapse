@@ -232,8 +232,12 @@ class BodyContourService {
             if let data = uiImage.pngData() {
                 let tempDir = FileManager.default.temporaryDirectory
                 let tempURL = tempDir.appendingPathComponent("vision_mask_\(Date().timeIntervalSince1970).png")
-                try? data.write(to: tempURL)
-                print("Debug mask saved to tmp: \(tempURL.path)")
+                do {
+                    try data.write(to: tempURL, options: .atomic)
+                    print("Debug mask saved to tmp: \(tempURL.path)")
+                } catch {
+                    print("Failed to save debug mask at \(tempURL.path): \(error)")
+                }
             }
         }
     }

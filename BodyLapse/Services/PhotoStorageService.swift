@@ -355,14 +355,9 @@ class PhotoStorageService {
             photos = decoded.sorted { $0.captureDate > $1.captureDate }
             // メタデータから写真を読み込み済み
             
-            // デバッグ: 体重データ付きの最初の数枚を出力
-            for (_, _) in photos.prefix(3).enumerated() {
-                // メタデータから写真を読み込み済み
-            }
-            
             if syncWeightData {
                 // WeightStorageServiceから体重データを即座に同期
-                Task {
+                Task { @MainActor in
                     await syncWeightDataFromStorage()
                     
                     // 同期完了通知を送信
@@ -583,10 +578,12 @@ class PhotoStorageService {
     
     // MARK: - 体重データ同期
     
+    @MainActor
     func syncWeightData() async {
         await syncWeightDataFromStorage()
     }
     
+    @MainActor
     private func syncWeightDataFromStorage() async {
         do {
             let weightEntries = try await WeightStorageService.shared.loadEntries()
@@ -623,7 +620,7 @@ class PhotoStorageService {
                     if needsUpdate {
                         photos[photoIndex] = updatedPhoto
                         hasChanges = true
-                        print("[PhotoStorage] Synced weight=\(entry.weight), bodyFat=\(entry.bodyFatPercentage ?? -1) to photo id=\(updatedPhoto.id)")
+                        print("[PhotoStorage] Synced weight data to photo id=\(updatedPhoto.id)")
                     }
                 }
             }

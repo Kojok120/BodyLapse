@@ -30,16 +30,23 @@ jobs:
             const issue_number = context.issue.number;
             const marker = `<!-- coderabbit-auto-trigger:${context.sha} -->`;
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner,
-              repo,
-              issue_number,
-              per_page: 100
-            });
-
-            const alreadyTriggered = comments.some((comment) =>
-              comment.user?.type === "Bot" && comment.body?.includes(marker)
+            const iterator = github.paginate.iterator(
+              github.rest.issues.listComments,
+              {
+                owner,
+                repo,
+                issue_number,
+                per_page: 100
+              }
             );
+
+            let alreadyTriggered = false;
+            for await (const { data: comments } of iterator) {
+              if (comments.some((comment) => comment.body?.includes(marker))) {
+                alreadyTriggered = true;
+                break;
+              }
+            }
 
             if (alreadyTriggered) {
               core.info("CodeRabbit auto-trigger comment already exists.");

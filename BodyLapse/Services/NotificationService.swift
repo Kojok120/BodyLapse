@@ -46,8 +46,9 @@ class NotificationService: NSObject {
         // Check permission status first
         checkNotificationPermission { [weak self] authorized in
             guard authorized else { return }
+            let hasPhotoToday = PhotoStorageService.shared.hasAnyPhotoForToday()
             // Schedule both types of reminders
-            self?.scheduleDailyCheck()  // 21:00 check for missed photos
+            self?.scheduleDailyCheck(skipToday: hasPhotoToday)  // 21:00 check for missed photos
             self?.scheduleDailyReminder()  // User-configured daily reminder
         }
     }
@@ -126,7 +127,7 @@ class NotificationService: NSObject {
         }
     }
     
-    private func scheduleDailyCheck() {
+    private func scheduleDailyCheck(skipToday: Bool = false) {
         // 次の7日間の21:00に通知をスケジュール
         let calendar = Calendar.current
         let now = Date()
@@ -140,6 +141,10 @@ class NotificationService: NSObject {
         
         // 次の7日間の通知をスケジュール
         for dayOffset in 0..<7 {
+            if skipToday && dayOffset == 0 {
+                continue
+            }
+
             guard let targetDate = calendar.date(byAdding: .day, value: dayOffset, to: now) else { continue }
             
             var dateComponents = calendar.dateComponents([.year, .month, .day], from: targetDate)
@@ -182,14 +187,9 @@ class NotificationService: NSObject {
     func rescheduleNotificationsIfNeeded() {
         // 今日写真が撮影されたか確認
         let hasPhotoToday = PhotoStorageService.shared.hasAnyPhotoForToday()
-        
-        if hasPhotoToday {
-            // 写真が撮影された場合、今日の通知をキャンセル
-            cancelTodaysMissedPhotoNotification()
-        }
-        
-        // 次の7日間の通知を再スケジュール
-        scheduleDailyCheck()
+
+        // 次の7日間の通知を再スケジュール（今日撮影済みの場合は当日分を除外）
+        scheduleDailyCheck(skipToday: hasPhotoToday)
     }
     
     func cancelDailyReminder() {
