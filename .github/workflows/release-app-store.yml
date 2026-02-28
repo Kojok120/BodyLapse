@@ -157,6 +157,7 @@ jobs:
       - name: Normalize match git credentials (optional)
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
         run: |
           set -euo pipefail
 
@@ -169,6 +170,7 @@ jobs:
           import base64
           import os
           import re
+          from urllib.parse import quote, urlsplit, urlunsplit
 
           raw = os.environ.get("MATCH_GIT_BASIC_AUTHORIZATION", "")
           raw = re.sub(r"\s+", "", raw)
@@ -211,14 +213,26 @@ jobs:
             username, token = "x-access-token", raw
 
           normalized = base64.b64encode(f"{username}:{token}".encode("utf-8")).decode("utf-8")
+          match_git_url = (os.environ.get("MATCH_GIT_URL", "") or "").strip()
+          normalized_url = ""
+          if match_git_url:
+            parsed = urlsplit(match_git_url)
+            netloc = parsed.netloc.split("@", 1)[-1]
+            user_escaped = quote(username, safe="")
+            token_escaped = quote(token, safe="")
+            normalized_url = urlunsplit((parsed.scheme, f"{user_escaped}:{token_escaped}@{netloc}", parsed.path, parsed.query, parsed.fragment))
 
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
             env_file.write(f"MATCH_GIT_AUTH_USERNAME={username}\n")
             env_file.write(f"MATCH_GIT_AUTH_TOKEN={token}\n")
             env_file.write(f"MATCH_GIT_BASIC_AUTHORIZATION_NORMALIZED={normalized}\n")
+            if normalized_url:
+              env_file.write(f"MATCH_GIT_URL_NORMALIZED={normalized_url}\n")
 
           print(f"::add-mask::{token}")
           print(f"::add-mask::{normalized}")
+          if normalized_url:
+            print(f"::add-mask::{normalized_url}")
           PY
 
       - name: Configure git credentials for match clone (optional)
@@ -237,13 +251,27 @@ jobs:
           EOF
           chmod 600 "$HOME/.netrc"
 
+      - name: Verify match repository access (optional)
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+        run: |
+          set -euo pipefail
+
+          TARGET_URL="${MATCH_GIT_URL_NORMALIZED:-${MATCH_GIT_URL:-}}"
+          if [ -z "${TARGET_URL}" ]; then
+            echo "MATCH_GIT_URL is not set. Skipping verification."
+            exit 0
+          fi
+
+          git ls-remote "$TARGET_URL" HEAD >/dev/null
+
       - name: Submit build to App Store
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
           RELEASE_NOTES_JSON_PATH: release_notes.json
-          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_URL: ${{ env.MATCH_GIT_URL_NORMALIZED || secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD || secrets.MATCH_GIT_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ env.MATCH_GIT_BASIC_AUTHORIZATION_NORMALIZED || secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 180
