@@ -4,6 +4,7 @@ default_platform :ios
 
 require "json"
 require "base64"
+require "uri"
 
 platform :ios do
   desc "Build and submit BodyLapse to App Store with localized release notes."
@@ -65,11 +66,21 @@ platform :ios do
       app_identifier: [ENV.fetch("APP_IDENTIFIER", "com.J.BodyLapse")]
     }
 
+    url_has_credentials = false
+    begin
+      parsed_url = URI.parse(match_git_url)
+      url_has_credentials = !parsed_url.user.to_s.empty?
+    rescue URI::InvalidURIError
+      url_has_credentials = false
+    end
+
     match_git_auth = ENV["MATCH_GIT_BASIC_AUTHORIZATION"].to_s.gsub(/\s+/, "").strip
     if match_git_auth.downcase.start_with?("basic")
       match_git_auth = match_git_auth[5..].to_s.strip
     end
-    unless match_git_auth.empty?
+    if url_has_credentials
+      UI.important("MATCH_GIT_URL already contains credentials. Skipping git_basic_authorization.")
+    elsif !match_git_auth.empty?
       token_prefixes = ["ghp_", "gho_", "ghu_", "ghs_", "github_pat_"]
       encode_basic = lambda { |credential| Base64.strict_encode64(credential) }
       classify_token = lambda do |value|
