@@ -2,6 +2,11 @@ import Foundation
 
 actor WeightStorageService {
     static let shared = WeightStorageService()
+
+    enum MergeStrategy {
+        case skipExisting
+        case replaceExisting
+    }
     
     private let documentsDirectory: URL
     private let weightsDirectory: URL
@@ -97,6 +102,52 @@ actor WeightStorageService {
         return entries.first { 
             Calendar.current.isDate($0.date, inSameDayAs: date) 
         }
+    }
+
+    // MARK: - バッチマージ
+    func mergeEntries(_ incomingEntries: [WeightEntry], strategy: MergeStrategy) throws -> Int {
+        guard !incomingEntries.isEmpty else { return 0 }
+
+        var entries = try loadEntries()
+        let calendar = Calendar.current
+
+        var indexByDay: [Date: Int] = [:]
+        for (index, existingEntry) in entries.enumerated() {
+            let day = calendar.startOfDay(for: existingEntry.date)
+            if indexByDay[day] == nil {
+                indexByDay[day] = index
+            }
+        }
+
+        var importedCount = 0
+
+        for entry in incomingEntries {
+            let entryDay = calendar.startOfDay(for: entry.date)
+
+            switch strategy {
+            case .skipExisting:
+                guard indexByDay[entryDay] == nil else { continue }
+                entries.append(entry)
+                indexByDay[entryDay] = entries.count - 1
+                importedCount += 1
+
+            case .replaceExisting:
+                if let existingIndex = indexByDay[entryDay] {
+                    entries[existingIndex] = entry
+                } else {
+                    entries.append(entry)
+                    indexByDay[entryDay] = entries.count - 1
+                }
+                importedCount += 1
+            }
+        }
+
+        if importedCount > 0 {
+            entries.sort { $0.date > $1.date }
+            try saveEntries(entries)
+        }
+
+        return importedCount
     }
     
     // MARK: - 日付範囲内のエントリ取得

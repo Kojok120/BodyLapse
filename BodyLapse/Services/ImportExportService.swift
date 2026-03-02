@@ -3,6 +3,9 @@ import UIKit
 
 class ImportExportService {
     static let shared = ImportExportService()
+    private static let safePathComponentCharacters = CharacterSet(
+        charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
+    )
     
     private init() {}
     
@@ -110,8 +113,11 @@ class ImportExportService {
         progress: @escaping (Float) -> Void,
         completion: @escaping (Result<URL, Error>) -> Void
     ) {
-        Task {
-            await self.performExport(options: options, progress: progress, completion: completion)
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+            Task {
+                await self.performExport(options: options, progress: progress, completion: completion)
+            }
         }
     }
     
@@ -275,8 +281,11 @@ class ImportExportService {
         progress: @escaping (Float) -> Void,
         completion: @escaping (Result<ImportSummary, Error>) -> Void
     ) {
-        Task {
-            await self.performImport(from: url, options: options, progress: progress, completion: completion)
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+            Task {
+                await self.performImport(from: url, options: options, progress: progress, completion: completion)
+            }
         }
     }
     
@@ -367,7 +376,8 @@ class ImportExportService {
                     print("[ImportExport] Categories file found, loading...")
                     let categories = try safelyDecodeJSON([PhotoCategory].self, from: categoriesPath)
                     print("[ImportExport] Loaded \(categories.count) categories")
-                    summary.categoriesImported = try self.importCategories(categories, options: options)
+                    let sanitizedCategories = categories.compactMap { self.sanitizedImportedCategory(from: $0) }
+                    summary.categoriesImported = try self.importCategories(sanitizedCategories, options: options)
                     print("[ImportExport] Categories imported: \(summary.categoriesImported)")
                 } else {
                     print("[ImportExport] Categories file not found")
@@ -514,6 +524,51 @@ class ImportExportService {
                 throw ImportExportError.invalidFormat
             }
         }
+    }
+
+    private func sanitizedPathComponent(_ value: String, maxLength: Int = 128) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.count <= maxLength else { return nil }
+        guard trimmed != ".", trimmed != ".." else { return nil }
+        guard !trimmed.contains("/"), !trimmed.contains("\\") else { return nil }
+        guard trimmed.unicodeScalars.allSatisfy({ Self.safePathComponentCharacters.contains($0) }) else {
+            return nil
+        }
+        return trimmed
+    }
+
+    private func safeChildURL(for fileName: String, under directory: URL) -> URL? {
+        guard let safeFileName = sanitizedPathComponent(fileName, maxLength: 255) else { return nil }
+
+        let root = directory.standardizedFileURL.resolvingSymlinksInPath()
+        let candidate = root
+            .appendingPathComponent(safeFileName)
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
+
+        let rootPath = root.path.hasSuffix("/") ? root.path : root.path + "/"
+        guard candidate.path.hasPrefix(rootPath) else {
+            return nil
+        }
+        return candidate
+    }
+
+    private func sanitizedImportedCategory(from category: PhotoCategory) -> PhotoCategory? {
+        guard let safeCategoryId = sanitizedPathComponent(category.id, maxLength: 64) else {
+            return nil
+        }
+        let trimmedName = category.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let safeName = String((trimmedName.isEmpty ? safeCategoryId : trimmedName).prefix(50))
+
+        return PhotoCategory(
+            id: safeCategoryId,
+            name: safeName,
+            order: max(0, category.order),
+            isDefault: category.isDefault,
+            guideline: category.guideline,
+            createdDate: category.createdDate,
+            isActive: category.isActive
+        )
     }
     
     private func exportPhotos(
@@ -731,7 +786,9 @@ class ImportExportService {
         let categoryDirs = try FileManager.default.contentsOfDirectory(
             at: directory,
             includingPropertiesForKeys: [.isDirectoryKey]
-        )
+        ).filter {
+            (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+        }
         
         print("[ImportExport] Found \(categoryDirs.count) category directories")
         for dir in categoryDirs {
@@ -748,9 +805,13 @@ class ImportExportService {
         print("[ImportExport] Total photo metadata files: \(totalPhotos)")
         
         var processedPhotos = 0
+        let totalPhotosFloat = Float(max(totalPhotos, 1))
         
         for categoryDir in categoryDirs {
-            let categoryId = categoryDir.lastPathComponent
+            guard let categoryId = sanitizedPathComponent(categoryDir.lastPathComponent, maxLength: 64) else {
+                print("[ImportExport] Invalid category directory name: \(categoryDir.lastPathComponent)")
+                continue
+            }
             print("[ImportExport] Processing category: \(categoryId)")
             let photoFiles = try FileManager.default.contentsOfDirectory(
                 at: categoryDir,
@@ -767,7 +828,7 @@ class ImportExportService {
                             guard let photo = try? self.safelyDecodeJSON(Photo.self, from: metadataFile) else {
                                 print("[ImportExport] Failed to decode photo metadata from: \(metadataFile.lastPathComponent)")
                                 processedPhotos += 1
-                                progress(Float(processedPhotos) / Float(totalPhotos))
+                                progress(Float(processedPhotos) / totalPhotosFloat)
                                 return  // This returns from autoreleasepool, not the method
                             }
                             print("[ImportExport] Successfully decoded photo: \(photo.id)")
@@ -787,9 +848,26 @@ class ImportExportService {
                             }
                             
                             if shouldImport {
+                                guard let imageFileName = self.sanitizedPathComponent(photo.fileName, maxLength: 255) else {
+                                    print("[ImportExport] Invalid image file name in metadata: \(photo.fileName)")
+                                    return
+                                }
+
+                                let metadataCategoryId = self.sanitizedPathComponent(photo.categoryId, maxLength: 64)
+                                let targetCategoryId = metadataCategoryId ?? categoryId
+                                let finalCategoryId: String
+                                if CategoryStorageService.shared.getCategoryById(targetCategoryId) != nil {
+                                    finalCategoryId = targetCategoryId
+                                } else {
+                                    finalCategoryId = categoryId
+                                }
+
                                 print("[ImportExport] Importing photo \(photo.id)")
                                 // Copy image file
-                                let sourceImagePath = categoryDir.appendingPathComponent(photo.fileName)
+                                guard let sourceImagePath = self.safeChildURL(for: imageFileName, under: categoryDir) else {
+                                    print("[ImportExport] Unsafe image path in metadata: \(photo.fileName)")
+                                    return
+                                }
                                 print("[ImportExport] Looking for image file: \(sourceImagePath.path)")
                                 
                                 // Load image safely with proper error handling
@@ -809,7 +887,7 @@ class ImportExportService {
                                                     let savedPhoto = try PhotoStorageService.shared.savePhoto(
                                                         image,
                                                         captureDate: photo.captureDate,
-                                                        categoryId: photo.categoryId,
+                                                        categoryId: finalCategoryId,
                                                         isFaceBlurred: photo.isFaceBlurred,
                                                         weight: photo.weight,
                                                         bodyFatPercentage: photo.bodyFatPercentage
@@ -835,7 +913,7 @@ class ImportExportService {
                 }
                 
                 processedPhotos += 1
-                progress(Float(processedPhotos) / Float(totalPhotos))
+                progress(Float(processedPhotos) / totalPhotosFloat)
             }
         }
         
@@ -849,20 +927,28 @@ class ImportExportService {
         progress: @escaping (Float) -> Void
     ) async throws -> Int {
         var imported = 0
+        guard FileManager.default.fileExists(atPath: directory.path) else {
+            print("[ImportExport] Videos directory does not exist")
+            return 0
+        }
+
         let videoFiles = try FileManager.default.contentsOfDirectory(
             at: directory,
             includingPropertiesForKeys: nil
         ).filter { $0.pathExtension == "json" }
         
         print("[ImportExport] Found \(videoFiles.count) video metadata files to import")
+        let totalVideosFloat = Float(max(videoFiles.count, 1))
         
         for (index, metadataFile) in videoFiles.enumerated() {
             // Process video import
             do {
-                let metadataData = try Data(contentsOf: metadataFile)
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
-                let video = try decoder.decode(Video.self, from: metadataData)
+                let video = try safelyDecodeJSON(Video.self, from: metadataFile)
+                guard let videoFileName = sanitizedPathComponent(video.fileName, maxLength: 255) else {
+                    print("[ImportExport] Invalid video file name in metadata: \(video.fileName)")
+                    progress(Float(index + 1) / totalVideosFloat)
+                    continue
+                }
                 
                 // 動画が既に存在するか確認
                 VideoStorageService.shared.initialize()
@@ -876,9 +962,9 @@ class ImportExportService {
                 print("[ImportExport] Merge strategy: skip, shouldImport: \(shouldImport)")
             case .replace:
                 shouldImport = true
-                if existing != nil {
+                if let existing {
                     print("[ImportExport] Deleting existing video")
-                    try VideoStorageService.shared.deleteVideo(existing!)
+                    try VideoStorageService.shared.deleteVideo(existing)
                 }
                 print("[ImportExport] Merge strategy: replace, shouldImport: \(shouldImport)")
             }
@@ -886,7 +972,11 @@ class ImportExportService {
             if shouldImport {
                 print("[ImportExport] Importing video \(video.id)")
                 // Copy video file
-                let sourceVideoPath = directory.appendingPathComponent(video.fileName)
+                guard let sourceVideoPath = safeChildURL(for: videoFileName, under: directory) else {
+                    print("[ImportExport] Unsafe video path in metadata: \(video.fileName)")
+                    progress(Float(index + 1) / totalVideosFloat)
+                    continue
+                }
                 print("[ImportExport] Looking for video file: \(sourceVideoPath.path)")
                 
                 if FileManager.default.fileExists(atPath: sourceVideoPath.path) {
@@ -910,33 +1000,23 @@ class ImportExportService {
                 print("[ImportExport] Error details: \(error.localizedDescription)")
             }
             
-            progress(Float(index + 1) / Float(videoFiles.count))
+            progress(Float(index + 1) / totalVideosFloat)
         }
         
         return imported
     }
     
     private func importWeightEntries(_ entries: [WeightEntry], options: ImportOptions) async throws -> Int {
-        var imported = 0
-        
-        for entry in entries {
-            let existing = try await WeightStorageService.shared.getEntry(for: entry.date)
-            
-            var shouldImport = false
+        let strategy: WeightStorageService.MergeStrategy = {
             switch options.mergeStrategy {
             case .skip:
-                shouldImport = (existing == nil)
+                return .skipExisting
             case .replace:
-                shouldImport = true
+                return .replaceExisting
             }
-            
-            if shouldImport {
-                try await WeightStorageService.shared.saveEntry(entry)
-                imported += 1
-            }
-        }
-        
-        return imported
+        }()
+
+        return try await WeightStorageService.shared.mergeEntries(entries, strategy: strategy)
     }
     
     private func importNotes(_ notes: [DailyNote], options: ImportOptions) async throws -> Int {
