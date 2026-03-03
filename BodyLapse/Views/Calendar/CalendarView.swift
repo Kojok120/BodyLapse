@@ -253,18 +253,17 @@ struct CalendarView: View {
         } message: {
             Text(videoAlertMessage)
         }
-        .actionSheet(isPresented: $showingPeriodPicker) {
-            ActionSheet(
-                title: Text("calendar.select_time_period".localized),
-                buttons: TimePeriod.allCases.map { period in
-                    .default(Text(period.localizedString)) {
-                        selectedPeriod = period
-                        selectedIndex = dateRange.count - 1
-                        selectedDate = dateRange[selectedIndex]
-                        selectedChartDate = dateRange[selectedIndex]
-                    }
-                } + [.cancel()]
-            )
+        .confirmationDialog(
+            "calendar.select_time_period".localized,
+            isPresented: $showingPeriodPicker,
+            titleVisibility: .visible
+        ) {
+            ForEach(TimePeriod.allCases, id: \.self) { period in
+                Button(period.localizedString) {
+                    applyPeriodSelection(period)
+                }
+            }
+            Button("common.cancel".localized, role: .cancel) { }
         }
         .overlay(
             Group {
@@ -347,6 +346,13 @@ extension CalendarView {
         viewModel.loadPhotos()
         viewModel.loadCategories()
         updateCurrentPhoto()
+    }
+
+    private func applyPeriodSelection(_ period: TimePeriod) {
+        selectedPeriod = period
+        selectedIndex = dateRange.count - 1
+        selectedDate = dateRange[selectedIndex]
+        selectedChartDate = dateRange[selectedIndex]
     }
     
     private func handleChartDateChange(_ newDate: Date?) {
