@@ -75,6 +75,9 @@
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <false/>
 
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>
