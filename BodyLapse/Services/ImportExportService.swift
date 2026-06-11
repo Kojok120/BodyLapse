@@ -126,151 +126,154 @@ class ImportExportService {
         progress: @escaping (Float) -> Void,
         completion: @escaping (Result<URL, Error>) -> Void
     ) async {
-            
-            do {
-                // 一時ディレクトリを作成
-                let tempDir = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("BodyLapseExport_\(UUID().uuidString)")
-                try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-                defer { try? FileManager.default.removeItem(at: tempDir) }
-                
-                var totalSteps: Float = 0
-                var currentStep: Float = 0
-                
-                // 総ステップ数を計算
-                if options.includePhotos {
-                    totalSteps += Float(PhotoStorageService.shared.photos.count)
-                }
-                if options.includeVideos {
-                    totalSteps += Float(VideoStorageService.shared.videos.count)
-                }
-                totalSteps += 5 // For other operations
-                
-                // フォルダ構造を作成
-                let photosDir = tempDir.appendingPathComponent("photos")
-                let videosDir = tempDir.appendingPathComponent("videos")
-                let dataDir = tempDir.appendingPathComponent("data")
-                
-                try FileManager.default.createDirectory(at: photosDir, withIntermediateDirectories: true)
-                try FileManager.default.createDirectory(at: videosDir, withIntermediateDirectories: true)
-                try FileManager.default.createDirectory(at: dataDir, withIntermediateDirectories: true)
-                
-                currentStep += 1
-                progress(currentStep / totalSteps)
-                
-                // 写真をエクスポート
-                var exportedPhotos: [Photo] = []
-                if options.includePhotos {
-                    exportedPhotos = try self.exportPhotos(
-                        to: photosDir,
-                        options: options,
-                        progress: { photoProgress in
-                            let stepProgress = currentStep + (photoProgress * Float(PhotoStorageService.shared.photos.count))
-                            progress(stepProgress / totalSteps)
-                        }
-                    )
-                    currentStep += Float(PhotoStorageService.shared.photos.count)
-                }
-                
-                // 動画をエクスポート
-                var exportedVideos: [Video] = []
-                if options.includeVideos {
-                    exportedVideos = try self.exportVideos(
-                        to: videosDir,
-                        options: options,
-                        progress: { videoProgress in
-                            let stepProgress = currentStep + (videoProgress * Float(VideoStorageService.shared.videos.count))
-                            progress(stepProgress / totalSteps)
-                        }
-                    )
-                    currentStep += Float(VideoStorageService.shared.videos.count)
-                }
-                
-                // カテゴリーをエクスポート
-                let categories = CategoryStorageService.shared.getActiveCategories()
-                let encoder = JSONEncoder()
-                encoder.dateEncodingStrategy = .iso8601
-                let categoriesData = try encoder.encode(categories)
-                try categoriesData.write(to: dataDir.appendingPathComponent("categories.json"))
-                
-                currentStep += 1
-                progress(currentStep / totalSteps)
-                
-                // 体重データをエクスポート
-                if options.includeWeightData {
-                    let weightEntries = try await WeightStorageService.shared.loadEntries()
-                    let filteredEntries = self.filterWeightEntries(weightEntries, options: options)
-                    let encoder = JSONEncoder()
-                    encoder.dateEncodingStrategy = .iso8601
-                    let weightData = try encoder.encode(filteredEntries)
-                    try weightData.write(to: dataDir.appendingPathComponent("weight_data.json"))
-                }
-                
-                currentStep += 1
-                progress(currentStep / totalSteps)
-                
-                // ノートをエクスポート
-                if options.includeNotes {
-                    let notes = await DailyNoteStorageService.shared.getAllNotes()
-                    let filteredNotes = self.filterNotes(notes, options: options)
-                    let encoder = JSONEncoder()
-                    encoder.dateEncodingStrategy = .iso8601
-                    let notesData = try encoder.encode(filteredNotes)
-                    try notesData.write(to: dataDir.appendingPathComponent("notes.json"))
-                }
-                
-                currentStep += 1
-                progress(currentStep / totalSteps)
-                
-                // リクエストに応じて設定をエクスポート
-                if options.includeSettings {
-                    let settings = await MainActor.run {
-                        UserSettingsManager.shared.settings
-                    }
-                    let encoder = JSONEncoder()
-                    encoder.dateEncodingStrategy = .iso8601
-                    let settingsData = try encoder.encode(settings)
-                    try settingsData.write(to: dataDir.appendingPathComponent("settings.json"))
-                }
-                
-                // マニフェストを作成
-                let manifest = self.createManifest(
-                    photos: exportedPhotos,
-                    videos: exportedVideos,
-                    categories: categories,
-                    options: options
-                )
-                let manifestEncoder = JSONEncoder()
-                manifestEncoder.dateEncodingStrategy = .iso8601
-                let manifestData = try manifestEncoder.encode(manifest)
-                try manifestData.write(to: tempDir.appendingPathComponent("manifest.json"))
-                
-                currentStep += 1
-                progress(currentStep / totalSteps)
-                
-                // ZIPファイルを作成
-                let zipPath = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("BodyLapse_Export_\(Date().timeIntervalSince1970).bodylapse")
-                
-                let success = SimpleZipArchive.createZipFile(
-                    atPath: zipPath.path,
-                    withContentsOfDirectory: tempDir.path,
-                    keepParentDirectory: false
-                )
-                
-                if success {
-                    DispatchQueue.main.async {
-                        completion(.success(zipPath))
-                    }
-                } else {
-                    throw ImportExportError.zipOperationFailed
-                }
-                
-            } catch {
-                DispatchQueue.main.async {
-                    completion(.failure(error))
-                }
+        do {
+            let photosToExport = options.includePhotos ? filterPhotos(options: options) : []
+            let videosToExport = options.includeVideos ? filterVideos(options: options) : []
+            let categories = filterCategories(CategoryStorageService.shared.getActiveCategories(), options: options)
+
+            var totalSteps = Float(photosToExport.count + videosToExport.count + 5)
+            if totalSteps <= 0 {
+                totalSteps = 1
             }
+
+            var currentStep: Float = 0
+            var archiveEntries: [SimpleZipArchive.ArchiveEntry] = []
+
+            // 写真をエクスポート
+            let exportedPhotos: [Photo]
+            if options.includePhotos {
+                let photoResult = try self.exportPhotos(
+                    photosToExport,
+                    progress: { photoProgress in
+                        let stepProgress = currentStep + (photoProgress * Float(max(photosToExport.count, 1)))
+                        progress(stepProgress / totalSteps)
+                    }
+                )
+                archiveEntries.append(contentsOf: photoResult.entries)
+                exportedPhotos = photoResult.photos
+                currentStep += Float(photosToExport.count)
+            } else {
+                exportedPhotos = []
+            }
+
+            // 動画をエクスポート
+            let exportedVideos: [Video]
+            if options.includeVideos {
+                let videoResult = try self.exportVideos(
+                    videosToExport,
+                    progress: { videoProgress in
+                        let stepProgress = currentStep + (videoProgress * Float(max(videosToExport.count, 1)))
+                        progress(stepProgress / totalSteps)
+                    }
+                )
+                archiveEntries.append(contentsOf: videoResult.entries)
+                exportedVideos = videoResult.videos
+                currentStep += Float(videosToExport.count)
+            } else {
+                exportedVideos = []
+            }
+
+            // カテゴリーをエクスポート
+            let categoriesData = try encodeJSON(categories)
+            archiveEntries.append(
+                SimpleZipArchive.ArchiveEntry(
+                    path: "data/categories.json",
+                    source: .data(categoriesData)
+                )
+            )
+
+            currentStep += 1
+            progress(currentStep / totalSteps)
+
+            // 体重データをエクスポート
+            var filteredWeightEntries: [WeightEntry] = []
+            if options.includeWeightData {
+                let weightEntries = try await WeightStorageService.shared.loadEntries()
+                filteredWeightEntries = self.filterWeightEntries(weightEntries, options: options)
+                let weightData = try encodeJSON(filteredWeightEntries)
+                archiveEntries.append(
+                    SimpleZipArchive.ArchiveEntry(
+                        path: "data/weight_data.json",
+                        source: .data(weightData)
+                    )
+                )
+            }
+
+            currentStep += 1
+            progress(currentStep / totalSteps)
+
+            // ノートをエクスポート
+            var filteredNotes: [DailyNote] = []
+            if options.includeNotes {
+                let notes = await DailyNoteStorageService.shared.getAllNotes()
+                filteredNotes = self.filterNotes(notes, options: options)
+                let notesData = try encodeJSON(filteredNotes)
+                archiveEntries.append(
+                    SimpleZipArchive.ArchiveEntry(
+                        path: "data/notes.json",
+                        source: .data(notesData)
+                    )
+                )
+            }
+
+            currentStep += 1
+            progress(currentStep / totalSteps)
+
+            // リクエストに応じて設定をエクスポート
+            if options.includeSettings {
+                let settings = await MainActor.run {
+                    UserSettingsManager.shared.settings
+                }
+                let settingsData = try encodeJSON(settings)
+                archiveEntries.append(
+                    SimpleZipArchive.ArchiveEntry(
+                        path: "data/settings.json",
+                        source: .data(settingsData)
+                    )
+                )
+            }
+
+            currentStep += 1
+            progress(currentStep / totalSteps)
+
+            // マニフェストを作成
+            let manifest = self.createManifest(
+                photos: exportedPhotos,
+                videos: exportedVideos,
+                categories: categories,
+                weightEntries: filteredWeightEntries,
+                notes: filteredNotes,
+                options: options
+            )
+            let manifestData = try encodeJSON(manifest)
+            archiveEntries.append(
+                SimpleZipArchive.ArchiveEntry(
+                    path: "manifest.json",
+                    source: .data(manifestData)
+                )
+            )
+
+            currentStep += 1
+            progress(currentStep / totalSteps)
+
+            // .bodylapseファイルを直接生成
+            let zipPath = FileManager.default.temporaryDirectory
+                .appendingPathComponent("BodyLapse_Export_\(UUID().uuidString).bodylapse")
+
+            guard SimpleZipArchive.createArchive(atPath: zipPath.path, entries: archiveEntries) else {
+                throw ImportExportError.zipOperationFailed
+            }
+
+            progress(1)
+
+            DispatchQueue.main.async {
+                completion(.success(zipPath))
+            }
+        } catch {
+            DispatchQueue.main.async {
+                completion(.failure(error))
+            }
+        }
     }
     
     // MARK: - インポート
@@ -308,7 +311,7 @@ class ImportExportService {
                 print("[ImportExport] Validating file size...")
                 let fileSize = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64 ?? 0
                 print("[ImportExport] File size: \(fileSize) bytes")
-                guard fileSize > 0 && fileSize < 500_000_000 else { // Max 500MB
+                guard fileSize > 0 && fileSize < 2_000_000_000 else { // Max 2GB（動画を含むバックアップを許容）
                     throw ImportExportError.invalidFormat
                 }
                 
@@ -506,24 +509,48 @@ class ImportExportService {
             throw ImportExportError.invalidFormat
         }
         
-        // 適切な設定でデコーダーを作成
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        
         // まずISO8601でデコードを試行
         do {
-            return try decoder.decode(type, from: data)
+            return try makeJSONDecoder(dateStrategy: .iso8601).decode(type, from: data)
         } catch {
             // ISO8601が失敗した場合、タイムスタンプで試行（後方互換性のため）
             print("ISO8601 decode failed, trying timestamp strategy: \(error)")
-            decoder.dateDecodingStrategy = .secondsSince1970
             do {
-                return try decoder.decode(type, from: data)
+                return try makeJSONDecoder(dateStrategy: .secondsSince1970).decode(type, from: data)
             } catch {
                 print("JSON decode error for \(type): \(error)")
                 throw ImportExportError.invalidFormat
             }
         }
+    }
+
+    private func makeJSONEncoder(prettyPrinted: Bool = false) -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.nonConformingFloatEncodingStrategy = .convertToString(
+            positiveInfinity: "Infinity",
+            negativeInfinity: "-Infinity",
+            nan: "NaN"
+        )
+        if prettyPrinted {
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        }
+        return encoder
+    }
+
+    private func makeJSONDecoder(dateStrategy: JSONDecoder.DateDecodingStrategy) -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = dateStrategy
+        decoder.nonConformingFloatDecodingStrategy = .convertFromString(
+            positiveInfinity: "Infinity",
+            negativeInfinity: "-Infinity",
+            nan: "NaN"
+        )
+        return decoder
+    }
+
+    private func encodeJSON<T: Encodable>(_ value: T, prettyPrinted: Bool = false) throws -> Data {
+        try makeJSONEncoder(prettyPrinted: prettyPrinted).encode(value)
     }
 
     private func sanitizedPathComponent(_ value: String, maxLength: Int = 128) -> String? {
@@ -570,119 +597,137 @@ class ImportExportService {
             isActive: category.isActive
         )
     }
-    
-    private func exportPhotos(
-        to directory: URL,
-        options: ExportOptions,
-        progress: @escaping (Float) -> Void
-    ) throws -> [Photo] {
-        var exportedPhotos: [Photo] = []
-        let photos = PhotoStorageService.shared.photos
-        
-        // オプションに基づいて写真をフィルター
-        let filteredPhotos = photos.filter { photo in
-            // 日付範囲を確認
-            if let dateRange = options.dateRange {
-                guard dateRange.contains(photo.captureDate) else { return false }
+
+    private func filterPhotos(options: ExportOptions) -> [Photo] {
+        PhotoStorageService.shared.photos.filter { photo in
+            if let dateRange = options.dateRange,
+               !dateRange.contains(photo.captureDate) {
+                return false
             }
-            
-            // カテゴリーを確認
-            if let categories = options.categories {
-                guard categories.contains(photo.categoryId) else { return false }
+
+            if let categories = options.categories,
+               !categories.contains(photo.categoryId) {
+                return false
             }
-            
+
             return true
         }
-        
-        // カテゴリーディレクトリを作成
-        var categoryDirs: [String: URL] = [:]
-        for photo in filteredPhotos {
-            if categoryDirs[photo.categoryId] == nil {
-                let categoryDir = directory.appendingPathComponent(photo.categoryId)
-                try FileManager.default.createDirectory(at: categoryDir, withIntermediateDirectories: true)
-                categoryDirs[photo.categoryId] = categoryDir
-            }
+    }
+
+    private func filterVideos(options: ExportOptions) -> [Video] {
+        VideoStorageService.shared.initialize()
+        return VideoStorageService.shared.videos.filter { video in
+            guard let dateRange = options.dateRange else { return true }
+            return dateRange.overlaps(video.startDate...video.endDate)
         }
+    }
+
+    private func filterCategories(_ categories: [PhotoCategory], options: ExportOptions) -> [PhotoCategory] {
+        guard let selectedCategories = options.categories else {
+            return categories
+        }
+        return categories.filter { selectedCategories.contains($0.id) }
+    }
+    
+    private func exportPhotos(
+        _ photos: [Photo],
+        progress: @escaping (Float) -> Void
+    ) throws -> (entries: [SimpleZipArchive.ArchiveEntry], photos: [Photo]) {
+        let totalPhotos = Float(max(photos.count, 1))
+        var archiveEntries: [SimpleZipArchive.ArchiveEntry] = []
+        var exportedPhotos: [Photo] = []
         
         // 写真をエクスポート
-        for (index, photo) in filteredPhotos.enumerated() {
-            guard let categoryDir = categoryDirs[photo.categoryId] else { continue }
-            
-            // 画像ファイルをコピー
-            if let sourceImagePath = photo.fileURL {
-                let destImagePath = categoryDir.appendingPathComponent(photo.fileName)
-                
-                if FileManager.default.fileExists(atPath: sourceImagePath.path) {
-                    try FileManager.default.copyItem(at: sourceImagePath, to: destImagePath)
-                }
+        for (index, photo) in photos.enumerated() {
+            defer {
+                progress(Float(index + 1) / totalPhotos)
             }
-            
-            // メタデータをJSONとして保存
+
+            guard let categoryId = sanitizedPathComponent(photo.categoryId, maxLength: 64),
+                  let imageFileName = sanitizedPathComponent(photo.fileName, maxLength: 255),
+                  let sourceImagePath = photo.fileURL,
+                  FileManager.default.fileExists(atPath: sourceImagePath.path) else {
+                continue
+            }
+
+            let basePath = "photos/\(categoryId)"
             let metadataFileName = photo.id.uuidString + ".json"
-            let destMetadataPath = categoryDir.appendingPathComponent(metadataFileName)
-            
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            encoder.dateEncodingStrategy = .iso8601
-            let metadataData = try encoder.encode(photo)
-            try metadataData.write(to: destMetadataPath)
-            
+            let metadataData = try encodeJSON(photo, prettyPrinted: true)
+
+            archiveEntries.append(
+                SimpleZipArchive.ArchiveEntry(
+                    path: "\(basePath)/\(imageFileName)",
+                    source: .file(sourceImagePath)
+                )
+            )
+            archiveEntries.append(
+                SimpleZipArchive.ArchiveEntry(
+                    path: "\(basePath)/\(metadataFileName)",
+                    source: .data(metadataData)
+                )
+            )
             exportedPhotos.append(photo)
-            progress(Float(index + 1) / Float(filteredPhotos.count))
         }
         
-        return exportedPhotos
+        return (archiveEntries, exportedPhotos)
     }
     
     private func exportVideos(
-        to directory: URL,
-        options: ExportOptions,
+        _ videos: [Video],
         progress: @escaping (Float) -> Void
-    ) throws -> [Video] {
+    ) throws -> (entries: [SimpleZipArchive.ArchiveEntry], videos: [Video]) {
+        let totalVideos = Float(max(videos.count, 1))
+        var archiveEntries: [SimpleZipArchive.ArchiveEntry] = []
         var exportedVideos: [Video] = []
-        VideoStorageService.shared.initialize()
-        let videos = VideoStorageService.shared.videos
-        
-        // 日付範囲に基づいて動画をフィルター
-        let filteredVideos = videos.filter { video in
-            if let dateRange = options.dateRange {
-                return dateRange.overlaps(video.startDate...video.endDate)
-            }
-            return true
-        }
         
         // 動画をエクスポート
-        for (index, video) in filteredVideos.enumerated() {
-            // 動画ファイルをコピー
-            let sourceVideoPath = video.fileURL
-            let destVideoPath = directory.appendingPathComponent(video.fileName)
-            
-            if FileManager.default.fileExists(atPath: sourceVideoPath.path) {
-                try FileManager.default.copyItem(at: sourceVideoPath, to: destVideoPath)
+        for (index, video) in videos.enumerated() {
+            defer {
+                progress(Float(index + 1) / totalVideos)
             }
-            
+
+            guard let videoFileName = sanitizedPathComponent(video.fileName, maxLength: 255) else {
+                continue
+            }
+
+            let sourceVideoPath = video.fileURL
+            guard FileManager.default.fileExists(atPath: sourceVideoPath.path) else {
+                continue
+            }
+
             // メタデータをJSONとして保存
             let metadataFileName = video.id.uuidString + ".json"
-            let destMetadataPath = directory.appendingPathComponent(metadataFileName)
-            
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            encoder.dateEncodingStrategy = .iso8601
-            let metadataData = try encoder.encode(video)
-            try metadataData.write(to: destMetadataPath)
-            
+            let metadataData = try encodeJSON(video, prettyPrinted: true)
+
+            archiveEntries.append(
+                SimpleZipArchive.ArchiveEntry(
+                    path: "videos/\(videoFileName)",
+                    source: .file(sourceVideoPath)
+                )
+            )
+            archiveEntries.append(
+                SimpleZipArchive.ArchiveEntry(
+                    path: "videos/\(metadataFileName)",
+                    source: .data(metadataData)
+                )
+            )
+
             // サムネイルがあればコピー
             if let thumbnailURL = video.thumbnailURL,
+               let thumbnailFileName = sanitizedPathComponent(thumbnailURL.lastPathComponent, maxLength: 255),
                FileManager.default.fileExists(atPath: thumbnailURL.path) {
-                let destThumbnailPath = directory.appendingPathComponent(thumbnailURL.lastPathComponent)
-                try FileManager.default.copyItem(at: thumbnailURL, to: destThumbnailPath)
+                archiveEntries.append(
+                    SimpleZipArchive.ArchiveEntry(
+                        path: "videos/\(thumbnailFileName)",
+                        source: .file(thumbnailURL)
+                    )
+                )
             }
-            
+
             exportedVideos.append(video)
-            progress(Float(index + 1) / Float(filteredVideos.count))
         }
         
-        return exportedVideos
+        return (archiveEntries, exportedVideos)
     }
     
     private func filterWeightEntries(_ entries: [WeightEntry], options: ExportOptions) -> [WeightEntry] {
@@ -699,6 +744,8 @@ class ImportExportService {
         photos: [Photo],
         videos: [Video],
         categories: [PhotoCategory],
+        weightEntries: [WeightEntry],
+        notes: [DailyNote],
         options: ExportOptions
     ) -> ExportManifest {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
@@ -718,8 +765,8 @@ class ImportExportService {
             photoCount: photos.count,
             videoCount: videos.count,
             categoryCount: categories.count,
-            weightEntryCount: 0, // Will be updated after weight export
-            noteCount: 0, // Will be updated after note export
+            weightEntryCount: weightEntries.count,
+            noteCount: notes.count,
             dateRange: dateRange
         )
         
@@ -746,8 +793,11 @@ class ImportExportService {
                 case .skip:
                     if existing == nil {
                         print("[ImportExport] Adding new category: \(category.name)")
-                        _ = CategoryStorageService.shared.addCategory(category)
-                        imported += 1
+                        if CategoryStorageService.shared.addCategory(category) {
+                            imported += 1
+                        } else {
+                            print("[ImportExport] Failed to add category (limit reached?): \(category.name)")
+                        }
                     } else {
                         print("[ImportExport] Skipping existing category: \(category.name)")
                     }
@@ -755,11 +805,15 @@ class ImportExportService {
                     if existing != nil {
                         print("[ImportExport] Updating existing category: \(category.name)")
                         CategoryStorageService.shared.updateCategory(category)
+                        imported += 1
                     } else {
                         print("[ImportExport] Adding new category: \(category.name)")
-                        _ = CategoryStorageService.shared.addCategory(category)
+                        if CategoryStorageService.shared.addCategory(category) {
+                            imported += 1
+                        } else {
+                            print("[ImportExport] Failed to add category (limit reached?): \(category.name)")
+                        }
                     }
-                    imported += 1
                 }
             }
         }
@@ -827,16 +881,29 @@ class ImportExportService {
                             print("[ImportExport] Reading metadata file: \(metadataFile.lastPathComponent)")
                             guard let photo = try? self.safelyDecodeJSON(Photo.self, from: metadataFile) else {
                                 print("[ImportExport] Failed to decode photo metadata from: \(metadataFile.lastPathComponent)")
-                                processedPhotos += 1
-                                progress(Float(processedPhotos) / totalPhotosFloat)
                                 return  // This returns from autoreleasepool, not the method
                             }
                             print("[ImportExport] Successfully decoded photo: \(photo.id)")
-                            
-                            // Check if photo already exists
-                            let existing = PhotoStorageService.shared.photos.first { $0.id == photo.id }
-                            print("[ImportExport] Photo \(photo.id) exists: \(existing != nil)")
-                            
+
+                            guard let imageFileName = self.sanitizedPathComponent(photo.fileName, maxLength: 255) else {
+                                print("[ImportExport] Invalid image file name in metadata: \(photo.fileName)")
+                                return
+                            }
+
+                            let metadataCategoryId = self.sanitizedPathComponent(photo.categoryId, maxLength: 64)
+                            let targetCategoryId = metadataCategoryId ?? categoryId
+                            let finalCategoryId: String
+                            if CategoryStorageService.shared.getCategoryById(targetCategoryId) != nil {
+                                finalCategoryId = targetCategoryId
+                            } else {
+                                finalCategoryId = categoryId
+                            }
+
+                            // アプリのデータモデルは「1日1カテゴリ1枚」なので、
+                            // 既存判定はIDではなく撮影日（同日）+カテゴリで行う
+                            let existing = PhotoStorageService.shared.getPhotoForDate(photo.captureDate, categoryId: finalCategoryId)
+                            print("[ImportExport] Photo for \(photo.captureDate) in \(finalCategoryId) exists: \(existing != nil)")
+
                             var shouldImport = false
                             switch options.mergeStrategy {
                             case .skip:
@@ -846,22 +913,8 @@ class ImportExportService {
                                 shouldImport = true
                                 print("[ImportExport] Merge strategy: replace, shouldImport: \(shouldImport)")
                             }
-                            
+
                             if shouldImport {
-                                guard let imageFileName = self.sanitizedPathComponent(photo.fileName, maxLength: 255) else {
-                                    print("[ImportExport] Invalid image file name in metadata: \(photo.fileName)")
-                                    return
-                                }
-
-                                let metadataCategoryId = self.sanitizedPathComponent(photo.categoryId, maxLength: 64)
-                                let targetCategoryId = metadataCategoryId ?? categoryId
-                                let finalCategoryId: String
-                                if CategoryStorageService.shared.getCategoryById(targetCategoryId) != nil {
-                                    finalCategoryId = targetCategoryId
-                                } else {
-                                    finalCategoryId = categoryId
-                                }
-
                                 print("[ImportExport] Importing photo \(photo.id)")
                                 // Copy image file
                                 guard let sourceImagePath = self.safeChildURL(for: imageFileName, under: categoryDir) else {
@@ -884,14 +937,29 @@ class ImportExportService {
                                             if let image = UIImage(data: imageData) {
                                                 print("[ImportExport] Created UIImage successfully")
                                                 do {
-                                                    let savedPhoto = try PhotoStorageService.shared.savePhoto(
-                                                        image,
-                                                        captureDate: photo.captureDate,
-                                                        categoryId: finalCategoryId,
-                                                        isFaceBlurred: photo.isFaceBlurred,
-                                                        weight: photo.weight,
-                                                        bodyFatPercentage: photo.bodyFatPercentage
-                                                    )
+                                                    let savedPhoto: Photo
+                                                    if existing != nil {
+                                                        // 置換: 同日・同カテゴリの既存写真を削除してから保存
+                                                        savedPhoto = try PhotoStorageService.shared.replacePhoto(
+                                                            for: photo.captureDate,
+                                                            categoryId: finalCategoryId,
+                                                            with: image,
+                                                            isFaceBlurred: photo.isFaceBlurred,
+                                                            bodyDetectionConfidence: photo.bodyDetectionConfidence,
+                                                            weight: photo.weight,
+                                                            bodyFatPercentage: photo.bodyFatPercentage
+                                                        )
+                                                    } else {
+                                                        savedPhoto = try PhotoStorageService.shared.savePhoto(
+                                                            image,
+                                                            captureDate: photo.captureDate,
+                                                            categoryId: finalCategoryId,
+                                                            isFaceBlurred: photo.isFaceBlurred,
+                                                            bodyDetectionConfidence: photo.bodyDetectionConfidence,
+                                                            weight: photo.weight,
+                                                            bodyFatPercentage: photo.bodyFatPercentage
+                                                        )
+                                                    }
                                                     imported += 1
                                                     print("[ImportExport] Successfully saved photo: \(savedPhoto.id)")
                                                 } catch {
@@ -951,8 +1019,14 @@ class ImportExportService {
                 }
                 
                 // 動画が既に存在するか確認
+                // 保存時にIDが再発行されるため、ID一致に加えて内容（期間・フレーム数）でも判定する
                 VideoStorageService.shared.initialize()
-                let existing = VideoStorageService.shared.videos.first { $0.id == video.id }
+                let existing = VideoStorageService.shared.videos.first {
+                    $0.id == video.id ||
+                    ($0.startDate == video.startDate &&
+                     $0.endDate == video.endDate &&
+                     $0.frameCount == video.frameCount)
+                }
                 print("[ImportExport] Video \(video.id) exists: \(existing != nil)")
             
             var shouldImport = false

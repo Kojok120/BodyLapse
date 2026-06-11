@@ -50,5 +50,40 @@
     
     <key>UILaunchStoryboardName</key>
     <string>LaunchScreen</string>
+
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.J.BodyLapse.bodylapse</string>
+            <key>UTTypeDescription</key>
+            <string>BodyLapse Backup</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>bodylapse</string>
+                </array>
+            </dict>
+        </dict>
+    </array>
+
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>BodyLapse Backup</string>
+            <key>LSHandlerRank</key>
+            <string>Owner</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>com.J.BodyLapse.bodylapse</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

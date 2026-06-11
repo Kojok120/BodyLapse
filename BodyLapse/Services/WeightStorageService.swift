@@ -164,6 +164,11 @@ actor WeightStorageService {
     
     // MARK: - プライベートメソッド
     private func saveEntries(_ entries: [WeightEntry]) throws {
+        // ディレクトリが（データ消去などで）失われていても保存できるようにする
+        try FileManager.default.createDirectory(
+            at: weightsDirectory,
+            withIntermediateDirectories: true
+        )
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = .prettyPrinted
