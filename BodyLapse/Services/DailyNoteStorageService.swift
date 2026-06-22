@@ -69,7 +69,7 @@ actor DailyNoteStorageService {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(notesCache)
-        try data.write(to: url)
+        try data.write(to: url, options: .atomic)
     }
     
     func saveNote(for date: Date, content: String) async throws {

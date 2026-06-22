@@ -334,6 +334,11 @@ class PhotoStorageService {
         imageCache.removeAllObjects()
         loadPhotosMetadata(syncWeightData: syncWeightData)
     }
+
+    /// 画像キャッシュを解放する。動画生成など大量の画像を順次読み込む処理の前後で呼び、メモリ余裕を確保する。
+    func clearImageCache() {
+        imageCache.removeAllObjects()
+    }
     
     private func loadPhotosMetadata(syncWeightData: Bool = true) {
         guard let metadataURL = metadataURL else {
@@ -370,14 +375,20 @@ class PhotoStorageService {
                 }
             }
         } catch {
-            // メタデータのデコードに失敗。サイレントに握り潰さずログに残す
-            // （破損検知やサポート対応のため）。in-memory配列は空にするが、
-            // 既存ファイルは上書きせず温存される（savePhotosMetadataは別途呼ばれた時のみ）。
+            // メタデータのデコードに失敗。破損ファイルをタイムスタンプ付きで退避してから空配列化する。
+            // （退避しておかないと後続の savePhotosMetadata が破損ファイルを []で上書きし復旧不能になる）
             print("[PhotoStorage] Failed to decode photos metadata: \(error)")
+            // metadataURL は冒頭の guard で展開済み（非Optional）
+            if FileManager.default.fileExists(atPath: metadataURL.path) {
+                let backupURL = metadataURL.deletingPathExtension()
+                    .appendingPathExtension("corrupt-\(Int(Date().timeIntervalSince1970)).json")
+                try? FileManager.default.copyItem(at: metadataURL, to: backupURL)
+                print("[PhotoStorage] Backed up corrupt metadata to: \(backupURL.lastPathComponent)")
+            }
             photos = []
         }
     }
-    
+
     private func savePhotosMetadata() {
         guard let metadataURL = metadataURL else {
             // エラー: メタデータURLにアクセスできません
@@ -386,10 +397,11 @@ class PhotoStorageService {
 
         do {
             let encoded = try JSONEncoder().encode(photos)
-            try encoded.write(to: metadataURL)
+            // .atomic で一時ファイル経由の安全な書込（書込中クラッシュでも本ファイルが破損しない）
+            try encoded.write(to: metadataURL, options: .atomic)
             // メタデータを保存済み
         } catch {
-            // メタデータの保存に失敗
+            print("[PhotoStorage] Failed to save photos metadata: \(error)")
         }
     }
 

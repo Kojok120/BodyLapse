@@ -64,7 +64,7 @@ class CategoryStorageService {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             let data = try encoder.encode(categories)
-            try data.write(to: url)
+            try data.write(to: url, options: .atomic)
         } catch {
             print("Error saving categories: \(error)")
         }

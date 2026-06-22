@@ -110,7 +110,7 @@ class VideoStorageService {
             
             if let data = thumbnail.jpegData(compressionQuality: 0.8) {
                 let thumbnailURL = thumbnailsDirectory.appendingPathComponent(fileName)
-                try data.write(to: thumbnailURL)
+                try data.write(to: thumbnailURL, options: .atomic)
             }
         } catch {
             // サムネイルの生成に失敗
@@ -129,7 +129,11 @@ class VideoStorageService {
     
     private func saveVideosMetadata() {
         guard let encoded = try? JSONEncoder().encode(videos) else { return }
-        try? encoded.write(to: metadataURL)
+        do {
+            try encoded.write(to: metadataURL, options: .atomic)
+        } catch {
+            print("[VideoStorage] Failed to save videos metadata: \(error)")
+        }
     }
 }
 
