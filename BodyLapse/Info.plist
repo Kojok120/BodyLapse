@@ -16,7 +16,15 @@
     <string>BodyLapse reads your weight and body fat data from Health to automatically track your progress</string>
     <key>NSHealthUpdateUsageDescription</key>
     <string>BodyLapse saves your weight and body fat measurements to Health for comprehensive tracking</string>
-    
+
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>ja</string>
+        <string>es</string>
+        <string>ko</string>
+    </array>
+
     <key>GADApplicationIdentifier</key>
     <string>ca-app-pub-2130434444191865~4196868445</string>
 
