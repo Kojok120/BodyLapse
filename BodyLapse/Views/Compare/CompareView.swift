@@ -13,6 +13,8 @@ struct CompareView: View {
     @State private var availableCategories: [PhotoCategory] = []
     @State private var firstCategory: PhotoCategory = PhotoCategory.defaultCategory
     @State private var secondCategory: PhotoCategory = PhotoCategory.defaultCategory
+    @State private var showingShareSheet = false
+    @State private var shareItems: [Any] = []
     
     var body: some View {
         NavigationView {
@@ -48,6 +50,20 @@ struct CompareView: View {
             }
             .navigationTitle("compare.title".localized)
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        composeAndShare()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .disabled(firstPhoto == nil || secondPhoto == nil)
+                    .accessibilityLabel("compare.share".localized)
+                }
+            }
+            .sheet(isPresented: $showingShareSheet) {
+                ShareSheet(activityItems: shareItems)
+            }
             .sheet(isPresented: $showingFirstCalendar) {
                 CalendarPopupView(
                     selectedDate: Binding(
@@ -619,5 +635,40 @@ struct CompareView: View {
     
     private func convertedWeight(_ weight: Double) -> Double {
         userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
+    }
+
+    /// 選択中の2枚からビフォーアフター共有画像を生成して共有シートを表示する。
+    /// 全ユーザー利用可。Pro以外はウォーターマークを付与する。
+    private func composeAndShare() {
+        guard let first = firstPhoto, let second = secondPhoto,
+              let firstImage = PhotoStorageService.shared.loadImage(for: first),
+              let secondImage = PhotoStorageService.shared.loadImage(for: second) else {
+            return
+        }
+
+        // 日付の早い方を「変化前」、遅い方を「変化後」にする
+        let beforeIsFirst = first.captureDate <= second.captureDate
+        let beforePhoto = beforeIsFirst ? first : second
+        let afterPhoto = beforeIsFirst ? second : first
+        let beforeImage = beforeIsFirst ? firstImage : secondImage
+        let afterImage = beforeIsFirst ? secondImage : firstImage
+
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+
+        let image = ShareComposerService.beforeAfterImage(
+            before: beforeImage,
+            after: afterImage,
+            beforeLabel: "compare.before".localized,
+            afterLabel: "compare.after".localized,
+            beforeDateText: formatter.string(from: beforePhoto.captureDate),
+            afterDateText: formatter.string(from: afterPhoto.captureDate),
+            addWatermark: !subscriptionManager.isPro
+        )
+
+        Haptics.impact()
+        shareItems = [image]
+        showingShareSheet = true
     }
 }
