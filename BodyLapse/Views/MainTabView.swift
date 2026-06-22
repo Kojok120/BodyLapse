@@ -59,6 +59,9 @@ struct MainTabView: View {
         .onAppear {
             performInitialHealthKitSync()
         }
+        .overlay {
+            AchievementCelebrationOverlay()
+        }
     }
     
     private func performInitialHealthKitSync() {

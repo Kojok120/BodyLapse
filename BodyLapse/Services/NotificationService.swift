@@ -138,6 +138,9 @@ class NotificationService: NSObject {
             identifiersToRemove.append("missed-photo-day-\(day)")
         }
         notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiersToRemove)
+
+        // 連続記録が伸びていれば「途切れそう」と励ますストリーク対応の文面にする
+        let currentStreak = PhotoStorageService.shared.getStatistics().currentStreak
         
         // 次の7日間の通知をスケジュール
         for dayOffset in 0..<7 {
@@ -160,7 +163,9 @@ class NotificationService: NSObject {
             
             let content = UNMutableNotificationContent()
             content.title = "notification.no_photo_title".localized
-            content.body = "notification.no_photo_body".localized
+            content.body = currentStreak >= 2
+                ? "notification.streak_at_risk_body".localized(with: currentStreak)
+                : "notification.no_photo_body".localized
             content.sound = .default
             content.badge = 1
             content.userInfo = ["openCamera": true, "scheduledDate": targetDate]

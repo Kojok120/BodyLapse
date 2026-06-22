@@ -754,3 +754,16 @@
 "streak.days_this_month" = "%d days this month";
 "streak.longest" = "Best: %d days";
 "streak.start" = "Start your streak today";
+"streak.summary.current" = "Current";
+"streak.summary.longest" = "Best";
+"streak.summary.total" = "Total";
+
+/* Achievements */
+"achievement.title" = "Achievements";
+"achievement.unlocked" = "Achievement unlocked!";
+"achievement.locked" = "Locked";
+"achievement.streak.name" = "%d-day streak";
+"achievement.total.name" = "%d days total";
+"achievement.streak.praise" = "You've shot %d days in a row! Keep it up 🎉";
+"achievement.total.praise" = "You've reached %d total days! 🎉";
+"notification.streak_at_risk_body" = "🔥 %d-day streak! Take today's photo to keep it going";

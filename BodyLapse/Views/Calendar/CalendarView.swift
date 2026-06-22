@@ -27,6 +27,7 @@ struct CalendarView: View {
     @State var showingMemoEditor = false
     @State var showingVideoGeneration = false
     @State var showingAddCategory = false
+    @State var showingAchievements = false
     
     // MARK: - Video Generation States  
     @State var isGeneratingVideo = false
@@ -114,7 +115,12 @@ struct CalendarView: View {
                 }
             )
 
-            StreakBadgeView(statistics: viewModel.statistics)
+            Button {
+                showingAchievements = true
+            } label: {
+                StreakBadgeView(statistics: viewModel.statistics)
+            }
+            .buttonStyle(.plain)
 
             PhotoPreviewSection(
                 selectedDate: selectedDate,
@@ -170,6 +176,10 @@ struct CalendarView: View {
         .onChange(of: viewModel.dailyNotes) { _, _ in
             currentMemo = viewModel.note(for: selectedDate)?.content ?? ""
         }
+        .onChange(of: viewModel.photos.count) { _, _ in
+            // 写真追加（＝新しい撮影日）でストリークが伸び、実績解除を判定する
+            AchievementService.shared.evaluate(viewModel.statistics)
+        }
         .sheet(isPresented: $showingWeightInput) {
             WeightInputView(photo: $currentPhoto, selectedDate: selectedDate, onSave: { weight, bodyFat in
                 handleWeightSave(weight: weight, bodyFat: bodyFat)
@@ -204,6 +214,9 @@ struct CalendarView: View {
                 isPremium: true, // All users now have premium features
                 onDateSelected: updateCurrentPhoto
             )
+        }
+        .sheet(isPresented: $showingAchievements) {
+            AchievementsView(statistics: viewModel.statistics)
         }
         .sheet(isPresented: $showingMemoEditor) {
             MemoEditorView(
@@ -329,10 +342,12 @@ extension CalendarView {
         }
         
         updateCurrentPhoto()
-        
+
         if selectedChartDate == nil {
             selectedChartDate = selectedDate
         }
+
+        AchievementService.shared.evaluate(viewModel.statistics)
     }
     
     private func handleNavigateToToday(_ notification: Notification) {

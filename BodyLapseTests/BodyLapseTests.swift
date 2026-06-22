@@ -452,3 +452,49 @@ struct PhotoStatisticsTests {
         #expect(stats.currentStreak == 1)
     }
 }
+
+// MARK: - AchievementService（実績解除）のテスト
+@Suite(.serialized)
+@MainActor
+struct AchievementServiceTests {
+    private func stats(streak: Int, longest: Int, total: Int) -> PhotoStatistics {
+        PhotoStatistics(currentStreak: streak, longestStreak: longest, daysThisMonth: total, totalDays: total, isTodayCaptured: true)
+    }
+
+    @Test
+    func unlocksStreakMilestonesAndIsIdempotent() {
+        let service = AchievementService.shared
+        service.resetForDebug()
+        defer { service.resetForDebug() }
+
+        // 最長7日 → streak_3 と streak_7 が解除される
+        let first = service.evaluate(stats(streak: 7, longest: 7, total: 7), notify: false)
+        #expect(Set(first.map { $0.id }) == ["streak_3", "streak_7"])
+
+        // 同じ統計で再評価しても新規解除はない（冪等）
+        let second = service.evaluate(stats(streak: 7, longest: 7, total: 7), notify: false)
+        #expect(second.isEmpty)
+    }
+
+    @Test
+    func unlocksTotalDaysMilestoneIndependentlyOfStreak() {
+        let service = AchievementService.shared
+        service.resetForDebug()
+        defer { service.resetForDebug() }
+
+        // 通算30日・最長5日 → total_30 は解除、streak_7 は未解除
+        let unlocked = service.evaluate(stats(streak: 1, longest: 5, total: 30), notify: false)
+        #expect(unlocked.contains { $0.id == "total_30" })
+        #expect(!unlocked.contains { $0.id == "streak_7" })
+    }
+
+    @Test
+    func belowThresholdUnlocksNothing() {
+        let service = AchievementService.shared
+        service.resetForDebug()
+        defer { service.resetForDebug() }
+
+        let unlocked = service.evaluate(stats(streak: 2, longest: 2, total: 2), notify: false)
+        #expect(unlocked.isEmpty)
+    }
+}

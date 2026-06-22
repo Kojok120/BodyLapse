@@ -66,6 +66,11 @@ struct CustomDatePicker: UIViewRepresentable {
                     let hasPhoto = photoDates.contains(normalizedDate)
                     let hasData = dataDates.contains(normalizedDate)
                     
+                    // 撮影済みの日は淡い円で背景を強調し、習慣が一目で分かるようにする
+                    if hasPhoto {
+                        addPhotoHighlight(to: cell)
+                    }
+
                     if hasPhoto || hasData {
                         addIndicator(to: cell, hasPhoto: hasPhoto, hasData: hasData)
                     }
@@ -109,6 +114,29 @@ struct CustomDatePicker: UIViewRepresentable {
         return calendar.date(from: components)
     }
     
+    /// 撮影済みの日に淡い円の背景ハイライトを追加する（再描画で重ならないよう冪等）。
+    private func addPhotoHighlight(to cell: UIView) {
+        // 既存のハイライト（tag 998）を除去してから追加
+        cell.subviews.filter { $0.tag == 998 }.forEach { $0.removeFromSuperview() }
+
+        let size: CGFloat = 32
+        let highlight = UIView()
+        highlight.tag = 998
+        highlight.isUserInteractionEnabled = false
+        highlight.translatesAutoresizingMaskIntoConstraints = false
+        highlight.backgroundColor = UIColor(red: 0, green: 0.7, blue: 0.8, alpha: 0.16) // Turquoise (faint)
+        highlight.layer.cornerRadius = size / 2
+
+        cell.insertSubview(highlight, at: 0)
+
+        NSLayoutConstraint.activate([
+            highlight.centerXAnchor.constraint(equalTo: cell.centerXAnchor),
+            highlight.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+            highlight.widthAnchor.constraint(equalToConstant: size),
+            highlight.heightAnchor.constraint(equalToConstant: size)
+        ])
+    }
+
     private func addIndicator(to cell: UIView, hasPhoto: Bool, hasData: Bool) {
         let indicatorSize: CGFloat = 6
         let spacing: CGFloat = 2

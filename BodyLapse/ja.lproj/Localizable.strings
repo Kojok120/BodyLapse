@@ -762,3 +762,16 @@
 "streak.days_this_month" = "今月%d日";
 "streak.longest" = "最長%d日";
 "streak.start" = "今日から記録を始めよう";
+"streak.summary.current" = "現在";
+"streak.summary.longest" = "最長";
+"streak.summary.total" = "通算";
+
+/* Achievements / 実績 */
+"achievement.title" = "実績";
+"achievement.unlocked" = "実績を解除しました！";
+"achievement.locked" = "未解除";
+"achievement.streak.name" = "%d日連続";
+"achievement.total.name" = "通算%d日";
+"achievement.streak.praise" = "%d日連続で撮影できました！この調子で続けよう🎉";
+"achievement.total.praise" = "通算%d日を達成しました！🎉";
+"notification.streak_at_risk_body" = "🔥 %d日連続中！今日撮って記録をキープしよう";

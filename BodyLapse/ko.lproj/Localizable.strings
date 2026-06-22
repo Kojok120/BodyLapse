@@ -754,3 +754,16 @@
 "streak.days_this_month" = "이번 달 %d일";
 "streak.longest" = "최고 %d일";
 "streak.start" = "오늘부터 기록을 시작하세요";
+"streak.summary.current" = "현재";
+"streak.summary.longest" = "최고";
+"streak.summary.total" = "총";
+
+/* Achievements / 업적 */
+"achievement.title" = "업적";
+"achievement.unlocked" = "업적 달성!";
+"achievement.locked" = "잠김";
+"achievement.streak.name" = "%d일 연속";
+"achievement.total.name" = "총 %d일";
+"achievement.streak.praise" = "%d일 연속 촬영했어요! 이대로 계속해요 🎉";
+"achievement.total.praise" = "총 %d일을 달성했어요! 🎉";
+"notification.streak_at_risk_body" = "🔥 %d일 연속 중! 오늘 사진을 찍어 기록을 이어가세요";

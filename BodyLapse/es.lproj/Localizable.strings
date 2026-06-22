@@ -754,3 +754,16 @@
 "streak.days_this_month" = "%d días este mes";
 "streak.longest" = "Récord: %d días";
 "streak.start" = "Empieza tu racha hoy";
+"streak.summary.current" = "Actual";
+"streak.summary.longest" = "Récord";
+"streak.summary.total" = "Total";
+
+/* Achievements / Logros */
+"achievement.title" = "Logros";
+"achievement.unlocked" = "¡Logro desbloqueado!";
+"achievement.locked" = "Bloqueado";
+"achievement.streak.name" = "%d días seguidos";
+"achievement.total.name" = "%d días en total";
+"achievement.streak.praise" = "¡Has hecho fotos %d días seguidos! Sigue así 🎉";
+"achievement.total.praise" = "¡Has alcanzado %d días en total! 🎉";
+"notification.streak_at_risk_body" = "🔥 ¡Racha de %d días! Toma la foto de hoy para mantenerla";
