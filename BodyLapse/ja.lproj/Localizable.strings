@@ -700,6 +700,10 @@
 "onboarding.feature.daily_photo" = "1日1枚の写真";
 "onboarding.feature.timelapse" = "タイムラプス動画を作成";
 "onboarding.feature.privacy" = "プライバシー保護";
+"onboarding.feature.progress" = "連続記録・体重・目標を管理";
+"onboarding.skip_confirm_title" = "最初の写真をスキップしますか？";
+"onboarding.skip_confirm_message" = "最初の記録がないと、後で変化を比較する基準がありません。今撮っておくのがおすすめです。";
+"onboarding.skip_capture" = "撮影する";
 "onboarding.privacy_detail" = "動画生成時の顔ぼかし機能\n画像や動画はすべて端末内に保存";
 "onboarding.ready" = "準備完了！";
 "onboarding.photo_saved" = "写真が正常に保存されました";

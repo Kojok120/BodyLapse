@@ -528,6 +528,10 @@
 "onboarding.feature.daily_photo" = "One photo per day";
 "onboarding.feature.timelapse" = "Create time-lapse videos";
 "onboarding.feature.privacy" = "Privacy protection";
+"onboarding.feature.progress" = "Track streaks, weight and goals";
+"onboarding.skip_confirm_title" = "Skip your first photo?";
+"onboarding.skip_confirm_message" = "Without a first photo you won't have a starting point to compare against later. Taking one now is recommended.";
+"onboarding.skip_capture" = "Take photo";
 "onboarding.privacy_detail" = "Face blur for video generation\nEverything stays on your device";
 "onboarding.ready" = "Ready!";
 "onboarding.photo_saved" = "Your photo has been saved successfully";

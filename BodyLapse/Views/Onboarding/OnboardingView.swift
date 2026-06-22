@@ -13,11 +13,7 @@ struct OnboardingView: View {
     @State private var confirmPasscode = ""
     @State private var showingPasscodeError = false
     @State private var passcodeErrorMessage = ""
-    
-    // プレミアム
-    @State private var showingPremiumView = false
-    @StateObject private var premiumViewModel = PremiumViewModel()
-    
+
     // 権限
     @State private var notificationsEnabled = false
     @State private var appLockEnabled = false
@@ -51,9 +47,6 @@ struct OnboardingView: View {
             .navigationBarHidden(currentStep == 2 && !didCapturePhoto) // Hide nav bar during camera
         }
         .interactiveDismissDisabled()
-        .sheet(isPresented: $showingPremiumView) {
-            PremiumView()
-        }
         .sheet(isPresented: $showingAppLockSetup, onDismiss: {
             // パスコードが空の場合、ユーザーがキャンセル - アプリロックをオフ
             if passcode.isEmpty {
@@ -123,7 +116,12 @@ struct OnboardingView: View {
                     icon: "video.fill",
                     text: "onboarding.feature.timelapse".localized
                 )
-                
+
+                ValuePropositionRow(
+                    icon: "flame.fill",
+                    text: "onboarding.feature.progress".localized
+                )
+
                 ValuePropositionRow(
                     icon: "eye.slash.fill",
                     text: "onboarding.feature.privacy".localized
@@ -157,7 +155,10 @@ struct OnboardingView: View {
                 BaselinePhotoCaptureViewWithSkip { photo in
                     didCapturePhoto = true
                 } onSkip: {
-                    didCapturePhoto = true
+                    // スキップ時は誤った「保存しました」状態を出さず、そのまま次のステップへ
+                    withAnimation {
+                        currentStep = 3
+                    }
                 }
             } else {
                 // Show success state with options to retake or continue
@@ -257,43 +258,6 @@ struct OnboardingView: View {
                     )
                 }
                 .padding(.horizontal)
-                
-                // プレミアム section
-                VStack(spacing: 15) {
-                    HStack {
-                        Image(systemName: "star.fill")
-                            .foregroundColor(.yellow)
-                        Text("onboarding.premium_features_title".localized)
-                            .font(.headline)
-                            .fontWeight(.bold)
-                        Spacer()
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach([
-                            "onboarding.premium.noads.description".localized,
-                            "onboarding.premium.all_features_free".localized
-                        ], id: \.self) { feature in
-                            OnboardingPremiumFeatureRow(text: feature)
-                        }
-                    }
-                    
-                    Button(action: {
-                        showingPremiumView = true
-                    }) {
-                        Text("onboarding.learn_more".localized)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.accentColor.opacity(0.1))
-                            .foregroundColor(.accentColor)
-                            .cornerRadius(10)
-                    }
-                }
-                .padding()
-                .background(Color(UIColor.secondarySystemBackground))
-                .cornerRadius(15)
-                .padding(.horizontal)
-                .padding(.top, 10)
                 
                 Spacer(minLength: 100)
             }
@@ -587,6 +551,7 @@ struct BaselinePhotoCaptureViewWithSkip: View {
     @State private var showingContourConfirmation = false
     @State private var contourError: String?
     @State private var shouldShowCamera = true
+    @State private var showingSkipConfirm = false
     
     // Timer states
     @State private var timerDuration: Int = 0 // 0 = off, 3, 5, 10 seconds
@@ -785,7 +750,7 @@ struct BaselinePhotoCaptureViewWithSkip: View {
                         Spacer()
                         
                         Button(action: {
-                            onSkip()
+                            showingSkipConfirm = true
                         }) {
                             Text("common.skip".localized)
                                 .font(.body)
@@ -809,8 +774,14 @@ struct BaselinePhotoCaptureViewWithSkip: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
             }
         }
+        .alert("onboarding.skip_confirm_title".localized, isPresented: $showingSkipConfirm) {
+            Button("onboarding.skip_capture".localized, role: .cancel) {}
+            Button("common.skip".localized, role: .destructive) { onSkip() }
+        } message: {
+            Text("onboarding.skip_confirm_message".localized)
+        }
     }
-    
+
     private func handlePhotoCapture(_ image: UIImage) {
         isProcessing = true
         capturedImage = image
