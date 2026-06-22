@@ -786,3 +786,17 @@
 "goal.projected" = "Previsto: %@";
 "goal.projected_unknown" = "Previsto: sigue registrando para verlo";
 "goal.reached" = "🎉 ¡Meta alcanzada!";
+
+/* Premium tiers (Standard / Pro) */
+"premium.choose_plan" = "Elige tu plan";
+"premium.pro.title" = "Pro";
+"premium.standard.title" = "Standard";
+"premium.recommended" = "Recomendado";
+"premium.best_value" = "Mejor precio";
+"premium.per_month" = "mes";
+"premium.per_year" = "año";
+"premium.feature.cloud" = "Copia en iCloud";
+"premium.feature.advanced_video" = "Vídeo y compartir avanzados";
+"premium.active_pro" = "Pro activo";
+"premium.active_standard" = "Standard activo";
+"settings.debug.pro_mode" = "Modo Pro (Debug)";

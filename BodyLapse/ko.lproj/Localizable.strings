@@ -786,3 +786,17 @@
 "goal.projected" = "도달 예상: %@";
 "goal.projected_unknown" = "도달 예상: 기록을 계속하면 표시됩니다";
 "goal.reached" = "🎉 목표 달성!";
+
+/* Premium tiers (Standard / Pro) */
+"premium.choose_plan" = "플랜 선택";
+"premium.pro.title" = "Pro";
+"premium.standard.title" = "Standard";
+"premium.recommended" = "추천";
+"premium.best_value" = "가장 알뜰";
+"premium.per_month" = "월";
+"premium.per_year" = "년";
+"premium.feature.cloud" = "iCloud 백업";
+"premium.feature.advanced_video" = "고급 동영상·공유";
+"premium.active_pro" = "Pro 사용 중";
+"premium.active_standard" = "Standard 사용 중";
+"settings.debug.pro_mode" = "Pro 모드 (디버그)";

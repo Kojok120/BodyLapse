@@ -794,3 +794,17 @@
 "goal.projected" = "達成予定: %@";
 "goal.projected_unknown" = "達成予定: 記録を続けると表示";
 "goal.reached" = "🎉 目標を達成しました！";
+
+/* Premium tiers (Standard / Pro) */
+"premium.choose_plan" = "プランを選ぶ";
+"premium.pro.title" = "Pro";
+"premium.standard.title" = "Standard";
+"premium.recommended" = "おすすめ";
+"premium.best_value" = "お得";
+"premium.per_month" = "月";
+"premium.per_year" = "年";
+"premium.feature.cloud" = "iCloudバックアップ";
+"premium.feature.advanced_video" = "高度な動画・共有";
+"premium.active_pro" = "Pro 有効";
+"premium.active_standard" = "Standard 加入中";
+"settings.debug.pro_mode" = "Proモード（デバッグ）";

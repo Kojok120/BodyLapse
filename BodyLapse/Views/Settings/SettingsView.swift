@@ -358,10 +358,15 @@ struct SettingsView: View {
                 #if DEBUG
                 Section(header: Text("settings.debug_options".localized)) {
                     Toggle("settings.debug.premium_mode".localized, isOn: Binding(
-                        get: { subscriptionManager.isPremium },
+                        get: { subscriptionManager.tier == .standard },
                         set: { _ in subscriptionManager.toggleDebugPremium() }
                     ))
-                    
+
+                    Toggle("settings.debug.pro_mode".localized, isOn: Binding(
+                        get: { subscriptionManager.tier == .pro },
+                        set: { _ in subscriptionManager.toggleDebugPro() }
+                    ))
+
                     Toggle("settings.debug.past_photos".localized, isOn: $userSettings.settings.debugAllowPastDatePhotos)
 
                     Button(action: openDebugOnboarding) {

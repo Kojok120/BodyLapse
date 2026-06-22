@@ -8,174 +8,262 @@ struct PremiumView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // 背景グラデーション
                 LinearGradient(
                     gradient: Gradient(colors: [Color.bodyLapseTurquoise, Color.bodyLapseTurquoise.opacity(0.8)]),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
-                
-                VStack(spacing: 0) {
-                    // 必須 App Store情報 - 常に上部に表示
-                    VStack(spacing: 10) {
-                        // サブスクリプションタイトル（App Store必須） - 全言語で固定
-                        Text("BodyLapse Premium")
-                            .font(.title.bold())
-                            .foregroundColor(.white)
-                            .padding(.top, 20)
-                        
-                        // 価格（App Store必須） - 最も目立つ表示
-                        if let product = viewModel.products.first {
-                            Text(product.displayPrice + "/" + "date.month".localized)
-                                .font(.largeTitle.bold())
-                                .foregroundColor(.white)
-                        } else {
-                            Text("premium.price.fallback".localized + "/" + "date.month".localized)
-                                .font(.largeTitle.bold())
-                                .foregroundColor(.white)
-                        }
-                        
-                        // サブスクリプション期間（従属的）
-                        Text("premium.subscription_length".localized)
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.9))
-                        
-                        // リンク（App Store必須）
-                        HStack(spacing: 20) {
-                            Link("premium.terms".localized, destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
-                                .font(.footnote.bold())
-                                .foregroundColor(.white)
-                                .underline()
-                            
-                            Link("premium.privacy".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!)
-                                .font(.footnote.bold())
-                                .foregroundColor(.white)
-                                .underline()
-                        }
-                        .padding(.top, 8)
-                    }
-                    
-                    ScrollView {
-                        VStack(spacing: 15) {
-                            Image(systemName: "crown.fill")
-                                .font(.system(size: 50))
-                                .foregroundColor(.yellow)
-                                .padding(.top, 15)
-                        
-                            // 機能リスト
-                            VStack(alignment: .leading, spacing: 10) {
-                                CompactPremiumFeatureRowView(
-                                    icon: "xmark.circle.fill",
-                                    title: "premium.feature.no_ads".localized,
-                                    description: "premium.feature.no_ads_desc".localized
-                                )
 
-                                CompactPremiumFeatureRowView(
-                                    icon: "hand.thumbsup.fill",
-                                    title: "premium.feature.support".localized,
-                                    description: "premium.feature.support_desc".localized
-                                )
+                ScrollView {
+                    VStack(spacing: 16) {
+                        header
+
+                        if viewModel.isPro {
+                            activeState(title: "premium.active_pro".localized, icon: "crown.fill")
+                        } else {
+                            proCard
+                            standardCard
+                            if viewModel.isPremium {
+                                Text("premium.active_standard".localized)
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.9))
                             }
-                            .padding(.horizontal)
-                            
-                            Spacer(minLength: 10)
-                            
-                            // メイン購読ボタン
-                            Button(action: {
-                                Task {
-                                    if let product = viewModel.products.first {
-                                        await viewModel.purchase(product)
-                                    } else {
-                                        await viewModel.loadProducts()
-                                    }
-                                }
-                            }) {
-                                Group {
-                                    if viewModel.isLoadingProducts {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            .scaleEffect(0.8)
-                                    } else {
-                                        Text("premium.subscribe_now".localized)
-                                            .font(.headline.bold())
-                                    }
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color.yellow, Color.orange]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(14)
-                                .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
-                            }
-                            .padding(.horizontal)
-                            .disabled(viewModel.isPurchasing || viewModel.isLoadingProducts)
-                            .scaleEffect(viewModel.isPurchasing ? 0.95 : 1.0)
-                            .animation(.easeInOut(duration: 0.1), value: viewModel.isPurchasing)
-                            
-                            // 下部リンク - コンパクトだが読みやすく
-                            VStack(spacing: 6) {
-                                Button(action: {
-                                    Task {
-                                        await viewModel.restorePurchases()
-                                    }
-                                }) {
-                                    Text("premium.restore".localized)
-                                        .font(.caption)
-                                        .foregroundColor(.white.opacity(0.7))
-                                        .underline()
-                                }
-                                .disabled(viewModel.isPurchasing)
-                                
-                                Text("premium.auto_renew".localized)
-                                    .font(.caption2)
-                                    .foregroundColor(.white.opacity(0.6))
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal)
-                            }
-                            .padding(.bottom, 10)
                         }
+
+                        footerLinks
                     }
+                    .padding(.bottom, 20)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("common.close".localized) {
-                        dismiss()
-                    }
-                    .foregroundColor(.white)
+                    Button("common.close".localized) { dismiss() }
+                        .foregroundColor(.white)
                 }
             }
             .alert("premium.purchase_error".localized, isPresented: .constant(viewModel.purchaseError != nil)) {
-                Button("common.ok".localized) {
-                    viewModel.purchaseError = nil
-                }
+                Button("common.ok".localized) { viewModel.purchaseError = nil }
             } message: {
                 Text(viewModel.purchaseError ?? "")
             }
             .overlay {
                 if viewModel.isPurchasing {
-                    Color.black.opacity(0.5)
-                        .ignoresSafeArea()
-                    ProgressView("common.processing".localized)
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.black.opacity(0.7))
-                        .cornerRadius(10)
+                    ZStack {
+                        Color.black.opacity(0.5).ignoresSafeArea()
+                        ProgressView("common.processing".localized)
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.black.opacity(0.7))
+                            .cornerRadius(10)
+                    }
                 }
             }
         }
         .task {
             await viewModel.loadProducts()
         }
+    }
+
+    // MARK: - ヘッダー
+
+    private var header: some View {
+        VStack(spacing: 6) {
+            Text("BodyLapse")
+                .font(.title.bold())
+                .foregroundColor(.white)
+                .padding(.top, 16)
+            Text("premium.choose_plan".localized)
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.9))
+        }
+    }
+
+    // MARK: - Proカード（おすすめ）
+
+    private var proCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("premium.pro.title".localized, systemImage: "crown.fill")
+                    .font(.title3.bold())
+                    .foregroundColor(.white)
+                Spacer()
+                Text("premium.recommended".localized)
+                    .font(.caption2.bold())
+                    .foregroundColor(.bodyLapseTurquoise)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.white)
+                    .clipShape(Capsule())
+            }
+
+            featureRow(icon: "icloud.fill", text: "premium.feature.cloud".localized)
+            featureRow(icon: "film.stack.fill", text: "premium.feature.advanced_video".localized)
+            featureRow(icon: "rectangle.badge.xmark", text: "premium.feature.no_ads".localized)
+
+            // 年額（プライマリ）
+            planButton(
+                product: viewModel.proYearlyProduct,
+                fallbackPrice: "$49.99",
+                period: "premium.per_year".localized,
+                badge: "premium.best_value".localized,
+                primary: true
+            )
+            // 月額（セカンダリ）
+            planButton(
+                product: viewModel.proMonthlyProduct,
+                fallbackPrice: "$9.99",
+                period: "premium.per_month".localized,
+                badge: nil,
+                primary: false
+            )
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.18))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white, lineWidth: 1.5))
+        )
+        .padding(.horizontal)
+    }
+
+    // MARK: - Standardカード
+
+    private var standardCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("premium.standard.title".localized)
+                .font(.headline)
+                .foregroundColor(.white)
+            featureRow(icon: "rectangle.badge.xmark", text: "premium.feature.no_ads".localized)
+            planButton(
+                product: viewModel.standardProduct,
+                fallbackPrice: "premium.price.fallback".localized,
+                period: "premium.per_month".localized,
+                badge: nil,
+                primary: false
+            )
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.1))
+        )
+        .padding(.horizontal)
+    }
+
+    private func featureRow(icon: String, text: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .foregroundColor(.white)
+                .frame(width: 24)
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.white)
+            Spacer()
+        }
+    }
+
+    /// 価格ボタン。product があれば実価格、なければフォールバック表記。
+    private func planButton(product: Product?, fallbackPrice: String, period: String, badge: String?, primary: Bool) -> some View {
+        Button {
+            Task {
+                if let product {
+                    await viewModel.purchase(product)
+                } else {
+                    await viewModel.loadProducts()
+                }
+            }
+        } label: {
+            HStack {
+                if let badge {
+                    Text(badge)
+                        .font(.caption2.bold())
+                        .foregroundColor(primary ? .orange : .white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(primary ? Color.white : Color.white.opacity(0.2))
+                        .clipShape(Capsule())
+                }
+                Spacer()
+                Text((product?.displayPrice ?? fallbackPrice) + " / " + period)
+                    .font(.headline.bold())
+                Spacer()
+            }
+            .foregroundColor(primary ? .white : .white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                Group {
+                    if primary {
+                        LinearGradient(colors: [Color.yellow, Color.orange], startPoint: .leading, endPoint: .trailing)
+                    } else {
+                        Color.white.opacity(0.18)
+                    }
+                }
+            )
+            .cornerRadius(12)
+        }
+        .disabled(viewModel.isPurchasing || viewModel.isLoadingProducts)
+    }
+
+    // MARK: - 加入済み表示
+
+    private func activeState(title: String, icon: String) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 50))
+                .foregroundColor(.yellow)
+            Text(title)
+                .font(.title3.bold())
+                .foregroundColor(.white)
+            Button {
+                if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                    UIApplication.shared.open(url)
+                }
+            } label: {
+                Text("settings.manage_subscription".localized)
+                    .font(.subheadline.bold())
+                    .foregroundColor(.bodyLapseTurquoise)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(Color.white)
+                    .cornerRadius(12)
+            }
+        }
+        .padding(.vertical, 30)
+    }
+
+    // MARK: - フッター（App Store必須情報）
+
+    private var footerLinks: some View {
+        VStack(spacing: 8) {
+            Button {
+                Task { await viewModel.restorePurchases() }
+            } label: {
+                Text("premium.restore".localized)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.8))
+                    .underline()
+            }
+            .disabled(viewModel.isPurchasing)
+
+            HStack(spacing: 20) {
+                Link("premium.terms".localized, destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+                Link("premium.privacy".localized, destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!)
+            }
+            .font(.footnote)
+            .foregroundColor(.white)
+            .underline()
+
+            Text("premium.auto_renew".localized)
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.6))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .padding(.top, 8)
     }
 }
 

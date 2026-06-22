@@ -786,3 +786,17 @@
 "goal.projected" = "Projected: %@";
 "goal.projected_unknown" = "Projected: keep logging to see";
 "goal.reached" = "🎉 Goal reached!";
+
+/* Premium tiers (Standard / Pro) */
+"premium.choose_plan" = "Choose your plan";
+"premium.pro.title" = "Pro";
+"premium.standard.title" = "Standard";
+"premium.recommended" = "Recommended";
+"premium.best_value" = "Best value";
+"premium.per_month" = "month";
+"premium.per_year" = "year";
+"premium.feature.cloud" = "iCloud backup";
+"premium.feature.advanced_video" = "Advanced video & sharing";
+"premium.active_pro" = "Pro is active";
+"premium.active_standard" = "Standard is active";
+"settings.debug.pro_mode" = "Pro Mode (Debug)";

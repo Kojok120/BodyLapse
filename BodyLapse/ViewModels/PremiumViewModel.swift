@@ -16,7 +16,27 @@ class PremiumViewModel: ObservableObject {
     var isPremium: Bool {
         subscriptionManager.isPremium
     }
-    
+
+    var isPro: Bool {
+        subscriptionManager.isPro
+    }
+
+    var tier: SubscriptionTier {
+        subscriptionManager.tier
+    }
+
+    var standardProduct: Product? {
+        products.first { $0.id == StoreProducts.premiumMonthly }
+    }
+
+    var proMonthlyProduct: Product? {
+        products.first { $0.id == StoreProducts.proMonthly }
+    }
+
+    var proYearlyProduct: Product? {
+        products.first { $0.id == StoreProducts.proYearly }
+    }
+
     var isLoadingProducts: Bool {
         subscriptionManager.isLoadingProducts
     }
