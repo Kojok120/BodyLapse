@@ -316,6 +316,30 @@ struct SettingsView: View {
                     NavigationLink(destination: ImportExportView()) {
                         Label("settings.import_export".localized, systemImage: "arrow.up.arrow.down.square")
                     }
+
+                    // クラウドバックアップ（Pro限定）
+                    if subscriptionManager.isPro {
+                        NavigationLink(destination: CloudBackupView()) {
+                            Label("cloud.title".localized, systemImage: "icloud")
+                        }
+                    } else {
+                        Button {
+                            showingPremiumUpgrade = true
+                        } label: {
+                            HStack {
+                                Label("cloud.title".localized, systemImage: "icloud")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Text("premium.pro.title".localized)
+                                    .font(.caption2.bold())
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.bodyLapseTurquoise)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    }
                     
                     // Data clearing feature - to be implemented in future version
                     /*

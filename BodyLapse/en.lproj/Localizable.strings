@@ -801,3 +801,16 @@
 "premium.active_standard" = "Standard is active";
 "settings.debug.pro_mode" = "Pro Mode (Debug)";
 "compare.share" = "Share";
+
+/* Cloud backup (Pro) */
+"cloud.title" = "iCloud Backup";
+"cloud.last_backup" = "Last backup";
+"cloud.never" = "Never";
+"cloud.backup_now" = "Back up now";
+"cloud.restore" = "Restore from cloud";
+"cloud.restore_title" = "Restore";
+"cloud.restore_confirm" = "This will merge the latest cloud backup into your current data. Continue?";
+"cloud.footer" = "Saves your photos, videos, weight, notes and settings to your own iCloud. Data stays in your iCloud account.";
+"cloud.success" = "Done";
+"cloud.error.no_account" = "Please sign in to iCloud (Settings > Apple ID > iCloud).";
+"cloud.error.no_backup" = "No backup found in the cloud.";

@@ -801,3 +801,16 @@
 "premium.active_standard" = "Standard activo";
 "settings.debug.pro_mode" = "Modo Pro (Debug)";
 "compare.share" = "Compartir";
+
+/* Cloud backup (Pro) */
+"cloud.title" = "Copia en iCloud";
+"cloud.last_backup" = "Última copia";
+"cloud.never" = "Nunca";
+"cloud.backup_now" = "Crear copia ahora";
+"cloud.restore" = "Restaurar desde la nube";
+"cloud.restore_title" = "Restaurar";
+"cloud.restore_confirm" = "Se fusionará la última copia de la nube con tus datos actuales. ¿Continuar?";
+"cloud.footer" = "Guarda tus fotos, vídeos, peso, notas y ajustes en tu propio iCloud. Los datos permanecen en tu cuenta de iCloud.";
+"cloud.success" = "Listo";
+"cloud.error.no_account" = "Inicia sesión en iCloud (Ajustes > Apple ID > iCloud).";
+"cloud.error.no_backup" = "No se encontró ninguna copia en la nube.";

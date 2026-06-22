@@ -801,3 +801,16 @@
 "premium.active_standard" = "Standard 사용 중";
 "settings.debug.pro_mode" = "Pro 모드 (디버그)";
 "compare.share" = "공유";
+
+/* Cloud backup (Pro) */
+"cloud.title" = "iCloud 백업";
+"cloud.last_backup" = "마지막 백업";
+"cloud.never" = "없음";
+"cloud.backup_now" = "지금 백업";
+"cloud.restore" = "클라우드에서 복원";
+"cloud.restore_title" = "복원";
+"cloud.restore_confirm" = "클라우드의 최신 백업을 현재 데이터에 병합합니다. 계속할까요?";
+"cloud.footer" = "사진·동영상·체중·메모·설정을 본인의 iCloud에 저장합니다. 데이터는 본인 iCloud 계정에 보관됩니다.";
+"cloud.success" = "완료";
+"cloud.error.no_account" = "iCloud에 로그인해 주세요 (설정 > Apple ID > iCloud).";
+"cloud.error.no_backup" = "클라우드에 백업이 없습니다.";
