@@ -16,6 +16,8 @@ struct CompareView: View {
     @State private var showingShareSheet = false
     @State private var shareItems: [Any] = []
     @State private var showingShareError = false
+    @State private var showingShareHint = false
+    @State private var showingProPaywall = false
     
     var body: some View {
         NavigationView {
@@ -54,7 +56,7 @@ struct CompareView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        composeAndShare()
+                        shareTapped()
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
@@ -69,6 +71,15 @@ struct CompareView: View {
                 Button("common.ok".localized) {}
             } message: {
                 Text("share.error.load_failed".localized)
+            }
+            .alert("paywall.share.title".localized, isPresented: $showingShareHint) {
+                Button("paywall.share_anyway".localized) { performShare() }
+                Button("paywall.view_pro".localized) { showingProPaywall = true }
+            } message: {
+                Text("paywall.share.message".localized)
+            }
+            .sheet(isPresented: $showingProPaywall) {
+                PremiumView()
             }
             .sheet(isPresented: $showingFirstCalendar) {
                 CalendarPopupView(
@@ -645,7 +656,17 @@ struct CompareView: View {
 
     /// 選択中の2枚からビフォーアフター共有画像を生成して共有シートを表示する。
     /// 全ユーザー利用可。Pro以外はウォーターマークを付与する。
-    private func composeAndShare() {
+    /// 共有ボタンのタップ入口。非Proには初回のみ透かしヒントを挟み、以降はそのまま共有する。
+    private func shareTapped() {
+        if !subscriptionManager.isPro, !PaywallPromptManager.shared.hasShown(.shareWatermark) {
+            PaywallPromptManager.shared.markShown(.shareWatermark)
+            showingShareHint = true
+        } else {
+            performShare()
+        }
+    }
+
+    private func performShare() {
         // 合成キャンバス相当にダウンサンプリングして読み込み、フル解像度2枚同時ロードのメモリ圧を避ける
         let targetSize = CGSize(width: 1080, height: 1350)
         guard let first = firstPhoto, let second = secondPhoto,

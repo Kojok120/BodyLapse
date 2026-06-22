@@ -803,6 +803,13 @@
 "premium.feature.advanced_video" = "Vídeo y compartir avanzados";
 "premium.active_pro" = "Pro activo";
 "premium.active_standard" = "Standard activo";
+"paywall.cloud.title" = "¿Proteger tu progreso?";
+"paywall.cloud.message" = "Tienes %d días de registros. Mantenlos a salvo con la copia en la nube de Pro.";
+"paywall.share.title" = "Sin marca de agua con Pro";
+"paywall.share.message" = "Las imágenes compartidas incluyen una marca de agua de BodyLapse. Con Pro puedes compartir sin ella.";
+"paywall.view_pro" = "Ver Pro";
+"paywall.later" = "Más tarde";
+"paywall.share_anyway" = "Compartir igualmente";
 "settings.debug.pro_mode" = "Modo Pro (Debug)";
 "compare.share" = "Compartir";
 

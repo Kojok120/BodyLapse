@@ -811,6 +811,13 @@
 "premium.feature.advanced_video" = "高度な動画・共有";
 "premium.active_pro" = "Pro 有効";
 "premium.active_standard" = "Standard 加入中";
+"paywall.cloud.title" = "大切な記録を守りませんか？";
+"paywall.cloud.message" = "%d日分の記録があります。Proのクラウドバックアップで安全に保管できます。";
+"paywall.share.title" = "Proで透かしなしに";
+"paywall.share.message" = "共有画像にはBodyLapseのロゴが入ります。Proならロゴなしで共有できます。";
+"paywall.view_pro" = "Proを見る";
+"paywall.later" = "後で";
+"paywall.share_anyway" = "このまま共有";
 "settings.debug.pro_mode" = "Proモード（デバッグ）";
 "compare.share" = "共有";
 

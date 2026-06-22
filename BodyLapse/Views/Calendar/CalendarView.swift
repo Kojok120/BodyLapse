@@ -28,6 +28,8 @@ struct CalendarView: View {
     @State var showingVideoGeneration = false
     @State var showingAddCategory = false
     @State var showingAchievements = false
+    @State var showingCloudUpsell = false
+    @State var showingProPaywall = false
     
     // MARK: - Video Generation States  
     @State var isGeneratingVideo = false
@@ -218,6 +220,15 @@ struct CalendarView: View {
         .sheet(isPresented: $showingAchievements) {
             AchievementsView(statistics: viewModel.statistics)
         }
+        .sheet(isPresented: $showingProPaywall) {
+            PremiumView()
+        }
+        .alert("paywall.cloud.title".localized, isPresented: $showingCloudUpsell) {
+            Button("paywall.view_pro".localized) { showingProPaywall = true }
+            Button("paywall.later".localized, role: .cancel) {}
+        } message: {
+            Text("paywall.cloud.message".localized(with: viewModel.statistics.totalDays))
+        }
         .sheet(isPresented: $showingMemoEditor) {
             MemoEditorView(
                 date: selectedDate,
@@ -348,6 +359,18 @@ extension CalendarView {
         }
 
         AchievementService.shared.evaluate(viewModel.statistics)
+        checkCloudUpsell()
+    }
+
+    /// 撮影日数が一定に達した非Proユーザーに、一度だけクラウドバックアップ(Pro)を提案する。
+    private func checkCloudUpsell() {
+        guard !subscriptionManager.isPro,
+              !PaywallPromptManager.shared.hasShown(.milestoneCloud),
+              viewModel.statistics.totalDays >= PaywallPromptManager.shared.cloudMilestoneThreshold else {
+            return
+        }
+        PaywallPromptManager.shared.markShown(.milestoneCloud)
+        showingCloudUpsell = true
     }
     
     private func handleNavigateToToday(_ notification: Notification) {

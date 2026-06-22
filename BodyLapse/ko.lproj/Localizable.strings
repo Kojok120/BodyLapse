@@ -803,6 +803,13 @@
 "premium.feature.advanced_video" = "고급 동영상·공유";
 "premium.active_pro" = "Pro 사용 중";
 "premium.active_standard" = "Standard 사용 중";
+"paywall.cloud.title" = "소중한 기록을 지킬까요?";
+"paywall.cloud.message" = "%d일치 기록이 있습니다. Pro 클라우드 백업으로 안전하게 보관하세요.";
+"paywall.share.title" = "Pro로 워터마크 없이";
+"paywall.share.message" = "공유 이미지에는 BodyLapse 로고가 포함됩니다. Pro에서는 로고 없이 공유할 수 있습니다.";
+"paywall.view_pro" = "Pro 보기";
+"paywall.later" = "나중에";
+"paywall.share_anyway" = "그대로 공유";
 "settings.debug.pro_mode" = "Pro 모드 (디버그)";
 "compare.share" = "공유";
 

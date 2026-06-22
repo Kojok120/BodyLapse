@@ -803,6 +803,13 @@
 "premium.feature.advanced_video" = "Advanced video & sharing";
 "premium.active_pro" = "Pro is active";
 "premium.active_standard" = "Standard is active";
+"paywall.cloud.title" = "Protect your progress?";
+"paywall.cloud.message" = "You have %d days of records. Keep them safe with Pro cloud backup.";
+"paywall.share.title" = "Go watermark-free with Pro";
+"paywall.share.message" = "Shared images include a BodyLapse watermark. With Pro you can share without it.";
+"paywall.view_pro" = "See Pro";
+"paywall.later" = "Later";
+"paywall.share_anyway" = "Share anyway";
 "settings.debug.pro_mode" = "Pro Mode (Debug)";
 "compare.share" = "Share";
 
