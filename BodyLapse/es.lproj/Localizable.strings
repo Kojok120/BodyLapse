@@ -735,3 +735,16 @@
 "share.error.title" = "Error al Compartir";
 "share.error.load_failed" = "Error al cargar la foto";
 "share.error.processing_failed" = "Error en el procesamiento del desenfoque facial";
+
+/* Quick Wins additions */
+"calendar.take_photo" = "Tomar foto de hoy";
+"camera.error.access_required" = "Se necesita acceso a la cámara para tomar fotos. Actívalo en Ajustes.";
+"camera.error.not_available" = "La cámara no está disponible en este dispositivo.";
+"camera.error.setup_failed" = "No se pudo iniciar la cámara: %@";
+"camera.error.save_failed" = "No se pudo guardar la foto: %@";
+"camera.error.capture_failed" = "No se pudo tomar la foto. Inténtalo de nuevo.";
+"import_export.import_failed_line" = "\n\n⚠️ No se pudieron leer %d elemento(s) y se omitieron.";
+"settings.premium.renews_in" = "Se renueva en %d día(s)";
+"settings.premium.trial_days_left" = "Prueba gratis: %d día(s) restantes";
+"settings.premium.expires_on" = "Próxima renovación: %@";
+"about.version" = "Versión %@ (%@)";

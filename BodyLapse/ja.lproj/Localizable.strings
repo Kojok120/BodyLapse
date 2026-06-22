@@ -213,8 +213,8 @@
 
 /* Compare View */
 "compare.title" = "進捗を比較";
-"compare.before" = "Before";
-"compare.after" = "After";
+"compare.before" = "変化前";
+"compare.after" = "変化後";
 "compare.select_first" = "最初の写真を選択";
 "compare.select_second" = "2番目の写真を選択";
 "compare.no_weight" = "体重なし";
@@ -743,3 +743,16 @@
 "share.error.title" = "共有エラー";
 "share.error.load_failed" = "写真の読み込みに失敗しました";
 "share.error.processing_failed" = "顔ぼかし処理に失敗しました";
+
+/* Quick Wins additions */
+"calendar.take_photo" = "今日の写真を撮る";
+"camera.error.access_required" = "写真を撮るにはカメラへのアクセスが必要です。設定から許可してください。";
+"camera.error.not_available" = "この端末ではカメラを利用できません。";
+"camera.error.setup_failed" = "カメラの起動に失敗しました：%@";
+"camera.error.save_failed" = "写真の保存に失敗しました：%@";
+"camera.error.capture_failed" = "写真の撮影に失敗しました。もう一度お試しください。";
+"import_export.import_failed_line" = "\n\n⚠️ %d件は読み込めずスキップされました。";
+"settings.premium.renews_in" = "あと%d日で自動更新";
+"settings.premium.trial_days_left" = "無料トライアル：残り%d日";
+"settings.premium.expires_on" = "次回更新日：%@";
+"about.version" = "バージョン %@（%@）";

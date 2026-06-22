@@ -183,9 +183,10 @@ struct WeightInputSheet: View {
             Task {
                 try? await WeightStorageService.shared.saveEntry(entry)
             }
-            
+
         }
-        
+
+        Haptics.success()
         onSave()
         dismiss()
     }

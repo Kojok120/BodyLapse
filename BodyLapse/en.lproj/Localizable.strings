@@ -735,3 +735,16 @@
 "share.error.title" = "Share Error";
 "share.error.load_failed" = "Failed to load photo";
 "share.error.processing_failed" = "Face blur processing failed";
+
+/* Quick Wins additions */
+"calendar.take_photo" = "Take Today's Photo";
+"camera.error.access_required" = "Camera access is required to take photos. Enable it in Settings.";
+"camera.error.not_available" = "The camera isn't available on this device.";
+"camera.error.setup_failed" = "Couldn't set up the camera: %@";
+"camera.error.save_failed" = "Couldn't save the photo: %@";
+"camera.error.capture_failed" = "Couldn't capture the photo. Please try again.";
+"import_export.import_failed_line" = "\n\n⚠️ %d item(s) couldn't be read and were skipped.";
+"settings.premium.renews_in" = "Auto-renews in %d day(s)";
+"settings.premium.trial_days_left" = "Free trial: %d day(s) left";
+"settings.premium.expires_on" = "Next renewal: %@";
+"about.version" = "Version %@ (%@)";

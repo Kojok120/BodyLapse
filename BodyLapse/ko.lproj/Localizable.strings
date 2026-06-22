@@ -735,3 +735,16 @@
 "share.error.title" = "공유 오류";
 "share.error.load_failed" = "사진 로드에 실패했습니다";
 "share.error.processing_failed" = "얼굴 흐림 처리에 실패했습니다";
+
+/* Quick Wins additions */
+"calendar.take_photo" = "오늘 사진 찍기";
+"camera.error.access_required" = "사진을 찍으려면 카메라 접근 권한이 필요합니다. 설정에서 허용해 주세요.";
+"camera.error.not_available" = "이 기기에서는 카메라를 사용할 수 없습니다.";
+"camera.error.setup_failed" = "카메라를 시작하지 못했습니다: %@";
+"camera.error.save_failed" = "사진을 저장하지 못했습니다: %@";
+"camera.error.capture_failed" = "사진을 촬영하지 못했습니다. 다시 시도해 주세요.";
+"import_export.import_failed_line" = "\n\n⚠️ %d개 항목을 읽지 못해 건너뛰었습니다.";
+"settings.premium.renews_in" = "%d일 후 자동 갱신";
+"settings.premium.trial_days_left" = "무료 체험: %d일 남음";
+"settings.premium.expires_on" = "다음 갱신일: %@";
+"about.version" = "버전 %@ (%@)";

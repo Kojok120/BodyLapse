@@ -278,6 +278,25 @@ class ImportExportService {
     
     // MARK: - インポート
     
+    /// 以前のインポートで残った一時ディレクトリ（BodyLapseImport_*）を掃除する。
+    /// アプリ強制終了などで defer が走らなかった場合のディスクリークを回収する。
+    func cleanupLeftoverImportTempDirectories() {
+        let tempDir = FileManager.default.temporaryDirectory
+        guard let contents = try? FileManager.default.contentsOfDirectory(
+            at: tempDir,
+            includingPropertiesForKeys: nil
+        ) else { return }
+
+        for url in contents where url.lastPathComponent.hasPrefix("BodyLapseImport_") {
+            do {
+                try FileManager.default.removeItem(at: url)
+                print("[ImportExport] Cleaned up leftover temp dir: \(url.lastPathComponent)")
+            } catch {
+                print("[ImportExport] Failed to clean up leftover temp dir \(url.lastPathComponent): \(error)")
+            }
+        }
+    }
+
     func importData(
         from url: URL,
         options: ImportOptions,
@@ -299,13 +318,23 @@ class ImportExportService {
         completion: @escaping (Result<ImportSummary, Error>) -> Void
     ) async {
         print("[ImportExport] Starting import from: \(url.path)")
-        
+
+        // 前回のインポートで残った一時ディレクトリを掃除（ディスクリーク防止）
+        cleanupLeftoverImportTempDirectories()
+
         do {
                 // 展開用の一時ディレクトリを作成
                 let tempDir = FileManager.default.temporaryDirectory
                     .appendingPathComponent("BodyLapseImport_\(UUID().uuidString)")
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-                defer { try? FileManager.default.removeItem(at: tempDir) }
+                defer {
+                    do {
+                        try FileManager.default.removeItem(at: tempDir)
+                    } catch {
+                        // 削除失敗を握り潰さず記録（ディスクリーク検知のため）
+                        print("[ImportExport] Failed to remove temp dir \(tempDir.lastPathComponent): \(error)")
+                    }
+                }
                 
                 // 展開前にファイルサイズを検証
                 print("[ImportExport] Validating file size...")
@@ -396,7 +425,7 @@ class ImportExportService {
                     print("[ImportExport] Photos directory exists: \(FileManager.default.fileExists(atPath: photosDir.path))")
                     
                     do {
-                        summary.photosImported = try self.importPhotos(
+                        let photoResult = try self.importPhotos(
                             from: photosDir,
                             options: options,
                             progress: { photoProgress in
@@ -404,7 +433,9 @@ class ImportExportService {
                                 progress(stepProgress / totalSteps)
                             }
                         )
-                        print("[ImportExport] Photos imported: \(summary.photosImported)")
+                        summary.photosImported = photoResult.imported
+                        summary.photosFailed = photoResult.failed
+                        print("[ImportExport] Photos imported: \(summary.photosImported), failed: \(summary.photosFailed)")
                     } catch {
                         print("[ImportExport] Error importing photos: \(error)")
                         throw error
@@ -826,15 +857,16 @@ class ImportExportService {
         from directory: URL,
         options: ImportOptions,
         progress: @escaping (Float) -> Void
-    ) throws -> Int {
+    ) throws -> (imported: Int, failed: Int) {
         var imported = 0
-        
+        var failed = 0
+
         print("[ImportExport] Importing photos from: \(directory.path)")
-        
+
         // Check if directory exists
         guard FileManager.default.fileExists(atPath: directory.path) else {
             print("[ImportExport] Photos directory does not exist")
-            return 0
+            return (0, 0)
         }
         
         let categoryDirs = try FileManager.default.contentsOfDirectory(
@@ -881,12 +913,14 @@ class ImportExportService {
                             print("[ImportExport] Reading metadata file: \(metadataFile.lastPathComponent)")
                             guard let photo = try? self.safelyDecodeJSON(Photo.self, from: metadataFile) else {
                                 print("[ImportExport] Failed to decode photo metadata from: \(metadataFile.lastPathComponent)")
+                                failed += 1
                                 return  // This returns from autoreleasepool, not the method
                             }
                             print("[ImportExport] Successfully decoded photo: \(photo.id)")
 
                             guard let imageFileName = self.sanitizedPathComponent(photo.fileName, maxLength: 255) else {
                                 print("[ImportExport] Invalid image file name in metadata: \(photo.fileName)")
+                                failed += 1
                                 return
                             }
 
@@ -919,6 +953,7 @@ class ImportExportService {
                                 // Copy image file
                                 guard let sourceImagePath = self.safeChildURL(for: imageFileName, under: categoryDir) else {
                                     print("[ImportExport] Unsafe image path in metadata: \(photo.fileName)")
+                                    failed += 1
                                     return
                                 }
                                 print("[ImportExport] Looking for image file: \(sourceImagePath.path)")
@@ -964,18 +999,23 @@ class ImportExportService {
                                                     print("[ImportExport] Successfully saved photo: \(savedPhoto.id)")
                                                 } catch {
                                                     print("[ImportExport] Failed to save photo: \(error)")
+                                                    failed += 1
                                                 }
                                             } else {
                                                 print("[ImportExport] Failed to create UIImage from data")
+                                                failed += 1
                                             }
                                         } else {
                                             print("Image too large or invalid size: \(fileSize) bytes")
+                                            failed += 1
                                         }
                                     } catch {
                                         print("Error loading image: \(error)")
+                                        failed += 1
                                     }
                                 } else {
                                     print("[ImportExport] Image file not found: \(sourceImagePath.path)")
+                                    failed += 1
                                 }
                             }
                 }
@@ -985,8 +1025,8 @@ class ImportExportService {
             }
         }
         
-        print("[ImportExport] Total photos imported: \(imported)")
-        return imported
+        print("[ImportExport] Total photos imported: \(imported), failed: \(failed)")
+        return (imported, failed)
     }
     
     private func importVideos(
@@ -1118,14 +1158,20 @@ class ImportExportService {
     
     struct ImportSummary {
         var photosImported: Int = 0
+        var photosFailed: Int = 0
         var videosImported: Int = 0
         var categoriesImported: Int = 0
         var weightEntriesImported: Int = 0
         var notesImported: Int = 0
         var settingsImported: Bool = false
-        
+
         var totalItemsImported: Int {
             photosImported + videosImported + categoriesImported + weightEntriesImported + notesImported
+        }
+
+        /// 読み込めずスキップされた項目があるか
+        var hasFailures: Bool {
+            photosFailed > 0
         }
     }
 }

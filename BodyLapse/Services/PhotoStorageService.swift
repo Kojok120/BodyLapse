@@ -370,7 +370,10 @@ class PhotoStorageService {
                 }
             }
         } catch {
-            // メタデータのデコードに失敗
+            // メタデータのデコードに失敗。サイレントに握り潰さずログに残す
+            // （破損検知やサポート対応のため）。in-memory配列は空にするが、
+            // 既存ファイルは上書きせず温存される（savePhotosMetadataは別途呼ばれた時のみ）。
+            print("[PhotoStorage] Failed to decode photos metadata: \(error)")
             photos = []
         }
     }

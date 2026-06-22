@@ -272,10 +272,16 @@ extension SubscriptionManagerService {
     
     /// サブスクリプションが期限切れ間近か確認（3日以内）
     var isAboutToExpire: Bool {
-        guard let expirationDate = expirationDate else { return false }
-        let daysUntilExpiration = Calendar.current.dateComponents([.day], 
-                                                                  from: Date(), 
-                                                                  to: expirationDate).day ?? 0
-        return daysUntilExpiration <= 3 && daysUntilExpiration >= 0
+        guard let days = daysUntilExpiration else { return false }
+        return days <= 3
+    }
+
+    /// 有効期限（次回更新日）までの残り日数。期限が無い場合はnil。
+    var daysUntilExpiration: Int? {
+        guard let expirationDate = expirationDate else { return nil }
+        guard let days = Calendar.current.dateComponents([.day],
+                                                         from: Date(),
+                                                         to: expirationDate).day else { return nil }
+        return max(0, days)
     }
 }

@@ -294,12 +294,17 @@ struct ImportExportView: View {
     private func handleImportCompletion() {
         if let summary = viewModel.importSummary {
             alertTitle = "import_export.import_completed".localized
-            alertMessage = String(format: "import_export.import_summary".localized,
-                                   summary.photosImported,
-                                   summary.videosImported,
-                                   summary.categoriesImported,
-                                   summary.weightEntriesImported,
-                                   summary.notesImported)
+            var message = String(format: "import_export.import_summary".localized,
+                                 summary.photosImported,
+                                 summary.videosImported,
+                                 summary.categoriesImported,
+                                 summary.weightEntriesImported,
+                                 summary.notesImported)
+            // 読み込めずスキップされた項目があればユーザーに通知（サイレント失敗を防ぐ）
+            if summary.hasFailures {
+                message += String(format: "import_export.import_failed_line".localized, summary.photosFailed)
+            }
+            alertMessage = message
             showingAlert = true
         }
     }
