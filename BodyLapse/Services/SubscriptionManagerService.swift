@@ -149,7 +149,9 @@ class SubscriptionManagerService: ObservableObject {
         // purchasedProductIDsの変更を監視
         storeManager.$purchasedProductIDs
             .sink { [weak self] _ in
-                Task {
+                // 連続更新で重いステータス更新Taskが積み上がらないよう、前のTaskをキャンセルしてから起動
+                self?.statusUpdateTask?.cancel()
+                self?.statusUpdateTask = Task {
                     await self?.updateSubscriptionStatus()
                 }
             }

@@ -821,7 +821,7 @@
 "cloud.backup_now" = "Back up now";
 "cloud.restore" = "Restore from cloud";
 "cloud.restore_title" = "Restore";
-"cloud.restore_confirm" = "This will merge the latest cloud backup into your current data. Continue?";
+"cloud.restore_confirm" = "Restores photos, weight and notes from the latest cloud backup. For any dates included in the backup, your current data on this device will be overwritten. Continue?";
 "cloud.footer" = "Backs up and restores your photos, weight and notes via your own iCloud (videos are excluded — they can be regenerated from photos). App settings stay on each device. Data stays in your iCloud account.";
 "cloud.success" = "Done";
 "cloud.error.no_account" = "Please sign in to iCloud (Settings > Apple ID > iCloud).";

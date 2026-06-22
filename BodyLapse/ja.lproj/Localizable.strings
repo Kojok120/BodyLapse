@@ -829,7 +829,7 @@
 "cloud.backup_now" = "今すぐバックアップ";
 "cloud.restore" = "クラウドから復元";
 "cloud.restore_title" = "復元";
-"cloud.restore_confirm" = "クラウドの最新バックアップを現在のデータに統合します。よろしいですか？";
+"cloud.restore_confirm" = "クラウドの最新バックアップから写真・体重・メモを復元します。バックアップに含まれる日付については、この端末の現在のデータが上書きされます。続行しますか？";
 "cloud.footer" = "写真・体重・メモをあなたのiCloudにバックアップ・復元します（動画は容量が大きいため対象外。写真から再生成できます）。アプリの設定は各端末に保持されます。データはご自身のiCloud内に保管されます。";
 "cloud.success" = "完了しました";
 "cloud.error.no_account" = "iCloudにサインインしてください（設定 > Apple ID > iCloud）。";

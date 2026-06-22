@@ -146,7 +146,9 @@ class CloudBackupService: ObservableObject {
             _ = try await importBundle(from: tempURL)
 
             // データ再読み込みを各画面へ通知
-            PhotoStorageService.shared.reloadPhotosFromDisk()
+            // 体重同期が完了してから通知する（完了前にPhotosUpdatedを出すと一時的に体重が欠ける）
+            PhotoStorageService.shared.reloadPhotosFromDisk(syncWeightData: false)
+            await PhotoStorageService.shared.syncWeightData()
             NotificationCenter.default.post(name: Notification.Name("PhotosUpdated"), object: nil)
 
             state = .success

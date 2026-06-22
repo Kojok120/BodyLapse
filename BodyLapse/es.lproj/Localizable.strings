@@ -821,7 +821,7 @@
 "cloud.backup_now" = "Crear copia ahora";
 "cloud.restore" = "Restaurar desde la nube";
 "cloud.restore_title" = "Restaurar";
-"cloud.restore_confirm" = "Se fusionará la última copia de la nube con tus datos actuales. ¿Continuar?";
+"cloud.restore_confirm" = "Restaura fotos, peso y notas desde la última copia en la nube. En las fechas incluidas en la copia, los datos actuales de este dispositivo se sobrescribirán. ¿Continuar?";
 "cloud.footer" = "Hace copia y restaura tus fotos, peso y notas en tu propio iCloud (los vídeos no se incluyen; puedes regenerarlos a partir de las fotos). Los ajustes permanecen en cada dispositivo. Los datos permanecen en tu cuenta de iCloud.";
 "cloud.success" = "Listo";
 "cloud.error.no_account" = "Inicia sesión en iCloud (Ajustes > Apple ID > iCloud).";
