@@ -302,7 +302,7 @@ struct ImportExportView: View {
                                  summary.notesImported)
             // 読み込めずスキップされた項目があればユーザーに通知（サイレント失敗を防ぐ）
             if summary.hasFailures {
-                message += String(format: "import_export.import_failed_line".localized, summary.photosFailed)
+                message += String(format: "import_export.import_failed_line".localized, summary.totalFailed)
             }
             alertMessage = message
             showingAlert = true

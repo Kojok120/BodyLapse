@@ -450,7 +450,7 @@ class ImportExportService {
                     print("[ImportExport] Videos directory exists: \(FileManager.default.fileExists(atPath: videosDir.path))")
                     
                     do {
-                        summary.videosImported = try await self.importVideos(
+                        let videoResult = try await self.importVideos(
                             from: videosDir,
                             options: options,
                             progress: { videoProgress in
@@ -458,7 +458,9 @@ class ImportExportService {
                                 progress(stepProgress / totalSteps)
                             }
                         )
-                        print("[ImportExport] Videos imported: \(summary.videosImported)")
+                        summary.videosImported = videoResult.imported
+                        summary.videosFailed = videoResult.failed
+                        print("[ImportExport] Videos imported: \(summary.videosImported), failed: \(summary.videosFailed)")
                     } catch {
                         print("[ImportExport] Error importing videos: \(error)")
                         throw error
@@ -1033,11 +1035,12 @@ class ImportExportService {
         from directory: URL,
         options: ImportOptions,
         progress: @escaping (Float) -> Void
-    ) async throws -> Int {
+    ) async throws -> (imported: Int, failed: Int) {
         var imported = 0
+        var failed = 0
         guard FileManager.default.fileExists(atPath: directory.path) else {
             print("[ImportExport] Videos directory does not exist")
-            return 0
+            return (0, 0)
         }
 
         let videoFiles = try FileManager.default.contentsOfDirectory(
@@ -1054,6 +1057,7 @@ class ImportExportService {
                 let video = try safelyDecodeJSON(Video.self, from: metadataFile)
                 guard let videoFileName = sanitizedPathComponent(video.fileName, maxLength: 255) else {
                     print("[ImportExport] Invalid video file name in metadata: \(video.fileName)")
+                    failed += 1
                     progress(Float(index + 1) / totalVideosFloat)
                     continue
                 }
@@ -1088,6 +1092,7 @@ class ImportExportService {
                 // Copy video file
                 guard let sourceVideoPath = safeChildURL(for: videoFileName, under: directory) else {
                     print("[ImportExport] Unsafe video path in metadata: \(video.fileName)")
+                    failed += 1
                     progress(Float(index + 1) / totalVideosFloat)
                     continue
                 }
@@ -1104,6 +1109,7 @@ class ImportExportService {
                     print("[ImportExport] Successfully imported video: \(video.fileName)")
                 } else {
                     print("[ImportExport] Video file not found: \(sourceVideoPath.path)")
+                    failed += 1
                 }
                 } else {
                     print("[ImportExport] Skipping video import (shouldImport = false)")
@@ -1112,12 +1118,13 @@ class ImportExportService {
                 // Log error but continue processing other videos
                 print("[ImportExport] Error importing video from \(metadataFile.lastPathComponent): \(error)")
                 print("[ImportExport] Error details: \(error.localizedDescription)")
+                failed += 1
             }
-            
+
             progress(Float(index + 1) / totalVideosFloat)
         }
-        
-        return imported
+
+        return (imported, failed)
     }
     
     private func importWeightEntries(_ entries: [WeightEntry], options: ImportOptions) async throws -> Int {
@@ -1160,6 +1167,7 @@ class ImportExportService {
         var photosImported: Int = 0
         var photosFailed: Int = 0
         var videosImported: Int = 0
+        var videosFailed: Int = 0
         var categoriesImported: Int = 0
         var weightEntriesImported: Int = 0
         var notesImported: Int = 0
@@ -1169,9 +1177,14 @@ class ImportExportService {
             photosImported + videosImported + categoriesImported + weightEntriesImported + notesImported
         }
 
+        /// 読み込めずスキップされた項目数（写真＋動画）
+        var totalFailed: Int {
+            photosFailed + videosFailed
+        }
+
         /// 読み込めずスキップされた項目があるか
         var hasFailures: Bool {
-            photosFailed > 0
+            totalFailed > 0
         }
     }
 }

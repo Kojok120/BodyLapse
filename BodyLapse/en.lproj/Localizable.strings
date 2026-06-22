@@ -315,6 +315,7 @@
 "premium.per" = "per";
 "premium.subscribe" = "Subscribe Now";
 "premium.price.fallback" = "$0.99(USD)";
+"premium.price.unavailable" = "Loading price…";
 "premium.price.period" = "per month";
 "premium.first_month_free" = "No introductory free month";
 "premium.after_trial" = "Billing:";
@@ -826,7 +827,8 @@
 "cloud.error.no_account" = "Please sign in to iCloud (Settings > Apple ID > iCloud).";
 "cloud.error.no_backup" = "No backup found in the cloud.";
 "cloud.error.network" = "Can't connect to the network. Please check your connection.";
-"cloud.error.quota" = "Your iCloud storage is full.";
+"cloud.error.quota" = "There isn't enough iCloud storage to save. Free up space in Settings > [your name] > iCloud > Manage Account Storage.";
+"cloud.uses_icloud_storage" = "This backup uses your own iCloud storage (the same as Apple's iCloud Backup). It can't save if your iCloud is full.";
 "cloud.error.restricted" = "iCloud access is restricted on this device.";
 "cloud.error.unavailable" = "iCloud is unavailable. Please try again later.";
 "cloud.error.generic" = "Something went wrong. Please try again later.";

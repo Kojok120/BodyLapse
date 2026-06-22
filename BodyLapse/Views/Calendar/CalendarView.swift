@@ -187,9 +187,10 @@ struct CalendarView: View {
         .onChange(of: viewModel.dailyNotes) { _, _ in
             currentMemo = viewModel.note(for: selectedDate)?.content ?? ""
         }
-        .onChange(of: viewModel.photos.count) { _, _ in
-            // 写真追加（＝新しい撮影日）でストリークが伸び、実績解除を判定する
-            AchievementService.shared.evaluate(viewModel.statistics)
+        .onChange(of: viewModel.statistics) { _, newStats in
+            // 統計（ストリーク・延べ日数等）の変化で実績を判定。
+            // 件数据え置きの差し替え（復元/再同期/置換）も統計値の変化として拾える。
+            AchievementService.shared.evaluate(newStats)
         }
         .sheet(isPresented: $showingWeightInput) {
             WeightInputView(photo: $currentPhoto, selectedDate: selectedDate, onSave: { weight, bodyFat in

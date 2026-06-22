@@ -83,7 +83,8 @@ struct GoalSettingView: View {
         }
         if let date = userSettings.settings.goalDate {
             hasTargetDate = true
-            targetDate = date
+            // DatePickerの範囲(Date()...)に合わせ、過去日が保存されていても未来側にクランプする
+            targetDate = max(date, Date())
         }
     }
 

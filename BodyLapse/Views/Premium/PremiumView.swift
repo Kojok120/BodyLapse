@@ -106,7 +106,6 @@ struct PremiumView: View {
             // 年額（プライマリ）
             planButton(
                 product: viewModel.proYearlyProduct,
-                fallbackPrice: "$49.99",
                 period: "premium.per_year".localized,
                 badge: "premium.best_value".localized,
                 primary: true
@@ -114,7 +113,6 @@ struct PremiumView: View {
             // 月額（セカンダリ）
             planButton(
                 product: viewModel.proMonthlyProduct,
-                fallbackPrice: "$9.99",
                 period: "premium.per_month".localized,
                 badge: nil,
                 primary: false
@@ -139,7 +137,6 @@ struct PremiumView: View {
             featureRow(icon: "rectangle.badge.xmark", text: "premium.feature.no_ads".localized)
             planButton(
                 product: viewModel.standardProduct,
-                fallbackPrice: "premium.price.fallback".localized,
                 period: "premium.per_month".localized,
                 badge: nil,
                 primary: false
@@ -165,8 +162,8 @@ struct PremiumView: View {
         }
     }
 
-    /// 価格ボタン。product があれば実価格、なければフォールバック表記。
-    private func planButton(product: Product?, fallbackPrice: String, period: String, badge: String?, primary: Bool) -> some View {
+    /// 価格ボタン。productがあればストアの実価格を表示。未取得時は固定価格を出さず「取得中」表記にする。
+    private func planButton(product: Product?, period: String, badge: String?, primary: Bool) -> some View {
         Button {
             Task {
                 if let product {
@@ -187,8 +184,13 @@ struct PremiumView: View {
                         .clipShape(Capsule())
                 }
                 Spacer()
-                Text((product?.displayPrice ?? fallbackPrice) + " / " + period)
-                    .font(.headline.bold())
+                if let product {
+                    Text(product.displayPrice + " / " + period)
+                        .font(.headline.bold())
+                } else {
+                    Text("premium.price.unavailable".localized)
+                        .font(.subheadline.bold())
+                }
                 Spacer()
             }
             .foregroundColor(primary ? .white : .white)

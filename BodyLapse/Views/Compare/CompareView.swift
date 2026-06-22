@@ -667,40 +667,49 @@ struct CompareView: View {
     }
 
     private func performShare() {
-        // 合成キャンバス相当にダウンサンプリングして読み込み、フル解像度2枚同時ロードのメモリ圧を避ける
-        let targetSize = CGSize(width: 1080, height: 1350)
-        guard let first = firstPhoto, let second = secondPhoto,
-              let firstImage = PhotoStorageService.shared.loadImage(for: first, targetSize: targetSize),
-              let secondImage = PhotoStorageService.shared.loadImage(for: second, targetSize: targetSize) else {
-            Haptics.warning()
-            showingShareError = true
-            return
-        }
+        guard let first = firstPhoto, let second = secondPhoto else { return }
 
         // 日付の早い方を「変化前」、遅い方を「変化後」にする
         let beforeIsFirst = first.captureDate <= second.captureDate
         let beforePhoto = beforeIsFirst ? first : second
         let afterPhoto = beforeIsFirst ? second : first
-        let beforeImage = beforeIsFirst ? firstImage : secondImage
-        let afterImage = beforeIsFirst ? secondImage : firstImage
 
+        let isPro = subscriptionManager.isPro
+        let beforeLabel = "compare.before".localized
+        let afterLabel = "compare.after".localized
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
+        let beforeDateText = formatter.string(from: beforePhoto.captureDate)
+        let afterDateText = formatter.string(from: afterPhoto.captureDate)
 
-        let isPro = subscriptionManager.isPro
-        let image = ShareComposerService.beforeAfterImage(
-            before: beforeImage,
-            after: afterImage,
-            beforeLabel: "compare.before".localized,
-            afterLabel: "compare.after".localized,
-            beforeDateText: formatter.string(from: beforePhoto.captureDate),
-            afterDateText: formatter.string(from: afterPhoto.captureDate),
-            addWatermark: !isPro
-        )
+        // 重い画像ロード/合成はバックグラウンドで行い、UI更新のみメインに戻す（共有ボタン押下時のUIフリーズを防ぐ）
+        DispatchQueue.global(qos: .userInitiated).async {
+            let targetSize = CGSize(width: 1080, height: 1350)
+            guard let beforeImage = PhotoStorageService.shared.loadImage(for: beforePhoto, targetSize: targetSize),
+                  let afterImage = PhotoStorageService.shared.loadImage(for: afterPhoto, targetSize: targetSize) else {
+                DispatchQueue.main.async {
+                    Haptics.warning()
+                    showingShareError = true
+                }
+                return
+            }
 
-        Haptics.impact()
-        shareItems = [image]
-        showingShareSheet = true
+            let image = ShareComposerService.beforeAfterImage(
+                before: beforeImage,
+                after: afterImage,
+                beforeLabel: beforeLabel,
+                afterLabel: afterLabel,
+                beforeDateText: beforeDateText,
+                afterDateText: afterDateText,
+                addWatermark: !isPro
+            )
+
+            DispatchQueue.main.async {
+                Haptics.impact()
+                shareItems = [image]
+                showingShareSheet = true
+            }
+        }
     }
 }

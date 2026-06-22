@@ -583,3 +583,41 @@ struct ProgressInsightTests {
         #expect(insight.projectedGoalDate == nil)
     }
 }
+
+// MARK: - NotificationService の文面選択ロジック
+@Suite
+struct NotificationServiceTests {
+    @Test
+    func streakBodyOnlyForTodayWithActiveStreak() {
+        // 当日かつ連続2日以上 → ストリーク文言
+        #expect(NotificationService.reminderBodyKey(currentStreak: 5, isToday: true) == "notification.streak_at_risk_body")
+        // 将来日は連続日数があっても通常文言（古い値の固定表示を防ぐ）
+        #expect(NotificationService.reminderBodyKey(currentStreak: 5, isToday: false) == "notification.no_photo_body")
+        // 連続1日以下は当日でも通常文言
+        #expect(NotificationService.reminderBodyKey(currentStreak: 1, isToday: true) == "notification.no_photo_body")
+        #expect(NotificationService.reminderBodyKey(currentStreak: 0, isToday: true) == "notification.no_photo_body")
+    }
+}
+
+// MARK: - PaywallPromptManager（表示済みフラグ）
+@Suite(.serialized)
+@MainActor
+struct PaywallPromptManagerTests {
+    @Test
+    func tracksShownStateIndependentlyAndResets() {
+        let manager = PaywallPromptManager.shared
+        manager.resetForDebug()
+        defer { manager.resetForDebug() }
+
+        #expect(manager.hasShown(.milestoneCloud) == false)
+        #expect(manager.hasShown(.shareWatermark) == false)
+
+        manager.markShown(.milestoneCloud)
+        #expect(manager.hasShown(.milestoneCloud) == true)
+        // 片方をマークしても他方は未表示のまま
+        #expect(manager.hasShown(.shareWatermark) == false)
+
+        manager.resetForDebug()
+        #expect(manager.hasShown(.milestoneCloud) == false)
+    }
+}

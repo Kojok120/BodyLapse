@@ -12,6 +12,8 @@ struct WeightInputSheet: View {
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @Environment(\.dismiss) private var dismiss
     @State private var isLoadingHealthData = false
+    @State private var showingSaveError = false
+    @State private var saveErrorMessage = ""
     
     var body: some View {
         NavigationView {
@@ -160,35 +162,49 @@ struct WeightInputSheet: View {
                 fetchHealthKitData()
             }
         }
+        .alert("common.error".localized, isPresented: $showingSaveError) {
+            Button("common.ok".localized) {}
+        } message: {
+            Text(saveErrorMessage)
+        }
     }
-    
+
     private func saveAndDismiss() {
         if let weightValue = Double(weightText) {
             // Convert to kg if needed
             weight = userSettings.settings.weightUnit == .kg ? weightValue : weightValue / 2.20462
         }
-        
+
         if !bodyFatText.isEmpty, let bodyFatValue = Double(bodyFatText) {
             bodyFat = bodyFatValue
         }
-        
-        // Also save to weight tracking
-        if let w = weight {
-            let entry = WeightEntry(
-                date: Date(),
-                weight: w,
-                bodyFatPercentage: bodyFat,
-                linkedPhotoID: nil
-            )
-            Task {
-                try? await WeightStorageService.shared.saveEntry(entry)
-            }
 
+        // 体重未入力なら保存対象なし。そのまま閉じる
+        guard let w = weight else {
+            onSave()
+            dismiss()
+            return
         }
 
-        Haptics.success()
-        onSave()
-        dismiss()
+        let entry = WeightEntry(
+            date: Date(),
+            weight: w,
+            bodyFatPercentage: bodyFat,
+            linkedPhotoID: nil
+        )
+        // 保存が成功してから成功演出・遷移を行う（保存前に成功扱いしない）
+        Task {
+            do {
+                try await WeightStorageService.shared.saveEntry(entry)
+                Haptics.success()
+                onSave()
+                dismiss()
+            } catch {
+                Haptics.error()
+                saveErrorMessage = error.localizedDescription
+                showingSaveError = true
+            }
+        }
     }
     
     private func skipAndSave() {

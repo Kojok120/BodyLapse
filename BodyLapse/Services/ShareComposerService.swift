@@ -16,7 +16,10 @@ enum ShareComposerService {
         addWatermark: Bool,
         canvasSize: CGSize = CGSize(width: 1080, height: 1350)
     ) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: canvasSize)
+        // scale=1 で固定し、Retina(2x/3x)による不要なメモリ膨張を回避（共有/保存用途は等倍で十分）
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: canvasSize, format: format)
         return renderer.image { ctx in
             UIColor.black.setFill()
             ctx.fill(CGRect(origin: .zero, size: canvasSize))

@@ -39,17 +39,13 @@ struct CustomDatePicker: UIViewRepresentable {
     }
     
     private func addIndicators(to picker: UIDatePicker) {
-        // Remove existing indicators
-        picker.subviews.forEach { subview in
-            subview.subviews.forEach { innerView in
-                if innerView.tag == 999 {
-                    innerView.removeFromSuperview()
-                }
-            }
-        }
-        
         // Find the calendar view
         guard let calendarView = findCalendarView(in: picker) else { return }
+
+        // 前回描画の装飾を再帰的に全除去（999:ドット, 998:撮影日ハイライト）。
+        // ハイライトはhasPhotoのセルにしか付けないため、写真状態が変わったセルに
+        // 998が残らないよう、追加前にツリー全体から確実に消す。
+        removeTaggedViews(in: calendarView, tags: [998, 999])
         
         let calendar = Calendar.current
         let dateFormatter = DateFormatter()
@@ -79,6 +75,17 @@ struct CustomDatePicker: UIViewRepresentable {
         }
     }
     
+    /// 指定タグのビューをサブツリーから再帰的に除去する。
+    private func removeTaggedViews(in view: UIView, tags: Set<Int>) {
+        for subview in view.subviews {
+            if tags.contains(subview.tag) {
+                subview.removeFromSuperview()
+            } else {
+                removeTaggedViews(in: subview, tags: tags)
+            }
+        }
+    }
+
     private func findCalendarView(in view: UIView) -> UIView? {
         for subview in view.subviews {
             if String(describing: type(of: subview)).contains("Calendar") ||

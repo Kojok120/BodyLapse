@@ -315,6 +315,7 @@
 "premium.per" = "por";
 "premium.subscribe" = "Suscribirse Ahora";
 "premium.price.fallback" = "$0.99";
+"premium.price.unavailable" = "Cargando precio…";
 "premium.price.period" = "al mes";
 "premium.first_month_free" = "No incluye primer mes gratis";
 "premium.after_trial" = "Facturación:";
@@ -826,7 +827,8 @@
 "cloud.error.no_account" = "Inicia sesión en iCloud (Ajustes > Apple ID > iCloud).";
 "cloud.error.no_backup" = "No se encontró ninguna copia en la nube.";
 "cloud.error.network" = "No se puede conectar a la red. Comprueba tu conexión.";
-"cloud.error.quota" = "No tienes suficiente espacio en iCloud.";
+"cloud.error.quota" = "No hay suficiente espacio en iCloud para guardar. Libera espacio en Ajustes > [tu nombre] > iCloud > Gestionar almacenamiento.";
+"cloud.uses_icloud_storage" = "Esta copia usa tu propio almacenamiento de iCloud (igual que la copia de iCloud de Apple). No se puede guardar si tu iCloud está lleno.";
 "cloud.error.restricted" = "El acceso a iCloud está restringido en este dispositivo.";
 "cloud.error.unavailable" = "iCloud no está disponible. Inténtalo de nuevo más tarde.";
 "cloud.error.generic" = "Algo salió mal. Inténtalo de nuevo más tarde.";

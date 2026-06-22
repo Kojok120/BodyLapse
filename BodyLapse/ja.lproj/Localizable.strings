@@ -313,6 +313,7 @@
 "premium.per" = "毎";
 "premium.subscribe" = "今すぐ登録";
 "premium.price.fallback" = "¥100";
+"premium.price.unavailable" = "価格を取得中…";
 "premium.price.period" = "/月";
 "premium.first_month_free" = "初月無料特典はありません";
 "premium.after_trial" = "請求について：";
@@ -834,7 +835,8 @@
 "cloud.error.no_account" = "iCloudにサインインしてください（設定 > Apple ID > iCloud）。";
 "cloud.error.no_backup" = "クラウドにバックアップが見つかりません。";
 "cloud.error.network" = "ネットワークに接続できません。通信環境を確認してください。";
-"cloud.error.quota" = "iCloudの空き容量が不足しています。";
+"cloud.error.quota" = "iCloudの空き容量が不足しているため保存できません。「設定」→ 一番上のApple ID →「iCloud」→「アカウントのストレージを管理」で空きを増やしてください。";
+"cloud.uses_icloud_storage" = "このバックアップはあなた自身のiCloudストレージを使用します（Appleの「iCloudバックアップ」と同じ仕組み）。空き容量が不足すると保存できません。";
 "cloud.error.restricted" = "iCloudの利用が制限されています。";
 "cloud.error.unavailable" = "iCloudを利用できません。後でもう一度お試しください。";
 "cloud.error.generic" = "処理に失敗しました。後でもう一度お試しください。";

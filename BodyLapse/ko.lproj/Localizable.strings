@@ -315,6 +315,7 @@
 "premium.per" = "당";
 "premium.subscribe" = "지금 구독";
 "premium.price.fallback" = "$0.99";
+"premium.price.unavailable" = "가격 불러오는 중…";
 "premium.price.period" = "/월";
 "premium.first_month_free" = "첫 달 무료 혜택이 없습니다";
 "premium.after_trial" = "과금 안내:";
@@ -826,7 +827,8 @@
 "cloud.error.no_account" = "iCloud에 로그인해 주세요 (설정 > Apple ID > iCloud).";
 "cloud.error.no_backup" = "클라우드에 백업이 없습니다.";
 "cloud.error.network" = "네트워크에 연결할 수 없습니다. 연결 상태를 확인해 주세요.";
-"cloud.error.quota" = "iCloud 저장 공간이 부족합니다.";
+"cloud.error.quota" = "iCloud 저장 공간이 부족하여 저장할 수 없습니다. 설정 > 사용자 이름 > iCloud > 계정 저장 공간 관리에서 공간을 확보하세요.";
+"cloud.uses_icloud_storage" = "이 백업은 본인의 iCloud 저장 공간을 사용합니다(Apple의 iCloud 백업과 동일한 방식). iCloud가 가득 차면 저장할 수 없습니다.";
 "cloud.error.restricted" = "이 기기에서는 iCloud 사용이 제한되어 있습니다.";
 "cloud.error.unavailable" = "iCloud를 사용할 수 없습니다. 나중에 다시 시도해 주세요.";
 "cloud.error.generic" = "문제가 발생했습니다. 나중에 다시 시도해 주세요.";

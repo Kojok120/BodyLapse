@@ -12,6 +12,17 @@ struct CloudBackupView: View {
 
     var body: some View {
         Form {
+            // ユーザーのiCloudストレージを使うことを冒頭で明示（容量超過の驚きを防ぐ）
+            Section {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "icloud")
+                        .foregroundColor(.bodyLapseTurquoise)
+                    Text("cloud.uses_icloud_storage".localized)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+            }
+
             Section {
                 HStack {
                     Text("cloud.last_backup".localized)
