@@ -814,3 +814,8 @@
 "cloud.success" = "Done";
 "cloud.error.no_account" = "Please sign in to iCloud (Settings > Apple ID > iCloud).";
 "cloud.error.no_backup" = "No backup found in the cloud.";
+"cloud.error.network" = "Can't connect to the network. Please check your connection.";
+"cloud.error.quota" = "Your iCloud storage is full.";
+"cloud.error.restricted" = "iCloud access is restricted on this device.";
+"cloud.error.unavailable" = "iCloud is unavailable. Please try again later.";
+"cloud.error.generic" = "Something went wrong. Please try again later.";

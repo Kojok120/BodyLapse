@@ -667,6 +667,7 @@ struct CompareView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
 
+        let isPro = subscriptionManager.isPro
         let image = ShareComposerService.beforeAfterImage(
             before: beforeImage,
             after: afterImage,
@@ -674,7 +675,7 @@ struct CompareView: View {
             afterLabel: "compare.after".localized,
             beforeDateText: formatter.string(from: beforePhoto.captureDate),
             afterDateText: formatter.string(from: afterPhoto.captureDate),
-            addWatermark: !subscriptionManager.isPro
+            addWatermark: !isPro
         )
 
         Haptics.impact()

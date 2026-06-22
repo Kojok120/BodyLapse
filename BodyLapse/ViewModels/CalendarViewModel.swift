@@ -4,10 +4,21 @@ import Combine
 @MainActor
 class CalendarViewModel: ObservableObject {
     @Published var currentMonth = Date()
-    @Published var photos: [Photo] = []
+    @Published var photos: [Photo] = [] {
+        didSet { statistics = Self.computeStatistics(from: photos) }
+    }
     @Published var selectedCategory: PhotoCategory = PhotoCategory.defaultCategory
     @Published var availableCategories: [PhotoCategory] = []
     @Published var dailyNotes: [Date: DailyNote] = [:]
+
+    /// 撮影習慣の統計。photos 変更時に一度だけ再計算してキャッシュする（毎参照のO(n)再計算を回避）。
+    @Published private(set) var statistics: PhotoStatistics = .empty
+
+    private static func computeStatistics(from photos: [Photo]) -> PhotoStatistics {
+        let calendar = Calendar.current
+        let days = Set(photos.map { calendar.startOfDay(for: $0.captureDate) })
+        return PhotoStatistics.compute(from: days)
+    }
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -65,12 +76,6 @@ class CalendarViewModel: ObservableObject {
         }
     }
 
-    /// 撮影習慣の統計（ストリーク等）。@Published photos の変化に追随して再計算される。
-    var statistics: PhotoStatistics {
-        let calendar = Calendar.current
-        let days = Set(photos.map { calendar.startOfDay(for: $0.captureDate) })
-        return PhotoStatistics.compute(from: days)
-    }
     
     func photo(for date: Date) -> Photo? {
         photos.first { photo in

@@ -30,13 +30,43 @@ class CloudBackupService: ObservableObject {
 
     private init() {}
 
-    /// iCloudアカウントが利用可能か（サインイン済みか）。
-    func isAccountAvailable() async -> Bool {
+    /// iCloudアカウントが利用可能ならnil、不可なら理由メッセージを返す。
+    private func accountUnavailableMessage() async -> String? {
         do {
-            return try await container.accountStatus() == .available
+            switch try await container.accountStatus() {
+            case .available:
+                return nil
+            case .noAccount:
+                return "cloud.error.no_account".localized
+            case .restricted:
+                return "cloud.error.restricted".localized
+            case .couldNotDetermine, .temporarilyUnavailable:
+                return "cloud.error.unavailable".localized
+            @unknown default:
+                return "cloud.error.unavailable".localized
+            }
         } catch {
-            return false
+            return userMessage(for: error)
         }
+    }
+
+    /// CloudKitのエラーをユーザー向けの具体的な文言に変換する。
+    private func userMessage(for error: Error) -> String {
+        if let ckError = error as? CKError {
+            switch ckError.code {
+            case .notAuthenticated:
+                return "cloud.error.no_account".localized
+            case .networkUnavailable, .networkFailure:
+                return "cloud.error.network".localized
+            case .quotaExceeded:
+                return "cloud.error.quota".localized
+            case .unknownItem:
+                return "cloud.error.no_backup".localized
+            default:
+                break
+            }
+        }
+        return "cloud.error.generic".localized
     }
 
     /// 直近のバックアップ日時を取得して `lastBackupDate` を更新する。
@@ -53,8 +83,9 @@ class CloudBackupService: ObservableObject {
     /// 現在のデータをエクスポートしてクラウドにバックアップする。
     func backupNow() async {
         state = .working
-        guard await isAccountAvailable() else {
-            state = .failure("cloud.error.no_account".localized)
+        if let message = await accountUnavailableMessage() {
+            state = .failure(message)
+            Haptics.error()
             return
         }
 
@@ -73,7 +104,7 @@ class CloudBackupService: ObservableObject {
             state = .success
             Haptics.success()
         } catch {
-            state = .failure(error.localizedDescription)
+            state = .failure(userMessage(for: error))
             Haptics.error()
         }
     }
@@ -81,8 +112,9 @@ class CloudBackupService: ObservableObject {
     /// クラウドの最新バックアップから復元する。
     func restoreFromCloud() async {
         state = .working
-        guard await isAccountAvailable() else {
-            state = .failure("cloud.error.no_account".localized)
+        if let message = await accountUnavailableMessage() {
+            state = .failure(message)
+            Haptics.error()
             return
         }
 
@@ -108,7 +140,7 @@ class CloudBackupService: ObservableObject {
             state = .success
             Haptics.success()
         } catch {
-            state = .failure(error.localizedDescription)
+            state = .failure(userMessage(for: error))
             Haptics.error()
         }
     }
