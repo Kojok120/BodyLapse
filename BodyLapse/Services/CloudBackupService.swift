@@ -97,13 +97,25 @@ class CloudBackupService: ObservableObject {
             record[assetKey] = CKAsset(fileURL: bundleURL)
             record[createdAtKey] = Date()
 
-            // 既存レコードを上書き保存
-            _ = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .allKeys)
+            // 既存レコードを上書き保存。
+            // private DB のデフォルトゾーンは atomic 非対応なので atomically: false。
+            let saveResults = try await database.modifyRecords(
+                saving: [record],
+                deleting: [],
+                savePolicy: .allKeys,
+                atomically: false
+            ).saveResults
+
+            // 個別レコードの保存結果を検証（部分失敗を「完了」と誤判定しないため）
+            if case .failure(let recordError)? = saveResults[record.recordID] {
+                throw recordError
+            }
 
             await refreshLastBackupDate()
             state = .success
             Haptics.success()
         } catch {
+            print("[CloudBackup] backup failed: \(error)")
             state = .failure(userMessage(for: error))
             Haptics.error()
         }
