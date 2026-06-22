@@ -160,9 +160,21 @@ class CloudBackupService: ObservableObject {
     // MARK: - 既存のエクスポート/インポートをasyncでラップ
 
     private func exportBundle() async throws -> URL {
-        try await withCheckedThrowingContinuation { continuation in
+        // クラウドバックアップは容量の大きい動画を除外する。
+        // 動画は写真から再生成できる派生物であり、iCloudクォータ超過(quotaExceeded)を避けるため
+        // かけがえのないデータ（写真・体重・メモ・設定・カテゴリ）のみをバックアップする。
+        let options = ImportExportService.ExportOptions(
+            includePhotos: true,
+            includeVideos: false,
+            includeSettings: true,
+            includeWeightData: true,
+            includeNotes: true,
+            dateRange: nil,
+            categories: nil
+        )
+        return try await withCheckedThrowingContinuation { continuation in
             ImportExportService.shared.exportData(
-                options: .all,
+                options: options,
                 progress: { _ in }
             ) { result in
                 continuation.resume(with: result)
