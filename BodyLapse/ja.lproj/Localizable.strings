@@ -756,3 +756,9 @@
 "settings.premium.trial_days_left" = "無料トライアル：残り%d日";
 "settings.premium.expires_on" = "次回更新日：%@";
 "about.version" = "バージョン %@（%@）";
+
+/* Streak / 撮影習慣 */
+"streak.current" = "%d日連続";
+"streak.days_this_month" = "今月%d日";
+"streak.longest" = "最長%d日";
+"streak.start" = "今日から記録を始めよう";

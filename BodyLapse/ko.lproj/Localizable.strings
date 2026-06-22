@@ -748,3 +748,9 @@
 "settings.premium.trial_days_left" = "무료 체험: %d일 남음";
 "settings.premium.expires_on" = "다음 갱신일: %@";
 "about.version" = "버전 %@ (%@)";
+
+/* Streak / 기록 */
+"streak.current" = "%d일 연속";
+"streak.days_this_month" = "이번 달 %d일";
+"streak.longest" = "최고 %d일";
+"streak.start" = "오늘부터 기록을 시작하세요";

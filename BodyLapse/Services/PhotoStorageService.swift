@@ -552,6 +552,17 @@ class PhotoStorageService {
         let uniqueDates = Set(photos.map { calendar.startOfDay(for: $0.captureDate) })
         return uniqueDates.count
     }
+
+    /// 写真が1枚以上ある日（startOfDay）の集合。カテゴリは問わない。
+    var photographedDays: Set<Date> {
+        let calendar = Calendar.current
+        return Set(photos.map { calendar.startOfDay(for: $0.captureDate) })
+    }
+
+    /// 撮影習慣の統計（ストリーク・今月の日数など）を取得する。
+    func getStatistics(referenceDate: Date = Date()) -> PhotoStatistics {
+        PhotoStatistics.compute(from: photographedDays, referenceDate: referenceDate)
+    }
     
     func checkAndRequestReviewIfNeeded() {
         Task { @MainActor in

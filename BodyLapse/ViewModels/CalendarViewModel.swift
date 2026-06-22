@@ -64,6 +64,13 @@ class CalendarViewModel: ObservableObject {
             Calendar.current.isDate(photo.captureDate, equalTo: currentMonth, toGranularity: .month)
         }
     }
+
+    /// 撮影習慣の統計（ストリーク等）。@Published photos の変化に追随して再計算される。
+    var statistics: PhotoStatistics {
+        let calendar = Calendar.current
+        let days = Set(photos.map { calendar.startOfDay(for: $0.captureDate) })
+        return PhotoStatistics.compute(from: days)
+    }
     
     func photo(for date: Date) -> Photo? {
         photos.first { photo in

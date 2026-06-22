@@ -370,3 +370,85 @@ struct BodyLapseTests {
         VideoStorageService.shared.initialize()
     }
 }
+
+// MARK: - PhotoStatistics（ストリーク計算）の純粋ロジックテスト
+@Suite
+struct PhotoStatisticsTests {
+    /// 決定的にするため UTC 固定の Gregorian カレンダーを使う。
+    private var calendar: Calendar {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        return cal
+    }
+
+    private func day(_ year: Int, _ month: Int, _ dayOfMonth: Int) -> Date {
+        calendar.date(from: DateComponents(year: year, month: month, day: dayOfMonth, hour: 12))!
+    }
+
+    @Test
+    func emptyReturnsZeroes() {
+        let stats = PhotoStatistics.compute(from: [], referenceDate: day(2026, 6, 15), calendar: calendar)
+        #expect(stats == .empty)
+        #expect(stats.currentStreak == 0)
+        #expect(stats.isTodayCaptured == false)
+    }
+
+    @Test
+    func todayOnlyIsStreakOne() {
+        let stats = PhotoStatistics.compute(from: [day(2026, 6, 15)], referenceDate: day(2026, 6, 15), calendar: calendar)
+        #expect(stats.currentStreak == 1)
+        #expect(stats.longestStreak == 1)
+        #expect(stats.totalDays == 1)
+        #expect(stats.daysThisMonth == 1)
+        #expect(stats.isTodayCaptured == true)
+    }
+
+    @Test
+    func consecutiveDaysEndingTodayCountTowardStreak() {
+        let days: Set<Date> = [day(2026, 6, 13), day(2026, 6, 14), day(2026, 6, 15)]
+        let stats = PhotoStatistics.compute(from: days, referenceDate: day(2026, 6, 15), calendar: calendar)
+        #expect(stats.currentStreak == 3)
+        #expect(stats.longestStreak == 3)
+        #expect(stats.isTodayCaptured == true)
+    }
+
+    @Test
+    func streakStaysAliveWhenTodayNotYetCaptured() {
+        // 今日(15日)は未撮影だが、昨日まで3日続いている → ストリークは生存(3)
+        let days: Set<Date> = [day(2026, 6, 12), day(2026, 6, 13), day(2026, 6, 14)]
+        let stats = PhotoStatistics.compute(from: days, referenceDate: day(2026, 6, 15), calendar: calendar)
+        #expect(stats.currentStreak == 3)
+        #expect(stats.isTodayCaptured == false)
+    }
+
+    @Test
+    func brokenStreakResetsCurrentButKeepsLongest() {
+        // 6/1-6/3 の3連続、間が空いて 6/15(今日)単独
+        let days: Set<Date> = [day(2026, 6, 1), day(2026, 6, 2), day(2026, 6, 3), day(2026, 6, 15)]
+        let stats = PhotoStatistics.compute(from: days, referenceDate: day(2026, 6, 15), calendar: calendar)
+        #expect(stats.currentStreak == 1)
+        #expect(stats.longestStreak == 3)
+        #expect(stats.totalDays == 4)
+    }
+
+    @Test
+    func daysThisMonthExcludesOtherMonths() {
+        // 5/30, 5/31, 6/1。基準は6/15。今月(6月)の撮影日は1日だけ。
+        let days: Set<Date> = [day(2026, 5, 30), day(2026, 5, 31), day(2026, 6, 1)]
+        let stats = PhotoStatistics.compute(from: days, referenceDate: day(2026, 6, 15), calendar: calendar)
+        #expect(stats.daysThisMonth == 1)
+        #expect(stats.longestStreak == 3) // 月をまたいでも連続は連続
+        #expect(stats.currentStreak == 0) // 今日・昨日に撮影なし
+    }
+
+    @Test
+    func duplicateTimestampsOnSameDayCountOnce() {
+        let days: Set<Date> = [
+            calendar.date(from: DateComponents(year: 2026, month: 6, day: 15, hour: 8))!,
+            calendar.date(from: DateComponents(year: 2026, month: 6, day: 15, hour: 20))!
+        ]
+        let stats = PhotoStatistics.compute(from: days, referenceDate: day(2026, 6, 15), calendar: calendar)
+        #expect(stats.totalDays == 1)
+        #expect(stats.currentStreak == 1)
+    }
+}

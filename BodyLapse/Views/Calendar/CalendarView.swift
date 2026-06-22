@@ -113,7 +113,9 @@ struct CalendarView: View {
                     showingCategoryGuidance = true
                 }
             )
-            
+
+            StreakBadgeView(statistics: viewModel.statistics)
+
             PhotoPreviewSection(
                 selectedDate: selectedDate,
                 isPremium: true, // All users now have premium features

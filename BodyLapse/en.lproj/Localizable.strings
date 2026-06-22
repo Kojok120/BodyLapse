@@ -748,3 +748,9 @@
 "settings.premium.trial_days_left" = "Free trial: %d day(s) left";
 "settings.premium.expires_on" = "Next renewal: %@";
 "about.version" = "Version %@ (%@)";
+
+/* Streak */
+"streak.current" = "%d-day streak";
+"streak.days_this_month" = "%d days this month";
+"streak.longest" = "Best: %d days";
+"streak.start" = "Start your streak today";

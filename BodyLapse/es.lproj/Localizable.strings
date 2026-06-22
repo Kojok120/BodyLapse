@@ -748,3 +748,9 @@
 "settings.premium.trial_days_left" = "Prueba gratis: %d día(s) restantes";
 "settings.premium.expires_on" = "Próxima renovación: %@";
 "about.version" = "Versión %@ (%@)";
+
+/* Streak / Racha */
+"streak.current" = "%d días seguidos";
+"streak.days_this_month" = "%d días este mes";
+"streak.longest" = "Récord: %d días";
+"streak.start" = "Empieza tu racha hoy";
