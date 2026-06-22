@@ -127,10 +127,21 @@ class CloudBackupService: ObservableObject {
     }
 
     private func importBundle(from url: URL) async throws -> ImportExportService.ImportSummary {
-        try await withCheckedThrowingContinuation { continuation in
+        // 「クラウドから復元」はバックアップを正とする操作なので .replace で上書きする
+        // （.skip だと既存データのある端末で同日データが取り込まれず部分復元になる）。
+        // 端末ローカルの設定/セキュリティは保持するため importSettings は false。
+        let options = ImportExportService.ImportOptions(
+            mergeStrategy: .replace,
+            importPhotos: true,
+            importVideos: true,
+            importSettings: false,
+            importWeightData: true,
+            importNotes: true
+        )
+        return try await withCheckedThrowingContinuation { continuation in
             ImportExportService.shared.importData(
                 from: url,
-                options: .default,
+                options: options,
                 progress: { _ in }
             ) { result in
                 continuation.resume(with: result)

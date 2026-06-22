@@ -810,7 +810,7 @@
 "cloud.restore" = "Restaurar desde la nube";
 "cloud.restore_title" = "Restaurar";
 "cloud.restore_confirm" = "Se fusionará la última copia de la nube con tus datos actuales. ¿Continuar?";
-"cloud.footer" = "Guarda tus fotos, vídeos, peso, notas y ajustes en tu propio iCloud. Los datos permanecen en tu cuenta de iCloud.";
+"cloud.footer" = "Hace copia y restaura tus fotos, vídeos, peso y notas en tu propio iCloud. Los ajustes permanecen en cada dispositivo. Los datos permanecen en tu cuenta de iCloud.";
 "cloud.success" = "Listo";
 "cloud.error.no_account" = "Inicia sesión en iCloud (Ajustes > Apple ID > iCloud).";
 "cloud.error.no_backup" = "No se encontró ninguna copia en la nube.";

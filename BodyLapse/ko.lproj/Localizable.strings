@@ -810,7 +810,7 @@
 "cloud.restore" = "클라우드에서 복원";
 "cloud.restore_title" = "복원";
 "cloud.restore_confirm" = "클라우드의 최신 백업을 현재 데이터에 병합합니다. 계속할까요?";
-"cloud.footer" = "사진·동영상·체중·메모·설정을 본인의 iCloud에 저장합니다. 데이터는 본인 iCloud 계정에 보관됩니다.";
+"cloud.footer" = "사진·동영상·체중·메모를 본인의 iCloud에 백업·복원합니다. 앱 설정은 각 기기에 유지됩니다. 데이터는 본인 iCloud 계정에 보관됩니다.";
 "cloud.success" = "완료";
 "cloud.error.no_account" = "iCloud에 로그인해 주세요 (설정 > Apple ID > iCloud).";
 "cloud.error.no_backup" = "클라우드에 백업이 없습니다.";

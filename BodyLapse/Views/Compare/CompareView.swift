@@ -15,6 +15,7 @@ struct CompareView: View {
     @State private var secondCategory: PhotoCategory = PhotoCategory.defaultCategory
     @State private var showingShareSheet = false
     @State private var shareItems: [Any] = []
+    @State private var showingShareError = false
     
     var body: some View {
         NavigationView {
@@ -63,6 +64,11 @@ struct CompareView: View {
             }
             .sheet(isPresented: $showingShareSheet) {
                 ShareSheet(activityItems: shareItems)
+            }
+            .alert("share.error.title".localized, isPresented: $showingShareError) {
+                Button("common.ok".localized) {}
+            } message: {
+                Text("share.error.load_failed".localized)
             }
             .sheet(isPresented: $showingFirstCalendar) {
                 CalendarPopupView(
@@ -640,9 +646,13 @@ struct CompareView: View {
     /// 選択中の2枚からビフォーアフター共有画像を生成して共有シートを表示する。
     /// 全ユーザー利用可。Pro以外はウォーターマークを付与する。
     private func composeAndShare() {
+        // 合成キャンバス相当にダウンサンプリングして読み込み、フル解像度2枚同時ロードのメモリ圧を避ける
+        let targetSize = CGSize(width: 1080, height: 1350)
         guard let first = firstPhoto, let second = secondPhoto,
-              let firstImage = PhotoStorageService.shared.loadImage(for: first),
-              let secondImage = PhotoStorageService.shared.loadImage(for: second) else {
+              let firstImage = PhotoStorageService.shared.loadImage(for: first, targetSize: targetSize),
+              let secondImage = PhotoStorageService.shared.loadImage(for: second, targetSize: targetSize) else {
+            Haptics.warning()
+            showingShareError = true
             return
         }
 
