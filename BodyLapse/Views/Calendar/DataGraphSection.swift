@@ -7,9 +7,6 @@ struct DataGraphSection: View {
     @Binding var selectedChartDate: Date?
     let onEditWeight: () -> Void
 
-    @ObservedObject private var userSettings = UserSettingsManager.shared
-    @State private var showingGoalSetting = false
-
     var body: some View {
         VStack(spacing: 6) {
             if #available(iOS 16.0, *) {
@@ -45,17 +42,6 @@ struct DataGraphSection: View {
                     // Reset chart selection when period changes
                     selectedChartDate = nil
                 }
-
-                // 進捗インサイト・目標トラッキング（全ユーザー無料）
-                ProgressInsightCard(
-                    insight: ProgressInsight.compute(
-                        entries: weightViewModel.weightEntries,
-                        goalWeight: userSettings.settings.goalWeight
-                    ),
-                    unit: userSettings.settings.weightUnit,
-                    onSetGoal: { showingGoalSetting = true }
-                )
-                .padding(.top, 2)
             } else {
                 Text("calendar.ios16_required".localized)
                     .foregroundColor(.secondary)
@@ -65,11 +51,6 @@ struct DataGraphSection: View {
                     .cornerRadius(15)
                     .padding(.horizontal)
             }
-        }
-        .sheet(isPresented: $showingGoalSetting) {
-            GoalSettingView(
-                currentWeightKg: weightViewModel.weightEntries.sorted { $0.date < $1.date }.last?.weight
-            )
         }
     }
     

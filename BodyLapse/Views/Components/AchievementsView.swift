@@ -3,17 +3,33 @@ import SwiftUI
 /// 実績バッジの一覧。解除済み/未解除を一覧表示し、現在の統計サマリーを上部に出す。
 struct AchievementsView: View {
     let statistics: PhotoStatistics
+    var weightEntries: [WeightEntry] = []
 
     @Environment(\.dismiss) private var dismiss
     @StateObject private var achievementService = AchievementService.shared
+    @ObservedObject private var userSettings = UserSettingsManager.shared
+    @State private var showingGoalSetting = false
 
     private let columns = [GridItem(.adaptive(minimum: 100), spacing: 16)]
+
+    private var progressInsight: ProgressInsight {
+        ProgressInsight.compute(entries: weightEntries, goalWeight: userSettings.settings.goalWeight)
+    }
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
                     summarySection
+
+                    // 進捗インサイト・目標（ホームから移設した統計）
+                    if progressInsight.hasData {
+                        ProgressInsightCard(
+                            insight: progressInsight,
+                            unit: userSettings.settings.weightUnit,
+                            onSetGoal: { showingGoalSetting = true }
+                        )
+                    }
 
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(Achievement.all) { achievement in
@@ -30,6 +46,11 @@ struct AchievementsView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("common.done".localized) { dismiss() }
                 }
+            }
+            .sheet(isPresented: $showingGoalSetting) {
+                GoalSettingView(
+                    currentWeightKg: weightEntries.sorted { $0.date < $1.date }.last?.weight
+                )
             }
         }
     }

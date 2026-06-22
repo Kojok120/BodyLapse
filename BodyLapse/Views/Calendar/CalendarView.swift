@@ -117,13 +117,6 @@ struct CalendarView: View {
                 }
             )
 
-            Button {
-                showingAchievements = true
-            } label: {
-                StreakBadgeView(statistics: viewModel.statistics)
-            }
-            .buttonStyle(.plain)
-
             PhotoPreviewSection(
                 selectedDate: selectedDate,
                 isPremium: true, // All users now have premium features
@@ -158,6 +151,22 @@ struct CalendarView: View {
         .withBannerAd()
         .navigationTitle("calendar.title".localized)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    showingAchievements = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flame.fill")
+                            .foregroundColor(viewModel.statistics.currentStreak > 0 ? .orange : .gray)
+                        Text("\(viewModel.statistics.currentStreak)")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.primary)
+                    }
+                }
+                .accessibilityLabel("streak.current".localized(with: viewModel.statistics.currentStreak))
+            }
+        }
         .onAppear(perform: handleOnAppear)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday")), perform: handleNavigateToToday)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhotosUpdated"))) { _ in
@@ -218,7 +227,7 @@ struct CalendarView: View {
             )
         }
         .sheet(isPresented: $showingAchievements) {
-            AchievementsView(statistics: viewModel.statistics)
+            AchievementsView(statistics: viewModel.statistics, weightEntries: weightViewModel.weightEntries)
         }
         .sheet(isPresented: $showingProPaywall) {
             PremiumView()
