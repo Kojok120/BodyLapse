@@ -498,3 +498,88 @@ struct AchievementServiceTests {
         #expect(unlocked.isEmpty)
     }
 }
+
+// MARK: - ProgressInsight（進捗インサイト/目標）の純粋ロジックテスト
+@Suite
+struct ProgressInsightTests {
+    private var calendar: Calendar {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        return cal
+    }
+
+    /// 基準日から offsetDays 日前のエントリを作る（weight は kg）。
+    private func entry(daysAgo: Int, weight: Double, from base: Date) -> WeightEntry {
+        let date = calendar.date(byAdding: .day, value: -daysAgo, to: base)!
+        return WeightEntry(date: date, weight: weight)
+    }
+
+    @Test
+    func emptyReturnsEmpty() {
+        let insight = ProgressInsight.compute(entries: [], calendar: calendar)
+        #expect(insight == .empty)
+        #expect(insight.hasData == false)
+    }
+
+    @Test
+    func computesTotalAndRecentChange() {
+        let base = calendar.date(from: DateComponents(year: 2026, month: 6, day: 15, hour: 12))!
+        // 60日前 80kg → 30日前 78kg → 当日 75kg
+        let entries = [
+            entry(daysAgo: 60, weight: 80, from: base),
+            entry(daysAgo: 30, weight: 78, from: base),
+            entry(daysAgo: 0, weight: 75, from: base)
+        ]
+        let insight = ProgressInsight.compute(entries: entries, calendar: calendar)
+        #expect(insight.currentWeight == 75)
+        #expect(insight.startWeight == 80)
+        #expect(insight.totalChange == -5)
+        // 直近30日: 30日前(78) を基準に 75-78 = -3
+        #expect(insight.recentChange == -3)
+        // 週次ペースは減少なので負
+        #expect((insight.weeklyRate ?? 0) < 0)
+    }
+
+    @Test
+    func goalProgressFractionAndProjection() {
+        let base = calendar.date(from: DateComponents(year: 2026, month: 6, day: 15, hour: 12))!
+        // 直線的に減少：60日前80kg → 当日75kg、目標70kg
+        let entries = (0...6).map { i in
+            entry(daysAgo: 60 - i * 10, weight: 80 - Double(i) * (5.0 / 6.0), from: base)
+        }
+        let insight = ProgressInsight.compute(entries: entries, goalWeight: 70, calendar: calendar)
+        #expect(insight.goalWeight == 70)
+        #expect(insight.hasReachedGoal == false)
+        // start80, current75, goal70 → (80-75)/(80-70)=0.5
+        #expect(abs((insight.progressFraction ?? 0) - 0.5) < 0.01)
+        // 減少中で目標は下なので達成予定日が出る
+        #expect(insight.projectedGoalDate != nil)
+        // あと約5kg
+        #expect(abs((insight.remainingToGoal ?? 0) - 5) < 0.01)
+    }
+
+    @Test
+    func reachedGoalWhenLosing() {
+        let base = calendar.date(from: DateComponents(year: 2026, month: 6, day: 15, hour: 12))!
+        let entries = [
+            entry(daysAgo: 30, weight: 75, from: base),
+            entry(daysAgo: 0, weight: 69, from: base)
+        ]
+        let insight = ProgressInsight.compute(entries: entries, goalWeight: 70, calendar: calendar)
+        #expect(insight.hasReachedGoal == true)
+        #expect(insight.progressFraction == 1)
+    }
+
+    @Test
+    func noProjectionWhenMovingAwayFromGoal() {
+        let base = calendar.date(from: DateComponents(year: 2026, month: 6, day: 15, hour: 12))!
+        // 体重が増加しているのに目標は下 → 達成予定は出ない
+        let entries = [
+            entry(daysAgo: 30, weight: 72, from: base),
+            entry(daysAgo: 0, weight: 76, from: base)
+        ]
+        let insight = ProgressInsight.compute(entries: entries, goalWeight: 70, calendar: calendar)
+        #expect(insight.hasReachedGoal == false)
+        #expect(insight.projectedGoalDate == nil)
+    }
+}

@@ -767,3 +767,22 @@
 "achievement.streak.praise" = "You've shot %d days in a row! Keep it up 🎉";
 "achievement.total.praise" = "You've reached %d total days! 🎉";
 "notification.streak_at_risk_body" = "🔥 %d-day streak! Take today's photo to keep it going";
+
+/* Progress insights & Goal */
+"insight.recent" = "30 days";
+"insight.total" = "Total";
+"insight.weekly" = "Weekly";
+"goal.title" = "Weight Goal";
+"goal.label" = "Goal";
+"goal.set" = "Set a goal";
+"goal.edit" = "Edit goal";
+"goal.clear" = "Remove goal";
+"goal.weight_section" = "Target weight";
+"goal.weight_placeholder" = "Target weight";
+"goal.current_hint" = "Current: %@";
+"goal.set_target_date" = "Set target date";
+"goal.target_date" = "Target date";
+"goal.remaining" = "%@ to go";
+"goal.projected" = "Projected: %@";
+"goal.projected_unknown" = "Projected: keep logging to see";
+"goal.reached" = "🎉 Goal reached!";

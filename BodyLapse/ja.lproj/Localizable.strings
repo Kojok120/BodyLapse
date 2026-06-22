@@ -775,3 +775,22 @@
 "achievement.streak.praise" = "%d日連続で撮影できました！この調子で続けよう🎉";
 "achievement.total.praise" = "通算%d日を達成しました！🎉";
 "notification.streak_at_risk_body" = "🔥 %d日連続中！今日撮って記録をキープしよう";
+
+/* Progress insights & Goal / 進捗インサイト・目標 */
+"insight.recent" = "30日";
+"insight.total" = "累計";
+"insight.weekly" = "週ペース";
+"goal.title" = "体重目標";
+"goal.label" = "目標";
+"goal.set" = "目標を設定";
+"goal.edit" = "目標を編集";
+"goal.clear" = "目標を削除";
+"goal.weight_section" = "目標体重";
+"goal.weight_placeholder" = "目標体重";
+"goal.current_hint" = "現在: %@";
+"goal.set_target_date" = "目標期日を設定";
+"goal.target_date" = "目標期日";
+"goal.remaining" = "あと%@";
+"goal.projected" = "達成予定: %@";
+"goal.projected_unknown" = "達成予定: 記録を続けると表示";
+"goal.reached" = "🎉 目標を達成しました！";

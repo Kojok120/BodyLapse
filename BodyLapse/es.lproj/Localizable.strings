@@ -767,3 +767,22 @@
 "achievement.streak.praise" = "¡Has hecho fotos %d días seguidos! Sigue así 🎉";
 "achievement.total.praise" = "¡Has alcanzado %d días en total! 🎉";
 "notification.streak_at_risk_body" = "🔥 ¡Racha de %d días! Toma la foto de hoy para mantenerla";
+
+/* Progress insights & Goal / Progreso y meta */
+"insight.recent" = "30 días";
+"insight.total" = "Total";
+"insight.weekly" = "Semanal";
+"goal.title" = "Meta de peso";
+"goal.label" = "Meta";
+"goal.set" = "Definir meta";
+"goal.edit" = "Editar meta";
+"goal.clear" = "Eliminar meta";
+"goal.weight_section" = "Peso objetivo";
+"goal.weight_placeholder" = "Peso objetivo";
+"goal.current_hint" = "Actual: %@";
+"goal.set_target_date" = "Definir fecha objetivo";
+"goal.target_date" = "Fecha objetivo";
+"goal.remaining" = "Faltan %@";
+"goal.projected" = "Previsto: %@";
+"goal.projected_unknown" = "Previsto: sigue registrando para verlo";
+"goal.reached" = "🎉 ¡Meta alcanzada!";

@@ -767,3 +767,22 @@
 "achievement.streak.praise" = "%d일 연속 촬영했어요! 이대로 계속해요 🎉";
 "achievement.total.praise" = "총 %d일을 달성했어요! 🎉";
 "notification.streak_at_risk_body" = "🔥 %d일 연속 중! 오늘 사진을 찍어 기록을 이어가세요";
+
+/* Progress insights & Goal / 진행 인사이트·목표 */
+"insight.recent" = "30일";
+"insight.total" = "누적";
+"insight.weekly" = "주간";
+"goal.title" = "체중 목표";
+"goal.label" = "목표";
+"goal.set" = "목표 설정";
+"goal.edit" = "목표 편집";
+"goal.clear" = "목표 삭제";
+"goal.weight_section" = "목표 체중";
+"goal.weight_placeholder" = "목표 체중";
+"goal.current_hint" = "현재: %@";
+"goal.set_target_date" = "목표 날짜 설정";
+"goal.target_date" = "목표 날짜";
+"goal.remaining" = "%@ 남음";
+"goal.projected" = "도달 예상: %@";
+"goal.projected_unknown" = "도달 예상: 기록을 계속하면 표시됩니다";
+"goal.reached" = "🎉 목표 달성!";
