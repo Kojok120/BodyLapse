@@ -23,19 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.2"
-
-      - name: Install CocoaPods dependencies
-        run: |
-          if [ -f Podfile ]; then
-            pod install
-          else
-            echo "Podfile not found, skipping pod install."
-          fi
-
       - name: Build
         run: |
           xcodebuild \
@@ -52,3 +39,16 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -only-testing:BodyLapseTests \
             test
+
+      - name: Build (Release, device, signing disabled)
+        # 出荷経路は Release 構成＋実機 SDK（testflight.yml がアーカイブする形）。
+        # マージ後に main で初めて Release 固有のビルドエラーが発覚しないよう、
+        # PR 段階で署名なしの Release ビルドを通しておく。
+        run: |
+          xcodebuild \
+            -project BodyLapse.xcodeproj \
+            -scheme BodyLapse \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            build

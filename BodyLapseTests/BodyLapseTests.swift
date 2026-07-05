@@ -621,3 +621,32 @@ struct PaywallPromptManagerTests {
         #expect(manager.hasShown(.milestoneCloud) == false)
     }
 }
+
+// MARK: - CloudBackupService（自動バックアップのデバウンス判定）
+
+@Suite
+struct CloudBackupAutoBackupTests {
+    @Test
+    func firstBackupIsAlwaysAllowed() {
+        // 一度もバックアップしていなければ実行してよい
+        #expect(CloudBackupService.shouldAutoBackup(now: Date(), lastBackup: nil) == true)
+    }
+
+    @Test
+    func recentBackupIsDebounced() {
+        // 前回から間隔未満（例: 1時間前）なら実行しない
+        let now = Date()
+        let oneHourAgo = now.addingTimeInterval(-3600)
+        #expect(CloudBackupService.shouldAutoBackup(now: now, lastBackup: oneHourAgo) == false)
+    }
+
+    @Test
+    func staleBackupIsAllowedAtBoundary() {
+        // ちょうど最小間隔経過で実行可（>=判定）、直前なら不可
+        let now = Date()
+        let atBoundary = now.addingTimeInterval(-CloudBackupService.autoBackupMinInterval)
+        let justInside = now.addingTimeInterval(-CloudBackupService.autoBackupMinInterval + 60)
+        #expect(CloudBackupService.shouldAutoBackup(now: now, lastBackup: atBoundary) == true)
+        #expect(CloudBackupService.shouldAutoBackup(now: now, lastBackup: justInside) == false)
+    }
+}
