@@ -20,11 +20,17 @@ name: TestFlight
 #
 # 必要な「Repository variable」(Settings → Secrets and variables → Actions → Variables):
 #   TESTFLIGHT_ENABLED = true   ← これを設定するまでこの job はスキップ（=シークレット未設定での赤failを防ぐ安全弁）
+#   ※必ずリポジトリレベルの variable にすること。environment スコープの変数は
+#     job レベルの if からは見えないため、環境側に作ると永遠にスキップされる。
 #
 # 署名: Archive は ASC API キーによる自動署名（-allowProvisioningUpdates）、Export は持ち込みの
 # 配布証明書(.p12)＋明示プロビジョニングプロファイル(PROV_PROFILE_APP)による手動署名。
 # （Export に ASC キーを渡すとクラウド署名を試みて権限エラーになるため分離している。）
-# ビルド番号は GitHub の run number（+100 の下駄）を使い毎回インクリメントする。
+# ビルド番号は UTC タイムスタンプ（yyyyMMddHHmm）。run number と違い、失敗 run の
+# 再実行やワークフロー名変更でも単調増加が保たれ、番号衝突で再実行が詰まらない。
+# 注意: ローカルの Xcode アーカイブは pbxproj の CURRENT_PROJECT_VERSION=1 のままに
+# なるため CI ビルドより低くなり ASC に拒否される。リリースは必ずこのワークフロー
+# （push か main 上の workflow_dispatch）経由で行うこと。
 
 on:
   push:
@@ -35,7 +41,6 @@ on:
       - '.claude/**'
       - 'bodylapse-marketing/**'
       - 'bodylapse-legal/**'
-      - 'fastlane/**'
   workflow_dispatch:
 
 permissions:
@@ -49,11 +54,12 @@ jobs:
   deploy:
     name: Build & Upload to TestFlight
     # TESTFLIGHT_ENABLED=true を設定するまではスキップ（シークレット未投入時の誤fail防止）。
-    if: ${{ vars.TESTFLIGHT_ENABLED == 'true' }}
+    # ref ガード: workflow_dispatch を含め main 以外からは配信しない（未レビューコードの本番署名防止）。
+    if: ${{ vars.TESTFLIGHT_ENABLED == 'true' && github.ref == 'refs/heads/main' }}
     # Apple は App Store Connect アップロードに iOS 26 SDK (Xcode 26+) を必須化。
     # macos-26 イメージに同梱の Xcode 26 を使う。
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 45
     environment: app-store-production
     env:
       SCHEME: BodyLapse
@@ -62,6 +68,28 @@ jobs:
       PROFILE_NAME: BodyLapse AppStore
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        env:
+          DIST_CERT_P12: ${{ secrets.DIST_CERT_P12 }}
+          DIST_CERT_PASSWORD: ${{ secrets.DIST_CERT_PASSWORD }}
+          PROV_PROFILE_APP: ${{ secrets.PROV_PROFILE_APP }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          # 空シークレットは base64 --decode が exit 0 で0バイトファイルを書き、
+          # 後段の security import / export / altool が原因不明のエラーで落ちる。
+          # ここで先に全数検査して、欠けている名前を明示して即失敗させる。
+          missing=0
+          for name in DIST_CERT_P12 DIST_CERT_PASSWORD PROV_PROFILE_APP ASC_KEY_ID ASC_ISSUER_ID ASC_API_KEY_P8; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Secret ${name} is empty or not set in the app-store-production environment."
+              missing=1
+            fi
+          done
+          exit "$missing"
 
       - name: Select Xcode (latest stable = Xcode 26+)
         run: |
@@ -89,7 +117,13 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
           security import "$RUNNER_TEMP/cert.p12" -P "$DIST_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
           # ビルド中に証明書を参照できるよう検索リストへ追加＋partition list 設定（UIプロンプト回避）。
-          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | sed s/\"//g)
+          # 既存の検索リストは配列で保持する（パスに空白があっても word-splitting で壊れない）。
+          existing_keychains=()
+          while IFS= read -r kc; do
+            kc="$(printf '%s' "$kc" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//' -e 's/"$//')"
+            if [ -n "$kc" ]; then existing_keychains+=("$kc"); fi
+          done < <(security list-keychains -d user)
+          security list-keychains -d user -s "$KEYCHAIN" ${existing_keychains[@]+"${existing_keychains[@]}"}
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PW" "$KEYCHAIN" >/dev/null
           rm -f "$RUNNER_TEMP/cert.p12"
 
@@ -121,9 +155,10 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -o pipefail
-          # ビルド番号は run number に下駄(+100)を履かせる。run number は実行毎に
-          # 単調増加するので同一バージョン内で衝突しない。
-          BUILD_NUMBER=$(( ${{ github.run_number }} + 100 ))
+          # ビルド番号は UTC タイムスタンプ（yyyyMMddHHmm）。run number 由来と違い、
+          # 失敗 run の再実行でもワークフロー名変更（run number リセット）でも
+          # 単調増加が保たれ、ASC の「番号は前回より大きく」制約と衝突しない。
+          BUILD_NUMBER="$(date -u +%Y%m%d%H%M)"
           echo "CFBundleVersion = $BUILD_NUMBER"
           xcodebuild archive \
             -project BodyLapse.xcodeproj \
@@ -139,6 +174,15 @@ jobs:
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
             | tee "$RUNNER_TEMP/archive.log"
+
+      - name: Upload archive log on failure
+        # tee したログはランナー破棄で消えるため、失敗時のみ artifact として保全する。
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive-log
+          path: ${{ runner.temp }}/archive.log
+          if-no-files-found: ignore
 
       - name: Export IPA
         run: |
@@ -172,6 +216,9 @@ jobs:
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
 
       - name: Upload to TestFlight
+        # altool はネットワーク要因でハングすることがあるため、job 全体ではなく
+        # このステップ単体で時間を区切る（ビルド番号消費を最小に留める）。
+        timeout-minutes: 15
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
