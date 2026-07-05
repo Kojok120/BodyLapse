@@ -1,0 +1,7 @@
+"NSCameraUsageDescription" = "매일의 진행 사진을 촬영하기 위해 카메라 접근 권한이 필요합니다.";
+"NSPhotoLibraryAddUsageDescription" = "사진과 타임랩스 동영상을 저장하기 위해 사진 보관함 접근 권한이 필요합니다.";
+"NSPhotoLibraryUsageDescription" = "타임랩스 동영상을 저장하기 위해 사진 보관함 접근 권한이 필요합니다.";
+"NSUserNotificationsUsageDescription" = "진행 사진 촬영을 알리는 매일 알림을 보냅니다.";
+"NSFaceIDUsageDescription" = "사진을 보호하기 위해 Face ID를 사용합니다.";
+"NSHealthShareUsageDescription" = "진행 상황을 자동으로 기록하기 위해 건강 앱에서 체중·체지방 데이터를 읽습니다.";
+"NSHealthUpdateUsageDescription" = "종합적인 기록을 위해 체중·체지방 측정값을 건강 앱에 저장합니다.";

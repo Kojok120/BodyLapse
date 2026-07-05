@@ -248,7 +248,25 @@ struct SettingsView: View {
                             Text("settings.premium_active".localized)
                                 .foregroundColor(.secondary)
                         }
-                        
+
+                        // トライアル / 次回更新までの残り日数を表示（解約前の再検討機会）
+                        if let days = subscriptionManager.daysUntilExpiration {
+                            HStack {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .foregroundColor(subscriptionManager.isAboutToExpire ? .orange : .secondary)
+                                if subscriptionManager.isInTrialPeriod {
+                                    Text("settings.premium.trial_days_left".localized(with: days))
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Text("settings.premium.renews_in".localized(with: days))
+                                        .font(.subheadline)
+                                        .foregroundColor(subscriptionManager.isAboutToExpire ? .orange : .secondary)
+                                }
+                            }
+                            .accessibilityElement(children: .combine)
+                        }
+
                         // サブスクリプション管理ボタン
                         Button(action: {
                             if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
@@ -298,6 +316,30 @@ struct SettingsView: View {
                     NavigationLink(destination: ImportExportView()) {
                         Label("settings.import_export".localized, systemImage: "arrow.up.arrow.down.square")
                     }
+
+                    // クラウドバックアップ（Pro限定）
+                    if subscriptionManager.isPro {
+                        NavigationLink(destination: CloudBackupView()) {
+                            Label("cloud.title".localized, systemImage: "icloud")
+                        }
+                    } else {
+                        Button {
+                            showingPremiumUpgrade = true
+                        } label: {
+                            HStack {
+                                Label("cloud.title".localized, systemImage: "icloud")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Text("premium.pro.title".localized)
+                                    .font(.caption2.bold())
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.bodyLapseTurquoise)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    }
                     
                     // Data clearing feature - to be implemented in future version
                     /*
@@ -340,10 +382,15 @@ struct SettingsView: View {
                 #if DEBUG
                 Section(header: Text("settings.debug_options".localized)) {
                     Toggle("settings.debug.premium_mode".localized, isOn: Binding(
-                        get: { subscriptionManager.isPremium },
+                        get: { subscriptionManager.tier == .standard },
                         set: { _ in subscriptionManager.toggleDebugPremium() }
                     ))
-                    
+
+                    Toggle("settings.debug.pro_mode".localized, isOn: Binding(
+                        get: { subscriptionManager.tier == .pro },
+                        set: { _ in subscriptionManager.toggleDebugPro() }
+                    ))
+
                     Toggle("settings.debug.past_photos".localized, isOn: $userSettings.settings.debugAllowPastDatePhotos)
 
                     Button(action: openDebugOnboarding) {
@@ -526,7 +573,14 @@ struct SettingsView: View {
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
-    
+
+    private var appVersionString: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+    }
+    private var appBuildString: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+    }
+
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
@@ -576,6 +630,11 @@ struct AboutView: View {
                 Text("about.made_with_love".localized)
                     .font(.caption)
                     .foregroundColor(.secondary)
+
+                Text("about.version".localized(with: appVersionString, appBuildString))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .accessibilityLabel("about.version".localized(with: appVersionString, appBuildString))
             }
             .padding()
             .navigationTitle("settings.about".localized)

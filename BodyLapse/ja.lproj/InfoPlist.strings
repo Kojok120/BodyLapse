@@ -1,0 +1,7 @@
+"NSCameraUsageDescription" = "毎日の進捗写真を撮影するためにカメラへのアクセスが必要です。";
+"NSPhotoLibraryAddUsageDescription" = "写真やタイムラプス動画を保存するために写真ライブラリへのアクセスが必要です。";
+"NSPhotoLibraryUsageDescription" = "タイムラプス動画を保存するために写真ライブラリへのアクセスが必要です。";
+"NSUserNotificationsUsageDescription" = "進捗写真の撮影をお知らせする毎日のリマインダーを送信します。";
+"NSFaceIDUsageDescription" = "写真を保護するためにFace IDを使用します。";
+"NSHealthShareUsageDescription" = "進捗を自動で記録するために、ヘルスケアから体重・体脂肪データを読み取ります。";
+"NSHealthUpdateUsageDescription" = "総合的に記録するために、体重・体脂肪の測定値をヘルスケアに保存します。";

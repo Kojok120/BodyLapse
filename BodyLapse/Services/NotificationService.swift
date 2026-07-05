@@ -127,6 +127,12 @@ class NotificationService: NSObject {
         }
     }
     
+    /// 未撮影リマインダーの本文ローカライズキーを決定する（テスト容易化のため純粋関数として分離）。
+    /// 当日かつ連続記録が2日以上のときだけ「途切れそう」文言、それ以外は通常文言。
+    static func reminderBodyKey(currentStreak: Int, isToday: Bool) -> String {
+        (isToday && currentStreak >= 2) ? "notification.streak_at_risk_body" : "notification.no_photo_body"
+    }
+
     private func scheduleDailyCheck(skipToday: Bool = false) {
         // 次の7日間の21:00に通知をスケジュール
         let calendar = Calendar.current
@@ -138,6 +144,9 @@ class NotificationService: NSObject {
             identifiersToRemove.append("missed-photo-day-\(day)")
         }
         notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiersToRemove)
+
+        // 連続記録が伸びていれば「途切れそう」と励ますストリーク対応の文面にする
+        let currentStreak = PhotoStorageService.shared.getStatistics().currentStreak
         
         // 次の7日間の通知をスケジュール
         for dayOffset in 0..<7 {
@@ -160,7 +169,12 @@ class NotificationService: NSObject {
             
             let content = UNMutableNotificationContent()
             content.title = "notification.no_photo_title".localized
-            content.body = "notification.no_photo_body".localized
+            // ストリーク文言は「当日(dayOffset==0)」の通知にのみ適用する。
+            // 将来日に現在のストリーク日数を固定表示すると、初日を取り逃した後で実態とずれるため。
+            let bodyKey = NotificationService.reminderBodyKey(currentStreak: currentStreak, isToday: dayOffset == 0)
+            content.body = (bodyKey == "notification.streak_at_risk_body")
+                ? bodyKey.localized(with: currentStreak)
+                : bodyKey.localized
             content.sound = .default
             content.badge = 1
             content.userInfo = ["openCamera": true, "scheduledDate": targetDate]

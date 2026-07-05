@@ -213,8 +213,8 @@
 
 /* Compare View */
 "compare.title" = "進捗を比較";
-"compare.before" = "Before";
-"compare.after" = "After";
+"compare.before" = "変化前";
+"compare.after" = "変化後";
 "compare.select_first" = "最初の写真を選択";
 "compare.select_second" = "2番目の写真を選択";
 "compare.no_weight" = "体重なし";
@@ -313,6 +313,7 @@
 "premium.per" = "毎";
 "premium.subscribe" = "今すぐ登録";
 "premium.price.fallback" = "¥100";
+"premium.price.unavailable" = "価格を取得中…";
 "premium.price.period" = "/月";
 "premium.first_month_free" = "初月無料特典はありません";
 "premium.after_trial" = "請求について：";
@@ -700,6 +701,10 @@
 "onboarding.feature.daily_photo" = "1日1枚の写真";
 "onboarding.feature.timelapse" = "タイムラプス動画を作成";
 "onboarding.feature.privacy" = "プライバシー保護";
+"onboarding.feature.progress" = "連続記録・体重・目標を管理";
+"onboarding.skip_confirm_title" = "最初の写真をスキップしますか？";
+"onboarding.skip_confirm_message" = "最初の記録がないと、後で変化を比較する基準がありません。今撮っておくのがおすすめです。";
+"onboarding.skip_capture" = "撮影する";
 "onboarding.privacy_detail" = "動画生成時の顔ぼかし機能\n画像や動画はすべて端末内に保存";
 "onboarding.ready" = "準備完了！";
 "onboarding.photo_saved" = "写真が正常に保存されました";
@@ -743,3 +748,95 @@
 "share.error.title" = "共有エラー";
 "share.error.load_failed" = "写真の読み込みに失敗しました";
 "share.error.processing_failed" = "顔ぼかし処理に失敗しました";
+
+/* Quick Wins additions */
+"calendar.take_photo" = "今日の写真を撮る";
+"camera.error.access_required" = "写真を撮るにはカメラへのアクセスが必要です。設定から許可してください。";
+"camera.error.not_available" = "この端末ではカメラを利用できません。";
+"camera.error.setup_failed" = "カメラの起動に失敗しました：%@";
+"camera.error.save_failed" = "写真の保存に失敗しました：%@";
+"camera.error.capture_failed" = "写真の撮影に失敗しました。もう一度お試しください。";
+"import_export.import_failed_line" = "\n\n⚠️ %d件は読み込めずスキップされました。";
+"settings.premium.renews_in" = "あと%d日で自動更新";
+"settings.premium.trial_days_left" = "無料トライアル：残り%d日";
+"settings.premium.expires_on" = "次回更新日：%@";
+"about.version" = "バージョン %@（%@）";
+
+/* Streak / 撮影習慣 */
+"streak.current" = "%d日連続";
+"streak.days_this_month" = "今月%d日";
+"streak.longest" = "最長%d日";
+"streak.start" = "今日から記録を始めよう";
+"streak.summary.current" = "現在";
+"streak.summary.longest" = "最長";
+"streak.summary.total" = "通算";
+
+/* Achievements / 実績 */
+"achievement.title" = "実績";
+"achievement.unlocked" = "実績を解除しました！";
+"achievement.locked" = "未解除";
+"achievement.streak.name" = "%d日連続";
+"achievement.total.name" = "通算%d日";
+"achievement.streak.praise" = "%d日連続で撮影できました！この調子で続けよう🎉";
+"achievement.total.praise" = "通算%d日を達成しました！🎉";
+"notification.streak_at_risk_body" = "🔥 %d日連続中！今日撮って記録をキープしよう";
+
+/* Progress insights & Goal / 進捗インサイト・目標 */
+"insight.recent" = "30日";
+"insight.total" = "累計";
+"insight.weekly" = "週ペース";
+"goal.title" = "体重目標";
+"goal.label" = "目標";
+"goal.set" = "目標を設定";
+"goal.edit" = "目標を編集";
+"goal.clear" = "目標を削除";
+"goal.weight_section" = "目標体重";
+"goal.weight_placeholder" = "目標体重";
+"goal.current_hint" = "現在: %@";
+"goal.set_target_date" = "目標期日を設定";
+"goal.target_date" = "目標期日";
+"goal.remaining" = "あと%@";
+"goal.projected" = "達成予定: %@";
+"goal.projected_unknown" = "達成予定: 記録を続けると表示";
+"goal.reached" = "🎉 目標を達成しました！";
+
+/* Premium tiers (Standard / Pro) */
+"premium.choose_plan" = "プランを選ぶ";
+"premium.pro.title" = "Pro";
+"premium.standard.title" = "Standard";
+"premium.recommended" = "おすすめ";
+"premium.best_value" = "お得";
+"premium.per_month" = "月";
+"premium.per_year" = "年";
+"premium.feature.cloud" = "iCloudバックアップ";
+"premium.feature.advanced_video" = "高度な動画・共有";
+"premium.active_pro" = "Pro 有効";
+"premium.active_standard" = "Standard 加入中";
+"paywall.cloud.title" = "大切な記録を守りませんか？";
+"paywall.cloud.message" = "%d日分の記録があります。Proのクラウドバックアップで安全に保管できます。";
+"paywall.share.title" = "Proで透かしなしに";
+"paywall.share.message" = "共有画像にはBodyLapseのロゴが入ります。Proならロゴなしで共有できます。";
+"paywall.view_pro" = "Proを見る";
+"paywall.later" = "後で";
+"paywall.share_anyway" = "このまま共有";
+"settings.debug.pro_mode" = "Proモード（デバッグ）";
+"compare.share" = "共有";
+
+/* Cloud backup (Pro) */
+"cloud.title" = "クラウドバックアップ";
+"cloud.last_backup" = "最終バックアップ";
+"cloud.never" = "未実施";
+"cloud.backup_now" = "今すぐバックアップ";
+"cloud.restore" = "クラウドから復元";
+"cloud.restore_title" = "復元";
+"cloud.restore_confirm" = "クラウドの最新バックアップから写真・体重・メモを復元します。バックアップに含まれる日付については、この端末の現在のデータが上書きされます。続行しますか？";
+"cloud.footer" = "写真・体重・メモをあなたのiCloudにバックアップ・復元します（動画は容量が大きいため対象外。写真から再生成できます）。アプリの設定は各端末に保持されます。データはご自身のiCloud内に保管されます。";
+"cloud.success" = "完了しました";
+"cloud.error.no_account" = "iCloudにサインインしてください（設定 > Apple ID > iCloud）。";
+"cloud.error.no_backup" = "クラウドにバックアップが見つかりません。";
+"cloud.error.network" = "ネットワークに接続できません。通信環境を確認してください。";
+"cloud.error.quota" = "iCloudの空き容量が不足しているため保存できません。「設定」→ 一番上のApple ID →「iCloud」→「アカウントのストレージを管理」で空きを増やしてください。";
+"cloud.uses_icloud_storage" = "このバックアップはあなた自身のiCloudストレージを使用します（Appleの「iCloudバックアップ」と同じ仕組み）。空き容量が不足すると保存できません。";
+"cloud.error.restricted" = "iCloudの利用が制限されています。";
+"cloud.error.unavailable" = "iCloudを利用できません。後でもう一度お試しください。";
+"cloud.error.generic" = "処理に失敗しました。後でもう一度お試しください。";

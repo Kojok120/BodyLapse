@@ -10,16 +10,18 @@ class SubscriptionManagerService: ObservableObject {
     static let shared = SubscriptionManagerService()
     
     // MARK: - 公開プロパティ
-    #if DEBUG
-    @Published var isPremium: Bool = false
-    #else
-    @Published private(set) var isPremium: Bool = false
-    #endif
+    /// 現在のサブスクリプションのティア（free / standard / pro）。
+    @Published private(set) var tier: SubscriptionTier = .free
     @Published private(set) var isLoadingSubscriptionStatus: Bool = false
     @Published private(set) var activeSubscriptionID: String?
     @Published private(set) var expirationDate: Date?
     @Published private(set) var isInTrialPeriod: Bool = false
     @Published private(set) var subscriptionError: String?
+
+    /// 有料（Standard以上）か。広告削除など既存の判定に使う（後方互換）。
+    var isPremium: Bool { tier != .free }
+    /// Proプランか。クラウドバックアップ・高度な動画などPro限定機能の判定に使う。
+    var isPro: Bool { tier == .pro }
     
     // MARK: - プライベートプロパティ
     private let storeManager = StoreManager.shared
@@ -30,8 +32,8 @@ class SubscriptionManagerService: ObservableObject {
     private init() {
         // Initializing SubscriptionManagerService...
         #if DEBUG
-        // デバッグモードではプレミアムが手動で有効化されたか確認
-        self.isPremium = UserDefaults.standard.bool(forKey: "debug_isPremium")
+        // デバッグモードで手動設定されたティアを反映
+        self.tier = Self.debugTier()
         #endif
         
         // 初期セットアップ
@@ -119,6 +121,18 @@ class SubscriptionManagerService: ObservableObject {
     func canAccessAdvancedCharts() -> Bool {
         return true // Now available for all users
     }
+
+    // MARK: - Pro限定機能
+
+    /// クラウドバックアップ（Pro限定）を利用できるか。
+    func canAccessCloudBackup() -> Bool {
+        return isPro
+    }
+
+    /// 高度な動画/SNS共有エクスポート（Pro限定）を利用できるか。
+    func canAccessAdvancedVideo() -> Bool {
+        return isPro
+    }
     
     // MARK: - プライベートメソッド
     
@@ -135,7 +149,9 @@ class SubscriptionManagerService: ObservableObject {
         // purchasedProductIDsの変更を監視
         storeManager.$purchasedProductIDs
             .sink { [weak self] _ in
-                Task {
+                // 連続更新で重いステータス更新Taskが積み上がらないよう、前のTaskをキャンセルしてから起動
+                self?.statusUpdateTask?.cancel()
+                self?.statusUpdateTask = Task {
                     await self?.updateSubscriptionStatus()
                 }
             }
@@ -144,66 +160,53 @@ class SubscriptionManagerService: ObservableObject {
     
     private func updateSubscriptionStatus() async {
         #if DEBUG
-        // デバッグモードでは手動設定のプレミアムステータスをUserDefaultsで確認
-        let debugPremium = UserDefaults.standard.bool(forKey: "debug_isPremium")
-        if debugPremium {
+        // デバッグモードでは手動設定のティアをUserDefaultsで確認
+        let forcedTier = Self.debugTier()
+        if forcedTier != .free {
             await MainActor.run {
-                let previousStatus = self.isPremium
-                self.isPremium = true
-                self.activeSubscriptionID = "debug.premium"
+                let previousTier = self.tier
+                self.tier = forcedTier
+                self.activeSubscriptionID = forcedTier == .pro ? "debug.pro" : "debug.standard"
                 self.expirationDate = Date().addingTimeInterval(30 * 24 * 60 * 60) // 30 days from now
                 self.isInTrialPeriod = false
-                
-                if previousStatus != self.isPremium {
+
+                if previousTier != self.tier {
                     NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
                 }
             }
             return
         }
         #endif
-        
-        // Updating subscription status...
-        // 現在のトランザクションステータスを取得
-        var hasActiveSubscription = false
+
+        // 現在のエンタイトルメントから最上位のティアを判定する
+        var highestTier: SubscriptionTier = .free
         var latestTransaction: Transaction?
         var subscriptionID: String?
-        
-        var transactionCount = 0
+
         for await result in Transaction.currentEntitlements {
-            transactionCount += 1
-            guard case .verified(let transaction) = result else { 
-                // 未検証のトランザクションが見つかりました
-                continue 
-            }
-            
-            // トランザクションを確認
-            // サブスクリプション製品か確認
-            if transaction.productID == StoreProducts.premiumMonthly {
-                // Found premium monthly subscription
-                
-                // サブスクリプションが取り消されていないか確認
-                if transaction.revocationDate == nil {
-                    hasActiveSubscription = true
-                    subscriptionID = transaction.productID
-                    // アクティブなサブスクリプションが見つかりました
-                    
-                    // 最新のトランザクションを保持
-                    if latestTransaction == nil || transaction.purchaseDate > latestTransaction!.purchaseDate {
-                        latestTransaction = transaction
-                    }
-                } else {
-                    // サブスクリプションが取り消された
-                }
+            guard case .verified(let transaction) = result else { continue }
+            guard transaction.revocationDate == nil else { continue }
+
+            let productTier = SubscriptionTier.tier(for: transaction.productID)
+            guard productTier != .free else { continue }
+
+            // より上位のティア、または同ティアで購入が新しいものを採用
+            let isHigherTier = productTier > highestTier
+            let isNewerSameTier = productTier == highestTier &&
+                (latestTransaction == nil || transaction.purchaseDate > latestTransaction!.purchaseDate)
+            if isHigherTier || isNewerSameTier {
+                highestTier = productTier
+                subscriptionID = transaction.productID
+                latestTransaction = transaction
             }
         }
-        // Total transactions checked: \(transactionCount)
-        
+
         // メインスレッドでプロパティを更新
         await MainActor.run {
-            let previousStatus = self.isPremium
-            self.isPremium = hasActiveSubscription
+            let previousTier = self.tier
+            self.tier = highestTier
             self.activeSubscriptionID = subscriptionID
-            
+
             // トランザクションがある場合、有効期限とトライアルステータスを更新
             if let transaction = latestTransaction {
                 self.expirationDate = transaction.expirationDate
@@ -212,9 +215,9 @@ class SubscriptionManagerService: ObservableObject {
                 self.expirationDate = nil
                 self.isInTrialPeriod = false
             }
-            
-            // ステータスが変更された場合、通知を送信
-            if previousStatus != self.isPremium {
+
+            // ティアが変更された場合、通知を送信
+            if previousTier != self.tier {
                 NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
             }
         }
@@ -223,29 +226,47 @@ class SubscriptionManagerService: ObservableObject {
     // MARK: - デバッグサポート
     
     #if DEBUG
-    /// デバッグ用にプレミアムステータスをトグル
+    /// UserDefaultsから現在のデバッグティアを取得
+    static func debugTier() -> SubscriptionTier {
+        if UserDefaults.standard.bool(forKey: "debug_isPro") { return .pro }
+        if UserDefaults.standard.bool(forKey: "debug_isPremium") { return .standard }
+        return .free
+    }
+
+    /// デバッグ用にStandard（広告削除）をトグル
     func toggleDebugPremium() {
-        let newStatus = !isPremium
-        UserDefaults.standard.set(newStatus, forKey: "debug_isPremium")
+        let enable = (tier == .free)
+        UserDefaults.standard.set(enable, forKey: "debug_isPremium")
+        UserDefaults.standard.set(false, forKey: "debug_isPro")
         UserDefaults.standard.synchronize()
-        
-        isPremium = newStatus
-        if newStatus {
-            activeSubscriptionID = "debug.premium"
-            expirationDate = Date().addingTimeInterval(30 * 24 * 60 * 60) // 30 days from now
-        } else {
-            activeSubscriptionID = nil
-            expirationDate = nil
-        }
-        
+
+        tier = enable ? .standard : .free
+        activeSubscriptionID = enable ? "debug.standard" : nil
+        expirationDate = enable ? Date().addingTimeInterval(30 * 24 * 60 * 60) : nil
+
         NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
     }
-    
-    /// デバッグプレミアムステータスをリセット
+
+    /// デバッグ用にPro（クラウド・高度動画）をトグル
+    func toggleDebugPro() {
+        let enable = (tier != .pro)
+        UserDefaults.standard.set(enable, forKey: "debug_isPro")
+        if enable { UserDefaults.standard.set(false, forKey: "debug_isPremium") }
+        UserDefaults.standard.synchronize()
+
+        tier = enable ? .pro : .free
+        activeSubscriptionID = enable ? "debug.pro" : nil
+        expirationDate = enable ? Date().addingTimeInterval(30 * 24 * 60 * 60) : nil
+
+        NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+    }
+
+    /// デバッグティアをリセット
     func resetDebugPremium() {
         UserDefaults.standard.removeObject(forKey: "debug_isPremium")
+        UserDefaults.standard.removeObject(forKey: "debug_isPro")
         UserDefaults.standard.synchronize()
-        
+
         Task {
             await updateSubscriptionStatus()
         }
@@ -257,25 +278,25 @@ class SubscriptionManagerService: ObservableObject {
 extension SubscriptionManagerService {
     /// 人間が読みやすいサブスクリプションステータスを取得
     var subscriptionStatusDescription: String {
-        guard isPremium else { return "Free" }
-        
-        if let subscriptionID = activeSubscriptionID {
-            if subscriptionID == StoreProducts.premiumMonthly {
-                return "Premium Monthly"
-            } else {
-                return "Premium"
-            }
+        switch tier {
+        case .pro: return "Pro"
+        case .standard: return "Standard"
+        case .free: return "Free"
         }
-        
-        return "Premium"
     }
     
     /// サブスクリプションが期限切れ間近か確認（3日以内）
     var isAboutToExpire: Bool {
-        guard let expirationDate = expirationDate else { return false }
-        let daysUntilExpiration = Calendar.current.dateComponents([.day], 
-                                                                  from: Date(), 
-                                                                  to: expirationDate).day ?? 0
-        return daysUntilExpiration <= 3 && daysUntilExpiration >= 0
+        guard let days = daysUntilExpiration else { return false }
+        return days <= 3
+    }
+
+    /// 有効期限（次回更新日）までの残り日数。期限が無い場合はnil。
+    var daysUntilExpiration: Int? {
+        guard let expirationDate = expirationDate else { return nil }
+        guard let days = Calendar.current.dateComponents([.day],
+                                                         from: Date(),
+                                                         to: expirationDate).day else { return nil }
+        return max(0, days)
     }
 }

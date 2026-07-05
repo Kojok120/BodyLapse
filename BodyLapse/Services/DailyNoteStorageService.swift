@@ -62,11 +62,14 @@ actor DailyNoteStorageService {
     
     private func saveNotesToDisk() async throws {
         guard let url = notesFileURL else { return }
-        
+
+        // ディレクトリが存在しないと書き込みが失敗するため、毎回保証する
+        await createDirectoriesIfNeeded()
+
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(notesCache)
-        try data.write(to: url)
+        try data.write(to: url, options: .atomic)
     }
     
     func saveNote(for date: Date, content: String) async throws {

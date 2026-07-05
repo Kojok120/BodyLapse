@@ -89,6 +89,33 @@ struct PhotoPreviewSection: View {
         }
     }
     
+    /// 選択中の日付が「今日」のときだけ表示する、カメラ起動CTA。
+    /// 過去日はカメラで撮影できないため、当日に限って案内する。
+    @ViewBuilder
+    private var takePhotoButton: some View {
+        if Calendar.current.isDateInToday(selectedDate) {
+            Button {
+                Haptics.impact(.light)
+                NotificationCenter.default.post(
+                    name: Notification.Name("NavigateToCameraAndLaunch"),
+                    object: nil
+                )
+            } label: {
+                HStack {
+                    Image(systemName: "camera.fill")
+                    Text("calendar.take_photo".localized)
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.bodyLapseTurquoise)
+                .cornerRadius(20)
+            }
+            .accessibilityLabel("calendar.take_photo".localized)
+        }
+    }
+
     private var noPhotoPlaceholder: some View {
         GeometryReader { geometry in
             ZStack {
@@ -103,6 +130,8 @@ struct PhotoPreviewSection: View {
                 VStack {
                     Spacer()
                     
+                    takePhotoButton
+
                     PhotosPicker(
                         selection: $selectedPhotoItems,
                         maxSelectionCount: 1,
@@ -205,6 +234,8 @@ struct PhotoPreviewSection: View {
             VStack {
                 Spacer()
                 
+                takePhotoButton
+
                 PhotosPicker(
                     selection: $selectedPhotoItems,
                     maxSelectionCount: 1,

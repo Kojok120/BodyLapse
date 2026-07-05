@@ -96,7 +96,7 @@ class CameraViewModel: NSObject, ObservableObject {
             }
         case .denied, .restricted:
             isAuthorized = false
-            alertMessage = "Camera access is required to take photos. Please enable it in Settings."
+            alertMessage = "camera.error.access_required".localized
             showingAlert = true
         @unknown default:
             isAuthorized = false
@@ -162,7 +162,7 @@ class CameraViewModel: NSObject, ObservableObject {
         } else if let any = AVCaptureDevice.default(for: .video) {
             device = any
         } else {
-            alertMessage = "Camera not available on this device"
+            alertMessage = "camera.error.not_available".localized
             showingAlert = true
             session.commitConfiguration()
             return
@@ -191,7 +191,7 @@ class CameraViewModel: NSObject, ObservableObject {
             }
         } catch {
             session.commitConfiguration()
-            alertMessage = "Failed to setup camera: \(error.localizedDescription)"
+            alertMessage = "camera.error.setup_failed".localized(with: error.localizedDescription)
             showingAlert = true
         }
     }
@@ -316,7 +316,10 @@ class CameraViewModel: NSObject, ObservableObject {
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
-                
+
+                // 保存完了の達成フィードバック
+                Haptics.success()
+
                 self.tempWeight = nil
                 self.tempBodyFat = nil
                 self.capturedImage = nil // Clear the captured image to close the sheet
@@ -354,7 +357,8 @@ class CameraViewModel: NSObject, ObservableObject {
         } catch {
             // Failed to save photo
             DispatchQueue.main.async { [weak self] in
-                self?.alertMessage = "Failed to save photo: \(error.localizedDescription)"
+                Haptics.error()
+                self?.alertMessage = "camera.error.save_failed".localized(with: error.localizedDescription)
                 self?.showingAlert = true
                 self?.capturedImage = nil // Clear even on error
             }
@@ -408,7 +412,8 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
               let imageData = photo.fileDataRepresentation(),
               let image = UIImage(data: imageData) else {
             DispatchQueue.main.async { [weak self] in
-                self?.alertMessage = "Failed to capture photo"
+                Haptics.error()
+                self?.alertMessage = "camera.error.capture_failed".localized
                 self?.showingAlert = true
             }
             return

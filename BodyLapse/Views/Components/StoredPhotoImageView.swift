@@ -28,10 +28,14 @@ struct StoredPhotoImageView<Placeholder: View>: View {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: contentMode)
+                        .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height, alignment: .center)
+                        .frame(width: geometry.size.width, height: geometry.size.height, alignment: .center)
                 } else {
                     placeholder()
+                        .frame(width: geometry.size.width, height: geometry.size.height, alignment: .center)
                 }
             }
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .center)
             .onAppear {
                 updateRequestedSize(geometry.size)
             }

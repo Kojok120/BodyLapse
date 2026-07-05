@@ -45,12 +45,16 @@ class FaceBlurService {
         let handler = VNImageRequestHandler(cgImage: cgImage, orientation: self.imageOrientation(from: image.imageOrientation))
         
         DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                try handler.perform([request])
-            } catch {
-                print("Failed to perform face detection: \(error)")
-                DispatchQueue.main.async {
-                    completion(image)
+            // バックグラウンドスレッドは自動解放プールを持たないため、CIImage/CIFilter等の
+            // 中間オブジェクトが蓄積しないよう明示的に autoreleasepool で包む（動画生成での連続呼び出し対策）
+            autoreleasepool {
+                do {
+                    try handler.perform([request])
+                } catch {
+                    print("Failed to perform face detection: \(error)")
+                    DispatchQueue.main.async {
+                        completion(image)
+                    }
                 }
             }
         }

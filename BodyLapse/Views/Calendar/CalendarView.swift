@@ -27,6 +27,9 @@ struct CalendarView: View {
     @State var showingMemoEditor = false
     @State var showingVideoGeneration = false
     @State var showingAddCategory = false
+    @State var showingAchievements = false
+    @State var showingCloudUpsell = false
+    @State var showingProPaywall = false
     
     // MARK: - Video Generation States  
     @State var isGeneratingVideo = false
@@ -113,7 +116,7 @@ struct CalendarView: View {
                     showingCategoryGuidance = true
                 }
             )
-            
+
             PhotoPreviewSection(
                 selectedDate: selectedDate,
                 isPremium: true, // All users now have premium features
@@ -148,6 +151,22 @@ struct CalendarView: View {
         .withBannerAd()
         .navigationTitle("calendar.title".localized)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    showingAchievements = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flame.fill")
+                            .foregroundColor(viewModel.statistics.currentStreak > 0 ? .orange : .gray)
+                        Text("\(viewModel.statistics.currentStreak)")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.primary)
+                    }
+                }
+                .accessibilityLabel("streak.current".localized(with: viewModel.statistics.currentStreak))
+            }
+        }
         .onAppear(perform: handleOnAppear)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday")), perform: handleNavigateToToday)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhotosUpdated"))) { _ in
@@ -167,6 +186,11 @@ struct CalendarView: View {
         }
         .onChange(of: viewModel.dailyNotes) { _, _ in
             currentMemo = viewModel.note(for: selectedDate)?.content ?? ""
+        }
+        .onChange(of: viewModel.statistics) { _, newStats in
+            // 統計（ストリーク・延べ日数等）の変化で実績を判定。
+            // 件数据え置きの差し替え（復元/再同期/置換）も統計値の変化として拾える。
+            AchievementService.shared.evaluate(newStats)
         }
         .sheet(isPresented: $showingWeightInput) {
             WeightInputView(photo: $currentPhoto, selectedDate: selectedDate, onSave: { weight, bodyFat in
@@ -202,6 +226,18 @@ struct CalendarView: View {
                 isPremium: true, // All users now have premium features
                 onDateSelected: updateCurrentPhoto
             )
+        }
+        .sheet(isPresented: $showingAchievements) {
+            AchievementsView(statistics: viewModel.statistics, weightEntries: weightViewModel.weightEntries)
+        }
+        .sheet(isPresented: $showingProPaywall) {
+            PremiumView()
+        }
+        .alert("paywall.cloud.title".localized, isPresented: $showingCloudUpsell) {
+            Button("paywall.view_pro".localized) { showingProPaywall = true }
+            Button("paywall.later".localized, role: .cancel) {}
+        } message: {
+            Text("paywall.cloud.message".localized(with: viewModel.statistics.totalDays))
         }
         .sheet(isPresented: $showingMemoEditor) {
             MemoEditorView(
@@ -253,18 +289,17 @@ struct CalendarView: View {
         } message: {
             Text(videoAlertMessage)
         }
-        .actionSheet(isPresented: $showingPeriodPicker) {
-            ActionSheet(
-                title: Text("calendar.select_time_period".localized),
-                buttons: TimePeriod.allCases.map { period in
-                    .default(Text(period.localizedString)) {
-                        selectedPeriod = period
-                        selectedIndex = dateRange.count - 1
-                        selectedDate = dateRange[selectedIndex]
-                        selectedChartDate = dateRange[selectedIndex]
-                    }
-                } + [.cancel()]
-            )
+        .confirmationDialog(
+            "calendar.select_time_period".localized,
+            isPresented: $showingPeriodPicker,
+            titleVisibility: .visible
+        ) {
+            ForEach(TimePeriod.allCases, id: \.self) { period in
+                Button(period.localizedString) {
+                    applyPeriodSelection(period)
+                }
+            }
+            Button("common.cancel".localized, role: .cancel) { }
         }
         .overlay(
             Group {
@@ -328,10 +363,24 @@ extension CalendarView {
         }
         
         updateCurrentPhoto()
-        
+
         if selectedChartDate == nil {
             selectedChartDate = selectedDate
         }
+
+        AchievementService.shared.evaluate(viewModel.statistics)
+        checkCloudUpsell()
+    }
+
+    /// 撮影日数が一定に達した非Proユーザーに、一度だけクラウドバックアップ(Pro)を提案する。
+    private func checkCloudUpsell() {
+        guard !subscriptionManager.isPro,
+              !PaywallPromptManager.shared.hasShown(.milestoneCloud),
+              viewModel.statistics.totalDays >= PaywallPromptManager.shared.cloudMilestoneThreshold else {
+            return
+        }
+        PaywallPromptManager.shared.markShown(.milestoneCloud)
+        showingCloudUpsell = true
     }
     
     private func handleNavigateToToday(_ notification: Notification) {
@@ -347,6 +396,13 @@ extension CalendarView {
         viewModel.loadPhotos()
         viewModel.loadCategories()
         updateCurrentPhoto()
+    }
+
+    private func applyPeriodSelection(_ period: TimePeriod) {
+        selectedPeriod = period
+        selectedIndex = dateRange.count - 1
+        selectedDate = dateRange[selectedIndex]
+        selectedChartDate = dateRange[selectedIndex]
     }
     
     private func handleChartDateChange(_ newDate: Date?) {

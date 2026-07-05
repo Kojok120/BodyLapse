@@ -66,6 +66,20 @@ class GalleryViewModel: ObservableObject {
             name: Notification.Name("CategoriesUpdated"),
             object: nil
         )
+
+        // 写真/データ更新（インポート・クラウド復元など）を監視して写真・動画を再読込
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDataUpdated),
+            name: Notification.Name("PhotosUpdated"),
+            object: nil
+        )
+    }
+
+    @objc private func handleDataUpdated() {
+        DispatchQueue.main.async { [weak self] in
+            self?.loadData()
+        }
     }
     
     deinit {

@@ -8,6 +8,16 @@ class SimpleZipArchive {
     private static let maxPathLength = 8_192
     private static let magic = "BODY".data(using: .utf8)!
 
+    enum EntrySource {
+        case file(URL)
+        case data(Data)
+    }
+
+    struct ArchiveEntry {
+        let path: String
+        let source: EntrySource
+    }
+
     private enum ArchiveError: Error {
         case unexpectedEOF
         case invalidHeader
@@ -23,15 +33,6 @@ class SimpleZipArchive {
         do {
             let fileManager = FileManager.default
             let directoryURL = URL(fileURLWithPath: directory)
-            let zipURL = URL(fileURLWithPath: zipPath)
-
-            if fileManager.fileExists(atPath: zipURL.path) {
-                try fileManager.removeItem(at: zipURL)
-            }
-            _ = fileManager.createFile(atPath: zipURL.path, contents: nil)
-
-            let outputHandle = try FileHandle(forWritingTo: zipURL)
-            defer { try? outputHandle.close() }
 
             let normalizedBasePath = directoryURL.standardizedFileURL.path.hasSuffix("/")
                 ? directoryURL.standardizedFileURL.path
@@ -68,26 +69,47 @@ class SimpleZipArchive {
                 files.append((url: fileURL, path: safePath, size: UInt64(size)))
             }
 
+            let entries = files.map { file in
+                ArchiveEntry(path: file.path, source: .file(file.url))
+            }
+            return createArchive(atPath: zipPath, entries: entries)
+        } catch {
+            print("Error creating archive: \(error)")
+            return false
+        }
+    }
+
+    static func createArchive(
+        atPath zipPath: String,
+        entries: [ArchiveEntry]
+    ) -> Bool {
+        do {
+            let fileManager = FileManager.default
+            let zipURL = URL(fileURLWithPath: zipPath)
+
+            if fileManager.fileExists(atPath: zipURL.path) {
+                try fileManager.removeItem(at: zipURL)
+            }
+            _ = fileManager.createFile(atPath: zipURL.path, contents: nil)
+
+            let outputHandle = try FileHandle(forWritingTo: zipURL)
+            defer { try? outputHandle.close() }
+
+            let validatedEntries = try validatedEntries(entries)
+
             try outputHandle.write(contentsOf: magic)
             try write(UInt16(1), to: outputHandle)
-            guard files.count <= Int(UInt32.max) else {
-                throw ArchiveError.invalidLength
-            }
-            try write(UInt32(files.count), to: outputHandle)
+            try write(UInt32(validatedEntries.count), to: outputHandle)
 
-            for file in files {
-                guard let pathData = file.path.data(using: .utf8) else {
+            for entry in validatedEntries {
+                guard let pathData = entry.path.data(using: .utf8) else {
                     throw ArchiveError.invalidPath
                 }
 
                 try write(UInt32(pathData.count), to: outputHandle)
                 try outputHandle.write(contentsOf: pathData)
-                try write(file.size, to: outputHandle)
-
-                let inputHandle = try FileHandle(forReadingFrom: file.url)
-                defer { try? inputHandle.close() }
-
-                try copyBytes(count: file.size, from: inputHandle, to: outputHandle)
+                try write(entry.size, to: outputHandle)
+                try write(entry.source, size: entry.size, to: outputHandle)
             }
 
             return true
@@ -230,6 +252,57 @@ class SimpleZipArchive {
             try output.write(contentsOf: chunk)
             remaining -= UInt64(chunk.count)
         }
+    }
+
+    private static func write(_ source: EntrySource, size: UInt64, to handle: FileHandle) throws {
+        switch source {
+        case .file(let url):
+            let inputHandle = try FileHandle(forReadingFrom: url)
+            defer { try? inputHandle.close() }
+            try copyBytes(count: size, from: inputHandle, to: handle)
+
+        case .data(let data):
+            guard UInt64(data.count) == size else {
+                throw ArchiveError.invalidLength
+            }
+            try handle.write(contentsOf: data)
+        }
+    }
+
+    private static func validatedEntries(_ entries: [ArchiveEntry]) throws -> [(path: String, source: EntrySource, size: UInt64)] {
+        guard entries.count <= Int(UInt32.max) else {
+            throw ArchiveError.invalidLength
+        }
+
+        var validated: [(path: String, source: EntrySource, size: UInt64)] = []
+        validated.reserveCapacity(entries.count)
+
+        var seenPaths = Set<String>()
+
+        for entry in entries {
+            guard let safePath = sanitizedRelativePath(entry.path), seenPaths.insert(safePath).inserted else {
+                throw ArchiveError.invalidPath
+            }
+
+            let size: UInt64
+            switch entry.source {
+            case .file(let url):
+                let values = try url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+                guard values.isRegularFile == true,
+                      let fileSize = values.fileSize,
+                      fileSize >= 0 else {
+                    throw ArchiveError.invalidLength
+                }
+                size = UInt64(fileSize)
+
+            case .data(let data):
+                size = UInt64(data.count)
+            }
+
+            validated.append((path: safePath, source: entry.source, size: size))
+        }
+
+        return validated
     }
 
     // MARK: - パス検証

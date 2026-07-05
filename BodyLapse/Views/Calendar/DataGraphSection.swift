@@ -6,7 +6,7 @@ struct DataGraphSection: View {
     let dateRange: [Date]
     @Binding var selectedChartDate: Date?
     let onEditWeight: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 6) {
             if #available(iOS 16.0, *) {

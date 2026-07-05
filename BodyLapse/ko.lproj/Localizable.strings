@@ -315,6 +315,7 @@
 "premium.per" = "당";
 "premium.subscribe" = "지금 구독";
 "premium.price.fallback" = "$0.99";
+"premium.price.unavailable" = "가격 불러오는 중…";
 "premium.price.period" = "/월";
 "premium.first_month_free" = "첫 달 무료 혜택이 없습니다";
 "premium.after_trial" = "과금 안내:";
@@ -692,6 +693,10 @@
 "onboarding.feature.daily_photo" = "하루 한 장의 사진";
 "onboarding.feature.timelapse" = "타임랩스 비디오 생성";
 "onboarding.feature.privacy" = "프라이버시 보호";
+"onboarding.feature.progress" = "연속 기록·체중·목표 관리";
+"onboarding.skip_confirm_title" = "첫 사진을 건너뛸까요?";
+"onboarding.skip_confirm_message" = "첫 기록이 없으면 나중에 변화를 비교할 기준이 없습니다. 지금 촬영하는 것을 권장합니다.";
+"onboarding.skip_capture" = "사진 찍기";
 "onboarding.privacy_detail" = "비디오 생성 시 얼굴 블러 처리\n모든 것이 기기에 저장됩니다";
 "onboarding.ready" = "준비 완료!";
 "onboarding.photo_saved" = "사진이 성공적으로 저장되었습니다";
@@ -735,3 +740,95 @@
 "share.error.title" = "공유 오류";
 "share.error.load_failed" = "사진 로드에 실패했습니다";
 "share.error.processing_failed" = "얼굴 흐림 처리에 실패했습니다";
+
+/* Quick Wins additions */
+"calendar.take_photo" = "오늘 사진 찍기";
+"camera.error.access_required" = "사진을 찍으려면 카메라 접근 권한이 필요합니다. 설정에서 허용해 주세요.";
+"camera.error.not_available" = "이 기기에서는 카메라를 사용할 수 없습니다.";
+"camera.error.setup_failed" = "카메라를 시작하지 못했습니다: %@";
+"camera.error.save_failed" = "사진을 저장하지 못했습니다: %@";
+"camera.error.capture_failed" = "사진을 촬영하지 못했습니다. 다시 시도해 주세요.";
+"import_export.import_failed_line" = "\n\n⚠️ %d개 항목을 읽지 못해 건너뛰었습니다.";
+"settings.premium.renews_in" = "%d일 후 자동 갱신";
+"settings.premium.trial_days_left" = "무료 체험: %d일 남음";
+"settings.premium.expires_on" = "다음 갱신일: %@";
+"about.version" = "버전 %@ (%@)";
+
+/* Streak / 기록 */
+"streak.current" = "%d일 연속";
+"streak.days_this_month" = "이번 달 %d일";
+"streak.longest" = "최고 %d일";
+"streak.start" = "오늘부터 기록을 시작하세요";
+"streak.summary.current" = "현재";
+"streak.summary.longest" = "최고";
+"streak.summary.total" = "총";
+
+/* Achievements / 업적 */
+"achievement.title" = "업적";
+"achievement.unlocked" = "업적 달성!";
+"achievement.locked" = "잠김";
+"achievement.streak.name" = "%d일 연속";
+"achievement.total.name" = "총 %d일";
+"achievement.streak.praise" = "%d일 연속 촬영했어요! 이대로 계속해요 🎉";
+"achievement.total.praise" = "총 %d일을 달성했어요! 🎉";
+"notification.streak_at_risk_body" = "🔥 %d일 연속 중! 오늘 사진을 찍어 기록을 이어가세요";
+
+/* Progress insights & Goal / 진행 인사이트·목표 */
+"insight.recent" = "30일";
+"insight.total" = "누적";
+"insight.weekly" = "주간";
+"goal.title" = "체중 목표";
+"goal.label" = "목표";
+"goal.set" = "목표 설정";
+"goal.edit" = "목표 편집";
+"goal.clear" = "목표 삭제";
+"goal.weight_section" = "목표 체중";
+"goal.weight_placeholder" = "목표 체중";
+"goal.current_hint" = "현재: %@";
+"goal.set_target_date" = "목표 날짜 설정";
+"goal.target_date" = "목표 날짜";
+"goal.remaining" = "%@ 남음";
+"goal.projected" = "도달 예상: %@";
+"goal.projected_unknown" = "도달 예상: 기록을 계속하면 표시됩니다";
+"goal.reached" = "🎉 목표 달성!";
+
+/* Premium tiers (Standard / Pro) */
+"premium.choose_plan" = "플랜 선택";
+"premium.pro.title" = "Pro";
+"premium.standard.title" = "Standard";
+"premium.recommended" = "추천";
+"premium.best_value" = "가장 알뜰";
+"premium.per_month" = "월";
+"premium.per_year" = "년";
+"premium.feature.cloud" = "iCloud 백업";
+"premium.feature.advanced_video" = "고급 동영상·공유";
+"premium.active_pro" = "Pro 사용 중";
+"premium.active_standard" = "Standard 사용 중";
+"paywall.cloud.title" = "소중한 기록을 지킬까요?";
+"paywall.cloud.message" = "%d일치 기록이 있습니다. Pro 클라우드 백업으로 안전하게 보관하세요.";
+"paywall.share.title" = "Pro로 워터마크 없이";
+"paywall.share.message" = "공유 이미지에는 BodyLapse 로고가 포함됩니다. Pro에서는 로고 없이 공유할 수 있습니다.";
+"paywall.view_pro" = "Pro 보기";
+"paywall.later" = "나중에";
+"paywall.share_anyway" = "그대로 공유";
+"settings.debug.pro_mode" = "Pro 모드 (디버그)";
+"compare.share" = "공유";
+
+/* Cloud backup (Pro) */
+"cloud.title" = "iCloud 백업";
+"cloud.last_backup" = "마지막 백업";
+"cloud.never" = "없음";
+"cloud.backup_now" = "지금 백업";
+"cloud.restore" = "클라우드에서 복원";
+"cloud.restore_title" = "복원";
+"cloud.restore_confirm" = "클라우드의 최신 백업에서 사진·체중·메모를 복원합니다. 백업에 포함된 날짜는 이 기기의 현재 데이터가 덮어쓰기됩니다. 계속할까요?";
+"cloud.footer" = "사진·체중·메모를 본인의 iCloud에 백업·복원합니다(동영상은 용량이 커서 제외, 사진에서 다시 만들 수 있습니다). 앱 설정은 각 기기에 유지됩니다. 데이터는 본인 iCloud 계정에 보관됩니다.";
+"cloud.success" = "완료";
+"cloud.error.no_account" = "iCloud에 로그인해 주세요 (설정 > Apple ID > iCloud).";
+"cloud.error.no_backup" = "클라우드에 백업이 없습니다.";
+"cloud.error.network" = "네트워크에 연결할 수 없습니다. 연결 상태를 확인해 주세요.";
+"cloud.error.quota" = "iCloud 저장 공간이 부족하여 저장할 수 없습니다. 설정 > 사용자 이름 > iCloud > 계정 저장 공간 관리에서 공간을 확보하세요.";
+"cloud.uses_icloud_storage" = "이 백업은 본인의 iCloud 저장 공간을 사용합니다(Apple의 iCloud 백업과 동일한 방식). iCloud가 가득 차면 저장할 수 없습니다.";
+"cloud.error.restricted" = "이 기기에서는 iCloud 사용이 제한되어 있습니다.";
+"cloud.error.unavailable" = "iCloud를 사용할 수 없습니다. 나중에 다시 시도해 주세요.";
+"cloud.error.generic" = "문제가 발생했습니다. 나중에 다시 시도해 주세요.";

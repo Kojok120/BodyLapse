@@ -3,7 +3,33 @@ import StoreKit
 
 // MARK: - プロダクト識別子
 enum StoreProducts {
+    /// Standardプラン（広告削除のみ・据え置き）
     static let premiumMonthly = "com.J.BodyLapse.premium.monthly"
+    /// Proプラン（広告なし＋クラウドバックアップ＋高度な動画/共有）
+    static let proMonthly = "com.J.BodyLapse.pro.monthly"
+    static let proYearly = "com.J.BodyLapse.pro.yearly"
+
+    static let all: [String] = [premiumMonthly, proMonthly, proYearly]
+    static let standardIDs: Set<String> = [premiumMonthly]
+    static let proIDs: Set<String> = [proMonthly, proYearly]
+}
+
+// MARK: - サブスクリプションのティア
+enum SubscriptionTier: Int, Comparable {
+    case free = 0
+    case standard = 1
+    case pro = 2
+
+    static func < (lhs: SubscriptionTier, rhs: SubscriptionTier) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+
+    /// プロダクトIDから対応するティアを返す。
+    static func tier(for productID: String) -> SubscriptionTier {
+        if StoreProducts.proIDs.contains(productID) { return .pro }
+        if StoreProducts.standardIDs.contains(productID) { return .standard }
+        return .free
+    }
 }
 
 // MARK: - ストアマネージャー
@@ -38,10 +64,8 @@ class StoreManager: ObservableObject {
         purchaseError = nil
         
         do {
-            // IDを指定してプロダクトをリクエスト
-            let products = try await Product.products(for: [
-                StoreProducts.premiumMonthly
-            ])
+            // IDを指定してプロダクトをリクエスト（Standard + Pro）
+            let products = try await Product.products(for: StoreProducts.all)
             
             // プロダクトの読み込み成功
             if products.isEmpty {

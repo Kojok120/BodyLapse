@@ -315,6 +315,7 @@
 "premium.per" = "per";
 "premium.subscribe" = "Subscribe Now";
 "premium.price.fallback" = "$0.99(USD)";
+"premium.price.unavailable" = "Loading price…";
 "premium.price.period" = "per month";
 "premium.first_month_free" = "No introductory free month";
 "premium.after_trial" = "Billing:";
@@ -528,6 +529,10 @@
 "onboarding.feature.daily_photo" = "One photo per day";
 "onboarding.feature.timelapse" = "Create time-lapse videos";
 "onboarding.feature.privacy" = "Privacy protection";
+"onboarding.feature.progress" = "Track streaks, weight and goals";
+"onboarding.skip_confirm_title" = "Skip your first photo?";
+"onboarding.skip_confirm_message" = "Without a first photo you won't have a starting point to compare against later. Taking one now is recommended.";
+"onboarding.skip_capture" = "Take photo";
 "onboarding.privacy_detail" = "Face blur for video generation\nEverything stays on your device";
 "onboarding.ready" = "Ready!";
 "onboarding.photo_saved" = "Your photo has been saved successfully";
@@ -735,3 +740,95 @@
 "share.error.title" = "Share Error";
 "share.error.load_failed" = "Failed to load photo";
 "share.error.processing_failed" = "Face blur processing failed";
+
+/* Quick Wins additions */
+"calendar.take_photo" = "Take Today's Photo";
+"camera.error.access_required" = "Camera access is required to take photos. Enable it in Settings.";
+"camera.error.not_available" = "The camera isn't available on this device.";
+"camera.error.setup_failed" = "Couldn't set up the camera: %@";
+"camera.error.save_failed" = "Couldn't save the photo: %@";
+"camera.error.capture_failed" = "Couldn't capture the photo. Please try again.";
+"import_export.import_failed_line" = "\n\n⚠️ %d item(s) couldn't be read and were skipped.";
+"settings.premium.renews_in" = "Auto-renews in %d day(s)";
+"settings.premium.trial_days_left" = "Free trial: %d day(s) left";
+"settings.premium.expires_on" = "Next renewal: %@";
+"about.version" = "Version %@ (%@)";
+
+/* Streak */
+"streak.current" = "%d-day streak";
+"streak.days_this_month" = "%d days this month";
+"streak.longest" = "Best: %d days";
+"streak.start" = "Start your streak today";
+"streak.summary.current" = "Current";
+"streak.summary.longest" = "Best";
+"streak.summary.total" = "Total";
+
+/* Achievements */
+"achievement.title" = "Achievements";
+"achievement.unlocked" = "Achievement unlocked!";
+"achievement.locked" = "Locked";
+"achievement.streak.name" = "%d-day streak";
+"achievement.total.name" = "%d days total";
+"achievement.streak.praise" = "You've shot %d days in a row! Keep it up 🎉";
+"achievement.total.praise" = "You've reached %d total days! 🎉";
+"notification.streak_at_risk_body" = "🔥 %d-day streak! Take today's photo to keep it going";
+
+/* Progress insights & Goal */
+"insight.recent" = "30 days";
+"insight.total" = "Total";
+"insight.weekly" = "Weekly";
+"goal.title" = "Weight Goal";
+"goal.label" = "Goal";
+"goal.set" = "Set a goal";
+"goal.edit" = "Edit goal";
+"goal.clear" = "Remove goal";
+"goal.weight_section" = "Target weight";
+"goal.weight_placeholder" = "Target weight";
+"goal.current_hint" = "Current: %@";
+"goal.set_target_date" = "Set target date";
+"goal.target_date" = "Target date";
+"goal.remaining" = "%@ to go";
+"goal.projected" = "Projected: %@";
+"goal.projected_unknown" = "Projected: keep logging to see";
+"goal.reached" = "🎉 Goal reached!";
+
+/* Premium tiers (Standard / Pro) */
+"premium.choose_plan" = "Choose your plan";
+"premium.pro.title" = "Pro";
+"premium.standard.title" = "Standard";
+"premium.recommended" = "Recommended";
+"premium.best_value" = "Best value";
+"premium.per_month" = "month";
+"premium.per_year" = "year";
+"premium.feature.cloud" = "iCloud backup";
+"premium.feature.advanced_video" = "Advanced video & sharing";
+"premium.active_pro" = "Pro is active";
+"premium.active_standard" = "Standard is active";
+"paywall.cloud.title" = "Protect your progress?";
+"paywall.cloud.message" = "You have %d days of records. Keep them safe with Pro cloud backup.";
+"paywall.share.title" = "Go watermark-free with Pro";
+"paywall.share.message" = "Shared images include a BodyLapse watermark. With Pro you can share without it.";
+"paywall.view_pro" = "See Pro";
+"paywall.later" = "Later";
+"paywall.share_anyway" = "Share anyway";
+"settings.debug.pro_mode" = "Pro Mode (Debug)";
+"compare.share" = "Share";
+
+/* Cloud backup (Pro) */
+"cloud.title" = "iCloud Backup";
+"cloud.last_backup" = "Last backup";
+"cloud.never" = "Never";
+"cloud.backup_now" = "Back up now";
+"cloud.restore" = "Restore from cloud";
+"cloud.restore_title" = "Restore";
+"cloud.restore_confirm" = "Restores photos, weight and notes from the latest cloud backup. For any dates included in the backup, your current data on this device will be overwritten. Continue?";
+"cloud.footer" = "Backs up and restores your photos, weight and notes via your own iCloud (videos are excluded — they can be regenerated from photos). App settings stay on each device. Data stays in your iCloud account.";
+"cloud.success" = "Done";
+"cloud.error.no_account" = "Please sign in to iCloud (Settings > Apple ID > iCloud).";
+"cloud.error.no_backup" = "No backup found in the cloud.";
+"cloud.error.network" = "Can't connect to the network. Please check your connection.";
+"cloud.error.quota" = "There isn't enough iCloud storage to save. Free up space in Settings > [your name] > iCloud > Manage Account Storage.";
+"cloud.uses_icloud_storage" = "This backup uses your own iCloud storage (the same as Apple's iCloud Backup). It can't save if your iCloud is full.";
+"cloud.error.restricted" = "iCloud access is restricted on this device.";
+"cloud.error.unavailable" = "iCloud is unavailable. Please try again later.";
+"cloud.error.generic" = "Something went wrong. Please try again later.";

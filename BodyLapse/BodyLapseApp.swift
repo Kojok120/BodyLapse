@@ -13,6 +13,7 @@ struct BodyLapseApp: App {
     @StateObject private var storeManager = StoreManager.shared
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @StateObject private var languageManager = LanguageManager.shared
+    @StateObject private var authService = AuthenticationService.shared
     @Environment(\.scenePhase) private var scenePhase
     @State private var isShowingPrivacyScreen = false
     
@@ -72,6 +73,9 @@ struct BodyLapseApp: App {
                 case .background:
                     // Keep privacy screen shown in background
                     isShowingPrivacyScreen = true
+                    if authService.isAuthenticationEnabled {
+                        authService.logout()
+                    }
                 @unknown default:
                     break
                 }

@@ -1,0 +1,187 @@
+name: TestFlight
+
+# main にアップデートが入るたびに iOS アプリをビルドして TestFlight へ配信する。
+# Gymnee の testflight.yml と同じ方式（fastlane/match 不使用。素の xcodebuild ＋
+# 持ち込み配布証明書(.p12)＋ASC API キー）。App Store への公開（審査提出・リリースノート入力）は
+# TestFlight ビルドを App Store Connect 上で選んで手動で行う。
+#
+# 必要なシークレット（Settings → Environments → app-store-production → Secrets）:
+#   APP_STORE_CONNECT_KEY_ID      App Store Connect API キーの Key ID（設定済み・動作実績あり）
+#   APP_STORE_CONNECT_ISSUER_ID   同 Issuer ID（設定済み・動作実績あり）
+#   APP_STORE_CONNECT_PRIVATE_KEY 同 API キー(.p8)の中身を base64 化した文字列（設定済み・動作実績あり）
+#   DIST_CERT_P12                 Apple Distribution 証明書(.p12・秘密鍵込み)を base64 化した文字列
+#                                 例) base64 -i Gymnee_AppleDistribution.p12 | pbcopy （同一チームなので流用可）
+#   DIST_CERT_PASSWORD            その .p12 のパスワード
+#   PROV_PROFILE_APP              com.J.BodyLapse の App Store 配布プロビジョニングプロファイル
+#                                 (.mobileprovision) を base64 化した文字列。
+#                                 Developer Portal → Profiles → + → App Store Connect →
+#                                 App ID: com.J.BodyLapse → 上記配布証明書 → 名前 "BodyLapse AppStore"
+#                                 ※ App ID に HealthKit / iCloud(CloudKit) が有効になった状態で作成すること
+#
+# 必要な「Repository variable」(Settings → Secrets and variables → Actions → Variables):
+#   TESTFLIGHT_ENABLED = true   ← これを設定するまでこの job はスキップ（=シークレット未設定での赤failを防ぐ安全弁）
+#
+# 署名: Archive は ASC API キーによる自動署名（-allowProvisioningUpdates）、Export は持ち込みの
+# 配布証明書(.p12)＋明示プロビジョニングプロファイル(PROV_PROFILE_APP)による手動署名。
+# （Export に ASC キーを渡すとクラウド署名を試みて権限エラーになるため分離している。）
+# ビルド番号は GitHub の run number（+100 の下駄）を使い毎回インクリメントする。
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.claude/**'
+      - 'bodylapse-marketing/**'
+      - 'bodylapse-legal/**'
+      - 'fastlane/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight-${{ github.ref }}
+  cancel-in-progress: false   # アップロード中の job は途中キャンセルしない
+
+jobs:
+  deploy:
+    name: Build & Upload to TestFlight
+    # TESTFLIGHT_ENABLED=true を設定するまではスキップ（シークレット未投入時の誤fail防止）。
+    if: ${{ vars.TESTFLIGHT_ENABLED == 'true' }}
+    # Apple は App Store Connect アップロードに iOS 26 SDK (Xcode 26+) を必須化。
+    # macos-26 イメージに同梱の Xcode 26 を使う。
+    runs-on: macos-26
+    timeout-minutes: 60
+    environment: app-store-production
+    env:
+      SCHEME: BodyLapse
+      TEAM_ID: PG5P26J3W2
+      BUNDLE_ID: com.J.BodyLapse
+      PROFILE_NAME: BodyLapse AppStore
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode (latest stable = Xcode 26+)
+        run: |
+          set -euo pipefail
+          # macos-26 既定が 26 系でない場合に備え、明示的に最新の Xcode_26 を選択。
+          latest="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)"
+          if [ -n "$latest" ]; then sudo xcode-select -s "$latest/Contents/Developer"; fi
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i ios || true
+
+      - name: Import Apple Distribution certificate
+        env:
+          DIST_CERT_P12: ${{ secrets.DIST_CERT_P12 }}
+          DIST_CERT_PASSWORD: ${{ secrets.DIST_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/app-signing.keychain-db"
+          KEYCHAIN_PW="$(uuidgen)"
+          echo "$DIST_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$DIST_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          # ビルド中に証明書を参照できるよう検索リストへ追加＋partition list 設定（UIプロンプト回避）。
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | sed s/\"//g)
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PW" "$KEYCHAIN" >/dev/null
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+      - name: Install provisioning profile
+        # Export の手動署名用に App Store 配布プロファイルを所定の場所へ復元。
+        env:
+          PROV_PROFILE_APP: ${{ secrets.PROV_PROFILE_APP }}
+        run: |
+          set -euo pipefail
+          PP="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PP"
+          echo "$PROV_PROFILE_APP" | base64 --decode > "$PP/bodylapse_app_appstore.mobileprovision"
+
+      - name: Place App Store Connect API key
+        env:
+          ASC_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/asc" ~/.appstoreconnect/private_keys ~/.private_keys
+          echo "$ASC_API_KEY_P8" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+          # altool は ~/.appstoreconnect/private_keys か ~/.private_keys から .p8 を探す。
+          cp "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8" ~/.appstoreconnect/private_keys/
+          cp "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8" ~/.private_keys/
+
+      - name: Archive (Release, App Store signing)
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          # ビルド番号は run number に下駄(+100)を履かせる。run number は実行毎に
+          # 単調増加するので同一バージョン内で衝突しない。
+          BUILD_NUMBER=$(( ${{ github.run_number }} + 100 ))
+          echo "CFBundleVersion = $BUILD_NUMBER"
+          xcodebuild archive \
+            -project BodyLapse.xcodeproj \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/BodyLapse.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8" \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
+            | tee "$RUNNER_TEMP/archive.log"
+
+      - name: Export IPA
+        run: |
+          set -euo pipefail
+          # 「Install provisioning profile」で App Store 配布プロファイルを
+          # ~/Library/MobileDevice/Provisioning Profiles/ へ復元済み。Export は
+          # signingStyle=manual で明示マッピングし、持ち込みの配布証明書(.p12)で署名する。
+          # Export に auth key を渡すとクラウド署名(Apple管理証明書)を試みて権限エラーに
+          # なるため渡さない（= 既存のオンディスク・プロファイル＋ローカル証明書に固定）。
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>$BUNDLE_ID</key><string>$PROFILE_NAME</string>
+            </dict>
+            <key>destination</key><string>export</string>
+            <key>uploadSymbols</key><true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/BodyLapse.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+
+      - name: Upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          IPA="$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)"
+          echo "Uploading: $IPA"
+          xcrun altool --upload-app --type ios --file "$IPA" \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true

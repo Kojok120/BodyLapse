@@ -16,6 +16,10 @@ struct UserSettings: Codable {
     // アプリ評価
     var hasRatedApp: Bool = false
     
+    // 体重目標（全ユーザー無料）。体重は常にkgで保存。
+    var goalWeight: Double? = nil
+    var goalDate: Date? = nil
+
     // 動画生成
     var showDateInVideo: Bool = true
     

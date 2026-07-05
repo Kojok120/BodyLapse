@@ -281,6 +281,9 @@ class VideoGenerationService {
         // 写真を処理
         var currentTime = CMTime.zero
         
+        // 大量フレーム読み込みでのメモリスパイクを抑えるため、生成開始時にキャッシュを解放して余裕を確保
+        PhotoStorageService.shared.clearImageCache()
+
         if options.layout == .single || options.selectedCategories.count <= 1 {
             // 単一カテゴリー動画の処理
             let totalPhotos = photos.count

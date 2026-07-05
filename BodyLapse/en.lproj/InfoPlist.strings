@@ -1,0 +1,7 @@
+"NSCameraUsageDescription" = "BodyLapse needs camera access to capture your daily progress photos.";
+"NSPhotoLibraryAddUsageDescription" = "BodyLapse needs photo library access to save your photos and time-lapse videos.";
+"NSPhotoLibraryUsageDescription" = "BodyLapse needs photo library access to save your time-lapse videos.";
+"NSUserNotificationsUsageDescription" = "BodyLapse will send you daily reminders to capture your progress photo.";
+"NSFaceIDUsageDescription" = "BodyLapse uses Face ID to secure your photos.";
+"NSHealthShareUsageDescription" = "BodyLapse reads your weight and body fat data from Health to automatically track your progress.";
+"NSHealthUpdateUsageDescription" = "BodyLapse saves your weight and body fat measurements to Health for comprehensive tracking.";

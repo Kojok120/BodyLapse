@@ -13,6 +13,11 @@ struct CompareView: View {
     @State private var availableCategories: [PhotoCategory] = []
     @State private var firstCategory: PhotoCategory = PhotoCategory.defaultCategory
     @State private var secondCategory: PhotoCategory = PhotoCategory.defaultCategory
+    @State private var showingShareSheet = false
+    @State private var shareItems: [Any] = []
+    @State private var showingShareError = false
+    @State private var showingShareHint = false
+    @State private var showingProPaywall = false
     
     var body: some View {
         NavigationView {
@@ -48,6 +53,34 @@ struct CompareView: View {
             }
             .navigationTitle("compare.title".localized)
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        shareTapped()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .disabled(firstPhoto == nil || secondPhoto == nil)
+                    .accessibilityLabel("compare.share".localized)
+                }
+            }
+            .sheet(isPresented: $showingShareSheet) {
+                ShareSheet(activityItems: shareItems)
+            }
+            .alert("share.error.title".localized, isPresented: $showingShareError) {
+                Button("common.ok".localized) {}
+            } message: {
+                Text("share.error.load_failed".localized)
+            }
+            .alert("paywall.share.title".localized, isPresented: $showingShareHint) {
+                Button("paywall.share_anyway".localized) { performShare() }
+                Button("paywall.view_pro".localized) { showingProPaywall = true }
+            } message: {
+                Text("paywall.share.message".localized)
+            }
+            .sheet(isPresented: $showingProPaywall) {
+                PremiumView()
+            }
             .sheet(isPresented: $showingFirstCalendar) {
                 CalendarPopupView(
                     selectedDate: Binding(
@@ -619,5 +652,64 @@ struct CompareView: View {
     
     private func convertedWeight(_ weight: Double) -> Double {
         userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
+    }
+
+    /// 選択中の2枚からビフォーアフター共有画像を生成して共有シートを表示する。
+    /// 全ユーザー利用可。Pro以外はウォーターマークを付与する。
+    /// 共有ボタンのタップ入口。非Proには初回のみ透かしヒントを挟み、以降はそのまま共有する。
+    private func shareTapped() {
+        if !subscriptionManager.isPro, !PaywallPromptManager.shared.hasShown(.shareWatermark) {
+            PaywallPromptManager.shared.markShown(.shareWatermark)
+            showingShareHint = true
+        } else {
+            performShare()
+        }
+    }
+
+    private func performShare() {
+        guard let first = firstPhoto, let second = secondPhoto else { return }
+
+        // 日付の早い方を「変化前」、遅い方を「変化後」にする
+        let beforeIsFirst = first.captureDate <= second.captureDate
+        let beforePhoto = beforeIsFirst ? first : second
+        let afterPhoto = beforeIsFirst ? second : first
+
+        let isPro = subscriptionManager.isPro
+        let beforeLabel = "compare.before".localized
+        let afterLabel = "compare.after".localized
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        let beforeDateText = formatter.string(from: beforePhoto.captureDate)
+        let afterDateText = formatter.string(from: afterPhoto.captureDate)
+
+        // 重い画像ロード/合成はバックグラウンドで行い、UI更新のみメインに戻す（共有ボタン押下時のUIフリーズを防ぐ）
+        DispatchQueue.global(qos: .userInitiated).async {
+            let targetSize = CGSize(width: 1080, height: 1350)
+            guard let beforeImage = PhotoStorageService.shared.loadImage(for: beforePhoto, targetSize: targetSize),
+                  let afterImage = PhotoStorageService.shared.loadImage(for: afterPhoto, targetSize: targetSize) else {
+                DispatchQueue.main.async {
+                    Haptics.warning()
+                    showingShareError = true
+                }
+                return
+            }
+
+            let image = ShareComposerService.beforeAfterImage(
+                before: beforeImage,
+                after: afterImage,
+                beforeLabel: beforeLabel,
+                afterLabel: afterLabel,
+                beforeDateText: beforeDateText,
+                afterDateText: afterDateText,
+                addWatermark: !isPro
+            )
+
+            DispatchQueue.main.async {
+                Haptics.impact()
+                shareItems = [image]
+                showingShareSheet = true
+            }
+        }
     }
 }

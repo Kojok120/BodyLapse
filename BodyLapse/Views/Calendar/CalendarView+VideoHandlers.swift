@@ -29,12 +29,14 @@ extension CalendarView {
                     
                     switch result {
                     case .success(let video):
+                        Haptics.success()
                         NotificationCenter.default.post(
                             name: NSNotification.Name("NavigateToGalleryAndPlayVideo"),
                             object: nil,
                             userInfo: ["videoId": video.id]
                         )
                     case .failure(let error):
+                        Haptics.error()
                         self.videoAlertMessage = error.localizedDescription
                         self.showingVideoAlert = true
                     }
