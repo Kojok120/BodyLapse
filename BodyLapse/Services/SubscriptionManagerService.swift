@@ -129,11 +129,7 @@ class SubscriptionManagerService: ObservableObject {
         return isPro
     }
 
-    /// 高度な動画/SNS共有エクスポート（Pro限定）を利用できるか。
-    func canAccessAdvancedVideo() -> Bool {
-        return isPro
-    }
-    
+
     // MARK: - プライベートメソッド
     
     private func initializeSubscriptionStatus() async {

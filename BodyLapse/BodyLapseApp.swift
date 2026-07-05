@@ -36,6 +36,9 @@ struct BodyLapseApp: App {
         // Initialize appearance manager to apply saved appearance mode
         Task { @MainActor in
             _ = AppearanceManager.shared
+
+            // クラウド自動バックアップの通知購読を開始（実行はPro・設定ON等の条件付き）
+            CloudBackupService.shared.activate()
         }
     }
     

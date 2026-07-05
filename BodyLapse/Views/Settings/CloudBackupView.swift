@@ -38,6 +38,24 @@ struct CloudBackupView: View {
             }
 
             Section {
+                Toggle(isOn: $service.autoBackupEnabled) {
+                    Label("cloud.auto_backup".localized, systemImage: "arrow.triangle.2.circlepath.icloud")
+                }
+                .disabled(isWorking)
+            } footer: {
+                Text("cloud.auto_backup_footer".localized)
+            }
+
+            Section {
+                Toggle(isOn: $service.includeVideos) {
+                    Label("cloud.include_videos".localized, systemImage: "film")
+                }
+                .disabled(isWorking)
+            } footer: {
+                Text("cloud.include_videos_footer".localized)
+            }
+
+            Section {
                 Button {
                     Task { await service.backupNow() }
                 } label: {

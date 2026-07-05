@@ -100,7 +100,7 @@ struct PremiumView: View {
             }
 
             featureRow(icon: "icloud.fill", text: "premium.feature.cloud".localized)
-            featureRow(icon: "film.stack.fill", text: "premium.feature.advanced_video".localized)
+            featureRow(icon: "checkmark.seal.fill", text: "premium.feature.watermark_free".localized)
             featureRow(icon: "rectangle.badge.xmark", text: "premium.feature.no_ads".localized)
 
             // 年額（プライマリ）
