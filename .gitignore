@@ -12,3 +12,6 @@ DerivedData/
 bodylapse-lp/
 .env
 bodylapse-marketing/
+
+# グロース分析ハーネス — 収集スナップショットはローカル蓄積 (集計値のみだが履歴は手元に貯める)
+analytics/snapshots/
