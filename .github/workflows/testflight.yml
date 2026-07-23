@@ -33,14 +33,7 @@ name: TestFlight
 # （push か main 上の workflow_dispatch）経由で行うこと。
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.claude/**'
-      - 'bodylapse-marketing/**'
-      - 'bodylapse-legal/**'
+  # 配信は手動起動(将来 /release スキル)。2026-07 CI整理
   workflow_dispatch:
 
 permissions:
