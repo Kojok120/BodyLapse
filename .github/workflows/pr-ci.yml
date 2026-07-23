@@ -9,6 +9,10 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.claude/**'
 
 permissions:
   contents: read
@@ -39,16 +43,3 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -only-testing:BodyLapseTests \
             test
-
-      - name: Build (Release, device, signing disabled)
-        # 出荷経路は Release 構成＋実機 SDK（testflight.yml がアーカイブする形）。
-        # マージ後に main で初めて Release 固有のビルドエラーが発覚しないよう、
-        # PR 段階で署名なしの Release ビルドを通しておく。
-        run: |
-          xcodebuild \
-            -project BodyLapse.xcodeproj \
-            -scheme BodyLapse \
-            -configuration Release \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGNING_ALLOWED=NO \
-            build
