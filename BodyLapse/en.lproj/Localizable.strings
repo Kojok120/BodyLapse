@@ -525,15 +525,16 @@
 "date.format.long" = "MMMM d, yyyy";
 
 /* Onboarding - New 3-Step Flow */
-"onboarding.main_title" = "Record your transformation\nwith daily photos";
-"onboarding.feature.daily_photo" = "One photo per day";
-"onboarding.feature.timelapse" = "Create time-lapse videos";
-"onboarding.feature.privacy" = "Privacy protection";
-"onboarding.feature.progress" = "Track streaks, weight and goals";
+"onboarding.hero.title" = "One photo a day. That's it.";
+"onboarding.hero.subtitle" = "Your photos become a flip-book time-lapse, so you can see your body change at a glance.";
+"onboarding.hero.privacy" = "Photos stay on your device and are never shared publicly";
+"onboarding.hero.day" = "Day %d";
+"onboarding.hero.playing" = "Playing · Day %d";
+"onboarding.hero.guide_note" = "Green line: your Day 1 outline";
+"onboarding.hero.accessibility" = "Illustration of daily photos collecting in a film strip and playing back as a time-lapse that shows the body changing";
 "onboarding.skip_confirm_title" = "Skip your first photo?";
 "onboarding.skip_confirm_message" = "Without a first photo you won't have a starting point to compare against later. Taking one now is recommended.";
 "onboarding.skip_capture" = "Take photo";
-"onboarding.privacy_detail" = "Face blur for video generation\nEverything stays on your device";
 "onboarding.ready" = "Ready!";
 "onboarding.photo_saved" = "Your photo has been saved successfully";
 "onboarding.retake_photo" = "Retake Photo";

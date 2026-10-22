@@ -689,15 +689,16 @@
 "weight.enable_health_sync" = "Habilitar Sincronización de Salud en Ajustes";
 
 /* Onboarding - New 3-Step Flow */
-"onboarding.main_title" = "Registra tu transformación\ncon fotos diarias";
-"onboarding.feature.daily_photo" = "Una foto por día";
-"onboarding.feature.timelapse" = "Crea videos time-lapse";
-"onboarding.feature.privacy" = "Protección de privacidad";
-"onboarding.feature.progress" = "Sigue rachas, peso y metas";
+"onboarding.hero.title" = "Una foto al día. Nada más.";
+"onboarding.hero.subtitle" = "Tus fotos se convierten en un time-lapse para ver de un vistazo cómo cambia tu cuerpo.";
+"onboarding.hero.privacy" = "Tus fotos se guardan en tu dispositivo y nunca se publican";
+"onboarding.hero.day" = "Día %d";
+"onboarding.hero.playing" = "Reproduciendo · Día %d";
+"onboarding.hero.guide_note" = "Línea verde: tu contorno del día 1";
+"onboarding.hero.accessibility" = "Ilustración de fotos diarias que se acumulan en una tira y se reproducen como un time-lapse que muestra cómo cambia el cuerpo";
 "onboarding.skip_confirm_title" = "¿Omitir tu primera foto?";
 "onboarding.skip_confirm_message" = "Sin una primera foto no tendrás un punto de partida para comparar después. Te recomendamos tomar una ahora.";
 "onboarding.skip_capture" = "Tomar foto";
-"onboarding.privacy_detail" = "Desenfoque facial para generación de video\nTodo permanece en tu dispositivo";
 "onboarding.ready" = "¡Listo!";
 "onboarding.photo_saved" = "Tu foto se ha guardado correctamente";
 "onboarding.retake_photo" = "Volver a tomar";
