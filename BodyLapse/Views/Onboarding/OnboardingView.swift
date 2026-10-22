@@ -87,61 +87,30 @@ struct OnboardingView: View {
     
     // MARK: - ステップ1: ようこそ
     private var welcomeStep: some View {
-        VStack(spacing: 30) {
-            Spacer()
-            
-            // アプリアイコン
-            Image(systemName: "figure.arms.open")
-                .font(.system(size: 80))
-                .foregroundColor(.accentColor)
-                .padding(.bottom, 10)
-            
-            // タイトル
-            Text("onboarding.main_title".localized)
-                .font(.title)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-                .lineSpacing(8)
-                .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
-            
-            // バリュープロポジション
-            VStack(alignment: .leading, spacing: 20) {
-                ValuePropositionRow(
-                    icon: "camera.fill",
-                    text: "onboarding.feature.daily_photo".localized
-                )
-                
-                ValuePropositionRow(
-                    icon: "video.fill",
-                    text: "onboarding.feature.timelapse".localized
-                )
+        VStack(spacing: 20) {
+            // 撮影 → フィルムに溜まる → パラパラ再生 のアニメーション
+            OnboardingHeroView(isActive: currentStep == 1)
+                .frame(maxHeight: .infinity)
 
-                ValuePropositionRow(
-                    icon: "flame.fill",
-                    text: "onboarding.feature.progress".localized
-                )
+            VStack(alignment: .leading, spacing: 8) {
+                Text("onboarding.hero.title".localized)
+                    .font(.title)
+                    .fontWeight(.bold)
 
-                ValuePropositionRow(
-                    icon: "eye.slash.fill",
-                    text: "onboarding.feature.privacy".localized
-                )
+                Text("onboarding.hero.subtitle".localized)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+
+                Label("onboarding.hero.privacy".localized, systemImage: "lock")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
             }
-            .padding(.horizontal, 40)
-            
-            // プライバシー詳細
-            Text("onboarding.privacy_detail".localized)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.top, 10)
-                .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
-            
-            Spacer()
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .padding()
+        .padding(.horizontal, 20)
+        .padding(.top, 4)
         .transition(.asymmetric(
             insertion: .move(edge: .trailing).combined(with: .opacity),
             removal: .move(edge: .leading).combined(with: .opacity)
@@ -291,15 +260,14 @@ struct OnboardingView: View {
                     }
                 }) {
                     Text("onboarding.start_now".localized)
-                        .frame(minWidth: 120)
-                        .padding(.horizontal, 25)
-                        .padding(.vertical, 14)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
                         .background(Color.accentColor)
                         .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(14)
                         .fontWeight(.semibold)
                 }
-                .padding()
+                .padding(.vertical)
             } else if currentStep == 2 && !didCapturePhoto {
                 // Hide navigation buttons during camera capture
                 EmptyView()
@@ -457,28 +425,6 @@ struct OnboardingView: View {
 }
 
 // MARK: - Supporting Views
-
-struct ValuePropositionRow: View {
-    let icon: String
-    let text: String
-    
-    var body: some View {
-        HStack(spacing: 15) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(.accentColor)
-                .frame(width: 30)
-            
-            Text(text)
-                .font(.body)
-                .fontWeight(.medium)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-            
-            Spacer()
-        }
-    }
-}
 
 struct SettingToggleRow: View {
     let icon: String

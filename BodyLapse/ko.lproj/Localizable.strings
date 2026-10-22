@@ -689,15 +689,16 @@
 "weight.enable_health_sync" = "설정에서 건강 동기화 활성화";
 
 /* Onboarding - New 3-Step Flow */
-"onboarding.main_title" = "매일 사진으로\n변화를 기록하세요";
-"onboarding.feature.daily_photo" = "하루 한 장의 사진";
-"onboarding.feature.timelapse" = "타임랩스 비디오 생성";
-"onboarding.feature.privacy" = "프라이버시 보호";
-"onboarding.feature.progress" = "연속 기록·체중·목표 관리";
+"onboarding.hero.title" = "하루 한 장, 찍기만 하세요.";
+"onboarding.hero.subtitle" = "모아 둔 사진이 타임랩스 영상이 되어 몸의 변화를 한눈에 볼 수 있어요.";
+"onboarding.hero.privacy" = "사진은 기기에 저장되며 외부에 공개되지 않아요";
+"onboarding.hero.day" = "%d일째";
+"onboarding.hero.playing" = "재생 중 · %d일째";
+"onboarding.hero.guide_note" = "초록 선은 1일째 윤곽";
+"onboarding.hero.accessibility" = "매일 찍은 사진이 필름에 쌓이고 타임랩스로 재생되어 몸의 변화가 보이는 일러스트";
 "onboarding.skip_confirm_title" = "첫 사진을 건너뛸까요?";
 "onboarding.skip_confirm_message" = "첫 기록이 없으면 나중에 변화를 비교할 기준이 없습니다. 지금 촬영하는 것을 권장합니다.";
 "onboarding.skip_capture" = "사진 찍기";
-"onboarding.privacy_detail" = "비디오 생성 시 얼굴 블러 처리\n모든 것이 기기에 저장됩니다";
 "onboarding.ready" = "준비 완료!";
 "onboarding.photo_saved" = "사진이 성공적으로 저장되었습니다";
 "onboarding.retake_photo" = "다시 찍기";

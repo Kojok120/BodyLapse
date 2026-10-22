@@ -697,15 +697,16 @@
 "weight.enable_health_sync" = "設定でヘルスケア同期を有効にする";
 
 /* Onboarding - New 3-Step Flow */
-"onboarding.main_title" = "毎日の写真で\n変化を記録";
-"onboarding.feature.daily_photo" = "1日1枚の写真";
-"onboarding.feature.timelapse" = "タイムラプス動画を作成";
-"onboarding.feature.privacy" = "プライバシー保護";
-"onboarding.feature.progress" = "連続記録・体重・目標を管理";
+"onboarding.hero.title" = "毎日1枚、撮るだけ。";
+"onboarding.hero.subtitle" = "撮りためた写真が、パラパラ動画に。体の変化がひと目でわかります。";
+"onboarding.hero.privacy" = "写真は端末内に保存。外部に公開されません";
+"onboarding.hero.day" = "%d日目";
+"onboarding.hero.playing" = "再生中・%d日目";
+"onboarding.hero.guide_note" = "緑の線は1日目の輪郭";
+"onboarding.hero.accessibility" = "毎日撮った写真がフィルムに溜まり、パラパラ動画になって体の変化が見えるイメージ";
 "onboarding.skip_confirm_title" = "最初の写真をスキップしますか？";
 "onboarding.skip_confirm_message" = "最初の記録がないと、後で変化を比較する基準がありません。今撮っておくのがおすすめです。";
 "onboarding.skip_capture" = "撮影する";
-"onboarding.privacy_detail" = "動画生成時の顔ぼかし機能\n画像や動画はすべて端末内に保存";
 "onboarding.ready" = "準備完了！";
 "onboarding.photo_saved" = "写真が正常に保存されました";
 "onboarding.retake_photo" = "撮り直す";
