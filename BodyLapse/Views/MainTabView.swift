@@ -5,7 +5,6 @@ struct MainTabView: View {
     @State private var videoToPlay: UUID?
     @State private var shouldLaunchCamera = false
     @StateObject private var userSettings = UserSettingsManager.shared
-    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var hasPerformedInitialSync = false
     
     var body: some View {
@@ -67,10 +66,8 @@ struct MainTabView: View {
     private func performInitialHealthKitSync() {
         // Only sync if:
         // 1. We haven't performed initial sync yet
-        // 2. User is premium
-        // 3. HealthKit is enabled
+        // 2. HealthKit is enabled (available for all users, not a paid feature)
         guard !hasPerformedInitialSync,
-              subscriptionManager.isPremium,
               userSettings.settings.healthKitEnabled else {
             return
         }
