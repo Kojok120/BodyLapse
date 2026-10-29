@@ -1,6 +1,6 @@
 {
-  "ja": "はじめて開いたときの画面を新しくしました。毎日撮った写真がパラパラ動画になる流れを、アニメーションでご紹介します。\n\nいつもBodyLapseをご利用いただきありがとうございます。",
-  "en-US": "A refreshed welcome screen. A short animation now shows how your daily photos turn into a time-lapse of your progress.\n\nThank you for using BodyLapse!",
-  "es-ES": "Pantalla de bienvenida renovada. Una breve animación muestra cómo tus fotos diarias se convierten en un time-lapse de tu progreso.\n\n¡Gracias por usar BodyLapse!",
-  "ko": "첫 화면을 새롭게 바꿨습니다. 매일 찍은 사진이 변화를 보여 주는 타임랩스 영상이 되는 과정을 짧은 애니메이션으로 소개합니다.\n\nBodyLapse를 이용해 주셔서 감사합니다!"
+  "ja": "Apple ヘルスケア連携を改善しました。カレンダーから入力した体重のヘルスケアへの保存と読み込み、アプリを開いたときの同期が、すべての方で動くようになりました。\n\nいつもBodyLapseをご利用いただきありがとうございます。",
+  "en-US": "Improved Apple Health integration. Weight you enter from the calendar is now saved to and read from Apple Health, and syncing when you open the app works for everyone.\n\nThank you for using BodyLapse!",
+  "es-ES": "Mejoras en la integración con Apple Salud. El peso que introduces desde el calendario ahora se guarda en Apple Salud y se lee de ella, y la sincronización al abrir la app funciona para todos.\n\n¡Gracias por usar BodyLapse!",
+  "ko": "Apple 건강 앱 연동을 개선했습니다. 캘린더에서 입력한 체중이 건강 앱에 저장되고 불러와지며, 앱을 열 때의 동기화도 모든 사용자에게 작동합니다.\n\nBodyLapse를 이용해 주셔서 감사합니다!"
 }
