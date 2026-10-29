@@ -14,3 +14,20 @@ Unit tests use XCTest in `BodyLapseTests`; name methods `test<Feature><Behavior>
 
 ## Commit & Pull Request Guidelines
 Commits in this repo are narrative and impact-focused, often written in Japanese; follow that pattern by summarizing the change, why it matters, and any user-facing effect in one sentence. Keep commits scoped to a single concern. Pull requests must describe the motivation, list key changes, note testing performed, and attach before/after media for UI updates. Reference related Jira or GitHub issues when available and flag configuration changes that require App Store Connect or entitlement updates.
+
+## 課金と機能の線引き
+
+- ティアは Free（広告あり）/ Standard（広告削除のみ。`com.J.BodyLapse.premium.monthly`）/ Pro（iCloud 自動バックアップ＋共有画像の透かしなし＋広告なし。`com.J.BodyLapse.pro.monthly` / `.pro.yearly`）。判定は `SubscriptionManagerService` の `isPremium`（Standard 以上）と `isPro` で行う
+- 公開済みの無料機能（体重記録・チャート・タイムラプス動画の透かしなし など）を後から有料にしない。透かしの再導入やゲートの付け直しを提案しない
+- ストリーク・実績・進捗インサイト・目標は全ユーザー無料に保つ（続けるための機能なので壁にしない）
+- Pro の価値は新しい機能を足して作る。未実装の機能（「高度な動画」など）をペイウォールや説明文で訴求しない
+- 文脈ペイウォールは種類ごとに原則 1 回きり（撮影 30 日達成時のクラウド誘導と、初回の比較共有時の透かし誘導。`PaywallPromptManager`）。新しく足すときも同じ作法でしつこくしない
+- Pro の iCloud バックアップは CloudKit のプライベート DB に、動画を含めて 1 日 1 回・Wi-Fi 接続時に自動で上げる（`CloudBackupService`）
+- App Store Connect のサブスクグループでは Pro（月額・年額）がレベル 1、Standard がレベル 2（アップグレードの按分が効く順）。商品を足すときもこの順を崩さない
+
+## 人物ビジュアル（オンボーディング・ストア画像・LP）
+
+- 人物はアプリアイコンと同じ全身黄色の 3D 人型で描く。性別が分からない造形、大人の頭身、服は同じ黄色の素材のタンクトップと短パン
+- 実写調・リアル寄りの体型表現・男女の 3D キャラクター・手描き SVG のイラストは使わない（体型はセンシティブなため）。`bodylapse-marketing/` にある古いマーケ素材も人物の参考にしない
+- 日数ごとの変化の絵は、1 日目の画像を元に Gemini の画像モデルで編集して作る。変化は「X%」のような割合でなく段階の描写で指示する（割合で書くと途中を飛ばしていきなり引き締まる）
+- 今の素材は `BodyLapse/Assets.xcassets` の `OnboardingFigureDay01` / `30` / `60` / `90`。元画像と生成スクリプトは gitignore 済みの `bodylapse-marketing/onboarding-yellow-figure/` にあり、クローンには含まれない
