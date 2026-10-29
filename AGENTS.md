@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+このファイルは Codex と Claude の両方が読む。`CLAUDE.md` は `@AGENTS.md` を import するスタブなので、指示の編集は AGENTS.md だけで行う。
+
 ## Project Structure & Module Organization
 BodyLapse/ contains SwiftUI app sources organized by feature: Models/ define data types, ViewModels/ hold observable state, Views/ is grouped by feature directories, Services/ encapsulate persistence, media, and integrations, while Utilities/ stores shared helpers. Assets.xcassets and localized strings live beside the entry points (BodyLapseApp.swift, AppDelegate.swift). Tests sit in BodyLapseTests/ for unit coverage and BodyLapseUITests/ for UI flows; keep fixtures next to the tests that use them. Third-party dependencies (Google Mobile Ads, OpenCV) come from Swift Package Manager references in the Xcode project; there is no CocoaPods setup.
 
@@ -14,6 +16,13 @@ Unit tests use XCTest in `BodyLapseTests`; name methods `test<Feature><Behavior>
 
 ## Commit & Pull Request Guidelines
 Commits in this repo are narrative and impact-focused, often written in Japanese; follow that pattern by summarizing the change, why it matters, and any user-facing effect in one sentence. Keep commits scoped to a single concern. Pull requests must describe the motivation, list key changes, note testing performed, and attach before/after media for UI updates. Reference related Jira or GitHub issues when available and flag configuration changes that require App Store Connect or entitlement updates.
+
+## 設計の前提
+
+- コア機能（撮影・保存・動画生成・顔ぼかし）は端末内で処理し、自前のサーバーへ送らない。写真と動画はアプリの Documents に置き、端末の外へ出るのはユーザーが共有したときと Pro の iCloud バックアップ（ユーザー自身の iCloud）だけにする
+- 永続化は設定が UserDefaults、写真・動画・体重・メモが Documents 配下のファイル（Core Data / SwiftData は使っていない）
+- iPhone 専用（iPad 非対応・全画面）
+- 作業の後は必ずビルドし、成功を確かめてから終える
 
 ## 課金と機能の線引き
 
