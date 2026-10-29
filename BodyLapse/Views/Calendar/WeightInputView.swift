@@ -8,7 +8,6 @@ struct WeightInputView: View {
     @State private var weightText = ""
     @State private var bodyFatText = ""
     @StateObject private var userSettings = UserSettingsManager.shared
-    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @Environment(\.dismiss) private var dismiss
     @State private var isLoadingHealthData = false
     
@@ -81,58 +80,56 @@ struct WeightInputView: View {
                 }
                 .padding(.horizontal, 30)
                 
-                // HealthKit Integration Section
-                if subscriptionManager.isPremium {
-                    VStack(spacing: 12) {
-                        HStack {
-                            Image(systemName: "heart.text.square.fill")
-                                .font(.title2)
-                                .foregroundColor(.red)
-                            Text("settings.apple_health_integration".localized)
-                                .font(.headline)
-                            Spacer()
-                        }
-                        
-                        Toggle(isOn: $userSettings.settings.healthKitEnabled) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("settings.sync_health".localized)
-                                    .font(.subheadline)
-                                Text("settings.auto_import".localized)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .onChange(of: userSettings.settings.healthKitEnabled) { _, newValue in
-                            if newValue {
-                                requestHealthKitPermission()
-                            } else {
-                                // When turning off, just update the setting
-                                userSettings.settings.healthKitEnabled = false
-                            }
-                        }
-                        
-                        if userSettings.settings.healthKitEnabled {
-                            Button(action: syncHealthData) {
-                                HStack {
-                                    if isLoadingHealthData {
-                                        ProgressView()
-                                            .scaleEffect(0.8)
-                                    } else {
-                                        Image(systemName: "arrow.triangle.2.circlepath")
-                                    }
-                                    Text("calendar.sync_today_data".localized)
-                                }
-                            }
-                            .disabled(isLoadingHealthData)
+                // HealthKit Integration Section - available for all users
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: "heart.text.square.fill")
+                            .font(.title2)
+                            .foregroundColor(.red)
+                        Text("settings.apple_health_integration".localized)
+                            .font(.headline)
+                        Spacer()
+                    }
+
+                    Toggle(isOn: $userSettings.settings.healthKitEnabled) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("settings.sync_health".localized)
+                                .font(.subheadline)
+                            Text("settings.auto_import".localized)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
-                    .padding()
-                    .background(Color.red.opacity(0.05))
-                    .cornerRadius(12)
-                    .padding(.horizontal, 30)
-                    .padding(.top, 20)
+                    .onChange(of: userSettings.settings.healthKitEnabled) { _, newValue in
+                        if newValue {
+                            requestHealthKitPermission()
+                        } else {
+                            // When turning off, just update the setting
+                            userSettings.settings.healthKitEnabled = false
+                        }
+                    }
+
+                    if userSettings.settings.healthKitEnabled {
+                        Button(action: syncHealthData) {
+                            HStack {
+                                if isLoadingHealthData {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                }
+                                Text("calendar.sync_today_data".localized)
+                            }
+                        }
+                        .disabled(isLoadingHealthData)
+                    }
                 }
-                
+                .padding()
+                .background(Color.red.opacity(0.05))
+                .cornerRadius(12)
+                .padding(.horizontal, 30)
+                .padding(.top, 20)
+
                 Spacer()
                 
                 // Action buttons
@@ -172,13 +169,6 @@ struct WeightInputView: View {
             Task {
                 await loadInitialData()
             }
-            
-            // Debug: Check actual HealthKit authorization status
-            if subscriptionManager.isPremium {
-                let isAuthorized = HealthKitService.shared.isAuthorized()
-                print("HealthKit authorization status: \(isAuthorized)")
-                print("Settings healthKitEnabled: \(userSettings.settings.healthKitEnabled)")
-            }
         }
     }
     
@@ -198,7 +188,7 @@ struct WeightInputView: View {
         onSave(weight, bodyFat)
         
         // Save to HealthKit if enabled
-        if subscriptionManager.isPremium && userSettings.settings.healthKitEnabled {
+        if userSettings.settings.healthKitEnabled {
             let saveDate = photo?.captureDate ?? selectedDate
             if let w = weight {
                 HealthKitService.shared.saveWeight(w, date: saveDate) { _, _ in }
@@ -252,7 +242,7 @@ struct WeightInputView: View {
         }
         
         // If still no weight data and HealthKit is enabled, try to fetch it
-        if weightText.isEmpty && subscriptionManager.isPremium && userSettings.settings.healthKitEnabled {
+        if weightText.isEmpty && userSettings.settings.healthKitEnabled {
             await MainActor.run {
                 fetchHealthKitData()
             }
@@ -308,10 +298,10 @@ struct WeightInputView: View {
     }
     
     private func syncHealthData() {
-        print("syncHealthData called - isPremium: \(subscriptionManager.isPremium), healthKitEnabled: \(userSettings.settings.healthKitEnabled)")
-        
-        guard subscriptionManager.isPremium && userSettings.settings.healthKitEnabled else {
-            print("Sync cancelled - not premium or health kit not enabled")
+        print("syncHealthData called - healthKitEnabled: \(userSettings.settings.healthKitEnabled)")
+
+        guard userSettings.settings.healthKitEnabled else {
+            print("Sync cancelled - health kit not enabled")
             return
         }
         

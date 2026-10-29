@@ -6,7 +6,7 @@
 BodyLapse/ contains SwiftUI app sources organized by feature: Models/ define data types, ViewModels/ hold observable state, Views/ is grouped by feature directories, Services/ encapsulate persistence, media, and integrations, while Utilities/ stores shared helpers. Assets.xcassets and localized strings live beside the entry points (BodyLapseApp.swift, AppDelegate.swift). Tests sit in BodyLapseTests/ for unit coverage and BodyLapseUITests/ for UI flows; keep fixtures next to the tests that use them. Third-party dependencies (Google Mobile Ads, OpenCV) come from Swift Package Manager references in the Xcode project; there is no CocoaPods setup.
 
 ## Build, Test, and Development Commands
-For IDE work open `BodyLapse.xcodeproj` (Xcode resolves the Swift packages). CLI builds use `xcodebuild -project BodyLapse.xcodeproj -scheme BodyLapse -destination 'platform=iOS Simulator,name=iPhone 16' build`. Run unit tests with the same command, adding `-only-testing:BodyLapseTests` and replacing `build` with `test` (this is what PR CI runs). Generate localized previews through Xcode previews; simulator snapshots go under `screenshots/` when documenting UI.
+For IDE work open `BodyLapse.xcodeproj` (Xcode resolves the Swift packages). CLI builds use `xcodebuild -project BodyLapse.xcodeproj -scheme BodyLapse -destination 'platform=iOS Simulator,name=iPhone 16' -packageAuthorizationProvider netrc build`. Run unit tests with the same command, adding `-only-testing:BodyLapseTests` and replacing `build` with `test` (this is what PR CI runs). ローカルでは `-packageAuthorizationProvider netrc` を外さない。外すと SwiftPM が GoogleMobileAds などのバイナリを落とす前にキーチェーンを読みに行き、macOS の許可ダイアログ待ちで「Resolve Package Graph」のまま無言で止まる（CPU 0%）。 Generate localized previews through Xcode previews; simulator snapshots go under `screenshots/` when documenting UI.
 
 ## Coding Style & Naming Conventions
 Adopt Swift 5.9 idioms: indent with four spaces, prefer `struct` over classes unless reference semantics are required, and mark reference types `final` when possible. Name types and files UpperCamelCase (e.g., `CalendarView.swift`), properties/functions lowerCamelCase, and enums with singular cases. Group logic using `// MARK:` headings and keep SwiftUI view modifiers vertically aligned. Localized keys belong in `*.lproj/Localizable.strings` with matching developer comments.
@@ -27,7 +27,7 @@ Commits in this repo are narrative and impact-focused, often written in Japanese
 ## 課金と機能の線引き
 
 - ティアは Free（広告あり）/ Standard（広告削除のみ。`com.J.BodyLapse.premium.monthly`）/ Pro（iCloud 自動バックアップ＋共有画像の透かしなし＋広告なし。`com.J.BodyLapse.pro.monthly` / `.pro.yearly`）。判定は `SubscriptionManagerService` の `isPremium`（Standard 以上）と `isPro` で行う
-- 公開済みの無料機能（体重記録・チャート・タイムラプス動画の透かしなし など）を後から有料にしない。透かしの再導入やゲートの付け直しを提案しない
+- 公開済みの無料機能（体重記録・チャート・タイムラプス動画の透かしなし・Apple ヘルスケア連携 など）を後から有料にしない。ヘルスケア連携は設定の `healthKitEnabled` だけで判定し、`isPremium` を条件に入れない（2025-08 に全員へ開放したとき、カレンダーの体重入力と起動時の同期に Premium の条件が残っていた）。透かしの再導入やゲートの付け直しを提案しない
 - ストリーク・実績・進捗インサイト・目標は全ユーザー無料に保つ（続けるための機能なので壁にしない）
 - Pro の価値は新しい機能を足して作る。未実装の機能（「高度な動画」など）をペイウォールや説明文で訴求しない
 - 文脈ペイウォールは種類ごとに原則 1 回きり（撮影 30 日達成時のクラウド誘導と、初回の比較共有時の透かし誘導。`PaywallPromptManager`）。新しく足すときも同じ作法でしつこくしない
