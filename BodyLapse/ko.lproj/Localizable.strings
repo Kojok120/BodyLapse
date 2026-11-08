@@ -140,7 +140,6 @@
 "settings.reminders" = "알림";
 "settings.daily_reminder" = "일일 알림";
 "settings.reminder_time" = "알림 시간";
-"settings.reminder_time_description" = "매일 사진 알림을 받을 시간을 선택하세요";
 "settings.premium_features" = "광고 제거 구독";
 "settings.premium_active" = "광고 제거 활성화";
 "settings.manage_subscription" = "구독 관리";
@@ -472,7 +471,6 @@
 
 /* Share Options Dialog */
 "share.options.title" = "공유 옵션";
-"share.options.description" = "사진을 공유할 방법을 선택하세요";
 "share.options.normal" = "원본 공유";
 "share.options.normal.description" = "수정 없이 사진을 공유합니다";
 "share.options.blur" = "얼굴 흐림 처리 후 공유";

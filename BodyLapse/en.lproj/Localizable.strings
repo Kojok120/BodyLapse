@@ -140,7 +140,6 @@
 "settings.reminders" = "Reminders";
 "settings.daily_reminder" = "Daily Reminder";
 "settings.reminder_time" = "Reminder Time";
-"settings.reminder_time_description" = "Choose when to receive your daily photo reminder";
 "settings.premium_features" = "Ad-Free Subscription";
 "settings.premium_active" = "Ad-Free Active";
 "settings.manage_subscription" = "Manage Subscription";
@@ -472,7 +471,6 @@
 
 /* Share Options Dialog */
 "share.options.title" = "Share Options";
-"share.options.description" = "Choose how you want to share your photo";
 "share.options.normal" = "Share Original";
 "share.options.normal.description" = "Share photo without any modifications";
 "share.options.blur" = "Share with Face Blur";

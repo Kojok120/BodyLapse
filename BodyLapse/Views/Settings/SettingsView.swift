@@ -165,39 +165,26 @@ struct SettingsView: View {
                                 ),
                                 displayedComponents: .hourAndMinute
                             )
-                            
-                            Text("settings.reminder_time_description".localized)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
                         }
                     }
                 }
                 
                 // HealthKit連携 - 全ユーザーに利用可能
+                // 見出しは節の 1 回だけにし、切り替えは 1 行にする (「ヘルス連携」「Apple ヘルスケア連携」「ヘルスと同期」の 3 段だった)
                 Section("settings.health_integration".localized) {
-                    VStack(spacing: 12) {
-                        HStack {
-                            Image(systemName: "heart.text.square.fill")
-                                .font(.title2)
-                                .foregroundColor(.red)
-                            Text("settings.apple_health_integration".localized)
-                                .font(.headline)
-                            Spacer()
-                        }
-                        
-                        Toggle(isOn: $healthKitEnabled) {
-                            VStack(alignment: .leading, spacing: 4) {
+                    Toggle(isOn: $healthKitEnabled) {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text("settings.sync_health".localized)
-                                    .font(.subheadline)
                                 Text("settings.auto_import".localized)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+                        } icon: {
+                            Image(systemName: "heart.text.square.fill")
+                                .foregroundColor(.red)
                         }
                     }
-                    .padding()
-                    .background(Color.red.opacity(0.05))
-                    .cornerRadius(12)
                     .onChange(of: healthKitEnabled) { _, newValue in
                         if newValue {
                             requestHealthKitPermission()
