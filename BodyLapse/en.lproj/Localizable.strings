@@ -869,3 +869,15 @@
 "error.weight.not_found" = "The weight record wasn't found.";
 "error.weight.invalid_data" = "The data format is invalid.";
 "calendar.delete_photo_failed" = "Couldn't delete the photo: %@";
+
+/* App lock: attempt limit and PIN recovery */
+"auth.biometric_reason" = "Unlock BodyLapse to see your photos";
+"auth.recovery_reason" = "Confirm it's you to set a new PIN";
+"auth.incorrect_pin" = "Incorrect PIN. After %d more wrong attempts, you'll need to wait.";
+"auth.lockout_seconds" = "Too many attempts. Try again in %d seconds.";
+"auth.lockout_minutes" = "Too many attempts. Try again in %d minutes.";
+"auth.forgot_pin" = "Forgot your PIN?";
+"auth.no_pin_on_device" = "There's no PIN on this iPhone (for example, after moving to a new iPhone). Confirm it's you with your iPhone passcode, then set a new PIN.";
+"auth.recover_with_device_passcode" = "Unlock with iPhone Passcode";
+"auth.recovery_needs_passcode" = "To reset your PIN, set a passcode for this iPhone in Settings.";
+"onboarding.pin_save_failed" = "Couldn't save the PIN. Please try again.";

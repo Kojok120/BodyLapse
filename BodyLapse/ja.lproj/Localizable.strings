@@ -869,3 +869,15 @@
 "error.weight.not_found" = "体重の記録が見つかりません。";
 "error.weight.invalid_data" = "データの形式が正しくありません。";
 "calendar.delete_photo_failed" = "写真を削除できませんでした: %@";
+
+/* App lock: attempt limit and PIN recovery */
+"auth.biometric_reason" = "写真を見るためにBodyLapseのロックを解除します";
+"auth.recovery_reason" = "新しいPINを設定するため、本人確認を行います";
+"auth.incorrect_pin" = "PINが違います。あと%d回間違えると、しばらく入力できなくなります。";
+"auth.lockout_seconds" = "試行回数が多すぎます。%d秒後にもう一度お試しください。";
+"auth.lockout_minutes" = "試行回数が多すぎます。%d分後にもう一度お試しください。";
+"auth.forgot_pin" = "PINを忘れた場合";
+"auth.no_pin_on_device" = "このiPhoneにはPINがありません（機種変更したときなど）。iPhoneのパスコードで本人確認してから、PINを設定し直してください。";
+"auth.recover_with_device_passcode" = "iPhoneのパスコードで解除";
+"auth.recovery_needs_passcode" = "PINを設定し直すには、設定アプリでiPhoneのパスコードを設定してください。";
+"onboarding.pin_save_failed" = "PINを保存できませんでした。もう一度お試しください。";

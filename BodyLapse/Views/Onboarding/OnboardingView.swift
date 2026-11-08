@@ -371,7 +371,7 @@ struct OnboardingView: View {
                     }
                 } else {
                     // Failed to save password
-                    passcodeErrorMessage = "Failed to save PIN"
+                    passcodeErrorMessage = "onboarding.pin_save_failed".localized
                     showingPasscodeError = true
                     return
                 }
