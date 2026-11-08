@@ -41,10 +41,17 @@ class AchievementService: ObservableObject {
 
         save()
         if notify {
-            pendingCelebrations.append(contentsOf: newlyUnlocked)
+            pendingCelebrations.append(contentsOf: Self.celebrations(for: newlyUnlocked))
             Haptics.success()
         }
         return newlyUnlocked
+    }
+
+    /// 一度に複数解除したとき (アップデート・取り込み・復元の後など) は、いちばん大きな節目だけを祝う。
+    /// 何枚も重ねて出すと閉じるだけの作業になるため。残りは実績の一覧で見られる
+    nonisolated static func celebrations(for newlyUnlocked: [Achievement]) -> [Achievement] {
+        guard let top = newlyUnlocked.max(by: { $0.threshold < $1.threshold }) else { return [] }
+        return [top]
     }
 
     /// 先頭の祝福を消化する（表示後に呼ぶ）。

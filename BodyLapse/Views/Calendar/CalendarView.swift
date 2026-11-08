@@ -383,7 +383,9 @@ extension CalendarView {
 
     /// 撮影日数が一定に達した非Proユーザーに、一度だけクラウドバックアップ(Pro)を提案する。
     private func checkCloudUpsell() {
-        guard !subscriptionManager.isPro,
+        // 実績のお祝いを出している間は重ねて出さない (次に開いたときに出す)
+        guard AchievementService.shared.pendingCelebrations.isEmpty,
+              !subscriptionManager.isPro,
               !PaywallPromptManager.shared.hasShown(.milestoneCloud),
               viewModel.statistics.totalDays >= PaywallPromptManager.shared.cloudMilestoneThreshold else {
             return
