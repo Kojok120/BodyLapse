@@ -327,8 +327,7 @@ class CameraViewModel: NSObject, ObservableObject {
                 // Check if there are more categories to capture (now available for all users)
                 if let nextCategory = CategoryStorageService.shared.getNextUncapturedCategory(
                     for: saveDate,
-                    currentCategoryId: self.selectedCategory.id,
-                    isPremium: true // All users can now access multiple categories
+                    currentCategoryId: self.selectedCategory.id
                 ) {
                     // Show transition to next category
                     self.nextCategory = nextCategory
@@ -497,7 +496,7 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
     @MainActor
     private func loadCategories() {
         // All users can now access all categories
-        availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: true)
+        availableCategories = CategoryStorageService.shared.getActiveCategories()
         
         // Update the selected category with fresh data from storage
         if let updatedCategory = availableCategories.first(where: { $0.id == selectedCategory.id }) {

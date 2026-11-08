@@ -98,7 +98,6 @@ struct CalendarView: View {
         let spacing = calculateSpacing()
         return VStack(spacing: spacing) {
             CalendarHeaderView(
-                isPremium: false, // No longer used, keeping for backward compatibility
                 availableCategories: viewModel.availableCategories,
                 selectedCategory: viewModel.selectedCategory,
                 selectedPeriod: $selectedPeriod,
@@ -121,7 +120,6 @@ struct CalendarView: View {
 
             PhotoPreviewSection(
                 selectedDate: selectedDate,
-                isPremium: true, // All users now have premium features
                 currentPhoto: $currentPhoto,
                 currentMemo: $currentMemo,
                 showingMemoEditor: $showingMemoEditor,
@@ -229,8 +227,7 @@ struct CalendarView: View {
                 showingDatePicker: $showingDatePicker,
                 dateRange: dateRange,
                 photoDates: getPhotoDates(),
-                dataDates: getDataDates(), // All users can see data dates
-                isPremium: true, // All users now have premium features
+                dataDates: getDataDates(),
                 onDateSelected: updateCurrentPhoto
             )
         }

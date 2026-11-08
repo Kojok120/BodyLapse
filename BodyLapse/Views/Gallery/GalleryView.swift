@@ -427,8 +427,8 @@ extension GalleryView {
                 }
             }
             
-            // Category chips for premium users
-            if !viewModel.isSelectionMode && viewModel.availableCategories.count > 1 && SubscriptionManagerService.shared.isPremium {
+            // カテゴリが複数あるときの絞り込み
+            if !viewModel.isSelectionMode && viewModel.availableCategories.count > 1 {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         CategoryChip(

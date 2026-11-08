@@ -5,7 +5,6 @@ import UIKit
 
 struct PhotoPreviewSection: View {
     let selectedDate: Date
-    let isPremium: Bool
     @Binding var currentPhoto: Photo?
     @Binding var currentMemo: String
     @Binding var showingMemoEditor: Bool
@@ -27,14 +26,6 @@ struct PhotoPreviewSection: View {
     
     var body: some View {
         VStack(spacing: 8) {
-            // Date display - only for free users
-            if !isPremium {
-                Text(formatDate(selectedDate))
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                    .padding(.top, 8)
-            }
-            
             // Photo viewer
             if photosForSelectedDate.isEmpty {
                 noPhotoPlaceholder
@@ -296,31 +287,15 @@ struct PhotoPreviewSection: View {
         }
     }
     
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        
-        // 現在の言語を確認して適切なフォーマットを設定
-        let currentLanguage = LanguageManager.shared.currentLanguage
-        switch currentLanguage {
-        case "ja":
-            formatter.dateFormat = "yyyy/MM/dd"
-        case "ko":
-            formatter.dateFormat = "yyyy.MM.dd"
-        default:
-            formatter.dateFormat = "MMM d, yyyy"
-        }
-        
-        return formatter.string(from: date)
-    }
     
     private func calculatePhotoHeight() -> CGFloat {
         let screenHeight = UIScreen.main.bounds.height
         let isSmallScreen = screenHeight < 700
         
         if isSmallScreen {
-            return isPremium ? screenHeight * 0.28 : screenHeight * 0.35
+            return screenHeight * 0.28
         } else {
-            return isPremium ? screenHeight * 0.38 : screenHeight * 0.46
+            return screenHeight * 0.38
         }
     }
     

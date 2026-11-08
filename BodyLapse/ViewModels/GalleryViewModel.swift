@@ -187,8 +187,7 @@ class GalleryViewModel: ObservableObject {
     }
     
     var availableCategories: [PhotoCategory] {
-        let isPremium = SubscriptionManagerService.shared.isPremium
-        return CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+        CategoryStorageService.shared.getActiveCategories()
     }
     
     func photosGroupedByMonth() -> [(String, [Photo])] {

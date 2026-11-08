@@ -223,7 +223,7 @@ struct VideoGenerationView: View {
             }
             
             // Load available categories
-            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: true) // All users get full categories
+            availableCategories = CategoryStorageService.shared.getActiveCategories()
             
             // Set layout based on available categories
             if availableCategories.count > 1 {

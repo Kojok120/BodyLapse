@@ -65,7 +65,7 @@ struct FilterOptionsView: View {
         NavigationView {
             Form {
                 Section("gallery.filter.category".localized) {
-                    if viewModel.availableCategories.count > 1 && SubscriptionManagerService.shared.isPremium {
+                    if viewModel.availableCategories.count > 1 {
                         ForEach(viewModel.availableCategories) { category in
                             HStack {
                                 Text(category.name)

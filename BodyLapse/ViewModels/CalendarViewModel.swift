@@ -62,8 +62,7 @@ class CalendarViewModel: ObservableObject {
     }
     
     func loadCategories() {
-        let isPremium = SubscriptionManagerService.shared.isPremium
-        availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+        availableCategories = CategoryStorageService.shared.getActiveCategories()
         if !availableCategories.contains(where: { $0.id == selectedCategory.id }) {
             selectedCategory = availableCategories.first ?? PhotoCategory.defaultCategory
         }
