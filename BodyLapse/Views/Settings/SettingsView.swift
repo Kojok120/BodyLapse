@@ -280,11 +280,10 @@ struct SettingsView: View {
                                         .foregroundColor(.secondary)
                                 }
                                 Spacer()
-                                if let product = subscriptionManager.products.first {
+                                // 広告を消すだけの Standard の値段を出す。並び順任せにせず商品 ID で引き、
+                                // 取れないときは固定の値段 (通貨が合わないことがある) を出さない
+                                if let product = subscriptionManager.products.first(where: { $0.id == StoreProducts.premiumMonthly }) {
                                     Text(product.displayPrice)
-                                        .fontWeight(.semibold)
-                                } else {
-                                    Text("settings.premium_price".localized)
                                         .fontWeight(.semibold)
                                 }
                             }
