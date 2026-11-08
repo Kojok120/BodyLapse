@@ -35,3 +35,12 @@ struct VideoRangePlannerTests {
         #expect(count == 2)
     }
 }
+
+struct FreeTrialTextTests {
+
+    @Test
+    func testSevenDaysReadsAsOneWeek() {
+        #expect(FreeTrialText.text(value: 7, unit: .day) == FreeTrialText.text(value: 1, unit: .week))
+        #expect(FreeTrialText.text(value: 3, unit: .day) != FreeTrialText.text(value: 1, unit: .week))
+    }
+}

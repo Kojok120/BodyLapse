@@ -894,3 +894,9 @@
 "calendar.video_range_calendar" = "Shown Period (%@)";
 "calendar.photos_in_range" = "Photos";
 "calendar.video_no_photos_in_range" = "There are no photos in this period for the selected categories. Widen the period.";
+"premium.trial_days" = "%d-day free trial";
+"premium.trial_weeks" = "%d-week free trial";
+"premium.trial_months" = "%d-month free trial";
+"premium.trial_years" = "%d-year free trial";
+"premium.trial_generic" = "Free trial";
+"premium.trial_then_price" = "then %@";

@@ -6,6 +6,8 @@ class PremiumViewModel: ObservableObject {
     @Published var isShowingPremiumView = false
     @Published var isPurchasing = false
     @Published var purchaseError: String?
+    /// 無料体験を使える商品の ID (体験を使い切った人には出さない)
+    @Published private(set) var freeTrialEligibleIDs: Set<String> = []
     
     private let subscriptionManager = SubscriptionManagerService.shared
     
@@ -54,9 +56,29 @@ class PremiumViewModel: ObservableObject {
     }
     
     func loadProducts() async {
-        // プロダクトを読み込み中...
         await subscriptionManager.loadProducts()
-        // プロダクト読み込み完了
+        await refreshFreeTrialEligibility()
+    }
+
+    /// Pro の無料体験を使えるかを App Store に問い合わせる
+    func refreshFreeTrialEligibility() async {
+        var eligible = Set<String>()
+        for product in [proYearlyProduct, proMonthlyProduct].compactMap({ $0 }) {
+            guard let subscription = product.subscription,
+                  subscription.introductoryOffer?.paymentMode == .freeTrial else { continue }
+            if await subscription.isEligibleForIntroOffer {
+                eligible.insert(product.id)
+            }
+        }
+        freeTrialEligibleIDs = eligible
+    }
+
+    /// 「1週間無料」のような体験の表示。使えない商品は nil
+    func freeTrialText(for product: Product) -> String? {
+        guard freeTrialEligibleIDs.contains(product.id),
+              let offer = product.subscription?.introductoryOffer,
+              offer.paymentMode == .freeTrial else { return nil }
+        return FreeTrialText.text(value: offer.period.value * max(offer.periodCount, 1), unit: offer.period.unit)
     }
     
     func purchase(_ product: Product) async {

@@ -894,3 +894,9 @@
 "calendar.video_range_calendar" = "표시 중인 기간(%@)";
 "calendar.photos_in_range" = "사진 수";
 "calendar.video_no_photos_in_range" = "이 기간에 선택한 카테고리의 사진이 없습니다. 기간을 넓혀 주세요.";
+"premium.trial_days" = "%d일 무료 체험";
+"premium.trial_weeks" = "%d주 무료 체험";
+"premium.trial_months" = "%d개월 무료 체험";
+"premium.trial_years" = "%d년 무료 체험";
+"premium.trial_generic" = "무료 체험";
+"premium.trial_then_price" = "이후 %@";

@@ -894,3 +894,9 @@
 "calendar.video_range_calendar" = "表示中の期間（%@）";
 "calendar.photos_in_range" = "写真の枚数";
 "calendar.video_no_photos_in_range" = "この期間に、選んだカテゴリの写真がありません。期間を広げてください。";
+"premium.trial_days" = "%d日間無料";
+"premium.trial_weeks" = "%d週間無料";
+"premium.trial_months" = "%dか月無料";
+"premium.trial_years" = "%d年間無料";
+"premium.trial_generic" = "無料体験あり";
+"premium.trial_then_price" = "その後 %@";

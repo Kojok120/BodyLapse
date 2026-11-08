@@ -184,7 +184,15 @@ struct PremiumView: View {
                         .clipShape(Capsule())
                 }
                 Spacer()
-                if let product {
+                if let product, let trial = viewModel.freeTrialText(for: product) {
+                    // 無料体験があるときは先に出し、その後の価格も並べる (審査 3.1.2)
+                    VStack(spacing: 2) {
+                        Text(trial)
+                            .font(.headline.bold())
+                        Text("premium.trial_then_price".localized(with: product.displayPrice + " / " + period))
+                            .font(.caption)
+                    }
+                } else if let product {
                     Text(product.displayPrice + " / " + period)
                         .font(.headline.bold())
                 } else {
