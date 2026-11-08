@@ -550,14 +550,20 @@ class PhotoStorageService {
     
     func migratePhotosToCategory(_ categoryId: String = PhotoCategory.defaultCategory.id) {
         // categoryIdなしの既存写真を移行するため
+        guard let photosDirectory = photosDirectory else { return }
+
+        // 旧形式の写真は Photos の直下に置かれている。起動やカメラタブのたびに呼ばれるので、
+        // 写真ごとに fileExists を 2 回呼ぶ前に、直下のファイルの名前を 1 回だけ読む。
+        // 直下にファイルが無ければ (移行済みの人のほぼ全員) ここで終わる
+        let legacyFileNames = Self.legacyPhotoFileNames(in: photosDirectory)
+        guard !legacyFileNames.isEmpty else { return }
+
         var needsSave = false
         
-        for (_, photo) in photos.enumerated() {
+        for photo in photos where legacyFileNames.contains(photo.fileName) {
             // 古いフォーマットから読み込まれた写真はcategoryIdが適切に設定されていない
             // Photoのinit(from decoder:)メソッドで処理されるが
             // ファイルを新しい場所に移動する必要がある
-            
-            guard let photosDirectory = photosDirectory else { continue }
             
             let oldPath = photosDirectory.appendingPathComponent(photo.fileName)
             let categoryDir = photosDirectory.appendingPathComponent(photo.categoryId)
@@ -585,6 +591,22 @@ class PhotoStorageService {
         if needsSave {
             savePhotosMetadata()
         }
+    }
+
+    /// Photos の直下にあるファイル (フォルダを除く) の名前
+    static func legacyPhotoFileNames(in photosDirectory: URL, fileManager: FileManager = .default) -> Set<String> {
+        guard let contents = try? fileManager.contentsOfDirectory(
+            at: photosDirectory,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return []
+        }
+        let names = contents.compactMap { url -> String? in
+            let isFile = (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) ?? false
+            return isFile ? url.lastPathComponent : nil
+        }
+        return Set(names)
     }
     
     // MARK: - アプリ評価サポート
