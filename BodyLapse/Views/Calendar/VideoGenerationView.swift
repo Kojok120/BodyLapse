@@ -70,14 +70,28 @@ struct VideoGenerationView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("calendar.period_label".localized)) {
-                    // Show current period info
-                    HStack {
-                        Text("calendar.selected_period".localized)
-                        Spacer()
-                        Text(period.localizedString)
-                            .foregroundColor(.secondary)
+                Section(
+                    header: Text("calendar.period_label".localized),
+                    footer: Group {
+                        if photoCountInRange == 0 {
+                            Text("calendar.video_no_photos_in_range".localized)
+                                .foregroundColor(.red)
+                        }
                     }
+                ) {
+                    // 既定は全期間。カレンダーで表示中の期間にも切り替えられる
+                    HStack(spacing: 12) {
+                        Button("calendar.video_range_all".localized, action: applyFullRange)
+                            .buttonStyle(.bordered)
+                        if let first = dateRange.first, let last = dateRange.last {
+                            Button("calendar.video_range_calendar".localized(with: period.localizedString)) {
+                                customStartDate = first
+                                customEndDate = last
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                    .font(.subheadline)
                     
                     // Always show date pickers
                     DatePicker("calendar.start_date".localized, 
@@ -89,6 +103,13 @@ struct VideoGenerationView: View {
                               selection: $customEndDate,
                               in: customStartDate...,
                               displayedComponents: .date)
+
+                    HStack {
+                        Text("calendar.photos_in_range".localized)
+                        Spacer()
+                        Text("gallery.photos_count".localized(with: photoCountInRange))
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 Section(header: Text("calendar.video_settings".localized)) {
@@ -206,21 +227,13 @@ struct VideoGenerationView: View {
                         }
                     }
                     .fontWeight(.semibold)
-                    .disabled(countPhotosInRange() == 0)
+                    .disabled(photoCountInRange == 0)
                 }
             }
         }
         .onAppear {
             // Initialize from user settings
             showDateInVideo = userSettings.settings.showDateInVideo
-            
-            // Initialize custom date range from current dateRange
-            if let firstDate = dateRange.first {
-                customStartDate = firstDate
-            }
-            if let lastDate = dateRange.last {
-                customEndDate = lastDate
-            }
             
             // Load available categories
             availableCategories = CategoryStorageService.shared.getActiveCategories()
@@ -238,15 +251,37 @@ struct VideoGenerationView: View {
                     selectedCategories.insert(defaultCategory.id)
                 }
             }
+
+            // 既定の期間は全期間 (カレンダーの既定の 1 週間だと約 2 秒の動画になっていた)
+            applyFullRange()
         }
     }
     
-    private func countPhotosInRange() -> Int {
-        let photos = PhotoStorageService.shared.photos
-        
-        return photos.filter { photo in
-            photo.captureDate >= customStartDate && photo.captureDate <= customEndDate
-        }.count
+    /// 動画に使うカテゴリ (単一レイアウトでは先頭の 1 つ)
+    private var categoryIdsForVideo: Set<String> {
+        if videoLayout == .sideBySide {
+            return selectedCategories
+        }
+        return selectedCategories.first.map { [$0] } ?? []
+    }
+
+    private var photoCountInRange: Int {
+        VideoRangePlanner.photoCount(
+            photos: PhotoStorageService.shared.photos,
+            from: customStartDate,
+            to: customEndDate,
+            categoryIds: categoryIdsForVideo
+        )
+    }
+
+    private func applyFullRange() {
+        let range = VideoRangePlanner.defaultRange(
+            photos: PhotoStorageService.shared.photos,
+            categoryIds: categoryIdsForVideo,
+            today: Date()
+        )
+        customStartDate = range.lowerBound
+        customEndDate = range.upperBound
     }
     
     

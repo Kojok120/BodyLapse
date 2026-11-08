@@ -888,3 +888,9 @@
 "photo_library.error.nothing_to_save" = "There's nothing to save.";
 "photo_library.error.failed" = "Couldn't save. Please try again.";
 "photo_library.error.failed_with_reason" = "Couldn't save: %@";
+
+/* Video range and free trial */
+"calendar.video_range_all" = "All Time";
+"calendar.video_range_calendar" = "Shown Period (%@)";
+"calendar.photos_in_range" = "Photos";
+"calendar.video_no_photos_in_range" = "There are no photos in this period for the selected categories. Widen the period.";

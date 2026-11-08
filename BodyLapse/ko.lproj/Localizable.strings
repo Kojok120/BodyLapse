@@ -888,3 +888,9 @@
 "photo_library.error.nothing_to_save" = "저장할 항목이 없습니다.";
 "photo_library.error.failed" = "저장하지 못했습니다. 다시 시도해 주세요.";
 "photo_library.error.failed_with_reason" = "저장하지 못했습니다: %@";
+
+/* Video range and free trial */
+"calendar.video_range_all" = "전체 기간";
+"calendar.video_range_calendar" = "표시 중인 기간(%@)";
+"calendar.photos_in_range" = "사진 수";
+"calendar.video_no_photos_in_range" = "이 기간에 선택한 카테고리의 사진이 없습니다. 기간을 넓혀 주세요.";
