@@ -28,10 +28,22 @@ class VideoStorageService {
     }
     
     private(set) var videos: [Video] = []
+    /// メタデータをディスクから読んだか。読まずに保存すると既存の動画一覧を上書きしてしまう。
+    private var hasLoadedMetadata = false
     
     func initialize() {
         createDirectoriesIfNeeded()
         loadVideosMetadata()
+        hasLoadedMetadata = true
+    }
+
+    /// ギャラリーを開く前 (起動直後) に動画を保存・削除しても、置き場があり一覧を読み込み済みにする
+    private func prepareForWrite() {
+        if hasLoadedMetadata {
+            createDirectoriesIfNeeded()
+        } else {
+            initialize()
+        }
     }
     
     private func createDirectoriesIfNeeded() {
@@ -40,6 +52,7 @@ class VideoStorageService {
     }
     
     func saveVideo(_ videoURL: URL, startDate: Date, endDate: Date, frameCount: Int) async throws -> Video {
+        prepareForWrite()
         let fileName = "\(UUID().uuidString).mp4"
         let destinationURL = videosDirectory.appendingPathComponent(fileName)
         
@@ -79,6 +92,7 @@ class VideoStorageService {
     }
     
     func deleteVideo(_ video: Video) throws {
+        prepareForWrite()
         let videoURL = videosDirectory.appendingPathComponent(video.fileName)
         try FileManager.default.removeItem(at: videoURL)
         
