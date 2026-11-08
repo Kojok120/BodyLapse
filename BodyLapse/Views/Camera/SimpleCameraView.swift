@@ -296,8 +296,26 @@ extension SimpleCameraViewController: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard error == nil,
               let imageData = photo.fileDataRepresentation(),
-              let image = UIImage(data: imageData) else { return }
+              let image = UIImage(data: imageData) else {
+            // 失敗を黙って捨てず、CameraViewModel と同じく触覚とアラートで知らせる
+            DispatchQueue.main.async { [weak self] in
+                Haptics.error()
+                self?.showCaptureFailedAlert()
+            }
+            return
+        }
         
         onCapture?(image)
+    }
+    
+    private func showCaptureFailedAlert() {
+        guard viewIfLoaded?.window != nil else { return }
+        let alert = UIAlertController(
+            title: "common.error".localized,
+            message: "camera.error.capture_failed".localized,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "common.ok".localized, style: .cancel))
+        present(alert, animated: true)
     }
 }
