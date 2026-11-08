@@ -274,6 +274,12 @@ class SimpleZipArchive {
         return components.joined(separator: "/")
     }
 
+    /// 相対パスを destinationRoot の下の URL にする。外へ出るパス (.. や絶対パス) は nil
+    static func safeDestinationURL(forRelativePath path: String, under destinationRoot: URL) -> URL? {
+        guard let safePath = sanitizedRelativePath(path) else { return nil }
+        return destinationURL(for: safePath, under: destinationRoot)
+    }
+
     private static func destinationURL(for relativePath: String, under destinationRoot: URL) -> URL? {
         let root = destinationRoot.standardizedFileURL.resolvingSymlinksInPath()
         let candidate = root.appendingPathComponent(relativePath).standardizedFileURL.resolvingSymlinksInPath()

@@ -4,6 +4,8 @@ struct MainTabView: View {
     @State private var selectedTab = 0
     @State private var videoToPlay: UUID?
     @StateObject private var userSettings = UserSettingsManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
+    @StateObject private var cloudBackup = CloudBackupService.shared
     @State private var hasPerformedInitialSync = false
     
     var body: some View {
@@ -53,6 +55,20 @@ struct MainTabView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCalendarToday"))) { _ in
             selectedTab = 0 // Calendar tab
+        }
+        // Pro の人がまっさらな端末で始めたとき、iCloud のバックアップから復元できることを一度だけ知らせる
+        .task(id: subscriptionManager.isPro) {
+            if subscriptionManager.isPro {
+                await cloudBackup.checkRestoreSuggestion()
+            }
+        }
+        .alert("cloud.suggest_restore.title".localized, isPresented: $cloudBackup.shouldSuggestRestore) {
+            Button("cloud.suggest_restore.open".localized) {
+                selectedTab = 4
+            }
+            Button("paywall.later".localized, role: .cancel) {}
+        } message: {
+            Text("cloud.suggest_restore.message".localized)
         }
         .onAppear {
             performInitialHealthKitSync()
