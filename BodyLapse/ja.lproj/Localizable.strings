@@ -855,3 +855,12 @@
 "memo.discard_confirm" = "編集中のメモを破棄しますか？";
 "memo.discard" = "破棄";
 "memo.keep_editing" = "編集を続ける";
+
+/* Face blur results */
+"face_blur.error.detection_failed" = "顔の検出に失敗しました。もう一度お試しください。";
+"face_blur.error.video_failed" = "顔の検出に失敗したため、素顔が映らないよう動画を作成しませんでした。もう一度お試しください。";
+"face_blur.no_faces_found" = "顔が見つからなかったため、ぼかしていません。必要ならペンのボタンから手でモザイクをかけてください。";
+"face_blur.edit_title" = "モザイク編集";
+"face_blur.preview_title" = "顔ぼかし確認";
+"face_blur.drag_hint" = "モザイクをかけたい場所をドラッグしてください";
+"face_blur.video_frames_without_faces" = "動画を作成しました。%d コマで顔が見つからず、ぼかしていません。共有する前に動画を確かめてください。";

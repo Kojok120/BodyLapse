@@ -36,6 +36,8 @@ struct CalendarView: View {
     @State var videoGenerationProgress: Float = 0
     @State var showingVideoAlert = false
     @State var videoAlertMessage = ""
+    /// 警告を閉じた後に再生する生成済みの動画
+    @State var pendingVideoIdToPlay: UUID?
     
     // MARK: - Guidance States
     @State var showingVideoGuidance = false
@@ -290,7 +292,12 @@ struct CalendarView: View {
                 }
         }
         .alert("calendar.video_generation".localized, isPresented: $showingVideoAlert) {
-            Button("common.ok".localized) { }
+            Button("common.ok".localized) {
+                if let videoId = pendingVideoIdToPlay {
+                    pendingVideoIdToPlay = nil
+                    openGeneratedVideo(videoId)
+                }
+            }
         } message: {
             Text(videoAlertMessage)
         }

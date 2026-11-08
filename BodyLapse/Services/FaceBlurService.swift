@@ -15,46 +15,52 @@ class FaceBlurService {
     
     private init() {}
     
-    func processImageAsync(_ image: UIImage, blurMethod: BlurMethod = .strongBlur) async -> UIImage {
-        await withCheckedContinuation { continuation in
-            processImage(image, blurMethod: blurMethod) { result in
-                continuation.resume(returning: result ?? image)
-            }
+    enum FaceBlurError: LocalizedError {
+        case invalidImage
+        case detectionFailed(Error)
+
+        var errorDescription: String? {
+            "face_blur.error.detection_failed".localized
         }
     }
-    
-    func processImage(_ image: UIImage, blurMethod: BlurMethod = .strongBlur, completion: @escaping (UIImage?) -> Void) {
+
+    struct BlurOutcome {
+        let image: UIImage
+        /// 見つけてぼかした顔の数。0 なら元の画像のまま。
+        let faceCount: Int
+    }
+
+    /// 顔を検出してぼかす。検出そのものが失敗したときは元の画像を返さずに投げる
+    /// (素顔のまま共有・動画化されるのを防ぐ)。
+    func blurFaces(in image: UIImage, blurMethod: BlurMethod = .strongBlur) async throws -> BlurOutcome {
         guard let cgImage = image.cgImage else {
-            completion(nil)
-            return
+            throw FaceBlurError.invalidImage
         }
-        
-        let request = VNDetectFaceRectanglesRequest { [weak self] request, error in
-            guard let self = self,
-                  error == nil,
-                  let results = request.results as? [VNFaceObservation],
-                  !results.isEmpty else {
-                completion(image)
-                return
-            }
-            
-            let blurredImage = self.blurFaces(in: image, faceObservations: results, blurMethod: blurMethod)
-            completion(blurredImage)
-        }
-        
-        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: self.imageOrientation(from: image.imageOrientation))
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            // バックグラウンドスレッドは自動解放プールを持たないため、CIImage/CIFilter等の
-            // 中間オブジェクトが蓄積しないよう明示的に autoreleasepool で包む（動画生成での連続呼び出し対策）
-            autoreleasepool {
-                do {
-                    try handler.perform([request])
-                } catch {
-                    print("Failed to perform face detection: \(error)")
-                    DispatchQueue.main.async {
-                        completion(image)
+        let orientation = imageOrientation(from: image.imageOrientation)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                // バックグラウンドスレッドは自動解放プールを持たないため、CIImage/CIFilter等の
+                // 中間オブジェクトが蓄積しないよう明示的に autoreleasepool で包む（動画生成での連続呼び出し対策）
+                autoreleasepool {
+                    // 完了ハンドラを使わず同期で結果を読む。perform が投げたときに
+                    // 完了ハンドラも呼ばれて 2 回 resume する (クラッシュする) のを避ける
+                    let request = VNDetectFaceRectanglesRequest()
+                    let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation)
+                    do {
+                        try handler.perform([request])
+                    } catch {
+                        continuation.resume(throwing: FaceBlurError.detectionFailed(error))
+                        return
                     }
+
+                    let faces = request.results ?? []
+                    guard !faces.isEmpty else {
+                        continuation.resume(returning: BlurOutcome(image: image, faceCount: 0))
+                        return
+                    }
+                    let blurred = self.blurFaces(in: image, faceObservations: faces, blurMethod: blurMethod)
+                    continuation.resume(returning: BlurOutcome(image: blurred, faceCount: faces.count))
                 }
             }
         }

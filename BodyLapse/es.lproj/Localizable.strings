@@ -847,3 +847,12 @@
 "memo.discard_confirm" = "¿Descartar los cambios de esta nota?";
 "memo.discard" = "Descartar";
 "memo.keep_editing" = "Seguir editando";
+
+/* Face blur results */
+"face_blur.error.detection_failed" = "No se pudieron detectar las caras. Inténtalo de nuevo.";
+"face_blur.error.video_failed" = "Falló la detección de caras, así que no se creó el video para no mostrar caras. Inténtalo de nuevo.";
+"face_blur.no_faces_found" = "No se encontraron caras, así que no se ha difuminado nada. Si hace falta, toca el botón del lápiz para añadir un mosaico a mano.";
+"face_blur.edit_title" = "Editar mosaico";
+"face_blur.preview_title" = "Revisar difuminado";
+"face_blur.drag_hint" = "Arrastra sobre las zonas que quieras cubrir con un mosaico";
+"face_blur.video_frames_without_faces" = "Se creó el video, pero no se encontró ninguna cara en %d fotogramas, así que no se difuminaron. Revisa el video antes de compartirlo.";

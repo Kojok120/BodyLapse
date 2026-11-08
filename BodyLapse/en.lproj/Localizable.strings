@@ -847,3 +847,12 @@
 "memo.discard_confirm" = "Discard your changes to this memo?";
 "memo.discard" = "Discard";
 "memo.keep_editing" = "Keep Editing";
+
+/* Face blur results */
+"face_blur.error.detection_failed" = "Couldn't detect faces. Please try again.";
+"face_blur.error.video_failed" = "Face detection failed, so the video wasn't created to keep faces hidden. Please try again.";
+"face_blur.no_faces_found" = "No faces were found, so nothing was blurred. If needed, tap the pen button to add a mosaic by hand.";
+"face_blur.edit_title" = "Edit Mosaic";
+"face_blur.preview_title" = "Check Face Blur";
+"face_blur.drag_hint" = "Drag over the areas you want to cover with a mosaic";
+"face_blur.video_frames_without_faces" = "The video was created, but no face was found in %d frames, so they weren't blurred. Please check the video before sharing it.";

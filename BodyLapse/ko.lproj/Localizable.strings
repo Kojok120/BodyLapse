@@ -847,3 +847,12 @@
 "memo.discard_confirm" = "편집 중인 메모를 버릴까요?";
 "memo.discard" = "버리기";
 "memo.keep_editing" = "계속 편집";
+
+/* Face blur results */
+"face_blur.error.detection_failed" = "얼굴을 감지하지 못했습니다. 다시 시도해 주세요.";
+"face_blur.error.video_failed" = "얼굴 감지에 실패하여 얼굴이 보이지 않도록 동영상을 만들지 않았습니다. 다시 시도해 주세요.";
+"face_blur.no_faces_found" = "얼굴을 찾지 못해 흐림 처리를 하지 않았습니다. 필요하면 펜 버튼으로 직접 모자이크를 넣어 주세요.";
+"face_blur.edit_title" = "모자이크 편집";
+"face_blur.preview_title" = "얼굴 흐림 확인";
+"face_blur.drag_hint" = "모자이크를 넣을 곳을 드래그하세요";
+"face_blur.video_frames_without_faces" = "동영상을 만들었습니다. %d개 프레임에서 얼굴을 찾지 못해 흐림 처리를 하지 않았습니다. 공유하기 전에 동영상을 확인해 주세요.";

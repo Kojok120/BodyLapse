@@ -83,6 +83,7 @@ class VideoGenerationService {
         case videoCreationFailed
         case exportFailed
         case cancelled
+        case faceBlurFailed
         
         var errorDescription: String? {
             switch self {
@@ -94,6 +95,8 @@ class VideoGenerationService {
                 return "Failed to export video"
             case .cancelled:
                 return "Video generation was cancelled"
+            case .faceBlurFailed:
+                return "face_blur.error.video_failed".localized
             }
         }
     }
@@ -135,12 +138,18 @@ class VideoGenerationService {
         )
     }
     
+    struct GenerationOutcome {
+        let video: Video
+        /// 顔ぼかしを有効にしたのに顔が見つからず、ぼかさずに入ったコマの数
+        let framesWithoutDetectedFaces: Int
+    }
+
     func generateVideo(
         from photos: [Photo],
         in dateRange: ClosedRange<Date>,
         options: VideoGenerationOptions = .default,
         progress: @escaping (Float) -> Void,
-        completion: @escaping (Result<Video, Error>) -> Void
+        completion: @escaping (Result<GenerationOutcome, Error>) -> Void
     ) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
@@ -183,7 +192,7 @@ class VideoGenerationService {
             
             Task {
                 do {
-                    let videoURL = try await self.createVideoAsync(
+                    let (videoURL, framesWithoutFaces) = try await self.createVideoAsync(
                         from: filteredPhotos,
                         options: options,
                         progress: progress
@@ -201,7 +210,7 @@ class VideoGenerationService {
                     try? FileManager.default.removeItem(at: videoURL)
                     
                     await MainActor.run {
-                        completion(.success(video))
+                        completion(.success(GenerationOutcome(video: video, framesWithoutDetectedFaces: framesWithoutFaces)))
                     }
                 } catch {
                     await MainActor.run {
@@ -216,7 +225,7 @@ class VideoGenerationService {
         from photos: [Photo],
         options: VideoGenerationOptions,
         progress: @escaping (Float) -> Void
-    ) async throws -> URL {
+    ) async throws -> (URL, Int) {
         let outputURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("mp4")
@@ -284,6 +293,23 @@ class VideoGenerationService {
         // 大量フレーム読み込みでのメモリスパイクを抑えるため、生成開始時にキャッシュを解放して余裕を確保
         PhotoStorageService.shared.clearImageCache()
 
+        // 顔ぼかし: 検出に失敗したコマは素顔のまま入れず生成を止める。見つからなかったコマは数えて知らせる
+        var framesWithoutFaces = 0
+        let blurMethod = await UserSettingsManager.shared.settings.faceBlurMethod.toServiceMethod
+        func blurred(_ image: UIImage) async throws -> UIImage {
+            do {
+                let outcome = try await FaceBlurService.shared.blurFaces(in: image, blurMethod: blurMethod)
+                if outcome.faceCount == 0 {
+                    framesWithoutFaces += 1
+                }
+                return outcome.image
+            } catch {
+                videoWriter.cancelWriting()
+                try? FileManager.default.removeItem(at: outputURL)
+                throw VideoGenerationError.faceBlurFailed
+            }
+        }
+
         if options.layout == .single || options.selectedCategories.count <= 1 {
             // 単一カテゴリー動画の処理
             let totalPhotos = photos.count
@@ -292,14 +318,7 @@ class VideoGenerationService {
                 guard let image = PhotoStorageService.shared.loadImage(for: photo) else { continue }
                 
                 // 有効な場合、顔のぼかしを適用
-                let imageToProcess: UIImage
-                if options.blurFaces {
-                    let userSettings = await UserSettingsManager.shared
-                    let blurMethod = await userSettings.settings.faceBlurMethod.toServiceMethod
-                    imageToProcess = await FaceBlurService.shared.processImageAsync(image, blurMethod: blurMethod)
-                } else {
-                    imageToProcess = image
-                }
+                let imageToProcess = options.blurFaces ? try await blurred(image) : image
                 
                 // ピクセルバッファに変換
                 if let pixelBuffer = autoreleasepool(invoking: { () -> CVPixelBuffer? in
@@ -350,13 +369,7 @@ class VideoGenerationService {
                     if let photo = photosForDate.first(where: { $0.categoryId == categoryId }),
                        let image = PhotoStorageService.shared.loadImage(for: photo) {
                         // 有効な場合、顔のぼかしを適用
-                        if options.blurFaces {
-                            let userSettings = await UserSettingsManager.shared
-                            let blurMethod = await userSettings.settings.faceBlurMethod.toServiceMethod
-                            categoryPhotos[categoryId] = await FaceBlurService.shared.processImageAsync(image, blurMethod: blurMethod)
-                        } else {
-                            categoryPhotos[categoryId] = image
-                        }
+                        categoryPhotos[categoryId] = options.blurFaces ? try await blurred(image) : image
                     }
                 }
                 
@@ -409,7 +422,7 @@ class VideoGenerationService {
             throw VideoGenerationError.videoCreationFailed
         }
         
-        return outputURL
+        return (outputURL, framesWithoutFaces)
     }
     
     
