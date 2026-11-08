@@ -558,16 +558,10 @@ struct SettingsView: View {
     }
 #endif
 
+    /// 画面の階層を作り直す。rootViewController を差し替えると、目隠しやロックの購読を持つ
+    /// App の階層ごと失われていたため、App 側の .id を変えて SwiftUI に作り直させる
     private func resetRootToContentView() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
-
-        window.rootViewController = UIHostingController(
-            rootView: ContentView()
-                .environmentObject(languageManager)
-                .tint(.bodyLapseTurquoise)
-        )
-        window.makeKeyAndVisible()
+        languageManager.reloadUI()
     }
 }
 
