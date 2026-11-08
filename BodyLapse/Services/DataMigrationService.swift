@@ -11,7 +11,7 @@ class DataMigrationService {
     static let shared = DataMigrationService()
     
     private let migrationVersionKey = "BodyLapseMigrationVersion"
-    private let currentMigrationVersion = 1
+    private let currentMigrationVersion = 2
     
     private init() {}
     
@@ -23,6 +23,10 @@ class DataMigrationService {
             
             if lastMigrationVersion < 1 {
                 performMigrationToVersion1()
+            }
+            
+            if lastMigrationVersion < 2 {
+                performMigrationToVersion2()
             }
             
             UserDefaults.standard.set(currentMigrationVersion, forKey: migrationVersionKey)
@@ -46,6 +50,25 @@ class DataMigrationService {
         // 初期化時に呼び出される
         
         print("Migration to version 1 completed")
+    }
+    
+    private func performMigrationToVersion2() {
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        Self.removeLegacyDebugMask(in: documentsDirectory)
+    }
+    
+    /// 旧版の輪郭検出が Documents に書き出していた人物シルエットの二値マスク。読む箇所はない
+    static let legacyDebugMaskFileName = "opencv_binary_mask_from_uiimage.png"
+    
+    /// 旧版が残した二値マスクを消す。無ければ何もしない (何度呼んでもよい)
+    static func removeLegacyDebugMask(in documentsDirectory: URL, fileManager: FileManager = .default) {
+        let url = documentsDirectory.appendingPathComponent(legacyDebugMaskFileName)
+        guard fileManager.fileExists(atPath: url.path) else { return }
+        do {
+            try fileManager.removeItem(at: url)
+        } catch {
+            print("[Migration] Failed to remove legacy debug mask: \(error)")
+        }
     }
     
     private func migrateExistingGuideline() {

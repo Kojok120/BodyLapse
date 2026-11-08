@@ -45,22 +45,6 @@ using namespace std;
     int nonZeroCount = cv::countNonZero(binaryMask);
     NSLog(@"OpenCV: Non-zero pixels after threshold: %d / %d", nonZeroCount, cvMask.rows * cvMask.cols);
     
-    // Save binary mask for debugging
-    @autoreleasepool {
-        UIImage *debugImage = MatToUIImage(binaryMask);
-        if (debugImage) {
-            NSData *pngData = UIImagePNGRepresentation(debugImage);
-            
-            // Save to Documents directory
-            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-            NSString *documentsDirectory = [paths firstObject];
-            NSString *filePath = [documentsDirectory stringByAppendingPathComponent:@"opencv_binary_mask_from_uiimage.png"];
-            
-            [pngData writeToFile:filePath atomically:YES];
-            NSLog(@"OpenCV: Binary mask saved to Documents: %@", filePath);
-        }
-    }
-    
     // Find contours
     vector<vector<cv::Point>> contours;
     vector<cv::Vec4i> hierarchy;

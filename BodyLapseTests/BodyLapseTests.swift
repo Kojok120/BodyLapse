@@ -650,3 +650,30 @@ struct CloudBackupAutoBackupTests {
         #expect(CloudBackupService.shouldAutoBackup(now: now, lastBackup: justInside) == false)
     }
 }
+
+// MARK: - DataMigrationService（旧版が残したシルエットのマスクの掃除）
+@Suite
+struct LegacyDebugMaskCleanupTests {
+    @Test
+    func removesLeftoverMaskAndIsIdempotent() throws {
+        let fileManager = FileManager.default
+        let documents = fileManager.temporaryDirectory.appendingPathComponent("BodyLapseTests_\(UUID().uuidString)")
+        try fileManager.createDirectory(at: documents, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: documents) }
+
+        let mask = documents.appendingPathComponent(DataMigrationService.legacyDebugMaskFileName)
+        let other = documents.appendingPathComponent("keep.png")
+        try Data("mask".utf8).write(to: mask)
+        try Data("keep".utf8).write(to: other)
+
+        DataMigrationService.removeLegacyDebugMask(in: documents)
+        #expect(!fileManager.fileExists(atPath: mask.path))
+        // ほかのファイルには触れない
+        #expect(fileManager.fileExists(atPath: other.path))
+
+        // 2 回目はファイルが無くても何も起きない
+        DataMigrationService.removeLegacyDebugMask(in: documents)
+        #expect(!fileManager.fileExists(atPath: mask.path))
+        #expect(fileManager.fileExists(atPath: other.path))
+    }
+}
