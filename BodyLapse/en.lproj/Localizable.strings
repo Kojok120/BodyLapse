@@ -837,3 +837,13 @@
 "cloud.error.restricted" = "iCloud access is restricted on this device.";
 "cloud.error.unavailable" = "iCloud is unavailable. Please try again later.";
 "cloud.error.generic" = "Something went wrong. Please try again later.";
+
+/* Weight input validation and delete confirmations */
+"calendar.weight_invalid_range" = "Enter a number from %d to %d %@.";
+"calendar.body_fat_invalid_range" = "Enter a number from %d to %d %%.";
+"calendar.delete_measurements" = "Delete weight and body fat for this day";
+"calendar.delete_measurements_confirm" = "Delete the weight and body fat for this day? Your photos stay.";
+"memo.delete_confirm" = "Delete this memo?";
+"memo.discard_confirm" = "Discard your changes to this memo?";
+"memo.discard" = "Discard";
+"memo.keep_editing" = "Keep Editing";

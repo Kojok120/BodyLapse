@@ -12,21 +12,7 @@ extension CalendarView {
             viewModel.loadCategories()
             updateCurrentPhoto()
             
-            if photo.weight != nil || photo.bodyFatPercentage != nil {
-                Task {
-                    let remainingPhotosForDate = PhotoStorageService.shared.getPhotosForDate(photo.captureDate)
-                    
-                    if remainingPhotosForDate.isEmpty {
-                        if let existingEntry = try await WeightStorageService.shared.getEntry(for: photo.captureDate) {
-                            try await WeightStorageService.shared.deleteEntry(existingEntry)
-                        }
-                    }
-                    
-                    await MainActor.run {
-                        weightViewModel.loadEntries()
-                    }
-                }
-            }
+            // 体重・体脂肪率は写真と別の記録なので、写真を消しても残す
             
             NotificationCenter.default.post(name: Notification.Name("PhotosUpdated"), object: nil)
         } catch {

@@ -193,9 +193,14 @@ struct CalendarView: View {
             AchievementService.shared.evaluate(newStats)
         }
         .sheet(isPresented: $showingWeightInput) {
-            WeightInputView(photo: $currentPhoto, selectedDate: selectedDate, onSave: { weight, bodyFat in
-                handleWeightSave(weight: weight, bodyFat: bodyFat)
-            })
+            WeightInputView(
+                photo: $currentPhoto,
+                selectedDate: selectedDate,
+                onSave: { weight, bodyFat in
+                    handleWeightSave(weight: weight, bodyFat: bodyFat)
+                },
+                onDelete: handleWeightDelete
+            )
         }
         .sheet(isPresented: $showingVideoGeneration) {
             VideoGenerationView(
@@ -459,58 +464,50 @@ extension CalendarView {
         weightViewModel.loadEntries()
     }
     
-    private func handleWeightSave(weight: Double?, bodyFat: Double?) {
+    private func handleWeightSave(weight: Double, bodyFat: Double?) {
+        let saveDate = currentPhoto?.captureDate ?? selectedDate
         if let photo = currentPhoto {
             PhotoStorageService.shared.updatePhotoMetadata(photo, weight: weight, bodyFatPercentage: bodyFat)
             viewModel.loadPhotos()
             updateCurrentPhoto()
-            
-            let saveDate = photo.captureDate
-            let entry = WeightEntry(
-                date: saveDate,
-                weight: weight ?? 0,
-                bodyFatPercentage: bodyFat,
-                linkedPhotoID: photo.id.uuidString
-            )
-            
-            Task {
-                do {
-                    if weight != nil || bodyFat != nil {
-                        try await WeightStorageService.shared.saveEntry(entry)
-                    } else {
-                        if let existingEntry = try await WeightStorageService.shared.getEntry(for: saveDate) {
-                            try await WeightStorageService.shared.deleteEntry(existingEntry)
-                        }
-                    }
-                    
-                    await MainActor.run {
-                        weightViewModel.loadEntries()
-                    }
-                } catch {
-                    print("[CalendarView] Error saving/deleting weight entry: \(error)")
-                }
+        }
+
+        let entry = WeightEntry(
+            date: saveDate,
+            weight: weight,
+            bodyFatPercentage: bodyFat,
+            linkedPhotoID: currentPhoto?.id.uuidString
+        )
+
+        Task {
+            do {
+                try await WeightStorageService.shared.saveEntry(entry)
+            } catch {
+                print("[CalendarView] Error saving weight entry: \(error)")
             }
-        } else {
-            let saveDate = selectedDate
-            let entry = WeightEntry(
-                date: saveDate,
-                weight: weight ?? 0,
-                bodyFatPercentage: bodyFat,
-                linkedPhotoID: nil
-            )
-            
-            Task {
-                do {
-                    if weight != nil || bodyFat != nil {
-                        try await WeightStorageService.shared.saveEntry(entry)
-                    }
-                    
-                    await MainActor.run {
-                        weightViewModel.loadEntries()
-                    }
-                } catch {
-                    print("[CalendarView] Error saving weight entry: \(error)")
-                }
+            await MainActor.run {
+                weightViewModel.loadEntries()
+            }
+        }
+    }
+
+    /// この日の体重・体脂肪率を消す。写真は残し、写真に写していた値も消す。
+    private func handleWeightDelete() {
+        let targetDate = currentPhoto?.captureDate ?? selectedDate
+        if let photo = PhotoStorageService.shared.getPhotosForDate(targetDate).first {
+            PhotoStorageService.shared.updatePhotoMetadata(photo, weight: nil, bodyFatPercentage: nil)
+            viewModel.loadPhotos()
+            updateCurrentPhoto()
+        }
+
+        Task {
+            do {
+                try await WeightStorageService.shared.deleteEntries(on: targetDate)
+            } catch {
+                print("[CalendarView] Error deleting weight entry: \(error)")
+            }
+            await MainActor.run {
+                weightViewModel.loadEntries()
             }
         }
     }

@@ -837,3 +837,13 @@
 "cloud.error.restricted" = "이 기기에서는 iCloud 사용이 제한되어 있습니다.";
 "cloud.error.unavailable" = "iCloud를 사용할 수 없습니다. 나중에 다시 시도해 주세요.";
 "cloud.error.generic" = "문제가 발생했습니다. 나중에 다시 시도해 주세요.";
+
+/* Weight input validation and delete confirmations */
+"calendar.weight_invalid_range" = "%d~%d %@ 사이의 숫자를 입력하세요.";
+"calendar.body_fat_invalid_range" = "%d~%d%% 사이의 숫자를 입력하세요.";
+"calendar.delete_measurements" = "이 날의 체중·체지방률 삭제";
+"calendar.delete_measurements_confirm" = "이 날의 체중과 체지방률을 삭제할까요? 사진은 남습니다.";
+"memo.delete_confirm" = "이 메모를 삭제할까요?";
+"memo.discard_confirm" = "편집 중인 메모를 버릴까요?";
+"memo.discard" = "버리기";
+"memo.keep_editing" = "계속 편집";

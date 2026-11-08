@@ -845,3 +845,13 @@
 "cloud.error.restricted" = "iCloudの利用が制限されています。";
 "cloud.error.unavailable" = "iCloudを利用できません。後でもう一度お試しください。";
 "cloud.error.generic" = "処理に失敗しました。後でもう一度お試しください。";
+
+/* Weight input validation and delete confirmations */
+"calendar.weight_invalid_range" = "%d〜%d %@ の数値を入力してください";
+"calendar.body_fat_invalid_range" = "%d〜%d %% の数値を入力してください";
+"calendar.delete_measurements" = "この日の体重・体脂肪率を削除";
+"calendar.delete_measurements_confirm" = "この日の体重と体脂肪率を削除しますか？写真は残ります。";
+"memo.delete_confirm" = "このメモを削除しますか？";
+"memo.discard_confirm" = "編集中のメモを破棄しますか？";
+"memo.discard" = "破棄";
+"memo.keep_editing" = "編集を続ける";

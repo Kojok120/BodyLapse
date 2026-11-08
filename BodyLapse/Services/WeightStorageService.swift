@@ -86,6 +86,15 @@ actor WeightStorageService {
         try saveEntries(entries)
     }
     
+    /// 指定日の記録をすべて消す (同じ日に複数あっても残さない)。
+    func deleteEntries(on date: Date) throws {
+        var entries = try loadEntries()
+        let before = entries.count
+        entries.removeAll { Calendar.current.isDate($0.date, inSameDayAs: date) }
+        guard entries.count != before else { return }
+        try saveEntries(entries)
+    }
+    
     // MARK: - エントリ更新
     func updateEntry(_ entry: WeightEntry) throws {
         var entries = try loadEntries()

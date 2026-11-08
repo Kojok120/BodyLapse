@@ -38,10 +38,6 @@ struct DataGraphSection: View {
                     fullDateRange: fullRange
                 )
                 .padding(.horizontal)
-                .onChange(of: selectedPeriod) { _, _ in
-                    // Reset chart selection when period changes
-                    selectedChartDate = nil
-                }
             } else {
                 Text("calendar.ios16_required".localized)
                     .foregroundColor(.secondary)
