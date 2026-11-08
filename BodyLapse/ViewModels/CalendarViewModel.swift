@@ -27,8 +27,12 @@ class CalendarViewModel: ObservableObject {
         loadPhotos()
         loadDailyNotes()
         
-        Timer.publish(every: 60, on: .main, in: .common)
-            .autoconnect()
+        // 60 秒ごとに無条件で読み直すのをやめ、変わりうる時だけ読み直す
+        // (写真・カテゴリは各通知で、日付をまたいだときとアプリに戻ったときはストリークのために)
+        NotificationCenter.default.publisher(for: Notification.Name("PhotosUpdated"))
+            .merge(with: NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification))
+            .merge(with: NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification))
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.loadPhotos()
                 self?.loadCategories()
