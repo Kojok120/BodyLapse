@@ -104,8 +104,6 @@ class VideoGenerationService {
     struct VideoGenerationOptions {
         let frameDuration: CMTime
         let videoSize: CGSize
-        let addWatermark: Bool
-        let transitionStyle: TransitionStyle
         let blurFaces: Bool
         let layout: VideoLayout
         let selectedCategories: [String]
@@ -113,29 +111,10 @@ class VideoGenerationService {
         let showGraph: Bool
         let isWeightInLbs: Bool
         
-        enum TransitionStyle {
-            case none
-            case fade
-            case crossDissolve
-        }
-        
         enum VideoLayout {
             case single
             case sideBySide
         }
-        
-        static let `default` = VideoGenerationOptions(
-            frameDuration: CMTime(value: 1, timescale: 4), // 0.25 seconds per frame
-            videoSize: CGSize(width: 1080, height: 1920), // Portrait HD
-            addWatermark: true,
-            transitionStyle: .fade,
-            blurFaces: false,
-            layout: .single,
-            selectedCategories: [],
-            showDate: true,
-            showGraph: false,
-            isWeightInLbs: false
-        )
     }
     
     struct GenerationOutcome {
@@ -147,7 +126,7 @@ class VideoGenerationService {
     func generateVideo(
         from photos: [Photo],
         in dateRange: ClosedRange<Date>,
-        options: VideoGenerationOptions = .default,
+        options: VideoGenerationOptions,
         progress: @escaping (Float) -> Void,
         completion: @escaping (Result<GenerationOutcome, Error>) -> Void
     ) {
@@ -325,7 +304,6 @@ class VideoGenerationService {
                     createPixelBuffer(
                         from: imageToProcess,
                         size: options.videoSize,
-                        addWatermark: options.addWatermark,
                         showDate: options.showDate,
                         date: photo.captureDate,
                         showGraph: options.showGraph,
@@ -381,7 +359,6 @@ class VideoGenerationService {
                             from: categoryPhotos,
                             categories: options.selectedCategories,
                             size: options.videoSize,
-                            addWatermark: options.addWatermark,
                             showDate: options.showDate,
                             date: date,
                             showGraph: options.showGraph,
@@ -427,7 +404,7 @@ class VideoGenerationService {
     
     
     
-    private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, weightEntries: [WeightEntry]? = nil, dateRange: ClosedRange<Date>? = nil, isWeightInLbs: Bool = false) -> CVPixelBuffer? {
+    private func createPixelBuffer(from image: UIImage, size: CGSize, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, weightEntries: [WeightEntry]? = nil, dateRange: ClosedRange<Date>? = nil, isWeightInLbs: Bool = false) -> CVPixelBuffer? {
         // 必要に応じて方向を修正
         let orientedImage = image.fixedOrientation()
         
@@ -512,71 +489,7 @@ class VideoGenerationService {
             drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size, isWeightInLbs: isWeightInLbs)
         }
         
-        // Add watermark if needed
-        if addWatermark {
-            drawWatermark(in: context, size: size)
-        }
-        
         return buffer
-    }
-    
-    private func drawWatermark(in context: CGContext, size: CGSize) {
-        // Save current context state
-        context.saveGState()
-        
-        // Watermark text
-        let watermarkText = "BodyLapse"
-        
-        // Calculate appropriate font size based on video size
-        let baseFontSize: CGFloat = min(size.width, size.height) * 0.05 // 5% of smaller dimension
-        let fontSize = max(baseFontSize, 30) // Minimum 30pt
-        
-        // Create watermark attributes with shadow
-        let shadow = NSShadow()
-        shadow.shadowColor = UIColor.black.withAlphaComponent(0.5)
-        shadow.shadowOffset = CGSize(width: 2, height: 2)
-        shadow.shadowBlurRadius = 4
-        
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: fontSize, weight: .bold),
-            .foregroundColor: UIColor.white.withAlphaComponent(0.9),
-            .shadow: shadow
-        ]
-        
-        // Calculate text size
-        let textSize = watermarkText.size(withAttributes: attributes)
-        
-        // Position in bottom right corner with padding
-        let padding: CGFloat = min(size.width, size.height) * 0.04 // 4% padding
-        let textRect = CGRect(
-            x: size.width - textSize.width - padding,
-            y: size.height - textSize.height - padding,
-            width: textSize.width,
-            height: textSize.height
-        )
-        
-        // Create a semi-transparent background for better visibility
-        let backgroundRect = textRect.insetBy(dx: -padding/2, dy: -padding/4)
-        context.setFillColor(UIColor.black.withAlphaComponent(0.3).cgColor)
-        context.fillEllipse(in: backgroundRect)
-        
-        // Flip coordinate system for text drawing
-        context.translateBy(x: 0, y: size.height)
-        context.scaleBy(x: 1.0, y: -1.0)
-        
-        // Draw the watermark text
-        UIGraphicsPushContext(context)
-        let flippedRect = CGRect(
-            x: textRect.origin.x,
-            y: textRect.origin.y,
-            width: textRect.width,
-            height: textRect.height
-        )
-        watermarkText.draw(in: flippedRect, withAttributes: attributes)
-        UIGraphicsPopContext()
-        
-        // Restore context state
-        context.restoreGState()
     }
     
     private func drawDate(_ date: Date, in context: CGContext, size: CGSize) {
@@ -740,7 +653,6 @@ class VideoGenerationService {
         from categoryPhotos: [String: UIImage],
         categories: [String],
         size: CGSize,
-        addWatermark: Bool,
         showDate: Bool = false,
         date: Date? = nil,
         showGraph: Bool = false,
@@ -876,11 +788,6 @@ class VideoGenerationService {
         // Add graph if needed (premium feature)
         if showGraph, let weightEntries = weightEntries, let dateRange = dateRange, let currentDate = date {
             drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size, isWeightInLbs: isWeightInLbs)
-        }
-        
-        // Add watermark if needed
-        if addWatermark {
-            drawWatermark(in: context, size: size)
         }
         
         return buffer

@@ -179,8 +179,6 @@ struct VideoGenerationView: View {
                         let options = VideoGenerationService.VideoGenerationOptions(
                             frameDuration: selectedSpeed.frameDuration,
                             videoSize: selectedQuality.videoSize,
-                            addWatermark: false, // No watermark for any users
-                            transitionStyle: .fade,
                             blurFaces: enableFaceBlur,
                             layout: videoLayout,
                             selectedCategories: Array(selectedCategories),
