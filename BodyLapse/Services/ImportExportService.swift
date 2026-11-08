@@ -527,7 +527,11 @@ class ImportExportService {
         if options.importWeightData {
             let weightPath = tempDir.appendingPathComponent("data/weight_data.json")
             if FileManager.default.fileExists(atPath: weightPath.path) {
-                let entries = try safelyDecodeJSON([WeightEntry].self, from: weightPath)
+                let decoded = try safelyDecodeJSON([WeightEntry].self, from: weightPath)
+                let entries = ImportedMeasurementSanitizer.weightEntries(decoded)
+                if entries.count < decoded.count {
+                    print("[ImportExport] Skipped \(decoded.count - entries.count) weight entries with invalid values")
+                }
                 summary.weightEntriesImported = try await self.importWeightEntries(entries, options: options)
             }
         }
@@ -1039,8 +1043,8 @@ class ImportExportService {
                                                             jpegData: jpegData,
                                                             isFaceBlurred: photo.isFaceBlurred,
                                                             bodyDetectionConfidence: photo.bodyDetectionConfidence,
-                                                            weight: photo.weight,
-                                                            bodyFatPercentage: photo.bodyFatPercentage
+                                                            weight: ImportedMeasurementSanitizer.weight(photo.weight),
+                                                            bodyFatPercentage: ImportedMeasurementSanitizer.bodyFat(photo.bodyFatPercentage)
                                                         )
                                                     } else {
                                                         savedPhoto = try PhotoStorageService.shared.savePhoto(
@@ -1049,8 +1053,8 @@ class ImportExportService {
                                                             categoryId: finalCategoryId,
                                                             isFaceBlurred: photo.isFaceBlurred,
                                                             bodyDetectionConfidence: photo.bodyDetectionConfidence,
-                                                            weight: photo.weight,
-                                                            bodyFatPercentage: photo.bodyFatPercentage
+                                                            weight: ImportedMeasurementSanitizer.weight(photo.weight),
+                                                            bodyFatPercentage: ImportedMeasurementSanitizer.bodyFat(photo.bodyFatPercentage)
                                                         )
                                                     }
                                                     imported += 1
