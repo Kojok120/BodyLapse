@@ -362,6 +362,15 @@ struct SettingsView: View {
                     Link(destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!) {
                         Label("settings.privacy_policy".localized, systemImage: "hand.raised")
                     }
+
+                    // 広告の同意を取った地域 (EEA・英国など) でだけ、同意の内容を変える入口を出す
+                    if AdConsentService.shared.isPrivacyOptionsRequired {
+                        Button {
+                            Task { await AdConsentService.shared.presentPrivacyOptions() }
+                        } label: {
+                            Label("settings.ad_privacy_options".localized, systemImage: "checkmark.shield")
+                        }
+                    }
                     
                     Link(destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!) {
                         Label("settings.terms_use".localized, systemImage: "doc.text")

@@ -80,7 +80,8 @@ struct BannerAdModifier: ViewModifier {
         VStack(spacing: 0) {
             content
             
-            if !subscriptionManager.isPremium {
+            // 広告の同意が要る地域で同意を得ていない間は、バナーの枠も出さない
+            if !subscriptionManager.isPremium && AdConsentService.shared.canRequestAds {
                 BannerAdView(isPremium: subscriptionManager.isPremium)
                     .frame(height: 50)
                     .background(Color(UIColor.systemBackground))

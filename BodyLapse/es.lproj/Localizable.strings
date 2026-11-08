@@ -155,6 +155,7 @@
 "settings.about" = "Acerca de";
 "settings.about_bodylapse" = "Acerca de BodyLapse";
 "settings.privacy_policy" = "Política de Privacidad";
+"settings.ad_privacy_options" = "Preferencias de privacidad de anuncios";
 "settings.terms_use" = "Términos de Uso";
 "settings.notification_required" = "Se Requiere Permiso de Notificación";
 "settings.notification_message" = "Por favor, habilite las notificaciones en Configuración para recibir recordatorios diarios de fotos.";

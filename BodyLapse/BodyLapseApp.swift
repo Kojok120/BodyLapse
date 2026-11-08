@@ -77,6 +77,8 @@ struct BodyLapseApp: App {
                     // 起動時に商品とサブスクの状態を読み込む
                     await subscriptionManager.loadProducts()
                     await subscriptionManager.refreshSubscriptionStatus()
+                    // 広告を出す人にだけ、必要な地域で広告の同意を求めてから広告 SDK を起動する
+                    await AdConsentService.shared.gatherConsentIfNeeded(isAdFree: subscriptionManager.isPremium)
                 }
         }
     }

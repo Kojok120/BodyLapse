@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import GoogleMobileAds
+import UserMessagingPlatform
 
 class AdMobService: NSObject {
     static let shared = AdMobService()
@@ -37,6 +38,7 @@ class AdMobService: NSObject {
         // 本番環境では広告ステータスチェックを削除
     }
     
+    /// 広告 SDK を起動する。広告の同意を確かめた後に AdConsentService から呼ぶ
     func initializeAdMob() {
         Task {
             await MobileAds.shared.start()
@@ -50,6 +52,8 @@ class AdMobService: NSObject {
     }
     
     func loadInterstitialAd() {
+        // 同意が要る地域で同意を得ていない間は読み込まない
+        guard ConsentInformation.shared.canRequestAds else { return }
         guard !isLoadingInterstitial else { 
             // インタースティシャル広告は既に読み込み中、スキップ
             return 

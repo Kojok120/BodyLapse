@@ -11,12 +11,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Initialize notification service
         _ = NotificationService.shared
         
-        // Initialize AdMob with delay to ensure proper setup
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            // Initializing AdMob
-            AdMobService.shared.initializeAdMob()
-        }
-        
+        // 広告 SDK は、広告の同意 (EEA・英国など) を確かめてから AdConsentService が起動する
+
         // Clear badge on app launch
         Task {
             do {
