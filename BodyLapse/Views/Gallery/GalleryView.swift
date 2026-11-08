@@ -170,7 +170,7 @@ struct GalleryView: View {
     }
     
     private func handlePhotoShare(_ image: UIImage, withFaceBlur: Bool) {
-        GalleryActionService.shared.handlePhotoShare(image, withFaceBlur: withFaceBlur, activeSheet: $activeSheet)
+        GalleryActionService.shared.handlePhotoShare(image, activeSheet: $activeSheet)
     }
 }
 

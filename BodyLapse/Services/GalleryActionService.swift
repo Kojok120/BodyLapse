@@ -12,7 +12,7 @@ class GalleryActionService {
         activeSheet.wrappedValue = .shareOptions(photo)
     }
     
-    func handlePhotoShare(_ image: UIImage, withFaceBlur: Bool, activeSheet: Binding<GalleryActiveSheet?>) {
+    func handlePhotoShare(_ image: UIImage, activeSheet: Binding<GalleryActiveSheet?>) {
         activeSheet.wrappedValue = .share([image])
     }
     
