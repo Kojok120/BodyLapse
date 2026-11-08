@@ -49,7 +49,7 @@
 "calendar.update_measurements" = "Actualizar Medidas";
 "calendar.weight" = "Peso";
 "calendar.enter_weight" = "Ingrese peso";
-"calendar.body_fat_optional" = "% Grasa Corporal (Opcional)";
+"calendar.body_fat_optional" = "Grasa Corporal (Opcional)";
 "calendar.enter_body_fat" = "Ingrese grasa corporal";
 "calendar.period_label" = "Período";
 "calendar.start_date" = "Fecha de Inicio";
@@ -137,6 +137,7 @@
 "settings.security" = "Seguridad";
 "settings.app_lock" = "Bloqueo de App";
 "settings.change_pin" = "Cambiar PIN";
+"settings.set_pin" = "Configurar PIN";
 "settings.reminders" = "Recordatorios";
 "settings.daily_reminder" = "Recordatorio Diario";
 "settings.reminder_time" = "Hora del Recordatorio";

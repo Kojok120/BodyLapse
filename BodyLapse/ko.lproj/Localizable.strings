@@ -137,6 +137,7 @@
 "settings.security" = "보안";
 "settings.app_lock" = "앱 잠금";
 "settings.change_pin" = "PIN 변경";
+"settings.set_pin" = "PIN 설정";
 "settings.reminders" = "알림";
 "settings.daily_reminder" = "일일 알림";
 "settings.reminder_time" = "알림 시간";
