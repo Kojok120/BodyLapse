@@ -27,6 +27,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2026-11-04 のランナーイメージから、SwiftPM のバイナリ (opencv2.xcframework.zip) の取得が
+      # 「already exists in file system」で失敗するようになった。取得の前にキャッシュを空にする
+      - name: Clear SwiftPM caches
+        run: |
+          rm -rf ~/Library/Caches/org.swift.swiftpm ~/Library/org.swift.swiftpm
+
       - name: Build
         run: |
           xcodebuild \
