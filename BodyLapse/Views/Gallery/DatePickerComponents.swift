@@ -99,15 +99,11 @@ struct DatePickerView: View {
     }
     
     private var monthString: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM"
-        return formatter.string(from: selectedMonth)
+        AppDateFormat.month(selectedMonth)
     }
     
     private var yearString: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy"
-        return formatter.string(from: selectedMonth)
+        AppDateFormat.year(selectedMonth)
     }
     
     private func datesInSelectedMonth() -> [Date] {

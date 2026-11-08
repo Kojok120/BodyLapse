@@ -17,10 +17,9 @@ enum GalleryActiveSheet: Identifiable {
 // MARK: - ギャラリーユーティリティ
 
 struct GalleryUtilities {
+    /// セルの日付。セルごとに DateFormatter を作らず、アプリの言語の書式を使い回す
     static func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M/d"
-        return formatter.string(from: date)
+        AppDateFormat.monthDay(date)
     }
 }
 

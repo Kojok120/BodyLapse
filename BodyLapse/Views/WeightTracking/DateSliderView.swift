@@ -149,24 +149,8 @@ struct DateSliderView: View {
         MeasurementInput.displayWeight(kg: weight, unit: userSettings.settings.weightUnit)
     }
     
-    private static var dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        return formatter
-    }()
-    
     private func formatDate(_ date: Date) -> String {
-        // 現在の言語を確認して適切なフォーマットを設定
-        let currentLanguage = LanguageManager.shared.currentLanguage
-        switch currentLanguage {
-        case "ja":
-            Self.dateFormatter.dateFormat = "yyyy/MM/dd"
-        case "ko":
-            Self.dateFormatter.dateFormat = "yyyy.MM.dd"
-        default:
-            Self.dateFormatter.dateFormat = "MMM d, yyyy"
-        }
-        
-        return Self.dateFormatter.string(from: date)
+        AppDateFormat.medium(date)
     }
 }
 

@@ -30,15 +30,8 @@ struct Photo: Identifiable, Codable {
 }
 
 extension Photo {
-    static var dateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter
-    }
-    
     var formattedDate: String {
-        Self.dateFormatter.string(from: captureDate)
+        AppDateFormat.mediumDateTime(captureDate)
     }
     
     enum CodingKeys: String, CodingKey {
