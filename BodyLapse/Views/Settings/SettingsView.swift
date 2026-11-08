@@ -20,8 +20,6 @@ struct SettingsView: View {
     @State private var isNotificationEnabled = false
     
     // カテゴリー管理ガイダンス
-    @StateObject private var tooltipManager = TooltipManager.shared
-    @State private var showingCategoryManagementGuidance = false
     
     
     // App Store ID - アプリ公開時に実際のIDに置き換え
@@ -29,15 +27,7 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
-                mainContent
-                
-                // カテゴリー管理ガイダンスオーバーレイ
-                if showingCategoryManagementGuidance {
-                    categoryManagementGuidanceOverlay
-                }
-                
-            }
+            mainContent
         }
     }
     
@@ -47,13 +37,6 @@ struct SettingsView: View {
                     // カテゴリー管理は全ユーザーに利用可能
                     NavigationLink(destination: CategoryManagementView()) {
                         Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
-                    }
-                    .withGuidanceBadge(for: .categoryManagement, size: 10, offset: CGPoint(x: 8, y: -8))
-                    .onTapGesture {
-                        if tooltipManager.needsGuidance(for: .categoryManagement) && !tooltipManager.hasShownTooltip(for: .categoryManagement) {
-                            showingCategoryManagementGuidance = true
-                            tooltipManager.markTooltipShown(for: .categoryManagement)
-                        }
                     }
                     
                     Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
@@ -285,10 +268,8 @@ struct SettingsView: View {
                         }
                         .foregroundColor(.primary)
                     } else {
-                        Button(action: { 
-                            showingPremiumUpgrade = true 
-                            // ボタンタップ時にプレミアム機能ガイダンスを完了済みとしてマーク
-                            tooltipManager.markFeatureCompleted(for: .premiumFeatures)
+                        Button(action: {
+                            showingPremiumUpgrade = true
                         }) {
                             HStack {
                                 VStack(alignment: .leading) {
@@ -308,7 +289,6 @@ struct SettingsView: View {
                                 }
                             }
                         }
-                        .withGuidanceBadge(for: .premiumFeatures, size: 10, offset: CGPoint(x: 8, y: -8))
                     }
                 }
                 
@@ -480,36 +460,6 @@ struct SettingsView: View {
                 checkNotificationStatus()
             }
     }
-    
-    private var categoryManagementGuidanceOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.1)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    showingCategoryManagementGuidance = false
-                    tooltipManager.markFeatureCompleted(for: .categoryManagement)
-                }
-            
-            VStack {
-                Spacer()
-                
-                GuidanceTooltip(
-                    title: tooltipManager.getTitle(for: .categoryManagement),
-                    description: tooltipManager.getDescription(for: .categoryManagement),
-                    isVisible: showingCategoryManagementGuidance,
-                    onDismiss: {
-                        showingCategoryManagementGuidance = false
-                        tooltipManager.markFeatureCompleted(for: .categoryManagement)
-                    }
-                )
-                .padding(.horizontal, 20)
-                .padding(.bottom, 100)
-                
-                Spacer()
-            }
-        }
-    }
-    
     
     private func requestHealthKitPermission() {
         HealthKitService.shared.requestAuthorization { success, error in

@@ -39,10 +39,6 @@ struct CalendarView: View {
     /// 警告を閉じた後に再生する生成済みの動画
     @State var pendingVideoIdToPlay: UUID?
     
-    // MARK: - Guidance States
-    @State var showingVideoGuidance = false
-    @State var showingCategoryGuidance = false
-    
     // MARK: - UI States
     @State var showingSaveSuccess = false
     @State var saveSuccessMessage = ""
@@ -68,17 +64,7 @@ struct CalendarView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
-                mainContent
-                
-                // Guidance overlays
-                CalendarGuidanceView(
-                    showingVideoGuidance: $showingVideoGuidance,
-                    showingCategoryGuidance: $showingCategoryGuidance,
-                    showingVideoGeneration: $showingVideoGeneration,
-                    showingAddCategory: $showingAddCategory
-                )
-            }
+            mainContent
         }
     }
     
@@ -97,12 +83,6 @@ struct CalendarView: View {
                 onCategorySelect: { category in
                     viewModel.selectCategory(category)
                     updateCurrentPhoto()
-                },
-                onVideoGuidanceRequested: {
-                    showingVideoGuidance = true
-                },
-                onCategoryGuidanceRequested: {
-                    showingCategoryGuidance = true
                 }
             )
 

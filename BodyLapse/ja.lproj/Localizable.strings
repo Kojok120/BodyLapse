@@ -468,17 +468,6 @@
 "onboarding.start_now" = "今すぐ始める";
 "onboarding.complete" = "完了";
 
-/* Guidance System */
-"guidance.got_it" = "OK";
-"guidance.video_generation.title" = "タイムラプス動画作成";
-"guidance.video_generation.description" = "毎日撮影した写真でタイムラプス動画を作成しましょう。";
-"guidance.category_adding.title" = "写真カテゴリーの追加";
-"guidance.category_adding.description" = "「正面」「側面」「背面」などのカスタムカテゴリーを作成して、様々な角度から進捗を記録できます。";
-"guidance.premium_features.title" = "広告非表示プラン";
-"guidance.premium_features.description" = "広告をなくしたい場合だけ購読してください。他の機能はすべて無料です。";
-"guidance.category_management.title" = "カテゴリー管理";
-"guidance.category_management.description" = "写真カテゴリーの作成、編集、整理ができます。様々な角度&ポーズを設定しましょう。";
-
 /* Share Options Dialog */
 "share.options.title" = "共有オプション";
 "share.options.description" = "写真の共有方法を選択してください";

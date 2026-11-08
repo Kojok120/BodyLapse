@@ -470,17 +470,6 @@
 "onboarding.start_now" = "Comenzar ahora";
 "onboarding.complete" = "Completar";
 
-/* Guidance System */
-"guidance.got_it" = "Entendido";
-"guidance.video_generation.title" = "Crear Videos Time-lapse";
-"guidance.video_generation.description" = "Genera videos time-lapse desde tus fotos de progreso. ¡Toca aquí para ver tu transformación a lo largo del tiempo!";
-"guidance.category_adding.title" = "Agregar Categorías de Fotos";
-"guidance.category_adding.description" = "Crea categorías personalizadas como 'Frontal', 'Lateral', 'Trasera' para rastrear diferentes ángulos de tu progreso.";
-"guidance.premium_features.title" = "Experiencia sin anuncios";
-"guidance.premium_features.description" = "Suscríbete solo si quieres eliminar los anuncios; todas las demás funciones ya están gratis.";
-"guidance.category_management.title" = "Gestión de Categorías";
-"guidance.category_management.description" = "Crea, edita y organiza tus categorías de fotos. Configura diferentes ángulos y poses para un seguimiento completo.";
-
 /* Share Options Dialog */
 "share.options.title" = "Opciones de Compartir";
 "share.options.description" = "Elige cómo quieres compartir tu foto";
