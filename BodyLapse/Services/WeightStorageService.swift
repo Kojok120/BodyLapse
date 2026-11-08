@@ -91,12 +91,6 @@ actor WeightStorageService {
     }
     
     // MARK: - エントリ削除
-    func deleteEntry(_ entry: WeightEntry) throws {
-        var entries = try loadEntries()
-        entries.removeAll { $0.id == entry.id }
-        try saveEntries(entries)
-    }
-    
     /// 指定日の記録をすべて消す (同じ日に複数あっても残さない)。
     func deleteEntries(on date: Date, deletedAt: Date = Date()) throws {
         var entries = try loadEntries()

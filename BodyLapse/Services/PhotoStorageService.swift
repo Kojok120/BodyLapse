@@ -551,26 +551,6 @@ class PhotoStorageService {
         return grouped.sorted { $0.key > $1.key }
     }
     
-    func hasPhoto(for date: Date, categoryId: String? = nil) -> Bool {
-        let calendar = Calendar.current
-        let targetDay = calendar.startOfDay(for: date)
-        
-        return photos.contains { photo in
-            (categoryId == nil || photo.categoryId == categoryId) &&
-            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
-        }
-    }
-    
-    func getPhotoID(for date: Date, categoryId: String? = nil) -> String? {
-        let calendar = Calendar.current
-        let targetDay = calendar.startOfDay(for: date)
-        
-        return photos.first { photo in
-            (categoryId == nil || photo.categoryId == categoryId) &&
-            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
-        }?.id.uuidString
-    }
-    
     // MARK: - カテゴリサポートメソッド
     
     func getPhotosForCategory(_ categoryId: String) -> [Photo] {

@@ -48,59 +48,6 @@ class HealthKitService {
     
     // MARK: - データ取得
     
-    func fetchLatestWeight(completion: @escaping (Double?, Error?) -> Void) {
-        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-        let query = HKSampleQuery(
-            sampleType: bodyMassType,
-            predicate: nil,
-            limit: 1,
-            sortDescriptors: [sortDescriptor]
-        ) { _, samples, error in
-            if let error = error {
-                DispatchQueue.main.async {
-                    completion(nil, error)
-                }
-                return
-            }
-            
-            let weight = samples?.first as? HKQuantitySample
-            let weightInKg = weight?.quantity.doubleValue(for: HKUnit.gramUnit(with: .kilo))
-            
-            DispatchQueue.main.async {
-                completion(weightInKg, nil)
-            }
-        }
-        
-        healthStore.execute(query)
-    }
-    
-    func fetchLatestBodyFatPercentage(completion: @escaping (Double?, Error?) -> Void) {
-        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-        let query = HKSampleQuery(
-            sampleType: bodyFatPercentageType,
-            predicate: nil,
-            limit: 1,
-            sortDescriptors: [sortDescriptor]
-        ) { _, samples, error in
-            if let error = error {
-                DispatchQueue.main.async {
-                    completion(nil, error)
-                }
-                return
-            }
-            
-            let bodyFat = samples?.first as? HKQuantitySample
-            let percentage = bodyFat?.quantity.doubleValue(for: HKUnit.percent())
-            
-            DispatchQueue.main.async {
-                // 小数（0.197）からパーセンテージ（19.7）に変換
-                completion(percentage != nil ? percentage! * 100 : nil, nil)
-            }
-        }
-        
-        healthStore.execute(query)
-    }
-    
     /// 期間内の量のサンプルを取る
     private func fetchSamples(of type: HKQuantityType, unit: HKUnit, from startDate: Date, to endDate: Date) async throws -> [HealthKitImportPlanner.Sample] {
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
