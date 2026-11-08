@@ -5,6 +5,8 @@ import StoreKit
 struct OnboardingView: View {
     @EnvironmentObject var userSettings: UserSettingsManager
     @State private var currentStep = 1
+    /// 次の段が入ってくる側。進むときは右から、戻るときは左から
+    @State private var stepInsertionEdge: Edge = .trailing
     
     // アプリロック
     @State private var showingAppLockSetup = false
@@ -28,18 +30,24 @@ struct OnboardingView: View {
                 progressIndicator
                 
                 // メインコンテンツ
-                TabView(selection: $currentStep) {
-                    welcomeStep
-                        .tag(1)
-                    
-                    photoStep
-                        .tag(2)
-                    
-                    personalizationStep
-                        .tag(3)
+                // 進むのは下のボタンだけにする。ページ式の TabView は横スワイプで進めてしまい、
+                // 撮影のスキップの確認を飛ばして設定へ行けた (scrollDisabled も効かない)。
+                // 今の段だけを出し、進む・戻るの向きに合わせて横に滑らせる
+                ZStack {
+                    switch currentStep {
+                    case 1:
+                        welcomeStep
+                            .transition(stepTransition)
+                    case 2:
+                        photoStep
+                            .transition(stepTransition)
+                    default:
+                        personalizationStep
+                            .transition(stepTransition)
+                    }
                 }
-                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                .animation(.easeInOut(duration: 0.3), value: currentStep)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
                 
                 // ナビゲーションボタン
                 navigationButtons
@@ -86,6 +94,20 @@ struct OnboardingView: View {
     }
     
     // MARK: - ステップ1: ようこそ
+    private var stepTransition: AnyTransition {
+        .asymmetric(
+            insertion: .move(edge: stepInsertionEdge),
+            removal: .move(edge: stepInsertionEdge == .trailing ? .leading : .trailing)
+        )
+    }
+
+    private func goToStep(_ step: Int) {
+        stepInsertionEdge = step > currentStep ? .trailing : .leading
+        withAnimation(.easeInOut(duration: 0.3)) {
+            currentStep = step
+        }
+    }
+
     private var welcomeStep: some View {
         VStack(spacing: 20) {
             // 撮影 → フィルムに溜まる → パラパラ再生 のアニメーション
@@ -125,9 +147,7 @@ struct OnboardingView: View {
                     didCapturePhoto = true
                 } onSkip: {
                     // スキップ時は誤った「保存しました」状態を出さず、そのまま次のステップへ
-                    withAnimation {
-                        currentStep = 3
-                    }
+                    goToStep(3)
                 }
             } else {
                 // Show success state with options to retake or continue
@@ -150,9 +170,7 @@ struct OnboardingView: View {
                     
                     VStack(spacing: 15) {
                         Button(action: {
-                            withAnimation {
-                                currentStep = 3
-                            }
+                            goToStep(3)
                         }) {
                             Text("common.next".localized)
                                 .frame(maxWidth: .infinity)
@@ -239,9 +257,7 @@ struct OnboardingView: View {
             // Back button (on step 2 and 3)
             if currentStep > 1 {
                 Button(action: {
-                    withAnimation {
-                        currentStep -= 1
-                    }
+                    goToStep(currentStep - 1)
                 }) {
                     Text("common.back".localized)
                         .foregroundColor(.accentColor)
@@ -255,9 +271,7 @@ struct OnboardingView: View {
             // Next/Complete button
             if currentStep == 1 {
                 Button(action: {
-                    withAnimation {
-                        currentStep = 2
-                    }
+                    goToStep(2)
                 }) {
                     Text("onboarding.start_now".localized)
                         .frame(maxWidth: .infinity)
@@ -444,6 +458,8 @@ struct BaselinePhotoCaptureViewWithSkip: View {
     @State private var contourError: String?
     @State private var shouldShowCamera = true
     @State private var showingSkipConfirm = false
+    /// 最初の写真を保存できなかったときの理由。黙って飛ばさず、撮り直すか飛ばすかを選んでもらう
+    @State private var saveErrorMessage: String?
     
     // Timer states
     @State private var timerDuration: Int = 0 // 0 = off, 3, 5, 10 seconds
@@ -672,6 +688,24 @@ struct BaselinePhotoCaptureViewWithSkip: View {
         } message: {
             Text("onboarding.skip_confirm_message".localized)
         }
+        .alert(
+            "common.error".localized,
+            isPresented: Binding(
+                get: { saveErrorMessage != nil },
+                set: { if !$0 { saveErrorMessage = nil } }
+            )
+        ) {
+            Button("onboarding.retake_photo".localized) {
+                saveErrorMessage = nil
+                resetForRetake()
+            }
+            Button("common.skip".localized, role: .cancel) {
+                saveErrorMessage = nil
+                onSkip()
+            }
+        } message: {
+            Text(saveErrorMessage ?? "")
+        }
     }
 
     private func handlePhotoCapture(_ image: UIImage) {
@@ -756,8 +790,8 @@ struct BaselinePhotoCaptureViewWithSkip: View {
             } catch {
                 DispatchQueue.main.async { [self] in
                     self.isProcessing = false
-                    // Even if save fails, continue
-                    self.onSkip()
+                    // 黙って次へ進むと、撮ったつもりの 1 日目が残らない。理由を出して選んでもらう
+                    self.saveErrorMessage = "camera.error.save_failed".localized(with: error.localizedDescription)
                 }
             }
         }
