@@ -57,6 +57,7 @@ class VideoStorageService {
         let destinationURL = videosDirectory.appendingPathComponent(fileName)
         
         try FileManager.default.copyItem(at: videoURL, to: destinationURL)
+        MediaFileProtection.apply(to: destinationURL)
         
         let asset = AVAsset(url: destinationURL)
         let duration = await loadDuration(for: asset)
@@ -124,7 +125,7 @@ class VideoStorageService {
             
             if let data = thumbnail.jpegData(compressionQuality: 0.8) {
                 let thumbnailURL = thumbnailsDirectory.appendingPathComponent(fileName)
-                try data.write(to: thumbnailURL, options: .atomic)
+                try data.write(to: thumbnailURL, options: [.atomic, MediaFileProtection.writingOptions])
             }
         } catch {
             // サムネイルの生成に失敗

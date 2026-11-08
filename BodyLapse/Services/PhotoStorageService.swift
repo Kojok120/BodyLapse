@@ -24,6 +24,9 @@ class PhotoStorageService {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
     }
     
+    /// 写真のフォルダ (カテゴリごとの下位フォルダを含む)。ファイル保護の対象
+    var photosDirectoryURL: URL? { photosDirectory }
+
     private var photosDirectory: URL? {
         documentsDirectory?.appendingPathComponent("Photos")
     }
@@ -143,7 +146,7 @@ class PhotoStorageService {
         let fileName = "\(UUID().uuidString).jpg"
         let fileURL = categoryDir.appendingPathComponent(fileName)
         
-        try imageData.write(to: fileURL)
+        try imageData.write(to: fileURL, options: MediaFileProtection.writingOptions)
         
         // 体重/体脂肪が未提供の場合、同日の他の写真から既存の体重データを確認
         var finalWeight = weight
@@ -570,6 +573,7 @@ class PhotoStorageService {
                     
                     // ファイルを新しい場所に移動
                     try FileManager.default.moveItem(at: oldPath, to: newPath)
+                    MediaFileProtection.apply(to: newPath)
                     needsSave = true
                     print("Migrated photo \(photo.fileName) to category \(photo.categoryId)")
                 } catch {

@@ -31,9 +31,16 @@ struct BodyLapseApp: App {
         // Initialize PhotoStorageService on app launch
         PhotoStorageService.shared.initialize()
         
-        // 前回までの取り込み・書き出しの一時ファイルが残っていれば消す (書き出しは全データの平文)
+        // 前回までの取り込み・書き出しの一時ファイルが残っていれば消す (書き出しは全データの平文)。
+        // 写真・動画・サムネイルのファイル保護を、まだなら一度だけ強める
+        let mediaDirectories = [
+            PhotoStorageService.shared.photosDirectoryURL,
+            VideoStorageService.shared.videosDirectory,
+            VideoStorageService.shared.thumbnailsDirectory
+        ].compactMap { $0 }
         DispatchQueue.global(qos: .utility).async {
             ImportExportService.shared.cleanupLeftoverTemporaryFiles()
+            MediaFileProtection.migrateIfNeeded(directories: mediaDirectories)
         }
 
         // Set up daily photo reminder check
