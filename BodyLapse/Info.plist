@@ -8,8 +8,6 @@
     <string>BodyLapse needs photo library access to save your photos and time-lapse videos</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>BodyLapse needs photo library access to save your time-lapse videos</string>
-    <key>NSUserNotificationsUsageDescription</key>
-    <string>BodyLapse will send you daily reminders to capture your progress photo</string>
     <key>NSFaceIDUsageDescription</key>
     <string>BodyLapse uses Face ID to secure your photos</string>
     <key>NSHealthShareUsageDescription</key>
