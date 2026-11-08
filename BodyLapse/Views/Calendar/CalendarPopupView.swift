@@ -61,14 +61,16 @@ struct CalendarPopupView: View {
         calendar.isDate(date, equalTo: displayedMonth, toGranularity: .month)
     }
     
+    /// 写真のある日だけ選べる (写真の無い日を選ぶと比較の片側が空になる)。前後の制限は日単位で比べる。
     private func isDateEnabled(_ date: Date) -> Bool {
-        if let minDate = minDate, date < minDate {
+        let day = calendar.startOfDay(for: date)
+        if let minDate = minDate, day < calendar.startOfDay(for: minDate) {
             return false
         }
-        if let maxDate = maxDate, date > maxDate {
+        if let maxDate = maxDate, day > calendar.startOfDay(for: maxDate) {
             return false
         }
-        return true
+        return hasPhoto(for: date)
     }
     
     var body: some View {
@@ -160,7 +162,7 @@ struct CalendarPopupView: View {
                         Circle()
                             .fill(Color.green)
                             .frame(width: 10, height: 10)
-                        Text(NSLocalizedString("calendar.photo_taken", comment: "Photo taken indicator"))
+                        Text("calendar.photo_taken".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

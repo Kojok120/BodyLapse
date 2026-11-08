@@ -1,42 +1,70 @@
 import Foundation
 import SwiftUI
 
-class CompareViewModel: ObservableObject {
-    @Published var photos: [Photo] = []
-    
+/// 比較の初期の組み合わせと差分を決める純関数
+enum ComparePairing {
+    /// そのカテゴリで最も古い写真を「変化前」、最も新しい写真を「変化後」にする。1 枚しか無ければ変化後だけ。
+    static func defaultPair(from photos: [Photo], categoryId: String) -> (before: Photo?, after: Photo?) {
+        let inCategory = photos
+            .filter { $0.categoryId == categoryId }
+            .sorted { $0.captureDate < $1.captureDate }
+        guard let latest = inCategory.last else { return (nil, nil) }
+        guard let earliest = inCategory.first, earliest.id != latest.id else { return (nil, latest) }
+        return (earliest, latest)
+    }
+
+    /// 指定日・カテゴリの写真
+    static func photo(on date: Date, categoryId: String, in photos: [Photo], calendar: Calendar = .current) -> Photo? {
+        photos.first { $0.categoryId == categoryId && calendar.isDate($0.captureDate, inSameDayAs: date) }
+    }
+
+    /// 後 − 前。どちらかが無ければ nil。
+    static func difference(before: Double?, after: Double?) -> Double? {
+        guard let before, let after else { return nil }
+        return after - before
+    }
+}
+
+@MainActor
+final class CompareViewModel: ObservableObject {
+    @Published private(set) var photos: [Photo] = []
+    /// 日 (startOfDay) ごとの体重・体脂肪率の記録。体重の正はこちらで、写真に写した値は予備。
+    @Published private(set) var entriesByDay: [Date: WeightEntry] = [:]
+
     init() {
-        loadPhotos()
+        refresh()
     }
-    
-    func loadPhotos() {
-        Task { @MainActor in
-            // ディスクから再読み込み後、1回の同期パスを実行して永続化。
-            PhotoStorageService.shared.reloadPhotosFromDisk(syncWeightData: false)
-            await PhotoStorageService.shared.syncWeightData()
-            photos = PhotoStorageService.shared.photos.sorted { $0.captureDate > $1.captureDate }
-            print("[CompareViewModel] Loaded \(photos.count) photos from PhotoStorageService")
+
+    /// メモリ上の写真一覧と体重の記録を読み直す。ディスクの読み直しや画像キャッシュの破棄はしない。
+    func refresh() {
+        photos = PhotoStorageService.shared.photos.sorted { $0.captureDate > $1.captureDate }
+        Task {
+            let entries = (try? await WeightStorageService.shared.loadEntries()) ?? []
+            let calendar = Calendar.current
+            var byDay: [Date: WeightEntry] = [:]
+            for entry in entries {
+                byDay[calendar.startOfDay(for: entry.date)] = entry
+            }
+            entriesByDay = byDay
         }
     }
-    
-    func getDaysBetween(_ firstPhoto: Photo, _ secondPhoto: Photo) -> Int {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.day], from: firstPhoto.captureDate, to: secondPhoto.captureDate)
-        return abs(components.day ?? 0)
+
+    func photo(on date: Date, categoryId: String) -> Photo? {
+        ComparePairing.photo(on: date, categoryId: categoryId, in: photos)
     }
-    
-    func getWeightDifference(_ firstPhoto: Photo, _ secondPhoto: Photo) -> Double? {
-        guard let firstWeight = firstPhoto.weight,
-              let secondWeight = secondPhoto.weight else {
-            return nil
+
+    /// 写真の日の体重 (kg)。体重 0 は「体重なし」。
+    func weight(for photo: Photo) -> Double? {
+        if let entry = entriesByDay[Calendar.current.startOfDay(for: photo.captureDate)] {
+            return entry.weight > 0 ? entry.weight : nil
         }
-        return secondWeight - firstWeight
+        return photo.weight
     }
-    
-    func getBodyFatDifference(_ firstPhoto: Photo, _ secondPhoto: Photo) -> Double? {
-        guard let firstBodyFat = firstPhoto.bodyFatPercentage,
-              let secondBodyFat = secondPhoto.bodyFatPercentage else {
-            return nil
+
+    func bodyFat(for photo: Photo) -> Double? {
+        if let entry = entriesByDay[Calendar.current.startOfDay(for: photo.captureDate)] {
+            return entry.bodyFatPercentage
         }
-        return secondBodyFat - firstBodyFat
+        return photo.bodyFatPercentage
     }
 }
