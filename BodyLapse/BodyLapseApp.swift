@@ -2,7 +2,6 @@
 //  BodyLapseApp.swift
 //  BodyLapse
 //
-//  Created by Koji Okamoto on 2025/06/24.
 //
 
 import SwiftUI
