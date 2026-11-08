@@ -22,8 +22,7 @@ extension CalendarView {
     }
     
     func copyPhoto(_ photo: Photo) {
-        guard let image = PhotoStorageService.shared.loadImage(for: photo) else { return }
-        UIPasteboard.general.image = image
+        guard PhotoPasteboard.copy(photo) else { return }
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
     }
