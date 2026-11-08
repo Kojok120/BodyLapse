@@ -54,29 +54,6 @@ class TooltipManager: ObservableObject {
         saveTooltipShown(for: feature)
     }
     
-    /// 全てのガイダンス状態をリセット（テスト/デバッグ用）
-    func resetAllGuidance() {
-        shownFeatures.removeAll()
-        completedFeatures.removeAll()
-        
-        for feature in FeatureID.allCases {
-            UserDefaults.standard.removeObject(forKey: Keys.tooltipShownPrefix + feature.rawValue)
-            UserDefaults.standard.removeObject(forKey: Keys.tooltipCompletedPrefix + feature.rawValue)
-        }
-    }
-    
-    /// ガイダンスが必要な機能の総数を取得
-    func getTotalGuidanceCount() -> Int {
-        return FeatureID.allCases.count - completedFeatures.count
-    }
-    
-    /// 完了率を取得
-    func getCompletionPercentage() -> Double {
-        let totalFeatures = FeatureID.allCases.count
-        let completedCount = completedFeatures.count
-        return totalFeatures > 0 ? Double(completedCount) / Double(totalFeatures) : 0.0
-    }
-    
     // MARK: - プライベートメソッド
     
     private func loadState() {

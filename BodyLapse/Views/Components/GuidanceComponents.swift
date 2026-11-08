@@ -90,77 +90,6 @@ struct GuidanceTooltip: View {
     }
 }
 
-// MARK: - Guidance Wrapper ViewModifier
-struct GuidanceModifier: ViewModifier {
-    let featureID: TooltipManager.FeatureID
-    @ObservedObject private var tooltipManager = TooltipManager.shared
-    @State private var showTooltip = false
-    
-    func body(content: Content) -> some View {
-        ZStack {
-            content
-                .onTapGesture {
-                    handleTap()
-                }
-                .overlay(
-                    // Badge positioning
-                    GuidanceBadge(
-                        isVisible: tooltipManager.needsGuidance(for: featureID),
-                        size: 10,
-                        offset: CGPoint(x: 8, y: -8)
-                    ),
-                    alignment: .topTrailing
-                )
-            
-            // Tooltip overlay
-            if showTooltip {
-                Color.black.opacity(0.1)
-                    .ignoresSafeArea()
-                    .onTapGesture {
-                        dismissTooltip()
-                    }
-                
-                VStack {
-                    Spacer()
-                    
-                    GuidanceTooltip(
-                        title: tooltipManager.getTitle(for: featureID),
-                        description: tooltipManager.getDescription(for: featureID),
-                        isVisible: showTooltip,
-                        onDismiss: {
-                            dismissTooltip()
-                        }
-                    )
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 100)
-                    
-                    Spacer()
-                }
-            }
-        }
-    }
-    
-    private func handleTap() {
-        // Only show tooltip if guidance is needed and hasn't been shown before
-        if tooltipManager.needsGuidance(for: featureID) && !tooltipManager.hasShownTooltip(for: featureID) {
-            showTooltip = true
-            tooltipManager.markTooltipShown(for: featureID)
-        }
-    }
-    
-    private func dismissTooltip() {
-        showTooltip = false
-        tooltipManager.markFeatureCompleted(for: featureID)
-    }
-}
-
-// MARK: - View Extension for Easy Usage
-extension View {
-    func withGuidance(for featureID: TooltipManager.FeatureID) -> some View {
-        self.modifier(GuidanceModifier(featureID: featureID))
-    }
-}
-
 // MARK: - Guidance Badge Only (for custom implementations)
 struct GuidanceBadgeOnly: ViewModifier {
     let featureID: TooltipManager.FeatureID
@@ -188,31 +117,5 @@ extension View {
         offset: CGPoint = CGPoint(x: 8, y: -8)
     ) -> some View {
         self.modifier(GuidanceBadgeOnly(featureID: featureID, size: size, offset: offset))
-    }
-}
-
-// MARK: - Custom Guidance Handler (for buttons that need custom behavior)
-struct CustomGuidanceHandler: ViewModifier {
-    let featureID: TooltipManager.FeatureID
-    let onGuidanceNeeded: () -> Void
-    @ObservedObject private var tooltipManager = TooltipManager.shared
-    
-    func body(content: Content) -> some View {
-        content
-            .onTapGesture {
-                if tooltipManager.needsGuidance(for: featureID) && !tooltipManager.hasShownTooltip(for: featureID) {
-                    tooltipManager.markTooltipShown(for: featureID)
-                    onGuidanceNeeded()
-                }
-            }
-    }
-}
-
-extension View {
-    func withCustomGuidance(
-        for featureID: TooltipManager.FeatureID,
-        onGuidanceNeeded: @escaping () -> Void
-    ) -> some View {
-        self.modifier(CustomGuidanceHandler(featureID: featureID, onGuidanceNeeded: onGuidanceNeeded))
     }
 }
