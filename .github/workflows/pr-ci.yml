@@ -46,6 +46,12 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "Simulator: $name"
 
+      # github.com のリリース配布の URL が落ちていても解決できるよう、GitHub から落とすバイナリを先にキャッシュへ置く
+      - name: Prefetch SwiftPM binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/ci/prefetch-spm-binaries.sh
+
       - name: Build
         run: |
           xcodebuild \

@@ -142,6 +142,12 @@ jobs:
           cp "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8" ~/.appstoreconnect/private_keys/
           cp "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8" ~/.private_keys/
 
+      # github.com のリリース配布の URL が落ちていても解決できるよう、GitHub から落とすバイナリを先にキャッシュへ置く
+      - name: Prefetch SwiftPM binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/ci/prefetch-spm-binaries.sh
+
       - name: Archive (Release, App Store signing)
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
