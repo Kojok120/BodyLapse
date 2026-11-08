@@ -269,7 +269,7 @@ class ImportExportService {
 
             // .bodylapseファイルを直接生成
             let zipPath = FileManager.default.temporaryDirectory
-                .appendingPathComponent("BodyLapse_Export_\(UUID().uuidString).bodylapse")
+                .appendingPathComponent("\(Self.exportTemporaryPrefix)\(UUID().uuidString).bodylapse")
 
             guard SimpleZipArchive.createArchive(atPath: zipPath.path, entries: archiveEntries) else {
                 throw ImportExportError.zipOperationFailed
@@ -289,23 +289,48 @@ class ImportExportService {
     
     // MARK: - インポート
     
-    /// 以前のインポートで残った一時ディレクトリ（BodyLapseImport_*）を掃除する。
-    /// アプリ強制終了などで defer が走らなかった場合のディスクリークを回収する。
-    func cleanupLeftoverImportTempDirectories() {
+    /// 一時フォルダに残った取り込み・書き出しのファイルの名前の頭
+    static let importTemporaryPrefix = "BodyLapseImport_"
+    static let exportTemporaryPrefix = "BodyLapse_Export_"
+
+    /// 一時フォルダに残った取り込み・書き出しのファイルを消す。
+    /// 書き出したファイルは写真・体重・メモを平文で詰めたものなので、共有を終えたら残さない。
+    /// アプリの強制終了などで後始末が走らなかった分も、次の起動や取り込みでここから回収する。
+    /// - Parameters:
+    ///   - prefixes: 消す対象の名前の頭
+    ///   - inUse: いま使っているファイル (取り込み中の元ファイルなど)。これは消さない
+    func cleanupLeftoverTemporaryFiles(
+        prefixes: [String] = [ImportExportService.importTemporaryPrefix, ImportExportService.exportTemporaryPrefix],
+        keeping inUse: URL? = nil
+    ) {
         let tempDir = FileManager.default.temporaryDirectory
         guard let contents = try? FileManager.default.contentsOfDirectory(
             at: tempDir,
             includingPropertiesForKeys: nil
         ) else { return }
 
-        for url in contents where url.lastPathComponent.hasPrefix("BodyLapseImport_") {
+        let keptPath = inUse?.standardizedFileURL.resolvingSymlinksInPath().path
+        for url in contents {
+            let name = url.lastPathComponent
+            guard prefixes.contains(where: { name.hasPrefix($0) }) else { continue }
+            if let keptPath, url.standardizedFileURL.resolvingSymlinksInPath().path == keptPath { continue }
             do {
                 try FileManager.default.removeItem(at: url)
-                print("[ImportExport] Cleaned up leftover temp dir: \(url.lastPathComponent)")
+                print("[ImportExport] Cleaned up leftover temp item: \(name)")
             } catch {
-                print("[ImportExport] Failed to clean up leftover temp dir \(url.lastPathComponent): \(error)")
+                print("[ImportExport] Failed to clean up leftover temp item \(name): \(error)")
             }
         }
+    }
+
+    /// 共有を終えた書き出しのファイルを消す。一時フォルダの書き出し以外は触らない。
+    func removeExportedFile(at url: URL) {
+        guard url.lastPathComponent.hasPrefix(Self.exportTemporaryPrefix),
+              url.standardizedFileURL.resolvingSymlinksInPath().deletingLastPathComponent().path
+                == FileManager.default.temporaryDirectory.standardizedFileURL.resolvingSymlinksInPath().path else {
+            return
+        }
+        try? FileManager.default.removeItem(at: url)
     }
 
     func importData(
@@ -330,13 +355,14 @@ class ImportExportService {
     ) async {
         print("[ImportExport] Starting import from: \(url.path)")
 
-        // 前回のインポートで残った一時ディレクトリを掃除（ディスクリーク防止）
-        cleanupLeftoverImportTempDirectories()
+        // 前回のインポートで残った一時ファイルを掃除する (ディスクリーク防止)。
+        // 画面側は選んだファイルを同じ頭の名前で一時フォルダへ写してから渡すので、取り込む元は残す
+        cleanupLeftoverTemporaryFiles(prefixes: [Self.importTemporaryPrefix], keeping: url)
 
         do {
                 // 展開用の一時ディレクトリを作成
                 let tempDir = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("BodyLapseImport_\(UUID().uuidString)")
+                    .appendingPathComponent("\(Self.importTemporaryPrefix)\(UUID().uuidString)")
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                 defer {
                     do {

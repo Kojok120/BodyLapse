@@ -31,6 +31,11 @@ struct BodyLapseApp: App {
         // Initialize PhotoStorageService on app launch
         PhotoStorageService.shared.initialize()
         
+        // 前回までの取り込み・書き出しの一時ファイルが残っていれば消す (書き出しは全データの平文)
+        DispatchQueue.global(qos: .utility).async {
+            ImportExportService.shared.cleanupLeftoverTemporaryFiles()
+        }
+
         // Set up daily photo reminder check
         NotificationService.shared.setupDailyPhotoCheck()
         
