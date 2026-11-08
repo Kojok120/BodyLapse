@@ -13,7 +13,6 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var tempWeight: Double?
     @Published var tempBodyFat: Double?
     @Published var showGuidelines = true
-    @Published var shouldBlurFace = true
     @Published var capturedPhoto: Photo?
     @Published var savedGuideline: BodyGuideline?
     @Published var selectedCategory: PhotoCategory = PhotoCategory.defaultCategory
@@ -430,12 +429,6 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         }
     }
     
-    func resetCapture() {
-        capturedImage = nil
-        bodyDetected = false
-        bodyConfidence = 0.0
-    }
-    
     func switchCamera() {
         guard let currentInput = self.currentInput else { return }
         
@@ -471,31 +464,6 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         }
         
         session.commitConfiguration()
-    }
-    
-    func processCapture(_ image: UIImage) {
-        self.capturedImage = image
-    }
-    
-    func cleanup() {
-        initializationTask?.cancel()
-        initializationTask = nil
-        
-        stopSession()
-        cleanupPreviewLayer()
-        
-        // Remove all inputs and outputs from the session
-        session.beginConfiguration()
-        for input in session.inputs {
-            session.removeInput(input)
-        }
-        for output in session.outputs {
-            session.removeOutput(output)
-        }
-        session.commitConfiguration()
-        
-        // Clear the current input reference
-        currentInput = nil
     }
     
     // MARK: - Category Support

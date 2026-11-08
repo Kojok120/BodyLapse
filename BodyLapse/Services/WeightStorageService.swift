@@ -126,16 +126,6 @@ actor WeightStorageService {
         try saveDeletedDays(deleted)
     }
     
-    // MARK: - エントリ更新
-    func updateEntry(_ entry: WeightEntry) throws {
-        var entries = try loadEntries()
-        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else {
-            throw WeightStorageError.entryNotFound
-        }
-        entries[index] = entry
-        try saveEntries(entries)
-    }
-    
     // MARK: - 日付別エントリ取得
     func getEntry(for date: Date) throws -> WeightEntry? {
         let entries = try loadEntries()
@@ -216,52 +206,6 @@ actor WeightStorageService {
         try data.write(to: weightsFile, options: .atomic)
         print("[WeightStorage] Saved \(entries.count) entries to file")
     }
-    
-    // MARK: - エクスポート/インポート
-    func exportData() throws -> Data {
-        guard FileManager.default.fileExists(atPath: weightsFile.path) else {
-            return Data()
-        }
-        return try Data(contentsOf: weightsFile)
-    }
-    
-    func importData(_ data: Data) throws {
-        // データを検証
-        let _ = try JSONDecoder().decode([WeightEntry].self, from: data)
-        
-        // データを保存
-        try data.write(to: weightsFile, options: .atomic)
-    }
-    
-    // MARK: - 統計
-    func getStatistics() throws -> WeightStatistics {
-        let entries = try loadEntries()
-        
-        guard !entries.isEmpty else {
-            return WeightStatistics(
-                totalEntries: 0,
-                averageWeight: nil,
-                minWeight: nil,
-                maxWeight: nil,
-                averageBodyFat: nil,
-                firstEntryDate: nil,
-                lastEntryDate: nil
-            )
-        }
-        
-        let weights = entries.map { $0.weight }
-        let bodyFats = entries.compactMap { $0.bodyFatPercentage }
-        
-        return WeightStatistics(
-            totalEntries: entries.count,
-            averageWeight: weights.reduce(0, +) / Double(weights.count),
-            minWeight: weights.min(),
-            maxWeight: weights.max(),
-            averageBodyFat: bodyFats.isEmpty ? nil : bodyFats.reduce(0, +) / Double(bodyFats.count),
-            firstEntryDate: entries.last?.date,
-            lastEntryDate: entries.first?.date
-        )
-    }
 }
 
 // MARK: - エラータイプ
@@ -277,15 +221,4 @@ enum WeightStorageError: LocalizedError {
             return "error.weight.invalid_data".localized
         }
     }
-}
-
-// MARK: - 統計モデル
-struct WeightStatistics {
-    let totalEntries: Int
-    let averageWeight: Double?
-    let minWeight: Double?
-    let maxWeight: Double?
-    let averageBodyFat: Double?
-    let firstEntryDate: Date?
-    let lastEntryDate: Date?
 }

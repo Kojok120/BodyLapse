@@ -3,7 +3,6 @@ import Combine
 
 @MainActor
 class CalendarViewModel: ObservableObject {
-    @Published var currentMonth = Date()
     @Published var photos: [Photo] = [] {
         didSet { statistics = Self.computeStatistics(from: photos) }
     }
@@ -72,21 +71,6 @@ class CalendarViewModel: ObservableObject {
         }
     }
     
-    var photosForCurrentMonth: [Photo] {
-        photos.filter { photo in
-            photo.categoryId == selectedCategory.id &&
-            Calendar.current.isDate(photo.captureDate, equalTo: currentMonth, toGranularity: .month)
-        }
-    }
-
-    
-    func photo(for date: Date) -> Photo? {
-        photos.first { photo in
-            photo.categoryId == selectedCategory.id &&
-            Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
-        }
-    }
-    
     func allPhotosForDate(_ date: Date) -> [Photo] {
         photos.filter { photo in
             Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
@@ -95,24 +79,6 @@ class CalendarViewModel: ObservableObject {
     
     func selectCategory(_ category: PhotoCategory) {
         selectedCategory = category
-    }
-    
-    func previousMonth() {
-        withAnimation {
-            currentMonth = Calendar.current.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
-        }
-    }
-    
-    func nextMonth() {
-        withAnimation {
-            currentMonth = Calendar.current.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
-        }
-    }
-    
-    func goToToday() {
-        withAnimation {
-            currentMonth = Date()
-        }
     }
     
     // MARK: - デイリーノート

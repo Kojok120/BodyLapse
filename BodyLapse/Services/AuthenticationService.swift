@@ -274,30 +274,6 @@ class AuthenticationService: ObservableObject {
         isAuthenticated = true
     }
     
-    func authenticate(completion: @escaping (Bool) -> Void) {
-        // 認証が有効でない場合は認証済みとしてマーク
-        guard isAuthenticationEnabled else {
-            isAuthenticated = true
-            completion(true)
-            return
-        }
-        
-        // 生体認証が有効な場合はまず試行
-        if isBiometricEnabled {
-            authenticateWithBiometric { success, error in
-                if success {
-                    completion(true)
-                } else {
-                    // 生体認証失敗、パスワード入力が必要
-                    completion(false)
-                }
-            }
-        } else {
-            // 生体認証が無効、パスワード入力が必要
-            completion(false)
-        }
-    }
-    
     func logout() {
         isAuthenticated = false
         authenticationError = nil

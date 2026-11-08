@@ -234,17 +234,6 @@ class SubscriptionManagerService: ObservableObject {
 
         NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
     }
-
-    /// デバッグティアをリセット
-    func resetDebugPremium() {
-        UserDefaults.standard.removeObject(forKey: "debug_isPremium")
-        UserDefaults.standard.removeObject(forKey: "debug_isPro")
-        UserDefaults.standard.synchronize()
-
-        Task {
-            await updateSubscriptionStatus()
-        }
-    }
     #endif
 }
 

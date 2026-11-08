@@ -150,17 +150,3 @@ class VideoStorageService {
         }
     }
 }
-
-enum VideoStorageError: LocalizedError {
-    case saveFailed
-    case thumbnailGenerationFailed
-    
-    var errorDescription: String? {
-        switch self {
-        case .saveFailed:
-            return "error.video.save_failed".localized
-        case .thumbnailGenerationFailed:
-            return "error.video.thumbnail_failed".localized
-        }
-    }
-}

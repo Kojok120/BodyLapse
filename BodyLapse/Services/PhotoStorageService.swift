@@ -543,57 +543,7 @@ class PhotoStorageService {
         imageCache.removeAllObjects()
     }
     
-    func photosGroupedByDate() -> [(Date, [Photo])] {
-        let grouped = Dictionary(grouping: photos) { photo in
-            Calendar.current.startOfDay(for: photo.captureDate)
-        }
-        
-        return grouped.sorted { $0.key > $1.key }
-    }
-    
     // MARK: - カテゴリサポートメソッド
-    
-    func getPhotosForCategory(_ categoryId: String) -> [Photo] {
-        return photos.filter { $0.categoryId == categoryId }
-            .sorted { $0.captureDate > $1.captureDate }
-    }
-    
-    func getPhotoCategories(for date: Date) -> [String] {
-        let calendar = Calendar.current
-        let targetDay = calendar.startOfDay(for: date)
-        
-        return photos.filter { photo in
-            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
-        }.map { $0.categoryId }.uniqued()
-    }
-    
-    func photosGroupedByDateAndCategory() -> [(Date, [(String, [Photo])])] {
-        let calendar = Calendar.current
-        
-        // まず日付別にグループ化
-        let dateGrouped = Dictionary(grouping: photos) { photo in
-            calendar.startOfDay(for: photo.captureDate)
-        }
-        
-        // 各日付内でカテゴリ別にグループ化
-        let result = dateGrouped.map { (date, photosForDate) in
-            let categoryGrouped = Dictionary(grouping: photosForDate) { $0.categoryId }
-                .sorted { $0.key < $1.key }
-                .map { ($0.key, $0.value.sorted { $0.captureDate > $1.captureDate }) }
-            
-            return (date, categoryGrouped)
-        }
-        
-        return result.sorted { $0.0 > $1.0 }
-    }
-    
-    func getPhotoDatesForCategory(_ categoryId: String) -> [Date] {
-        let calendar = Calendar.current
-        let photosInCategory = photos.filter { $0.categoryId == categoryId }
-        
-        let dates = Set(photosInCategory.map { calendar.startOfDay(for: $0.captureDate) })
-        return Array(dates).sorted(by: >)
-    }
     
     func migratePhotosToCategory(_ categoryId: String = PhotoCategory.defaultCategory.id) {
         // categoryIdなしの既存写真を移行するため
@@ -742,13 +692,6 @@ private extension UIImage {
         let pixelWidth = size.width * scale
         let pixelHeight = size.height * scale
         return Int(pixelWidth * pixelHeight * 4)
-    }
-}
-
-extension Array where Element: Hashable {
-    func uniqued() -> [Element] {
-        var seen = Set<Element>()
-        return filter { seen.insert($0).inserted }
     }
 }
 

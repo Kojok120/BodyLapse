@@ -4,8 +4,6 @@ import AVFoundation
 struct CameraView: View {
     @StateObject private var viewModel = CameraViewModel()
     @ObservedObject private var userSettings = UserSettingsManager.shared
-    @ObservedObject private var subscriptionManager = SubscriptionManagerService.shared
-    @State private var showingPhotoReview = false
     @State private var activeSheet: ActiveSheet?
     @State private var showingAddCategory = false
     @State private var newCategoryToSetup: PhotoCategory?

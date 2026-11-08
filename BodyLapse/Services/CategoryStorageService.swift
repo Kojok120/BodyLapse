@@ -10,7 +10,6 @@ import Foundation
 class CategoryStorageService {
     static let shared = CategoryStorageService()
     
-    private let categoriesKey = "BodyLapseCategories"
     private let categoriesFileName = "categories.json"
     
     private var documentsDirectory: URL? {
@@ -140,18 +139,6 @@ class CategoryStorageService {
     
     func getActiveCategories() -> [PhotoCategory] {
         return loadCategories()
-    }
-    
-    func updateCategoryOrder(_ categories: [PhotoCategory]) {
-        var allCategories = loadAllCategories()
-        
-        for (index, category) in categories.enumerated() {
-            if let existingIndex = allCategories.firstIndex(where: { $0.id == category.id }) {
-                allCategories[existingIndex].order = index
-            }
-        }
-        
-        saveCategories(allCategories)
     }
     
     func getNextUncapturedCategory(for date: Date, currentCategoryId: String) -> PhotoCategory? {

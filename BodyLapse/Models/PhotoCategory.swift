@@ -69,8 +69,4 @@ extension PhotoCategory {
     var canBeDeleted: Bool {
         return isCustom && isActive
     }
-    
-    var canBeRenamed: Bool {
-        return isCustom
-    }
 }

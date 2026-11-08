@@ -92,10 +92,4 @@ class DataMigrationService {
             print("Guideline migration completed")
         }
     }
-    
-    func resetMigrationStatus() {
-        // デバッグ目的
-        UserDefaults.standard.removeObject(forKey: migrationVersionKey)
-        print("Migration status reset")
-    }
 }

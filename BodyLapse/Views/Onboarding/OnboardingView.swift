@@ -292,40 +292,6 @@ struct OnboardingView: View {
     
     // MARK: - ヘルパーメソッド
     
-    private var biometricIcon: String {
-        let context = LAContext()
-        var error: NSError?
-        
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            switch context.biometryType {
-            case .faceID:
-                return "faceid"
-            case .touchID:
-                return "touchid"
-            default:
-                return "lock.shield"
-            }
-        }
-        return "lock.shield"
-    }
-    
-    private var biometricLocalizedName: String {
-        let context = LAContext()
-        var error: NSError?
-        
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            switch context.biometryType {
-            case .faceID:
-                return "onboarding.enable_faceid".localized
-            case .touchID:
-                return "onboarding.enable_touchid".localized
-            default:
-                return "onboarding.enable_biometric".localized
-            }
-        }
-        return "onboarding.enable_biometric".localized
-    }
-    
     private func checkBiometricAvailability() {
         let context = LAContext()
         var error: NSError?

@@ -4,9 +4,6 @@ import UIKit
 class GuidelineStorageService {
     static let shared = GuidelineStorageService()
     
-    private let guidelineKey = "BodyLapseGuideline"
-    private let userDefaults = UserDefaults.standard
-    
     private init() {}
     
     // MARK: - レガシーサポート（デフォルトカテゴリ）
@@ -44,14 +41,5 @@ class GuidelineStorageService {
     
     func hasGuideline(for categoryId: String) -> Bool {
         return loadGuideline(for: categoryId) != nil
-    }
-    
-    func getAllGuidelines() -> [(categoryId: String, guideline: BodyGuideline)] {
-        let categories = CategoryStorageService.shared.getActiveCategories()
-        
-        return categories.compactMap { category in
-            guard let guideline = category.guideline else { return nil }
-            return (category.id, guideline)
-        }
     }
 }
