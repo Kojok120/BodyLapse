@@ -309,20 +309,21 @@ struct VideoGenerationProgressView: View {
                 .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 20) {
+                // 明るいカードに白い文字で、ほぼ読めなかった (1.12:1)
                 Text("calendar.generating_video".localized)
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 
                 ProgressView(value: progress)
-                    .progressViewStyle(LinearProgressViewStyle(tint: .white))
+                    .progressViewStyle(LinearProgressViewStyle(tint: .bodyLapseTurquoise))
                     .frame(width: 200)
                 
                 Text("\(Int(progress * 100))%")
                     .font(.caption)
-                    .foregroundColor(.white)
+                    .foregroundColor(.secondary)
             }
             .padding(30)
-            .background(Color(UIColor.systemGray6))
+            .background(Color(UIColor.systemBackground))
             .cornerRadius(15)
         }
     }
