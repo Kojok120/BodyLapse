@@ -643,3 +643,17 @@
 "premium.trial_years" = "Gratis durante %d año(s)";
 "premium.trial_generic" = "Prueba gratuita";
 "premium.trial_then_price" = "después, %@";
+
+/* iCloud backup: decisions and restore suggestion */
+"cloud.error.needs_decision" = "Hay otra copia de seguridad en iCloud. Elige si quieres restaurarla o reemplazarla con los datos de este dispositivo.";
+"cloud.error.conflict" = "Otro dispositivo actualizó la copia al mismo tiempo. Inténtalo de nuevo.";
+"cloud.error.invalid_backup" = "No se pudo leer la copia de seguridad de iCloud.";
+"cloud.decision.title" = "La copia automática está en pausa";
+"cloud.decision.other_message" = "iCloud tiene una copia que no se hizo con los datos actuales de este dispositivo (por ejemplo, de otro iPhone o de antes de reinstalar). Para que no se sobrescriba, la copia automática está en pausa hasta que elijas.";
+"cloud.decision.legacy_message" = "iCloud tiene una copia hecha con una versión anterior de la app y este dispositivo no tiene sus fotos. Para que no se sobrescriba, la copia automática está en pausa hasta que elijas.";
+"cloud.decision.replace" = "Reemplazar con los datos de este dispositivo";
+"cloud.decision.replace_title" = "¿Reemplazar la copia de iCloud?";
+"cloud.decision.replace_confirm" = "La copia de iCloud se reemplazará con las fotos, el peso y las notas de este dispositivo. Lo que solo esté en la copia de iCloud se perderá.";
+"cloud.suggest_restore.title" = "Tienes una copia en iCloud";
+"cloud.suggest_restore.message" = "Puedes restaurar tus fotos, peso y notas desde Ajustes > Copia en iCloud.";
+"cloud.suggest_restore.open" = "Abrir Ajustes";

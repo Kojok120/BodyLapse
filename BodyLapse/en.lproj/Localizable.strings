@@ -643,3 +643,17 @@
 "premium.trial_years" = "%d-year free trial";
 "premium.trial_generic" = "Free trial";
 "premium.trial_then_price" = "then %@";
+
+/* iCloud backup: decisions and restore suggestion */
+"cloud.error.needs_decision" = "There's a different backup in iCloud. Choose whether to restore it or replace it with this device's data.";
+"cloud.error.conflict" = "Another device updated the backup at the same time. Please try again.";
+"cloud.error.invalid_backup" = "The backup in iCloud couldn't be read.";
+"cloud.decision.title" = "Automatic backup is paused";
+"cloud.decision.other_message" = "iCloud has a backup that wasn't made from this device's current data (for example, from another iPhone or before reinstalling). So that it isn't overwritten, automatic backup is paused until you choose.";
+"cloud.decision.legacy_message" = "iCloud has a backup made with an earlier version of the app, and this device doesn't have the photos in it. So that it isn't overwritten, automatic backup is paused until you choose.";
+"cloud.decision.replace" = "Replace with This Device's Data";
+"cloud.decision.replace_title" = "Replace the iCloud Backup?";
+"cloud.decision.replace_confirm" = "The backup in iCloud will be replaced with the photos, weight and notes on this device. Anything that's only in the iCloud backup will be lost.";
+"cloud.suggest_restore.title" = "You Have an iCloud Backup";
+"cloud.suggest_restore.message" = "You can restore your photos, weight and notes from Settings > iCloud Backup.";
+"cloud.suggest_restore.open" = "Open Settings";

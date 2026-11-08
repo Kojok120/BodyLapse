@@ -3,8 +3,8 @@ import CloudKit
 import Network
 
 /// Pro限定のクラウドバックアップ（CloudKitプライベートDB）。
-/// 既存のエクスポート/インポート（.bodylapseバンドル）を1つのCKAssetとして
-/// ユーザー自身のiCloudに保存・復元する。サーバ運用不要・データはユーザーのiCloud内。
+/// 写真・動画は 1 ファイル 1 レコードにして、まだ上げていない分だけを上げる。小さなデータは目録 1 件にまとめる。
+/// 別の端末やまっさらな端末から黙って上書きしないよう、どのバックアップの続きかを端末に覚える (CloudBackupPlanner)。
 @MainActor
 class CloudBackupService: ObservableObject {
     static let shared = CloudBackupService()
@@ -18,6 +18,10 @@ class CloudBackupService: ObservableObject {
 
     @Published var state: BackupState = .idle
     @Published var lastBackupDate: Date?
+    /// クラウドに別のバックアップがあり、自動バックアップを止めているとき、その理由
+    @Published private(set) var pendingDecision: CloudBackupPlanner.Decision.Reason?
+    /// まっさらな端末で、クラウドにバックアップがあると分かったとき (一度だけ復元を案内する)
+    @Published var shouldSuggestRestore = false
 
     /// バックアップに動画を含めるか（デフォルトON）。
     /// 動画は容量が大きく iCloud クォータを圧迫し得るため、
@@ -32,23 +36,38 @@ class CloudBackupService: ObservableObject {
         didSet { UserDefaults.standard.set(autoBackupEnabled, forKey: Self.autoBackupKey) }
     }
     private static let autoBackupKey = "cloud_backup_auto_enabled"
+    private static let localStateKey = "cloud_backup_local_state_v2"
+    private static let restoreSuggestedKey = "cloud_backup_restore_suggested"
 
     /// 自動バックアップの最小間隔。厳密な24時間だと撮影時刻の日々の揺らぎで1日飛ぶため20時間。
     static let autoBackupMinInterval: TimeInterval = 20 * 60 * 60
 
     private let containerID = "iCloud.com.J.BodyLapse"
-    private let recordType = "Backup"
-    private let recordName = "latest-backup"
-    private let assetKey = "bundle"
-    private let createdAtKey = "createdAt"
-
     private lazy var container = CKContainer(identifier: containerID)
-    private var database: CKDatabase { container.privateCloudDatabase }
-    private var recordID: CKRecord.ID { CKRecord.ID(recordName: recordName) }
+    private lazy var store: CloudBackupStore = CloudKitBackupStore(database: container.privateCloudDatabase)
+    private var engine: CloudBackupEngine { CloudBackupEngine(store: store) }
+
+    /// 実行中か。最初の await より前に立て、撮影が続いても同時に複数走らせない
+    private var isRunning = false
+
+    private var localState: CloudBackupPlanner.LocalState {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: Self.localStateKey),
+                  let state = try? JSONDecoder().decode(CloudBackupPlanner.LocalState.self, from: data) else {
+                return CloudBackupPlanner.LocalState()
+            }
+            return state
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                UserDefaults.standard.set(data, forKey: Self.localStateKey)
+            }
+        }
+    }
 
     private init() {
         // 新規撮影後の自動バックアップ。savePhoto は userInfo["photo"] 付きで
-        // PhotosUpdated を投げる（復元・再読込は userInfo なし）ので、それだけに反応する。
+        // PhotosUpdated を投げる（復元・再読込・取り込みは userInfo なし）ので、それだけに反応する。
         NotificationCenter.default.addObserver(
             forName: Notification.Name("PhotosUpdated"),
             object: nil,
@@ -63,6 +82,14 @@ class CloudBackupService: ObservableObject {
 
     /// アプリ起動時に呼び、シングルトンを生成して通知購読を開始させる。
     func activate() {}
+
+    private var workDirectory: URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("CloudBackupWork", isDirectory: true)
+    }
+
+    private var localEarliestPhotoDate: Date? {
+        PhotoStorageService.shared.photos.map(\.captureDate).min()
+    }
 
     /// iCloudアカウントが利用可能ならnil、不可なら理由メッセージを返す。
     private func accountUnavailableMessage() async -> String? {
@@ -86,6 +113,18 @@ class CloudBackupService: ObservableObject {
 
     /// CloudKitのエラーをユーザー向けの具体的な文言に変換する。
     private func userMessage(for error: Error) -> String {
+        if let backupError = error as? CloudBackupError {
+            switch backupError {
+            case .needsDecision:
+                return "cloud.error.needs_decision".localized
+            case .conflict:
+                return "cloud.error.conflict".localized
+            case .noBackup:
+                return "cloud.error.no_backup".localized
+            case .invalidBackup:
+                return "cloud.error.invalid_backup".localized
+            }
+        }
         if let ckError = error as? CKError {
             switch ckError.code {
             case .notAuthenticated:
@@ -103,19 +142,42 @@ class CloudBackupService: ObservableObject {
         return "cloud.error.generic".localized
     }
 
-    /// 直近のバックアップ日時を取得して `lastBackupDate` を更新する。
-    func refreshLastBackupDate() async {
-        do {
-            let record = try await database.record(for: recordID)
-            lastBackupDate = record[createdAtKey] as? Date
-        } catch {
-            // レコードが無い/取得失敗時はnilのまま（初回など）
-            lastBackupDate = nil
+    /// クラウドの状態を読み、最終バックアップの日時と、止めている理由を更新する
+    func refreshStatus() async {
+        guard await accountUnavailableMessage() == nil,
+              let snapshot = try? await store.fetchSnapshot() else {
+            return
+        }
+        lastBackupDate = snapshot.latestBackupDate
+        let decision = CloudBackupPlanner.decide(
+            cloud: snapshot,
+            local: localState,
+            localEarliestPhotoDate: localEarliestPhotoDate,
+            force: false
+        )
+        if case .needsDecision(let reason) = decision {
+            pendingDecision = reason
+        } else {
+            pendingDecision = nil
         }
     }
 
-    /// 現在のデータをエクスポートしてクラウドにバックアップする。
-    func backupNow() async {
+    /// Pro の人がまっさらな端末で使い始めたとき、クラウドにバックアップがあれば一度だけ復元を案内する
+    func checkRestoreSuggestion() async {
+        guard SubscriptionManagerService.shared.canAccessCloudBackup(),
+              !UserDefaults.standard.bool(forKey: Self.restoreSuggestedKey) else { return }
+        await refreshStatus()
+        guard pendingDecision != nil else { return }
+        UserDefaults.standard.set(true, forKey: Self.restoreSuggestedKey)
+        shouldSuggestRestore = true
+    }
+
+    /// 現在のデータをクラウドへ上げる。replaceCloudBackup は「この端末の内容で置き換える」を選んだとき
+    func backupNow(replaceCloudBackup: Bool = false) async {
+        guard !isRunning else { return }
+        isRunning = true
+        defer { isRunning = false }
+
         state = .working
         if let message = await accountUnavailableMessage() {
             state = .failure(message)
@@ -124,9 +186,12 @@ class CloudBackupService: ObservableObject {
         }
 
         do {
-            try await uploadCurrentData()
+            try await upload(force: replaceCloudBackup)
             state = .success
             Haptics.success()
+        } catch CloudBackupError.needsDecision(let reason) {
+            pendingDecision = reason
+            state = .idle
         } catch {
             print("[CloudBackup] backup failed: \(error)")
             state = .failure(userMessage(for: error))
@@ -134,30 +199,32 @@ class CloudBackupService: ObservableObject {
         }
     }
 
-    /// 現在のデータをエクスポートしてクラウドへアップロードする共通処理。
-    private func uploadCurrentData() async throws {
-        let bundleURL = try await exportBundle()
-        defer { try? FileManager.default.removeItem(at: bundleURL) }
+    /// 書き出しと同じ中身を作り、差分を上げる共通処理
+    private func upload(force: Bool) async throws {
+        let options = ImportExportService.ExportOptions(
+            includePhotos: true,
+            includeVideos: includeVideos,
+            includeSettings: true,
+            includeWeightData: true,
+            includeNotes: true,
+            dateRange: nil,
+            categories: nil
+        )
+        let entries = try await ImportExportService.shared.makeExportEntries(options: options)
+        defer { try? FileManager.default.removeItem(at: workDirectory) }
 
-        let record = CKRecord(recordType: recordType, recordID: recordID)
-        record[assetKey] = CKAsset(fileURL: bundleURL)
-        record[createdAtKey] = Date()
-
-        // 既存レコードを上書き保存。
-        // private DB のデフォルトゾーンは atomic 非対応なので atomically: false。
-        let saveResults = try await database.modifyRecords(
-            saving: [record],
-            deleting: [],
-            savePolicy: .allKeys,
-            atomically: false
-        ).saveResults
-
-        // 個別レコードの保存結果を検証（部分失敗を「完了」と誤判定しないため）
-        if case .failure(let recordError)? = saveResults[record.recordID] {
-            throw recordError
-        }
-
-        await refreshLastBackupDate()
+        let outcome = try await engine.backup(
+            entries: entries,
+            local: localState,
+            localEarliestPhotoDate: localEarliestPhotoDate,
+            force: force,
+            workDirectory: workDirectory,
+            persist: { [weak self] state in self?.localState = state }
+        )
+        localState = outcome.state
+        pendingDecision = nil
+        lastBackupDate = Date()
+        print("[CloudBackup] uploaded \(outcome.uploadedCount), deleted \(outcome.deletedCount)")
     }
 
     // MARK: - 自動バックアップ
@@ -173,25 +240,31 @@ class CloudBackupService: ObservableObject {
     func autoBackupIfNeeded() async {
         guard autoBackupEnabled,
               SubscriptionManagerService.shared.canAccessCloudBackup(),
+              !isRunning,
               state != .working else { return }
+        // 待ちや問い合わせの前に印を立てる (この間に来た通知で二重に走らせない)
+        isRunning = true
+        defer { isRunning = false }
 
         // 撮影直後の保存・画面遷移と競合しないよう少し待ってから始める
         try? await Task.sleep(nanoseconds: 5_000_000_000)
-        guard state != .working else { return }
 
         // 起動後まだクラウドの日時を取得していない場合は先に取得（不要な連続実行を防ぐ）
         if lastBackupDate == nil {
-            await refreshLastBackupDate()
+            await refreshStatus()
         }
         guard Self.shouldAutoBackup(now: Date(), lastBackup: lastBackupDate) else { return }
 
-        // モバイル回線では実行しない（動画込みのバンドルは大きくなり得る）
+        // モバイル回線では実行しない（動画込みだと大きくなり得る）
         guard await !isNetworkExpensive() else { return }
         guard await accountUnavailableMessage() == nil else { return }
 
         state = .working
         do {
-            try await uploadCurrentData()
+            try await upload(force: false)
+        } catch CloudBackupError.needsDecision(let reason) {
+            // クラウドに別のバックアップがある: 上書きせず、設定の画面で選んでもらう
+            pendingDecision = reason
         } catch {
             // 自動実行では撮影フローを邪魔しない：失敗はログのみ（次の撮影時に再試行される）
             print("[CloudBackup] auto backup failed: \(error)")
@@ -217,6 +290,10 @@ class CloudBackupService: ObservableObject {
 
     /// クラウドの最新バックアップから復元する。
     func restoreFromCloud() async {
+        guard !isRunning else { return }
+        isRunning = true
+        defer { isRunning = false }
+
         state = .working
         if let message = await accountUnavailableMessage() {
             state = .failure(message)
@@ -225,19 +302,30 @@ class CloudBackupService: ObservableObject {
         }
 
         do {
-            let record = try await database.record(for: recordID)
-            guard let asset = record[assetKey] as? CKAsset, let assetURL = asset.fileURL else {
-                state = .failure("cloud.error.no_backup".localized)
-                return
+            defer { try? FileManager.default.removeItem(at: workDirectory) }
+            let outcome = try await engine.restore(local: localState, workDirectory: workDirectory)
+
+            // 「クラウドから復元」はバックアップを正とする操作なので .replace で上書きする
+            // （.skip だと既存データのある端末で同日データが取り込まれず部分復元になる）。
+            // 端末ローカルの設定/セキュリティは保持するため importSettings は false。
+            let options = ImportExportService.ImportOptions(
+                mergeStrategy: .replace,
+                importPhotos: true,
+                importVideos: true,
+                importSettings: false,
+                importWeightData: true,
+                importNotes: true
+            )
+            _ = try await ImportExportService.shared.importExtractedBundle(
+                at: outcome.extractedDirectory,
+                options: options,
+                progress: { _ in }
+            )
+            localState = outcome.state
+            pendingDecision = nil
+            if outcome.missingMediaCount > 0 {
+                print("[CloudBackup] \(outcome.missingMediaCount) media files were missing in the cloud")
             }
-
-            // CKAssetのファイルは一時的なので、安全な場所へコピーしてからインポート
-            let tempURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent("CloudRestore_\(UUID().uuidString).bodylapse")
-            try FileManager.default.copyItem(at: assetURL, to: tempURL)
-            defer { try? FileManager.default.removeItem(at: tempURL) }
-
-            _ = try await importBundle(from: tempURL)
 
             // データ再読み込みを各画面へ通知
             // 体重同期が完了してから通知する（完了前にPhotosUpdatedを出すと一時的に体重が欠ける）
@@ -245,58 +333,12 @@ class CloudBackupService: ObservableObject {
             await PhotoStorageService.shared.syncWeightData()
             NotificationCenter.default.post(name: Notification.Name("PhotosUpdated"), object: nil)
 
+            await refreshStatus()
             state = .success
             Haptics.success()
         } catch {
             state = .failure(userMessage(for: error))
             Haptics.error()
-        }
-    }
-
-    // MARK: - 既存のエクスポート/インポートをasyncでラップ
-
-    private func exportBundle() async throws -> URL {
-        // 動画は容量が大きく iCloud クォータ超過(quotaExceeded)の主因になるため、
-        // ユーザーがトグルで除外できるようにしている（既定は含める）。
-        let options = ImportExportService.ExportOptions(
-            includePhotos: true,
-            includeVideos: includeVideos,
-            includeSettings: true,
-            includeWeightData: true,
-            includeNotes: true,
-            dateRange: nil,
-            categories: nil
-        )
-        return try await withCheckedThrowingContinuation { continuation in
-            ImportExportService.shared.exportData(
-                options: options,
-                progress: { _ in }
-            ) { result in
-                continuation.resume(with: result)
-            }
-        }
-    }
-
-    private func importBundle(from url: URL) async throws -> ImportExportService.ImportSummary {
-        // 「クラウドから復元」はバックアップを正とする操作なので .replace で上書きする
-        // （.skip だと既存データのある端末で同日データが取り込まれず部分復元になる）。
-        // 端末ローカルの設定/セキュリティは保持するため importSettings は false。
-        let options = ImportExportService.ImportOptions(
-            mergeStrategy: .replace,
-            importPhotos: true,
-            importVideos: true,
-            importSettings: false,
-            importWeightData: true,
-            importNotes: true
-        )
-        return try await withCheckedThrowingContinuation { continuation in
-            ImportExportService.shared.importData(
-                from: url,
-                options: options,
-                progress: { _ in }
-            ) { result in
-                continuation.resume(with: result)
-            }
         }
     }
 }

@@ -641,3 +641,17 @@
 "premium.trial_years" = "%d年間無料";
 "premium.trial_generic" = "無料体験あり";
 "premium.trial_then_price" = "その後 %@";
+
+/* iCloud backup: decisions and restore suggestion */
+"cloud.error.needs_decision" = "iCloudに別のバックアップがあります。復元するか、この端末の内容で置き換えるかを選んでください。";
+"cloud.error.conflict" = "別の端末が同時にバックアップを更新しました。もう一度お試しください。";
+"cloud.error.invalid_backup" = "iCloudのバックアップを読み込めませんでした。";
+"cloud.decision.title" = "自動バックアップを止めています";
+"cloud.decision.other_message" = "iCloudに、この端末の今のデータとは別のバックアップがあります（ほかのiPhoneや、再インストールする前のものなど）。上書きして消えないよう、選ぶまで自動バックアップを止めています。";
+"cloud.decision.legacy_message" = "iCloudに以前のバージョンのアプリで作ったバックアップがあり、この端末にはその写真がありません。上書きして消えないよう、選ぶまで自動バックアップを止めています。";
+"cloud.decision.replace" = "この端末の内容で置き換える";
+"cloud.decision.replace_title" = "iCloudのバックアップを置き換えますか？";
+"cloud.decision.replace_confirm" = "iCloudのバックアップを、この端末の写真・体重・メモで置き換えます。iCloudのバックアップにしかないデータは消えます。";
+"cloud.suggest_restore.title" = "iCloudにバックアップがあります";
+"cloud.suggest_restore.message" = "設定 > iCloudバックアップ から、写真・体重・メモを復元できます。";
+"cloud.suggest_restore.open" = "設定を開く";

@@ -4,6 +4,7 @@ import SwiftUI
 struct CloudBackupView: View {
     @StateObject private var service = CloudBackupService.shared
     @State private var showingRestoreConfirm = false
+    @State private var showingReplaceConfirm = false
 
     private var isWorking: Bool {
         if case .working = service.state { return true }
@@ -20,6 +21,33 @@ struct CloudBackupView: View {
                     Text("cloud.uses_icloud_storage".localized)
                         .font(.footnote)
                         .foregroundColor(.secondary)
+                }
+            }
+
+            // クラウドに別のバックアップがあり、上書きしないよう自動バックアップを止めている
+            if let reason = service.pendingDecision {
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("cloud.decision.title".localized, systemImage: "exclamationmark.icloud")
+                            .font(.headline)
+                            .foregroundColor(.orange)
+                        Text(reason == .legacyBackup ? "cloud.decision.legacy_message".localized : "cloud.decision.other_message".localized)
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Button {
+                        showingRestoreConfirm = true
+                    } label: {
+                        Label("cloud.restore".localized, systemImage: "icloud.and.arrow.down")
+                    }
+                    .disabled(isWorking)
+                    Button(role: .destructive) {
+                        showingReplaceConfirm = true
+                    } label: {
+                        Label("cloud.decision.replace".localized, systemImage: "icloud.and.arrow.up")
+                    }
+                    .disabled(isWorking)
                 }
             }
 
@@ -57,7 +85,12 @@ struct CloudBackupView: View {
 
             Section {
                 Button {
-                    Task { await service.backupNow() }
+                    if service.pendingDecision != nil {
+                        // 別のバックアップを置き換えるので、確かめてから上げる
+                        showingReplaceConfirm = true
+                    } else {
+                        Task { await service.backupNow() }
+                    }
                 } label: {
                     Label("cloud.backup_now".localized, systemImage: "icloud.and.arrow.up")
                 }
@@ -86,7 +119,15 @@ struct CloudBackupView: View {
         .navigationTitle("cloud.title".localized)
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            await service.refreshLastBackupDate()
+            await service.refreshStatus()
+        }
+        .alert("cloud.decision.replace_title".localized, isPresented: $showingReplaceConfirm) {
+            Button("common.cancel".localized, role: .cancel) {}
+            Button("cloud.decision.replace".localized, role: .destructive) {
+                Task { await service.backupNow(replaceCloudBackup: true) }
+            }
+        } message: {
+            Text("cloud.decision.replace_confirm".localized)
         }
         .alert("cloud.restore_title".localized, isPresented: $showingRestoreConfirm) {
             Button("common.cancel".localized, role: .cancel) {}
