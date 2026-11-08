@@ -67,15 +67,55 @@ class StaticWeightChartRenderer {
         return width * fraction
     }
     
+    /// プログレスバー以外 (背景・グリッド・軸・線) を描いたグラフ。
+    /// 動画のコマごとに変わるのはプログレスバーだけなので、これを一度だけ作り、コマごとにバーだけを重ねる
+    struct BaseChart {
+        let image: UIImage
+        let chartRect: CGRect
+        let dateRange: ClosedRange<Date>
+        let options: ChartOptions
+    }
+
     func renderChart(
         entries: [WeightEntry],
         currentDate: Date,
         dateRange: ClosedRange<Date>,
-        options: ChartOptions = .default
+        options: ChartOptions = .default,
+        scale: CGFloat = 0
     ) -> UIImage? {
+        guard let base = renderBase(entries: entries, dateRange: dateRange, options: options, scale: scale) else {
+            return nil
+        }
+        return compose(base, currentDate: currentDate)
+    }
+
+    /// 作っておいたグラフに、currentDate の位置のプログレスバーを重ねる
+    func compose(_ base: BaseChart, currentDate: Date) -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = base.image.scale
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: base.options.size, format: format).image { rendererContext in
+            base.image.draw(at: .zero)
+            drawProgressBar(
+                in: rendererContext.cgContext,
+                rect: base.chartRect,
+                currentDate: currentDate,
+                dateRange: base.dateRange,
+                options: base.options
+            )
+        }
+    }
+
+    /// プログレスバー以外を描く。scale は 0 で画面の倍率、動画では 1 (動画の画素と同じ大きさで描けば足りる)
+    func renderBase(
+        entries: [WeightEntry],
+        dateRange: ClosedRange<Date>,
+        options: ChartOptions = .default,
+        scale: CGFloat = 0
+    ) -> BaseChart? {
         guard !entries.isEmpty else { return nil }
         
-        UIGraphicsBeginImageContextWithOptions(options.size, false, 0)
+        UIGraphicsBeginImageContextWithOptions(options.size, false, scale)
         defer { UIGraphicsEndImageContext() }
         
         guard let context = UIGraphicsGetCurrentContext() else { return nil }
@@ -179,16 +219,8 @@ class StaticWeightChartRenderer {
             )
         }
         
-        // プログレスバーを描画
-        drawProgressBar(
-            in: context,
-            rect: chartRect,
-            currentDate: currentDate,
-            dateRange: dateRange,
-            options: options
-        )
-        
-        return UIGraphicsGetImageFromCurrentImageContext()
+        guard let image = UIGraphicsGetImageFromCurrentImageContext() else { return nil }
+        return BaseChart(image: image, chartRect: chartRect, dateRange: dateRange, options: options)
     }
     
     private func drawGrid(in context: CGContext, rect: CGRect, options: ChartOptions) {

@@ -235,6 +235,12 @@ class VideoGenerationService {
             }
         }
         
+        // グラフの本体は生成ごとに一度だけ描き、コマごとにはプログレスバーとその日の数字だけを重ねる
+        let chartOverlay: VideoWeightChartOverlay? = {
+            guard options.showGraph, let dateRange, !weightEntries.isEmpty else { return nil }
+            return VideoWeightChartOverlay(entries: weightEntries, dateRange: dateRange, isWeightInLbs: options.isWeightInLbs)
+        }()
+
         // ビデオライターを作成
         let videoWriter = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
         
@@ -307,14 +313,13 @@ class VideoGenerationService {
                         showDate: options.showDate,
                         date: photo.captureDate,
                         showGraph: options.showGraph,
-                        weightEntries: weightEntries,
-                        dateRange: dateRange,
-                        isWeightInLbs: options.isWeightInLbs
+                        chart: chartOverlay,
+                        pool: pixelBufferAdaptor.pixelBufferPool
                     )
                 }) {
                     // 非同期で入力の準備ができるまで待機
                     while !videoWriterInput.isReadyForMoreMediaData {
-                        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                        try await Task.sleep(nanoseconds: 10_000_000) // 0.01 秒 (0.1 秒だと待つたびに 1 コマ分以上遅れる)
                     }
                     
                     // ピクセルバッファを追加
@@ -362,14 +367,13 @@ class VideoGenerationService {
                             showDate: options.showDate,
                             date: date,
                             showGraph: options.showGraph,
-                            weightEntries: weightEntries,
-                            dateRange: dateRange,
-                            isWeightInLbs: options.isWeightInLbs
+                            chart: chartOverlay,
+                            pool: pixelBufferAdaptor.pixelBufferPool
                         )
                     }) {
                         // 非同期で入力の準備ができるまで待機
                         while !videoWriterInput.isReadyForMoreMediaData {
-                            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                            try await Task.sleep(nanoseconds: 10_000_000) // 0.01 秒
                         }
                         
                         // ピクセルバッファを追加
@@ -404,15 +408,22 @@ class VideoGenerationService {
     
     
     
-    private func createPixelBuffer(from image: UIImage, size: CGSize, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, weightEntries: [WeightEntry]? = nil, dateRange: ClosedRange<Date>? = nil, isWeightInLbs: Bool = false) -> CVPixelBuffer? {
-        // 必要に応じて方向を修正
-        let orientedImage = image.fixedOrientation()
-        
+    /// コマの画素の入れ物。書き込み側のプールがあればそこから借り、コマごとに新しく確保しない
+    private func makePixelBuffer(size: CGSize, pool: CVPixelBufferPool?) -> CVPixelBuffer? {
+        if let pool {
+            var pooled: CVPixelBuffer?
+            if CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, pool, &pooled) == kCVReturnSuccess,
+               let pooled,
+               CVPixelBufferGetWidth(pooled) == Int(size.width),
+               CVPixelBufferGetHeight(pooled) == Int(size.height) {
+                return pooled
+            }
+        }
+
         let options: [String: Any] = [
             kCVPixelBufferCGImageCompatibilityKey as String: kCFBooleanTrue!,
             kCVPixelBufferCGBitmapContextCompatibilityKey as String: kCFBooleanTrue!
         ]
-        
         var pixelBuffer: CVPixelBuffer?
         let status = CVPixelBufferCreate(
             kCFAllocatorDefault,
@@ -422,8 +433,15 @@ class VideoGenerationService {
             options as CFDictionary,
             &pixelBuffer
         )
+        return status == kCVReturnSuccess ? pixelBuffer : nil
+    }
+
+    private func createPixelBuffer(from image: UIImage, size: CGSize, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, chart: VideoWeightChartOverlay? = nil, pool: CVPixelBufferPool? = nil) -> CVPixelBuffer? {
+        // 必要に応じて方向を修正
+        let orientedImage = image.fixedOrientation()
         
-        guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
+        // プールの入れ物は前のコマの中身が残っているが、下で黒く塗りつぶしてから描く
+        guard let buffer = makePixelBuffer(size: size, pool: pool) else {
             return nil
         }
         
@@ -484,9 +502,9 @@ class VideoGenerationService {
             drawDate(date, in: context, size: size)
         }
         
-        // Add graph if needed (premium feature)
-        if showGraph, let weightEntries = weightEntries, let dateRange = dateRange, let currentDate = date {
-            drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size, isWeightInLbs: isWeightInLbs)
+        // 体重のグラフ
+        if let chart, let currentDate = date {
+            drawWeightChart(chart, currentDate: currentDate, in: context, size: size)
         }
         
         return buffer
@@ -496,10 +514,8 @@ class VideoGenerationService {
         // Save current context state
         context.saveGState()
         
-        // Format date
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy/MM/dd"
-        let dateText = dateFormatter.string(from: date)
+        // アプリの言語の書式で入れる (コマごとに DateFormatter を作らない)
+        let dateText = AppDateFormat.medium(date)
         
         // Calculate appropriate font size based on video size
         let baseFontSize: CGFloat = min(size.width, size.height) * 0.06 // 6% of smaller dimension
@@ -557,34 +573,16 @@ class VideoGenerationService {
         context.restoreGState()
     }
     
-    private func drawWeightChart(weightEntries: [WeightEntry], currentDate: Date, dateRange: ClosedRange<Date>, in context: CGContext, size: CGSize, isWeightInLbs: Bool) {
+    private func drawWeightChart(_ chart: VideoWeightChartOverlay, currentDate: Date, in context: CGContext, size: CGSize) {
         // Calculate chart size and position
         let chartHeight = size.height * 0.15 // 15% of video height
         let chartWidth = size.width * 0.9 // 90% of video width
         let chartX = (size.width - chartWidth) / 2
         let chartY: CGFloat = 10 // Position at top of the frame
-        
-        // Configure chart options        
-        let chartOptions = StaticWeightChartRenderer.ChartOptions(
-            size: CGSize(width: chartWidth, height: chartHeight),
-            showBodyFat: true,
-            backgroundColor: UIColor.black.withAlphaComponent(0.8),
-            gridColor: UIColor.white.withAlphaComponent(0.2),
-            weightLineColor: UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0),
-            bodyFatLineColor: UIColor(red: 1.0, green: 0.624, blue: 0.039, alpha: 1.0),
-            progressBarColor: UIColor(red: 0.0, green: 0.8, blue: 0.0, alpha: 0.8),
-            textColor: .white,
-            font: .systemFont(ofSize: 12),
-            isWeightInLbs: isWeightInLbs
-        )
+        let isWeightInLbs = chart.isWeightInLbs
         
         // Render the chart
-        if let chartImage = StaticWeightChartRenderer.shared.renderChart(
-            entries: weightEntries,
-            currentDate: currentDate,
-            dateRange: dateRange,
-            options: chartOptions
-        ) {
+        if let chartImage = chart.image(for: currentDate, chartSize: CGSize(width: chartWidth, height: chartHeight)) {
             // Draw chart with a semi-transparent background
             context.saveGState()
             
@@ -601,7 +599,7 @@ class VideoGenerationService {
             }
             
             // Add weight and body fat labels if available
-            if let entry = weightEntries.first(where: { Calendar.current.isDate($0.date, inSameDayAs: currentDate) }) {
+            if let entry = chart.entry(on: currentDate) {
                 // Format weight with correct unit
                 let convertedWeight = isWeightInLbs ? entry.weight * 2.20462 : entry.weight
                 let weightUnit = isWeightInLbs ? "lbs" : "kg"
@@ -656,26 +654,10 @@ class VideoGenerationService {
         showDate: Bool = false,
         date: Date? = nil,
         showGraph: Bool = false,
-        weightEntries: [WeightEntry]? = nil,
-        dateRange: ClosedRange<Date>? = nil,
-        isWeightInLbs: Bool = false
+        chart: VideoWeightChartOverlay? = nil,
+        pool: CVPixelBufferPool? = nil
     ) -> CVPixelBuffer? {
-        let options: [String: Any] = [
-            kCVPixelBufferCGImageCompatibilityKey as String: kCFBooleanTrue!,
-            kCVPixelBufferCGBitmapContextCompatibilityKey as String: kCFBooleanTrue!
-        ]
-        
-        var pixelBuffer: CVPixelBuffer?
-        let status = CVPixelBufferCreate(
-            kCFAllocatorDefault,
-            Int(size.width),
-            Int(size.height),
-            kCVPixelFormatType_32ARGB,
-            options as CFDictionary,
-            &pixelBuffer
-        )
-        
-        guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
+        guard let buffer = makePixelBuffer(size: size, pool: pool) else {
             return nil
         }
         
@@ -785,9 +767,9 @@ class VideoGenerationService {
             drawDate(date, in: context, size: size)
         }
         
-        // Add graph if needed (premium feature)
-        if showGraph, let weightEntries = weightEntries, let dateRange = dateRange, let currentDate = date {
-            drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size, isWeightInLbs: isWeightInLbs)
+        // 体重のグラフ
+        if let chart, let currentDate = date {
+            drawWeightChart(chart, currentDate: currentDate, in: context, size: size)
         }
         
         return buffer
