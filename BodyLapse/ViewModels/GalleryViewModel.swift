@@ -6,7 +6,7 @@ import Photos
 class GalleryViewModel: ObservableObject {
     @Published var photos: [Photo] = []
     @Published var videos: [Video] = []
-    @Published var selectedSection: GallerySection = .videos
+    @Published var selectedSection: GallerySection = .photos
     @Published var selectedCategories: Set<String> = []
     @Published var sortOrder: SortOrder = .newest
     @Published var showingFilterOptions = false
