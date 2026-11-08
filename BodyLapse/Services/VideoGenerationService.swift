@@ -315,7 +315,7 @@ class VideoGenerationService {
             let totalPhotos = photos.count
             
             for (index, photo) in photos.enumerated() {
-                guard let image = PhotoStorageService.shared.loadImage(for: photo) else { continue }
+                guard let image = PhotoStorageService.shared.loadImage(for: photo, targetSize: options.videoSize, scale: 1, cache: false) else { continue }
                 
                 // 有効な場合、顔のぼかしを適用
                 let imageToProcess = options.blurFaces ? try await blurred(image) : image
@@ -367,7 +367,7 @@ class VideoGenerationService {
                 var categoryPhotos: [String: UIImage] = [:]
                 for categoryId in options.selectedCategories {
                     if let photo = photosForDate.first(where: { $0.categoryId == categoryId }),
-                       let image = PhotoStorageService.shared.loadImage(for: photo) {
+                       let image = PhotoStorageService.shared.loadImage(for: photo, targetSize: options.videoSize, scale: 1, cache: false) {
                         // 有効な場合、顔のぼかしを適用
                         categoryPhotos[categoryId] = options.blurFaces ? try await blurred(image) : image
                     }

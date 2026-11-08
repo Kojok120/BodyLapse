@@ -860,9 +860,6 @@ class ImportExportService {
         options: ImportOptions,
         progress: @escaping (Float) -> Void
     ) throws -> (imported: Int, failed: Int) {
-        var imported = 0
-        var failed = 0
-
         print("[ImportExport] Importing photos from: \(directory.path)")
 
         // Check if directory exists
@@ -877,6 +874,20 @@ class ImportExportService {
         ).filter {
             (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
         }
+
+        // 1 枚ごとにメタデータ全件の書き込みと更新通知 (バックアップの起動) をしないよう、最後にまとめる
+        return try PhotoStorageService.shared.performBatchUpdates {
+            try importPhotoFiles(in: categoryDirs, options: options, progress: progress)
+        }
+    }
+
+    private func importPhotoFiles(
+        in categoryDirs: [URL],
+        options: ImportOptions,
+        progress: @escaping (Float) -> Void
+    ) throws -> (imported: Int, failed: Int) {
+        var imported = 0
+        var failed = 0
         
         print("[ImportExport] Found \(categoryDirs.count) category directories")
         for dir in categoryDirs {
@@ -967,12 +978,10 @@ class ImportExportService {
                                         let attrs = try FileManager.default.attributesOfItem(atPath: sourceImagePath.path)
                                         let fileSize = attrs[.size] as? Int64 ?? 0
                                         if fileSize > 0 && fileSize < 50_000_000 { // Max 50MB per image
-                                            // メモリマッピングで画像データを読み込み
+                                            // メモリマッピングで画像データを読み込み、向きの正しい JPEG はそのまま使う (再エンコードしない)
                                             let imageData = try Data(contentsOf: sourceImagePath, options: [.mappedIfSafe])
                                             
-                                            // 画像を作成
-                                            if let image = UIImage(data: imageData) {
-                                                print("[ImportExport] Created UIImage successfully")
+                                            if let jpegData = try? PhotoStorageService.storableJPEGData(fromImported: imageData) {
                                                 do {
                                                     let savedPhoto: Photo
                                                     if existing != nil {
@@ -980,7 +989,7 @@ class ImportExportService {
                                                         savedPhoto = try PhotoStorageService.shared.replacePhoto(
                                                             for: photo.captureDate,
                                                             categoryId: finalCategoryId,
-                                                            with: image,
+                                                            jpegData: jpegData,
                                                             isFaceBlurred: photo.isFaceBlurred,
                                                             bodyDetectionConfidence: photo.bodyDetectionConfidence,
                                                             weight: photo.weight,
@@ -988,7 +997,7 @@ class ImportExportService {
                                                         )
                                                     } else {
                                                         savedPhoto = try PhotoStorageService.shared.savePhoto(
-                                                            image,
+                                                            jpegData: jpegData,
                                                             captureDate: photo.captureDate,
                                                             categoryId: finalCategoryId,
                                                             isFaceBlurred: photo.isFaceBlurred,
@@ -1004,7 +1013,7 @@ class ImportExportService {
                                                     failed += 1
                                                 }
                                             } else {
-                                                print("[ImportExport] Failed to create UIImage from data")
+                                                print("[ImportExport] Failed to read image data")
                                                 failed += 1
                                             }
                                         } else {

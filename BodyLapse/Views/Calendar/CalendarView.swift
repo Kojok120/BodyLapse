@@ -401,7 +401,7 @@ extension CalendarView {
             selectedIndex = index
         }
         
-        PhotoStorageService.shared.reloadPhotosFromDisk()
+        // 写真の一覧はメモリ上で更新済みなので、ディスクから読み直さない
         viewModel.loadPhotos()
         viewModel.loadCategories()
         updateCurrentPhoto()

@@ -11,7 +11,8 @@ struct PhotoGridItem: View {
     let onSave: () -> Void
     let onShare: () -> Void
     @State private var image: UIImage?
-    @State private var lastLoadedSize: CGSize = .zero
+    /// 読み込む大きさ。セルが見えている間だけ読み込み、速くスクロールして消えたセルの分は取り消す
+    @State private var requestedSize: CGSize = .zero
     
     var body: some View {
         GeometryReader { geometry in
@@ -69,7 +70,10 @@ struct PhotoGridItem: View {
                 onTap()
             }
             .onAppear {
-                loadImage(for: geometry.size)
+                requestedSize = CGSize(width: max(geometry.size.width, 1), height: max(geometry.size.height, 1))
+            }
+            .onChange(of: geometry.size) { _, newSize in
+                requestedSize = CGSize(width: max(newSize.width, 1), height: max(newSize.height, 1))
             }
             .onDisappear {
                 if !isSelectionMode {
@@ -78,6 +82,9 @@ struct PhotoGridItem: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
+        .task(id: "\(photo.id.uuidString)_\(Int(requestedSize.width))x\(Int(requestedSize.height))") {
+            await loadImage()
+        }
         .contextMenu {
             if !isSelectionMode {
                 Button {
@@ -124,18 +131,24 @@ struct PhotoGridItem: View {
         }
     }
     
-    private func loadImage(for size: CGSize) {
-        let clampedSize = CGSize(width: max(size.width, 1), height: max(size.height, 1))
-        if image != nil && abs(clampedSize.width - lastLoadedSize.width) < 1 && abs(clampedSize.height - lastLoadedSize.height) < 1 {
+    @MainActor
+    private func loadImage() async {
+        let targetSize = requestedSize
+        guard targetSize.width > 1, targetSize.height > 1 else { return }
+        if let cached = PhotoStorageService.shared.cachedImage(for: photo, targetSize: targetSize) {
+            image = cached
             return
         }
-        lastLoadedSize = clampedSize
-        DispatchQueue.global(qos: .userInitiated).async {
-            let loadedImage = PhotoStorageService.shared.loadImage(for: photo, targetSize: clampedSize)
-            DispatchQueue.main.async {
-                self.image = loadedImage
-            }
-        }
+        // 見えてすぐ消えたセル (速いスクロール) は読み込みを始めない
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        guard !Task.isCancelled else { return }
+
+        let targetPhoto = photo
+        let loadedImage = await Task.detached(priority: .userInitiated) {
+            PhotoStorageService.shared.loadImage(for: targetPhoto, targetSize: targetSize)
+        }.value
+        guard !Task.isCancelled else { return }
+        image = loadedImage
     }
 }
 
