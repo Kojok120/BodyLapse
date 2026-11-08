@@ -22,17 +22,11 @@
 "common.close" = "Cerrar";
 "common.back" = "Atrás";
 "common.next" = "Siguiente";
-"common.continue" = "Continuar";
 "common.skip" = "Omitir";
-"common.finish" = "Finalizar";
 "common.error" = "Error";
-"common.loading" = "Cargando...";
 "common.processing" = "Procesando...";
 "common.replace" = "Reemplazar";
-"common.retake" = "Retomar";
 "common.copy" = "Copiar";
-"common.use_photo" = "Usar Foto";
-"common.save_photo" = "Guardar Foto";
 "common.enable" = "Habilitar";
 
 /* Calendar View */
@@ -48,7 +42,6 @@
 "calendar.generate" = "Generar";
 "calendar.body_detected" = "Cuerpo detectado";
 "calendar.align_body" = "Alinea tu cuerpo";
-"calendar.no_photo" = "Sin foto";
 "calendar.confirm_delete_photo" = "Eliminar Foto";
 "calendar.delete_photo_message" = "¿Estás seguro de que quieres eliminar esta foto? Esta acción no se puede deshacer.";
 "calendar.select_time_period" = "Seleccionar Período";
@@ -58,21 +51,15 @@
 "calendar.enter_weight" = "Ingrese peso";
 "calendar.body_fat_optional" = "% Grasa Corporal (Opcional)";
 "calendar.enter_body_fat" = "Ingrese grasa corporal";
-"calendar.clear_data" = "Borrar Datos";
 "calendar.period_label" = "Período";
-"calendar.selected_period" = "Período Seleccionado";
-"calendar.date_range" = "Rango de Fechas";
 "calendar.start_date" = "Fecha de Inicio";
 "calendar.end_date" = "Fecha de Fin";
-"calendar.photos" = "Fotos";
 "calendar.video_settings" = "Configuración de Video";
 "calendar.speed" = "Velocidad";
 "calendar.quality" = "Calidad";
 "calendar.blur_faces" = "Difuminar Caras";
 "calendar.show_date" = "Mostrar Fecha";
 "calendar.show_graph" = "Mostrar Gráfico";
-"calendar.watermark_notice" = "La versión gratuita incluye marca de agua";
-"calendar.estimated_duration" = "Duración Estimada";
 "calendar.generate_video" = "Generar Video";
 "calendar.speed.slow" = "Lento (0.5s/cuadro)";
 "calendar.speed.normal" = "Normal (0.25s/cuadro)";
@@ -84,12 +71,7 @@
 "calendar.generating_video" = "Generando Video";
 "calendar.select_date" = "Seleccionar Fecha";
 "calendar.has_photo" = "Foto";
-"calendar.has_data" = "Datos";
-"calendar.no_data_period" = "Sin datos para el período seleccionado";
 "calendar.ios16_required" = "El seguimiento de peso requiere iOS 16 o posterior";
-"calendar.no_weight_data" = "Aún sin datos de peso";
-"calendar.add_weight_hint" = "Añade datos de peso al guardar fotos";
-"calendar.reload_data" = "Recargar Datos";
 "calendar.add_memo" = "Añadir nota";
 "calendar.upload_photo" = "Subir Foto";
 "calendar.invalid_image" = "Formato de imagen no válido";
@@ -119,7 +101,6 @@
 "gallery.save_to_photos" = "Guardar en Fotos";
 "gallery.photo_saved" = "Foto guardada en la biblioteca";
 "gallery.video_saved" = "Video guardado en la biblioteca";
-"gallery.photos_count" = "fotos";
 "gallery.action_cannot_be_undone" = "Esta acción no se puede deshacer.";
 "gallery.play" = "Reproducir";
 "gallery.select_dates" = "Seleccionar Fechas";
@@ -147,8 +128,6 @@
 "settings.reset_guideline" = "Restablecer Guía Corporal";
 "settings.set_guideline" = "Establecer Guía Corporal";
 "settings.weight_unit" = "Unidad de Peso";
-"settings.video_generation" = "Generación de Video";
-"settings.show_date_in_video" = "Mostrar Fecha en Video";
 "settings.appearance" = "Apariencia";
 "settings.appearance_mode" = "Modo de Apariencia";
 "settings.appearance_light" = "Claro";
@@ -168,20 +147,15 @@
 "settings.auto_import" = "Importar peso y grasa corporal automáticamente";
 "settings.sync_now" = "Sincronizar Ahora";
 "settings.upgrade_premium" = "Eliminar Anuncios";
-"settings.premium_description" = "Disfruta de una experiencia sin anuncios";
 "settings.no_ads_only" = "Eliminar anuncios - Todas las demás funciones son gratuitas";
 "settings.health_integration" = "Integración con Salud";
 "settings.premium_price" = "$0.99 al mes";
 "settings.data" = "Datos";
-"settings.export_photos" = "Exportar Fotos";
 "settings.clear_all_data" = "Borrar Todos los Datos";
 "settings.about" = "Acerca de";
 "settings.about_bodylapse" = "Acerca de BodyLapse";
-"settings.version" = "v1.0.0";
 "settings.privacy_policy" = "Política de Privacidad";
-"settings.terms_service" = "Términos de Servicio";
 "settings.terms_use" = "Términos de Uso";
-"settings.debug_settings" = "Configuración de Depuración";
 "settings.notification_required" = "Se Requiere Permiso de Notificación";
 "settings.notification_message" = "Por favor, habilite las notificaciones en Configuración para recibir recordatorios diarios de fotos.";
 "settings.health_required" = "Se Requiere Acceso a Salud";
@@ -190,7 +164,6 @@
 "settings.reset" = "Restablecer";
 "settings.language" = "Idioma";
 "settings.open_settings" = "Abrir Configuración";
-"settings.developer" = "Desarrollador";
 "settings.face_id" = "Face ID";
 "settings.touch_id" = "Touch ID";
 "settings.biometric" = "Biométrico";
@@ -208,78 +181,26 @@
 "about.contact" = "Contacto";
 "about.made_with_love" = "Hecho con ❤️ para entusiastas del fitness";
 
-/* Export Photos */
-"export.description" = "Exporta tus fotos para compartir o respaldar";
-"export.all_photos" = "Exportar Todas las Fotos";
-"export.title" = "Exportar Fotos";
-
 /* Compare View */
 "compare.title" = "Comparar Progreso";
 "compare.before" = "Antes";
 "compare.after" = "Después";
-"compare.select_first" = "Seleccionar Primera Foto";
-"compare.select_second" = "Seleccionar Segunda Foto";
 "compare.no_weight" = "Sin peso";
 "compare.select_photo" = "Seleccionar foto";
 "compare.weight" = "peso";
 "compare.body_fat" = "grasa corporal";
-"compare.upgrade_premium" = "Eliminar Anuncios";
-"compare.premium_feature" = "Todas las funciones están disponibles en la versión gratuita";
 "compare.instruction" = "Compara Tu Progreso";
 "compare.select_two_photos" = "Selecciona dos fotos para ver tu transformación";
 "compare.select_date" = "Seleccionar Fecha";
 
 /* Onboarding */
-"onboarding.welcome" = "Bienvenido a BodyLapse";
-"onboarding.setup_account" = "Configurar Tu Cuenta";
-"onboarding.daily_photos.title" = "Fotos de Progreso Diarias";
-"onboarding.daily_photos.subtitle" = "Captura tu transformación con\nfotos diarias consistentes";
-"onboarding.daily_photos.description" = "Las guías visuales te ayudan a mantener\nla misma pose y posición cada vez";
-"onboarding.timelapse.title" = "Videos Time-Lapse";
-"onboarding.timelapse.subtitle" = "Observa tu viaje desarrollarse\ncon impresionantes videos time-lapse";
-"onboarding.timelapse.description" = "Personaliza la velocidad y calidad del video\npara crear el montaje de transformación perfecto";
-"onboarding.privacy.title" = "Protección de Privacidad";
-"onboarding.privacy.subtitle" = "Mantén tu identidad privada con\ntecnología automática de difuminado facial";
-"onboarding.privacy.description" = "Todo el procesamiento ocurre en tu dispositivo\nTus fotos nunca salen de tu teléfono";
-"onboarding.metrics.title" = "Rastrea Tus Métricas";
-"onboarding.metrics.subtitle" = "Registra peso y porcentaje de grasa corporal\npara visualizar tu progreso en el tiempo";
-"onboarding.metrics.description" = "Combina fotos con datos perspicaces\npara un seguimiento integral del progreso";
-"onboarding.comparison.title" = "Comparación Antes y Después";
-"onboarding.comparison.subtitle" = "Selecciona dos fotos para ver\ntu transformación lado a lado";
-"onboarding.comparison.description" = "Compara fácilmente tu punto de partida\ncon tu progreso actual";
-"onboarding.start.title" = "¡Comencemos!";
-"onboarding.start.subtitle" = "Toma tu primera foto y comienza\na rastrear tu viaje de transformación";
-"onboarding.start" = "Comenzar";
-"onboarding.first_photo.title" = "Toma Tu Primera Foto";
-"onboarding.first_photo.subtitle" = "Párate en el marco y\ncaptura tu punto de partida";
-"onboarding.security.title" = "Asegura Tu Progreso";
 "onboarding.security.subtitle" = "Protege tus fotos con\nFace ID o un código de acceso";
-"onboarding.enable_faceid" = "Habilitar Face ID";
-"onboarding.enable_touchid" = "Habilitar Touch ID";
 "onboarding.enable_biometric" = "Habilitar Autenticación Biométrica";
 "onboarding.setup_passcode" = "Configurar Código de Acceso";
 "onboarding.create_passcode" = "Crear Código de Acceso";
 "onboarding.enter_passcode" = "Ingrese Código de 4 Dígitos";
 "onboarding.confirm_passcode" = "Confirmar Código de Acceso";
 "onboarding.passcode_mismatch" = "Los códigos de acceso no coinciden";
-
-/* Onboarding Premium Features */
-"onboarding.premium.title" = "BodyLapse Sin Anuncios\nDisfruta sin anuncios";
-"onboarding.premium.subtitle" = "¡Todas las funciones son gratis! Suscríbete solo para eliminar anuncios";
-"onboarding.premium.metrics.title" = "Todo Incluido";
-"onboarding.premium.metrics.description" = "Seguimiento, categorías y exportaciones ya están en el plan gratuito";
-"onboarding.premium.advanced_tracking.title" = "Siempre Disponible";
-"onboarding.premium.advanced_tracking.description" = "Las herramientas avanzadas siguen siendo gratuitas";
-"onboarding.premium.nowatermark.title" = "Videos Sin Marca de Agua";
-"onboarding.premium.nowatermark.description" = "Los videos sin marca de agua siguen siendo gratuitos";
-"onboarding.premium.noads.title" = "Experiencia Sin Anuncios";
-"onboarding.premium.noads.description" = "Elimina todos los anuncios para disfrutar sin interrupciones";
-"onboarding.premium.all_features_free" = "Todas las demás funciones siguen siendo gratuitas para todos";
-"onboarding.premium.price" = "Plan Premium";
-"onboarding.premium.price.detail" = "Cancela cuando quieras • Sin prueba gratuita";
-"onboarding.premium.price.fallback" = "$0.99 / mes";
-"onboarding.premium.trial" = "No incluye prueba gratuita";
-"onboarding.premium.cancel_anytime" = "Cancela cuando quieras";
 
 /* Authentication */
 "auth.app_name" = "BodyLapse";
@@ -293,86 +214,22 @@
 "auth.tap_touchid" = "Toque para desbloquear con Touch ID";
 
 /* Premium View */
-"premium.title" = "BodyLapse Sin Anuncios";
-"premium.subtitle" = "Elimina solo los anuncios; todo lo demás sigue siendo gratis";
-"premium.feature.tracking" = "Todas las Funciones Disponibles";
-"premium.feature.tracking_desc" = "Seguimiento de peso, gráficos y más ya están incluidos en el plan gratuito";
-"premium.feature.advanced_tracking" = "Siempre Incluidas";
-"premium.feature.advanced_tracking_desc" = "Las categorías y ángulos múltiples siguen siendo gratuitas para todos";
 "premium.feature.no_ads" = "Sin Anuncios";
-"premium.feature.no_ads_desc" = "Esta suscripción quita los anuncios; el resto de funciones ya es gratuito";
-"premium.feature.support" = "Apoya BodyLapse";
-"premium.feature.support_desc" = "Apoya el desarrollo continuo y disfruta de la app sin anuncios";
-"premium.feature.no_watermark" = "Videos Sin Marca de Agua";
-"premium.feature.no_watermark_desc" = "Crea videos sin marca de agua - gratis para todos";
-"premium.feature.reminders" = "Recordatorios Diarios";
-"premium.feature.reminders_desc" = "Recibe recordatorios diarios de fotos - gratis para todos";
 "premium.restore" = "Restaurar Compras";
 "premium.auto_renew" = "Las suscripciones se renovarán automáticamente a menos que se cancelen";
 "premium.terms" = "Términos de Uso";
 "premium.privacy" = "Política de Privacidad";
 "premium.purchase_error" = "Error de Compra";
-"premium.per" = "por";
-"premium.subscribe" = "Suscribirse Ahora";
-"premium.price.fallback" = "$0.99";
 "premium.price.unavailable" = "Cargando precio…";
-"premium.price.period" = "al mes";
-"premium.first_month_free" = "No incluye primer mes gratis";
-"premium.after_trial" = "Facturación:";
-"premium.start_free_trial" = "Suscribirse ahora";
-"premium.then_per_month" = "Se cobra mensualmente";
-"premium.subscription_length" = "Suscripción Mensual (Renovación automática)";
-"premium.subscription_details" = "Suscripción de 1 mes con renovación automática";
-"premium.includes_all_features" = "Disfruta sin anuncios:";
-"premium.subscribe_now" = "Suscribirse Ahora";
-
-/* Weight Input */
-"weight.title" = "Entrada de Peso";
-"weight.weight" = "Peso";
-"weight.body_fat" = "% Grasa Corporal";
-"weight.enter_weight" = "Ingrese peso";
-"weight.enter_body_fat" = "Ingrese porcentaje de grasa corporal";
-"weight.no_data_yet" = "Aún Sin Datos de Peso";
-"weight.start_tracking_message" = "Comienza a rastrear tu peso para ver tu progreso a lo largo del tiempo";
-"weight.add_first_entry" = "Añadir Primera Entrada";
-"weight.recent_entries" = "Entradas Recientes";
-
-/* Date and Time */
-"date.today" = "Hoy";
-"date.yesterday" = "Ayer";
-"date.days_ago" = "hace %d días";
-"date.week" = "semana";
-"date.month" = "mes";
-"date.year" = "año";
 
 /* Units */
-"unit.kg" = "kg";
-"unit.lbs" = "libras";
 "unit.percent" = "%";
-
-/* Languages */
-"language.english" = "English";
-"language.japanese" = "日本語";
-"language.korean" = "한국어";
-"language.spanish" = "Español";
 
 /* Language Change */
 "settings.language_changed" = "Idioma cambiado. La aplicación se actualizará para aplicar los cambios.";
 
 /* Reset Guideline */
 "reset_guideline.instruction" = "Toma una nueva foto para actualizar tu contorno corporal";
-"reset_guideline.success_message" = "¡Tu guía corporal se ha actualizado con éxito!";
-
-/* Premium Offer - Onboarding */
-"onboarding.premium_offer.title" = "Comienza Tu Viaje Premium";
-"onboarding.premium_offer.subtitle" = "Desbloquea todas las funciones y lleva tu seguimiento de fitness al siguiente nivel";
-"onboarding.premium_offer.special" = "Oferta Especial para Nuevos Usuarios";
-"onboarding.premium_offer.benefit1" = "Rastrea peso y porcentaje de grasa corporal";
-"onboarding.premium_offer.benefit2" = "Sin anuncios, nunca";
-"onboarding.premium_offer.benefit3" = "Sin marca de agua en videos";
-"onboarding.premium_offer.start_trial" = "Comenzar Prueba Gratuita";
-"onboarding.premium_offer.maybe_later" = "Quizás Más Tarde";
-"onboarding.premium_offer.terms" = "Cancela cuando quieras. La suscripción se renueva automáticamente a menos que se cancele.";
 
 /* Category Names */
 "category.default.front" = "Frontal";
@@ -389,7 +246,6 @@
 "category.management.category_name" = "Nombre de Categoría";
 "category.management.example" = "Ejemplo: Lateral, Espalda, Músculos, etc.";
 "category.management.delete_title" = "Eliminar Categoría";
-"category.management.delete_message" = "¿Eliminar categoría \"%@\"?\nLas fotos en esta categoría no se eliminarán.";
 "category.management.delete_warning" = "¿Estás seguro de que quieres eliminar la categoría \"%@\"?\n\nADVERTENCIA: Todas las fotos y guías asociadas con esta categoría se eliminarán permanentemente. Esta acción no se puede deshacer.";
 "category.management.delete" = "Eliminar";
 "category.management.add_failed" = "Error al añadir categoría";
@@ -398,19 +254,7 @@
 "category.management.edit_name_action" = "Editar Nombre";
 "category.management.set_guideline" = "Establecer Guía";
 
-/* Premium Category Feature */
-"category.premium.title" = "Función de Múltiples Categorías";
-"category.premium.description" = "Crea hasta 4 categorías para organizar y\nadministrar tus fotos con Premium";
-"category.premium.feature1" = "Gestiona múltiples ángulos simultáneamente";
-"category.premium.feature2" = "Guías específicas por categoría";
-"category.premium.feature3" = "Generación de video lado a lado";
-"category.premium.feature4" = "Filtrado por categoría";
-"category.premium.upgrade" = "Actualizar a Premium";
-
 /* Video Generation */
-"video.layout" = "Diseño";
-"video.layout.single" = "Individual";
-"video.layout.sidebyside" = "Lado a Lado";
 "video.category.select" = "Seleccionar Categorías (Máx 4)";
 "video.no_photo" = "Sin foto";
 
@@ -433,8 +277,6 @@
 "import_export.import_data" = "Importar Datos";
 "import_export.import_description" = "Restaurar datos desde respaldo";
 "import_export.import_footer" = "Solo se pueden importar archivos de exportación de BodyLapse (.bodylapse)";
-"import_export.export_completed" = "Exportación Completada";
-"import_export.export_completed_message" = "Exportación de datos completada exitosamente";
 "import_export.import_completed" = "Importación Completada";
 "import_export.import_summary" = "Importación completada:\n\nFotos: %d\nVideos: %d\nCategorías: %d\nDatos de peso: %d\nNotas: %d";
 "import_export.data_types" = "Tipos de Datos";
@@ -458,40 +300,19 @@
 "guideline.setup.start" = "Iniciar Configuración";
 "guideline.setup.nav_title" = "Configuración de Guía Corporal";
 
-/* Notification Onboarding */
-"onboarding.notification.title" = "Mantente en el Camino";
-"onboarding.notification.subtitle" = "Nunca pierdas un día de progreso";
-"onboarding.notification.description" = "BodyLapse te recordará si no has tomado una foto antes de las 9 PM";
-"onboarding.notification.daily_reminder" = "Recordatorio diario a las 9 PM si no se ha tomado foto";
-"onboarding.enable_notifications" = "Habilitar Notificaciones";
-
 /* Additional Strings */
 "settings.import_export" = "Importar/Exportar Datos";
 "settings.debug_options" = "Opciones de Depuración";
-"settings.premium_mode" = "Modo Premium";
-"settings.allow_past_photos" = "Permitir Fotos de Fechas Pasadas";
 "settings.subscription_status" = "Estado de Suscripción";
 "settings.expiration_date" = "Fecha de Expiración";
 "calendar.photo_taken" = "Foto tomada";
 "calendar.selected" = "Seleccionada";
-"calendar.select_date_title" = "Seleccionar Fecha";
 "calendar.data_available" = "Datos disponibles";
 "calendar.data_includes_note" = "※ Los datos incluyen peso, porcentaje de grasa corporal y notas";
 "memo.add_memo" = "Añadir Nota";
 "memo.content" = "Contenido de Nota";
 "memo.save" = "Guardar";
 "memo.delete" = "Eliminar Nota";
-"photo.captured_on" = "Capturada el";
-"photo.details" = "Detalles de Foto";
-"photo.body_detected" = "Cuerpo detectado (%d%% confianza)";
-"photo.delete_title" = "Eliminar Foto";
-"photo.delete_message" = "¿Estás seguro de que quieres eliminar esta foto? Esta acción no se puede deshacer.";
-"weight.track_progress" = "Rastrea Tu Progreso";
-"weight.add_measurements" = "Añade tus medidas actuales";
-"weight.save_photo" = "Guardar Foto";
-"weight.skip_save" = "Omitir y Guardar Foto";
-"gallery.section_videos" = "Videos";
-"gallery.section_photos" = "Fotos";
 "notification.no_photo_title" = "Aún no has tomado la foto de hoy";
 "notification.no_photo_body" = "¡Registremos el progreso de hoy! Toca para comenzar a disparar";
 "notification.daily_reminder_title" = "Recordatorio de Foto Diaria";
@@ -511,18 +332,10 @@
 "import.handling_method" = "Método de Manejo";
 "import.skip" = "Omitir";
 "import.replace" = "Reemplazar";
-"import.keep_both" = "Mantener Ambos";
 "import.skip_description" = "Los datos existentes se conservarán, solo se añadirán datos nuevos";
 "import.replace_description" = "Los datos existentes serán sobrescritos con datos nuevos";
-"import.keep_both_description" = "Ambos datos se mantendrán (fotos y videos guardados con nombres diferentes)";
 "import.import_options" = "Opciones de Importación";
 "import.import_button" = "Importar";
-
-/* Date Formats */
-"date.format.month_year" = "MMMM yyyy";
-"date.format.medium" = "MMM d, yyyy";
-"date.format.short" = "d/M";
-"date.format.long" = "d 'de' MMMM 'de' yyyy";
 
 /* Debug Options */
 "settings.debug.premium_mode" = "Modo Premium";
@@ -532,32 +345,9 @@
 /* Weight View */
 "weight.percentage_format" = "%.1f%%";
 
-/* Sync Status */
-"settings.sync.syncing" = "Sincronizando...";
-"settings.sync.last_sync" = "Última sincronización: %@";
-"settings.sync.never" = "Nunca";
-
-/* Photo Detail */
-"photo.confidence_level" = "Cuerpo detectado (%d%% confianza)";
-"photo.weight_format" = "Peso: %.1f %@";
-"photo.body_fat_format" = "Grasa Corporal: %.1f%%";
-
-/* Memo */
-"memo.character_count" = "%d/100";
-"memo.edit" = "Editar";
-
-/* Import Status */
-"import.file_count" = "%d archivos";
-"import.success" = "Éxito";
-"import.failed" = "Fallido";
-
 /* Navigation Titles */
 "nav.select_date" = "Seleccionar Fecha";
 "nav.review_photo" = "Revisar Foto";
-"nav.premium_subscription" = "Suscripción Premium";
-"nav.photo_saved" = "¡Foto Guardada!";
-"nav.weight_tracking" = "Seguimiento de Peso";
-"nav.add_entry" = "Añadir Entrada";
 
 /* Chart Labels */
 "chart.weight" = "Peso";
@@ -583,30 +373,10 @@
 "import_export.import_detailed_guide" = "Importa datos desde un archivo de respaldo creado por BodyLapse. Puedes elegir qué datos importar y cómo manejar duplicados.";
 "import_export.merge_skip_detail" = "Omitir: Mantén tus datos existentes, solo añade elementos nuevos";
 "import_export.merge_replace_detail" = "Reemplazar: Sobrescribe datos existentes con datos importados";
-"import_export.merge_keep_both_detail" = "Mantener Ambos: Guarda ambas versiones (renombradas)";
 "import_export.export_detailed_guide" = "Crea un respaldo de tus datos de BodyLapse. Puedes seleccionar tipos de datos específicos y rangos de fechas para exportar.";
 "import_export.export_includes" = "La exportación incluye todos los datos seleccionados en un formato seguro";
 "import_export.export_format" = "Los archivos .bodylapse son archivos comprimidos";
 "import_export.export_privacy" = "Tus datos nunca salen de tu dispositivo a menos que los compartas";
-
-/* Individual Photo Import */
-"import_export.import_single_photo" = "Importar Foto desde Biblioteca";
-"import_export.import_single_photo_description" = "Añadir una foto desde tu biblioteca de fotos";
-"import_export.how_to_import_photos" = "Cómo Importar Fotos";
-"import_export.photo_import_instruction1" = "Selecciona una foto de tu biblioteca";
-"import_export.photo_import_instruction2" = "Elige la fecha para la foto";
-"import_export.photo_import_instruction3" = "Opcionalmente añade datos de peso";
-"import_export.select_photo" = "Seleccionar Foto";
-"import_export.photo_selected" = "Foto Seleccionada";
-"import_export.photo_date" = "Fecha de Foto";
-"import_export.category" = "Categoría";
-"import_export.photo_details" = "Detalles de Foto";
-"import_export.weight_data_optional" = "Los datos de peso son opcionales y solo están disponibles para usuarios premium";
-"import_export.import_photo" = "Importar Foto";
-"import_export.import_success" = "Importación Exitosa";
-"import_export.photo_imported_successfully" = "¡Foto importada exitosamente!";
-"import_export.invalid_image" = "Formato de imagen no válido";
-"import_export.photo_already_exists" = "Ya existe una foto para esta fecha y categoría";
 
 /* Import/Export Help */
 "import_export.help_title" = "Ayuda de Importación/Exportación";
@@ -641,8 +411,6 @@
 "import_export.help_merge_skip_description" = "Preserva todos tus datos actuales. Solo se añadirán elementos nuevos de la importación. Opción segura si no estás seguro.";
 "import_export.help_merge_replace" = "Reemplazar Existentes";
 "import_export.help_merge_replace_description" = "Sobrescribe tus datos actuales con datos importados cuando ocurran conflictos. Usar con precaución.";
-"import_export.help_merge_keep_both" = "Mantener Ambas Versiones";
-"import_export.help_merge_keep_both_description" = "Guarda ambas versiones renombrando elementos importados. Bueno para comparar datos antiguos y nuevos.";
 
 /* FAQ */
 "import_export.help_faq_q1" = "¿Puedo importar fotos desde mi carrete de cámara?";
@@ -672,21 +440,8 @@
 "import_export.error_file_not_found" = "Archivo no encontrado";
 "import_export.error_zip_failed" = "Operación ZIP fallida";
 
-/* Photo Capture */
-"photo.replace_today_title" = "¿Reemplazar la Foto de Hoy?";
-"photo.replace_today_message" = "Solo puedes guardar una foto por día. La foto existente será reemplazada.";
-"photo.guidelines" = "Guías";
-"photo.switch_camera" = "Cambiar";
-"photo.add_measurements_optional" = "Agregar Medidas (Opcional)";
-"photo.body_fat" = "Grasa Corporal";
-"photo.enter_value" = "0.0";
-"photo.measurements_note" = "Siempre puedes agregar o actualizar estas medidas más tarde desde la vista de Calendario.";
-
 /* Apple Health Integration */
-"weight.syncing_with_health" = "Sincronizando con Apple Health";
-"weight.loading_from_health" = "Cargando desde Health";
 "settings.apple_health_integration" = "Integración con Apple Health";
-"weight.enable_health_sync" = "Habilitar Sincronización de Salud en Ajustes";
 
 /* Onboarding - New 3-Step Flow */
 "onboarding.hero.title" = "Una foto al día. Nada más.";
@@ -711,12 +466,6 @@
 "onboarding.reminder_subtitle" = "Notificación a las 9 PM (evita olvidar)";
 "onboarding.privacy_lock_title" = "Protección de Privacidad";
 "onboarding.privacy_lock_subtitle" = "Face ID/Código de acceso";
-"onboarding.premium_features_title" = "Experiencia sin anuncios";
-"onboarding.premium_feature1" = "Elimina los anuncios para una experiencia sin interrupciones";
-"onboarding.premium_feature2" = "El resto de funciones ya están incluidas gratis";
-"onboarding.premium_feature3" = "Apoya el desarrollo continuo";
-"onboarding.premium_feature4" = "Sin prueba gratuita: la facturación inicia de inmediato";
-"onboarding.learn_more" = "Más información";
 "onboarding.start_now" = "Comenzar ahora";
 "onboarding.complete" = "Completar";
 
@@ -740,7 +489,6 @@
 "share.options.blur.description" = "Desenfoca automáticamente los rostros para privacidad";
 "share.error.title" = "Error al Compartir";
 "share.error.load_failed" = "Error al cargar la foto";
-"share.error.processing_failed" = "Error en el procesamiento del desenfoque facial";
 
 /* Quick Wins additions */
 "calendar.take_photo" = "Tomar foto de hoy";
@@ -752,14 +500,10 @@
 "import_export.import_failed_line" = "\n\n⚠️ No se pudieron leer %d elemento(s) y se omitieron.";
 "settings.premium.renews_in" = "Se renueva en %d día(s)";
 "settings.premium.trial_days_left" = "Prueba gratis: %d día(s) restantes";
-"settings.premium.expires_on" = "Próxima renovación: %@";
 "about.version" = "Versión %@ (%@)";
 
 /* Streak / Racha */
 "streak.current" = "%d días seguidos";
-"streak.days_this_month" = "%d días este mes";
-"streak.longest" = "Récord: %d días";
-"streak.start" = "Empieza tu racha hoy";
 "streak.summary.current" = "Actual";
 "streak.summary.longest" = "Récord";
 "streak.summary.total" = "Total";
@@ -837,3 +581,65 @@
 "cloud.error.restricted" = "El acceso a iCloud está restringido en este dispositivo.";
 "cloud.error.unavailable" = "iCloud no está disponible. Inténtalo de nuevo más tarde.";
 "cloud.error.generic" = "Algo salió mal. Inténtalo de nuevo más tarde.";
+
+/* Weight input validation and delete confirmations */
+"calendar.weight_invalid_range" = "Introduce un número entre %d y %d %@.";
+"calendar.body_fat_invalid_range" = "Introduce un número entre %d y %d %%.";
+"calendar.delete_measurements" = "Eliminar el peso y la grasa corporal de este día";
+"calendar.delete_measurements_confirm" = "¿Eliminar el peso y la grasa corporal de este día? Las fotos se conservan.";
+"memo.delete_confirm" = "¿Eliminar esta nota?";
+"memo.discard_confirm" = "¿Descartar los cambios de esta nota?";
+"memo.discard" = "Descartar";
+"memo.keep_editing" = "Seguir editando";
+
+/* Face blur results */
+"face_blur.error.detection_failed" = "No se pudieron detectar las caras. Inténtalo de nuevo.";
+"face_blur.error.video_failed" = "Falló la detección de caras, así que no se creó el video para no mostrar caras. Inténtalo de nuevo.";
+"face_blur.no_faces_found" = "No se encontraron caras, así que no se ha difuminado nada. Si hace falta, toca el botón del lápiz para añadir un mosaico a mano.";
+"face_blur.edit_title" = "Editar mosaico";
+"face_blur.preview_title" = "Revisar difuminado";
+"face_blur.drag_hint" = "Arrastra sobre las zonas que quieras cubrir con un mosaico";
+"face_blur.video_frames_without_faces" = "Se creó el video, pero no se encontró ninguna cara en %d fotogramas, así que no se difuminaron. Revisa el video antes de compartirlo.";
+
+/* User-facing error messages */
+"error.photo.compression_failed" = "No se pudo procesar la imagen.";
+"error.photo.save_failed" = "No se pudo guardar la foto.";
+"error.storage_unavailable" = "No se pudo acceder al almacenamiento de la app.";
+"error.video.no_photos" = "No hay fotos en el periodo seleccionado.";
+"error.video.creation_failed" = "No se pudo crear el video.";
+"error.video.export_failed" = "No se pudo exportar el video.";
+"error.video.cancelled" = "Se canceló la creación del video.";
+"error.weight.not_found" = "No se encontró el registro de peso.";
+"error.weight.invalid_data" = "El formato de los datos no es válido.";
+"calendar.delete_photo_failed" = "No se pudo eliminar la foto: %@";
+
+/* App lock: attempt limit and PIN recovery */
+"auth.biometric_reason" = "Desbloquea BodyLapse para ver tus fotos";
+"auth.recovery_reason" = "Confirma que eres tú para establecer un PIN nuevo";
+"auth.incorrect_pin" = "PIN incorrecto. Si fallas %d veces más, tendrás que esperar.";
+"auth.lockout_seconds" = "Demasiados intentos. Inténtalo de nuevo en %d segundos.";
+"auth.lockout_minutes" = "Demasiados intentos. Inténtalo de nuevo en %d minutos.";
+"auth.forgot_pin" = "¿Olvidaste tu PIN?";
+"auth.no_pin_on_device" = "Este iPhone no tiene PIN (por ejemplo, tras cambiar de iPhone). Confirma que eres tú con el código del iPhone y luego establece un PIN nuevo.";
+"auth.recover_with_device_passcode" = "Desbloquear con el código del iPhone";
+"auth.recovery_needs_passcode" = "Para restablecer el PIN, configura un código para este iPhone en Ajustes.";
+"onboarding.pin_save_failed" = "No se pudo guardar el PIN. Inténtalo de nuevo.";
+
+/* Saving to the photo library */
+"photo_library.error.title" = "No se pudo guardar en Fotos";
+"photo_library.error.access_denied" = "BodyLapse no tiene permiso para añadir a tu fototeca. Actívalo en Ajustes > BodyLapse > Fotos.";
+"photo_library.error.nothing_to_save" = "No hay nada que guardar.";
+"photo_library.error.failed" = "No se pudo guardar. Inténtalo de nuevo.";
+"photo_library.error.failed_with_reason" = "No se pudo guardar: %@";
+
+/* Video range and free trial */
+"calendar.video_range_all" = "Todo";
+"calendar.video_range_calendar" = "Periodo visible (%@)";
+"calendar.photos_in_range" = "Fotos";
+"calendar.video_no_photos_in_range" = "No hay fotos de las categorías seleccionadas en este periodo. Amplía el periodo.";
+"premium.trial_days" = "Gratis durante %d día(s)";
+"premium.trial_weeks" = "Gratis durante %d semana(s)";
+"premium.trial_months" = "Gratis durante %d mes(es)";
+"premium.trial_years" = "Gratis durante %d año(s)";
+"premium.trial_generic" = "Prueba gratuita";
+"premium.trial_then_price" = "después, %@";

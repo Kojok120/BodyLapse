@@ -109,37 +109,4 @@ actor DailyNoteStorageService {
         await loadNotesIfNeeded()
         return notesCache
     }
-    
-    func getNotes(for dateRange: ClosedRange<Date>) async -> [DailyNote] {
-        await loadNotesIfNeeded()
-        
-        let startOfStartDate = Calendar.current.startOfDay(for: dateRange.lowerBound)
-        let endOfEndDate = Calendar.current.startOfDay(for: dateRange.upperBound).addingTimeInterval(86400 - 1)
-        
-        return notesCache.filter { note in
-            note.date >= startOfStartDate && note.date <= endOfEndDate
-        }
-    }
-    
-    func hasNote(for date: Date) async -> Bool {
-        await loadNotesIfNeeded()
-        
-        let startOfDay = Calendar.current.startOfDay(for: date)
-        return notesCache.contains { $0.dateOnly == startOfDay }
-    }
-    
-    func updateNote(_ note: DailyNote) async throws {
-        await loadNotesIfNeeded()
-        
-        if let index = notesCache.firstIndex(where: { $0.id == note.id }) {
-            notesCache[index] = note
-            try await saveNotesToDisk()
-        }
-    }
-    
-    func getNoteDates() async -> Set<Date> {
-        await loadNotesIfNeeded()
-        
-        return Set(notesCache.map { $0.dateOnly })
-    }
 }

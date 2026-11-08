@@ -11,6 +11,16 @@ actor WeightStorageService {
     private let documentsDirectory: URL
     private let weightsDirectory: URL
     private let weightsFile: URL
+    /// アプリで消した日と消した時刻。ヘルスケアの同期で消した値を書き戻さないために使う
+    private var deletedDaysFile: URL {
+        weightsDirectory.appendingPathComponent("deleted_days.json")
+    }
+
+    /// 日の識別子 (端末の暦とタイムゾーンでの yyyy-MM-dd)
+    nonisolated static func dayKey(for date: Date) -> String {
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
+    }
     
     private init() {
         // ドキュメントディレクトリを取得
@@ -76,24 +86,44 @@ actor WeightStorageService {
         // ソートして保存
         entries.sort { $0.date > $1.date }
         try saveEntries(entries)
+        try clearDeletionMark(for: entry.date)
         print("[WeightStorage] Total entries after save: \(entries.count)")
     }
     
     // MARK: - エントリ削除
-    func deleteEntry(_ entry: WeightEntry) throws {
+    /// 指定日の記録をすべて消す (同じ日に複数あっても残さない)。
+    func deleteEntries(on date: Date, deletedAt: Date = Date()) throws {
         var entries = try loadEntries()
-        entries.removeAll { $0.id == entry.id }
-        try saveEntries(entries)
-    }
-    
-    // MARK: - エントリ更新
-    func updateEntry(_ entry: WeightEntry) throws {
-        var entries = try loadEntries()
-        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else {
-            throw WeightStorageError.entryNotFound
+        let before = entries.count
+        entries.removeAll { Calendar.current.isDate($0.date, inSameDayAs: date) }
+        if entries.count != before {
+            try saveEntries(entries)
         }
-        entries[index] = entry
-        try saveEntries(entries)
+        var deleted = try deletedDays()
+        deleted[Self.dayKey(for: date)] = deletedAt
+        try saveDeletedDays(deleted)
+    }
+
+    /// アプリで消した日 (yyyy-MM-dd) と消した時刻
+    func deletedDays() throws -> [String: Date] {
+        guard FileManager.default.fileExists(atPath: deletedDaysFile.path) else { return [:] }
+        let data = try Data(contentsOf: deletedDaysFile)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode([String: Date].self, from: data)
+    }
+
+    private func saveDeletedDays(_ days: [String: Date]) throws {
+        try FileManager.default.createDirectory(at: weightsDirectory, withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(days).write(to: deletedDaysFile, options: .atomic)
+    }
+
+    private func clearDeletionMark(for date: Date) throws {
+        var deleted = try deletedDays()
+        guard deleted.removeValue(forKey: Self.dayKey(for: date)) != nil else { return }
+        try saveDeletedDays(deleted)
     }
     
     // MARK: - 日付別エントリ取得
@@ -176,52 +206,6 @@ actor WeightStorageService {
         try data.write(to: weightsFile, options: .atomic)
         print("[WeightStorage] Saved \(entries.count) entries to file")
     }
-    
-    // MARK: - エクスポート/インポート
-    func exportData() throws -> Data {
-        guard FileManager.default.fileExists(atPath: weightsFile.path) else {
-            return Data()
-        }
-        return try Data(contentsOf: weightsFile)
-    }
-    
-    func importData(_ data: Data) throws {
-        // データを検証
-        let _ = try JSONDecoder().decode([WeightEntry].self, from: data)
-        
-        // データを保存
-        try data.write(to: weightsFile, options: .atomic)
-    }
-    
-    // MARK: - 統計
-    func getStatistics() throws -> WeightStatistics {
-        let entries = try loadEntries()
-        
-        guard !entries.isEmpty else {
-            return WeightStatistics(
-                totalEntries: 0,
-                averageWeight: nil,
-                minWeight: nil,
-                maxWeight: nil,
-                averageBodyFat: nil,
-                firstEntryDate: nil,
-                lastEntryDate: nil
-            )
-        }
-        
-        let weights = entries.map { $0.weight }
-        let bodyFats = entries.compactMap { $0.bodyFatPercentage }
-        
-        return WeightStatistics(
-            totalEntries: entries.count,
-            averageWeight: weights.reduce(0, +) / Double(weights.count),
-            minWeight: weights.min(),
-            maxWeight: weights.max(),
-            averageBodyFat: bodyFats.isEmpty ? nil : bodyFats.reduce(0, +) / Double(bodyFats.count),
-            firstEntryDate: entries.last?.date,
-            lastEntryDate: entries.first?.date
-        )
-    }
 }
 
 // MARK: - エラータイプ
@@ -232,20 +216,9 @@ enum WeightStorageError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .entryNotFound:
-            return "Weight entry not found"
+            return "error.weight.not_found".localized
         case .invalidData:
-            return "Invalid data format"
+            return "error.weight.invalid_data".localized
         }
     }
-}
-
-// MARK: - 統計モデル
-struct WeightStatistics {
-    let totalEntries: Int
-    let averageWeight: Double?
-    let minWeight: Double?
-    let maxWeight: Double?
-    let averageBodyFat: Double?
-    let firstEntryDate: Date?
-    let lastEntryDate: Date?
 }

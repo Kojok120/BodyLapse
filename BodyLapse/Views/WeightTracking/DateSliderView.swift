@@ -11,14 +11,10 @@ struct DateSliderView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var isDragging = false
     
-    private var sortedEntries: [WeightEntry] {
-        entries.sorted { $0.date < $1.date }
-    }
-    
     private var selectedEntry: WeightEntry? {
         guard let selectedDate = selectedDate else { return nil }
         
-        return sortedEntries.first { entry in
+        return entries.first { entry in
             Calendar.current.isDate(entry.date, inSameDayAs: selectedDate)
         }
     }
@@ -34,17 +30,20 @@ struct DateSliderView: View {
                     
                     HStack(spacing: 20) {
                         if let selectedEntry = selectedEntry {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("chart.weight".localized)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
-                                    .font(.body)
-                                    .foregroundColor(.bodyLapseTurquoise)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
+                            // 体重 0 は「体重なし」(過去に体脂肪率だけ保存したときの値)
+                            if selectedEntry.weight > 0 {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("chart.weight".localized)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("\(convertedWeight(selectedEntry.weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
+                                        .font(.body)
+                                        .foregroundColor(.bodyLapseTurquoise)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.8)
+                                }
+                                .frame(minWidth: 60)
                             }
-                            .frame(minWidth: 60)
                             
                             if let bodyFat = selectedEntry.bodyFatPercentage {
                                 VStack(alignment: .leading, spacing: 2) {
@@ -147,7 +146,7 @@ struct DateSliderView: View {
     }
     
     private func convertedWeight(_ weight: Double) -> Double {
-        userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
+        MeasurementInput.displayWeight(kg: weight, unit: userSettings.settings.weightUnit)
     }
     
     private static var dateFormatter: DateFormatter = {

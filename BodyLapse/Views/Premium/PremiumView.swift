@@ -184,7 +184,15 @@ struct PremiumView: View {
                         .clipShape(Capsule())
                 }
                 Spacer()
-                if let product {
+                if let product, let trial = viewModel.freeTrialText(for: product) {
+                    // 無料体験があるときは先に出し、その後の価格も並べる (審査 3.1.2)
+                    VStack(spacing: 2) {
+                        Text(trial)
+                            .font(.headline.bold())
+                        Text("premium.trial_then_price".localized(with: product.displayPrice + " / " + period))
+                            .font(.caption)
+                    }
+                } else if let product {
                     Text(product.displayPrice + " / " + period)
                         .font(.headline.bold())
                 } else {
@@ -266,85 +274,6 @@ struct PremiumView: View {
                 .padding(.horizontal)
         }
         .padding(.top, 8)
-    }
-}
-
-// MARK: - コンパクトプレミアム機能行
-struct CompactPremiumFeatureRowView: View {
-    let icon: String
-    let title: String
-    let description: String
-    
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.body)
-                .foregroundColor(.white)
-                .frame(width: 24)
-            
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.subheadline.bold())
-                    .foregroundColor(.white)
-                
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
-                    .lineLimit(1)
-            }
-            
-            Spacer()
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(10)
-    }
-}
-
-// MARK: - サブスクリプション詳細ビュー
-struct SubscriptionDetailsView: View {
-    let product: Product
-    let action: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 10) {
-            HStack {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(product.displayName)
-                        .font(.subheadline)
-                        .foregroundColor(.white)
-                    
-                    Text(product.description)
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.8))
-                }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing, spacing: 5) {
-                    Text(product.displayPrice)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                    
-                    if let period = product.subscription?.subscriptionPeriod {
-                        Text("\("premium.per".localized) \(period.unit.localizedDescription)")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.9))
-                    }
-                }
-            }
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.15))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                )
-        )
     }
 }
 

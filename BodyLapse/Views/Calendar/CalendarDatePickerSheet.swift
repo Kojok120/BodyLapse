@@ -9,7 +9,6 @@ struct CalendarDatePickerSheet: View {
     let dateRange: [Date]
     let photoDates: Set<Date>
     let dataDates: Set<Date>
-    let isPremium: Bool
     
     let onDateSelected: () -> Void
     
@@ -32,15 +31,13 @@ struct CalendarDatePickerSheet: View {
                                 .foregroundColor(.secondary)
                         }
                         
-                        if isPremium {
-                            HStack(spacing: 4) {
-                                Circle()
-                                    .fill(Color.bodyLapseYellow)
-                                    .frame(width: 8, height: 8)
-                                Text("calendar.data_available".localized)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Color.bodyLapseYellow)
+                                .frame(width: 8, height: 8)
+                            Text("calendar.data_available".localized)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
                     

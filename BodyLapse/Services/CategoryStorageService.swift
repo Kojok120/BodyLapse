@@ -10,7 +10,6 @@ import Foundation
 class CategoryStorageService {
     static let shared = CategoryStorageService()
     
-    private let categoriesKey = "BodyLapseCategories"
     private let categoriesFileName = "categories.json"
     
     private var documentsDirectory: URL? {
@@ -142,27 +141,8 @@ class CategoryStorageService {
         return loadCategories()
     }
     
-    func getActiveCategoriesForUser(isPremium: Bool) -> [PhotoCategory] {
-        let categories = loadCategories()
-        
-        // 全ユーザーが全カテゴリを利用可能
-        return categories
-    }
-    
-    func updateCategoryOrder(_ categories: [PhotoCategory]) {
-        var allCategories = loadAllCategories()
-        
-        for (index, category) in categories.enumerated() {
-            if let existingIndex = allCategories.firstIndex(where: { $0.id == category.id }) {
-                allCategories[existingIndex].order = index
-            }
-        }
-        
-        saveCategories(allCategories)
-    }
-    
-    func getNextUncapturedCategory(for date: Date, currentCategoryId: String, isPremium: Bool) -> PhotoCategory? {
-        let availableCategories = getActiveCategoriesForUser(isPremium: isPremium)
+    func getNextUncapturedCategory(for date: Date, currentCategoryId: String) -> PhotoCategory? {
+        let availableCategories = getActiveCategories()
         
         // 現在のカテゴリのインデックスを検出
         guard let currentIndex = availableCategories.firstIndex(where: { $0.id == currentCategoryId }) else {

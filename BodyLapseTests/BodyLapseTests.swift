@@ -13,28 +13,32 @@ struct BodyLapseTests {
         let fileManager = FileManager.default
         let tempRoot = fileManager.temporaryDirectory.appendingPathComponent("BodyLapseTests_\(UUID().uuidString)")
         let sourceDir = tempRoot.appendingPathComponent("source")
-        let nestedDir = sourceDir.appendingPathComponent("nested")
         let archiveURL = tempRoot.appendingPathComponent("archive.bodylapse")
         let outputDir = tempRoot.appendingPathComponent("output")
 
-        try fileManager.createDirectory(at: nestedDir, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: sourceDir, withIntermediateDirectories: true)
         defer { try? fileManager.removeItem(at: tempRoot) }
 
+        // 本番の書き出しと同じく、ファイルとメモリ上のデータを混ぜて createArchive に渡す
         let topLevelFile = sourceDir.appendingPathComponent("top.txt")
-        let nestedFile = nestedDir.appendingPathComponent("inner.txt")
+        let nestedFile = sourceDir.appendingPathComponent("inner.txt")
         try Data("top-level".utf8).write(to: topLevelFile)
         try Data("nested-value".utf8).write(to: nestedFile)
+        let entries = [
+            SimpleZipArchive.ArchiveEntry(path: "top.txt", source: .file(topLevelFile)),
+            SimpleZipArchive.ArchiveEntry(path: "nested/inner.txt", source: .file(nestedFile)),
+            SimpleZipArchive.ArchiveEntry(path: "nested/deeper/meta.json", source: .data(Data("{\"v\":1}".utf8)))
+        ]
 
-        #expect(SimpleZipArchive.createZipFile(atPath: archiveURL.path, withContentsOfDirectory: sourceDir.path))
+        #expect(SimpleZipArchive.createArchive(atPath: archiveURL.path, entries: entries))
         #expect(SimpleZipArchive.unzipFile(atPath: archiveURL.path, toDestination: outputDir.path))
 
-        let extractedTop = outputDir.appendingPathComponent("top.txt")
-        let extractedNested = outputDir.appendingPathComponent("nested/inner.txt")
-
-        let extractedTopData = try Data(contentsOf: extractedTop)
-        let extractedNestedData = try Data(contentsOf: extractedNested)
+        let extractedTopData = try Data(contentsOf: outputDir.appendingPathComponent("top.txt"))
+        let extractedNestedData = try Data(contentsOf: outputDir.appendingPathComponent("nested/inner.txt"))
+        let extractedMetaData = try Data(contentsOf: outputDir.appendingPathComponent("nested/deeper/meta.json"))
         #expect(extractedTopData == Data("top-level".utf8))
         #expect(extractedNestedData == Data("nested-value".utf8))
+        #expect(extractedMetaData == Data("{\"v\":1}".utf8))
     }
 
     @Test
@@ -648,5 +652,32 @@ struct CloudBackupAutoBackupTests {
         let justInside = now.addingTimeInterval(-CloudBackupService.autoBackupMinInterval + 60)
         #expect(CloudBackupService.shouldAutoBackup(now: now, lastBackup: atBoundary) == true)
         #expect(CloudBackupService.shouldAutoBackup(now: now, lastBackup: justInside) == false)
+    }
+}
+
+// MARK: - DataMigrationService（旧版が残したシルエットのマスクの掃除）
+@Suite
+struct LegacyDebugMaskCleanupTests {
+    @Test
+    func removesLeftoverMaskAndIsIdempotent() throws {
+        let fileManager = FileManager.default
+        let documents = fileManager.temporaryDirectory.appendingPathComponent("BodyLapseTests_\(UUID().uuidString)")
+        try fileManager.createDirectory(at: documents, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: documents) }
+
+        let mask = documents.appendingPathComponent(DataMigrationService.legacyDebugMaskFileName)
+        let other = documents.appendingPathComponent("keep.png")
+        try Data("mask".utf8).write(to: mask)
+        try Data("keep".utf8).write(to: other)
+
+        DataMigrationService.removeLegacyDebugMask(in: documents)
+        #expect(!fileManager.fileExists(atPath: mask.path))
+        // ほかのファイルには触れない
+        #expect(fileManager.fileExists(atPath: other.path))
+
+        // 2 回目はファイルが無くても何も起きない
+        DataMigrationService.removeLegacyDebugMask(in: documents)
+        #expect(!fileManager.fileExists(atPath: mask.path))
+        #expect(fileManager.fileExists(atPath: other.path))
     }
 }

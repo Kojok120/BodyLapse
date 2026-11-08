@@ -2,18 +2,11 @@ import SwiftUI
 import AVFoundation
 
 struct CameraView: View {
-    @Binding var shouldLaunchCamera: Bool
     @StateObject private var viewModel = CameraViewModel()
     @ObservedObject private var userSettings = UserSettingsManager.shared
-    @ObservedObject private var subscriptionManager = SubscriptionManagerService.shared
-    @State private var showingPhotoReview = false
     @State private var activeSheet: ActiveSheet?
     @State private var showingAddCategory = false
     @State private var newCategoryToSetup: PhotoCategory?
-    
-    init(shouldLaunchCamera: Binding<Bool> = .constant(false)) {
-        self._shouldLaunchCamera = shouldLaunchCamera
-    }
     
     enum ActiveSheet: Identifiable {
         case photoReview
@@ -312,16 +305,6 @@ struct CameraView: View {
                     viewModel.reloadCategories()
                     viewModel.selectCategory(category)
                 }
-        }
-        .onAppear {
-            if shouldLaunchCamera {
-                // Reset the flag
-                shouldLaunchCamera = false
-                // Capture photo after a short delay to ensure camera is ready
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    viewModel.capturePhoto()
-                }
-            }
         }
     }
 }

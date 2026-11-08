@@ -4,8 +4,9 @@ struct PhotoDetailSheet: View {
     let photo: Photo
     @Environment(\.dismiss) private var dismiss
     @StateObject private var userSettings = UserSettingsManager.shared
-    @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var activeSheet: GalleryActiveSheet?
+    /// 原寸の画像。拡大して見るため原寸で読むが、body の評価のたびに読まないよう一度だけ読む
+    @State private var image: UIImage?
     
     // Zoom functionality state
     @State private var currentScale: CGFloat = 1.0
@@ -16,7 +17,7 @@ struct PhotoDetailSheet: View {
     var body: some View {
         NavigationView {
             VStack {
-                if let image = PhotoStorageService.shared.loadImage(for: photo) {
+                if let image {
                     GeometryReader { geometry in
                         Image(uiImage: image)
                             .resizable()
@@ -91,20 +92,20 @@ struct PhotoDetailSheet: View {
                         Text(photo.formattedDate)
                             .font(.headline)
                         
-                        if subscriptionManager.isPremium {
-                            HStack {
-                                if let weight = photo.weight {
-                                    Label("\(String(format: "%.1f", weight)) \(userSettings.settings.weightUnit.symbol)", systemImage: "scalemass")
-                                        .font(.subheadline)
-                                }
-                                
-                                if let bodyFat = photo.bodyFatPercentage {
-                                    Label("\(String(format: "%.1f", bodyFat))%", systemImage: "percent")
-                                        .font(.subheadline)
-                                }
+                        HStack {
+                            if let weight = photo.weight, weight > 0 {
+                                // 体重は kg で持っているので、表示単位に直す
+                                let displayWeight = MeasurementInput.displayWeight(kg: weight, unit: userSettings.settings.weightUnit)
+                                Label("\(String(format: "%.1f", displayWeight)) \(userSettings.settings.weightUnit.symbol)", systemImage: "scalemass")
+                                    .font(.subheadline)
                             }
-                            .foregroundColor(.secondary)
+                            
+                            if let bodyFat = photo.bodyFatPercentage {
+                                Label("\(String(format: "%.1f", bodyFat))%", systemImage: "percent")
+                                    .font(.subheadline)
+                            }
                         }
+                        .foregroundColor(.secondary)
                         
                         if photo.isFaceBlurred {
                             Label("camera.face_blurred".localized, systemImage: "eye.slash")
@@ -122,7 +123,7 @@ struct PhotoDetailSheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
-                        if PhotoStorageService.shared.loadImage(for: photo) != nil {
+                        if image != nil {
                             activeSheet = .shareOptions(photo)
                         }
                     } label: {
@@ -152,6 +153,12 @@ struct PhotoDetailSheet: View {
                     }
                 }
             }
+        }
+        .task(id: photo.id) {
+            let photo = photo
+            image = await Task.detached(priority: .userInitiated) {
+                PhotoStorageService.shared.loadImage(for: photo)
+            }.value
         }
     }
     

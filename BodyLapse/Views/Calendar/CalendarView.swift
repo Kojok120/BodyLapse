@@ -36,6 +36,8 @@ struct CalendarView: View {
     @State var videoGenerationProgress: Float = 0
     @State var showingVideoAlert = false
     @State var videoAlertMessage = ""
+    /// 警告を閉じた後に再生する生成済みの動画
+    @State var pendingVideoIdToPlay: UUID?
     
     // MARK: - Guidance States
     @State var showingVideoGuidance = false
@@ -96,7 +98,6 @@ struct CalendarView: View {
         let spacing = calculateSpacing()
         return VStack(spacing: spacing) {
             CalendarHeaderView(
-                isPremium: false, // No longer used, keeping for backward compatibility
                 availableCategories: viewModel.availableCategories,
                 selectedCategory: viewModel.selectedCategory,
                 selectedPeriod: $selectedPeriod,
@@ -119,7 +120,6 @@ struct CalendarView: View {
 
             PhotoPreviewSection(
                 selectedDate: selectedDate,
-                isPremium: true, // All users now have premium features
                 currentPhoto: $currentPhoto,
                 currentMemo: $currentMemo,
                 showingMemoEditor: $showingMemoEditor,
@@ -193,9 +193,14 @@ struct CalendarView: View {
             AchievementService.shared.evaluate(newStats)
         }
         .sheet(isPresented: $showingWeightInput) {
-            WeightInputView(photo: $currentPhoto, selectedDate: selectedDate, onSave: { weight, bodyFat in
-                handleWeightSave(weight: weight, bodyFat: bodyFat)
-            })
+            WeightInputView(
+                photo: $currentPhoto,
+                selectedDate: selectedDate,
+                onSave: { weight, bodyFat in
+                    handleWeightSave(weight: weight, bodyFat: bodyFat)
+                },
+                onDelete: handleWeightDelete
+            )
         }
         .sheet(isPresented: $showingVideoGeneration) {
             VideoGenerationView(
@@ -222,8 +227,7 @@ struct CalendarView: View {
                 showingDatePicker: $showingDatePicker,
                 dateRange: dateRange,
                 photoDates: getPhotoDates(),
-                dataDates: getDataDates(), // All users can see data dates
-                isPremium: true, // All users now have premium features
+                dataDates: getDataDates(),
                 onDateSelected: updateCurrentPhoto
             )
         }
@@ -285,7 +289,12 @@ struct CalendarView: View {
                 }
         }
         .alert("calendar.video_generation".localized, isPresented: $showingVideoAlert) {
-            Button("common.ok".localized) { }
+            Button("common.ok".localized) {
+                if let videoId = pendingVideoIdToPlay {
+                    pendingVideoIdToPlay = nil
+                    openGeneratedVideo(videoId)
+                }
+            }
         } message: {
             Text(videoAlertMessage)
         }
@@ -374,7 +383,9 @@ extension CalendarView {
 
     /// 撮影日数が一定に達した非Proユーザーに、一度だけクラウドバックアップ(Pro)を提案する。
     private func checkCloudUpsell() {
-        guard !subscriptionManager.isPro,
+        // 実績のお祝いを出している間は重ねて出さない (次に開いたときに出す)
+        guard AchievementService.shared.pendingCelebrations.isEmpty,
+              !subscriptionManager.isPro,
               !PaywallPromptManager.shared.hasShown(.milestoneCloud),
               viewModel.statistics.totalDays >= PaywallPromptManager.shared.cloudMilestoneThreshold else {
             return
@@ -392,7 +403,7 @@ extension CalendarView {
             selectedIndex = index
         }
         
-        PhotoStorageService.shared.reloadPhotosFromDisk()
+        // 写真の一覧はメモリ上で更新済みなので、ディスクから読み直さない
         viewModel.loadPhotos()
         viewModel.loadCategories()
         updateCurrentPhoto()
@@ -459,58 +470,50 @@ extension CalendarView {
         weightViewModel.loadEntries()
     }
     
-    private func handleWeightSave(weight: Double?, bodyFat: Double?) {
+    private func handleWeightSave(weight: Double, bodyFat: Double?) {
+        let saveDate = currentPhoto?.captureDate ?? selectedDate
         if let photo = currentPhoto {
             PhotoStorageService.shared.updatePhotoMetadata(photo, weight: weight, bodyFatPercentage: bodyFat)
             viewModel.loadPhotos()
             updateCurrentPhoto()
-            
-            let saveDate = photo.captureDate
-            let entry = WeightEntry(
-                date: saveDate,
-                weight: weight ?? 0,
-                bodyFatPercentage: bodyFat,
-                linkedPhotoID: photo.id.uuidString
-            )
-            
-            Task {
-                do {
-                    if weight != nil || bodyFat != nil {
-                        try await WeightStorageService.shared.saveEntry(entry)
-                    } else {
-                        if let existingEntry = try await WeightStorageService.shared.getEntry(for: saveDate) {
-                            try await WeightStorageService.shared.deleteEntry(existingEntry)
-                        }
-                    }
-                    
-                    await MainActor.run {
-                        weightViewModel.loadEntries()
-                    }
-                } catch {
-                    print("[CalendarView] Error saving/deleting weight entry: \(error)")
-                }
+        }
+
+        let entry = WeightEntry(
+            date: saveDate,
+            weight: weight,
+            bodyFatPercentage: bodyFat,
+            linkedPhotoID: currentPhoto?.id.uuidString
+        )
+
+        Task {
+            do {
+                try await WeightStorageService.shared.saveEntry(entry)
+            } catch {
+                print("[CalendarView] Error saving weight entry: \(error)")
             }
-        } else {
-            let saveDate = selectedDate
-            let entry = WeightEntry(
-                date: saveDate,
-                weight: weight ?? 0,
-                bodyFatPercentage: bodyFat,
-                linkedPhotoID: nil
-            )
-            
-            Task {
-                do {
-                    if weight != nil || bodyFat != nil {
-                        try await WeightStorageService.shared.saveEntry(entry)
-                    }
-                    
-                    await MainActor.run {
-                        weightViewModel.loadEntries()
-                    }
-                } catch {
-                    print("[CalendarView] Error saving weight entry: \(error)")
-                }
+            await MainActor.run {
+                weightViewModel.loadEntries()
+            }
+        }
+    }
+
+    /// この日の体重・体脂肪率を消す。写真は残し、写真に写していた値も消す。
+    private func handleWeightDelete() {
+        let targetDate = currentPhoto?.captureDate ?? selectedDate
+        if let photo = PhotoStorageService.shared.getPhotosForDate(targetDate).first {
+            PhotoStorageService.shared.updatePhotoMetadata(photo, weight: nil, bodyFatPercentage: nil)
+            viewModel.loadPhotos()
+            updateCurrentPhoto()
+        }
+
+        Task {
+            do {
+                try await WeightStorageService.shared.deleteEntries(on: targetDate)
+            } catch {
+                print("[CalendarView] Error deleting weight entry: \(error)")
+            }
+            await MainActor.run {
+                weightViewModel.loadEntries()
             }
         }
     }

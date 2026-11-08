@@ -1,12 +1,11 @@
 import Foundation
 import SwiftUI
-import Photos
 
 @MainActor
 class GalleryViewModel: ObservableObject {
     @Published var photos: [Photo] = []
     @Published var videos: [Video] = []
-    @Published var selectedSection: GallerySection = .videos
+    @Published var selectedSection: GallerySection = .photos
     @Published var selectedCategories: Set<String> = []
     @Published var sortOrder: SortOrder = .newest
     @Published var showingFilterOptions = false
@@ -118,45 +117,6 @@ class GalleryViewModel: ObservableObject {
         }
     }
     
-    func savePhotoToLibrary(_ photo: Photo, completion: @escaping (Bool, Error?) -> Void) {
-        PHPhotoLibrary.requestAuthorization { status in
-            guard status == .authorized else {
-                completion(false, NSError(domain: "GalleryViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Photo library access denied"]))
-                return
-            }
-            
-            guard let image = PhotoStorageService.shared.loadImage(for: photo) else {
-                completion(false, NSError(domain: "GalleryViewModel", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"]))
-                return
-            }
-            
-            PHPhotoLibrary.shared().performChanges({
-                PHAssetChangeRequest.creationRequestForAsset(from: image)
-            }) { success, error in
-                DispatchQueue.main.async {
-                    completion(success, error)
-                }
-            }
-        }
-    }
-    
-    func saveVideoToLibrary(_ video: Video, completion: @escaping (Bool, Error?) -> Void) {
-        PHPhotoLibrary.requestAuthorization { status in
-            guard status == .authorized else {
-                completion(false, NSError(domain: "GalleryViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Photo library access denied"]))
-                return
-            }
-            
-            PHPhotoLibrary.shared().performChanges({
-                PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: video.fileURL)
-            }) { success, error in
-                DispatchQueue.main.async {
-                    completion(success, error)
-                }
-            }
-        }
-    }
-    
     var filteredPhotos: [Photo] {
         var result = photos
         
@@ -187,8 +147,7 @@ class GalleryViewModel: ObservableObject {
     }
     
     var availableCategories: [PhotoCategory] {
-        let isPremium = SubscriptionManagerService.shared.isPremium
-        return CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+        CategoryStorageService.shared.getActiveCategories()
     }
     
     func photosGroupedByMonth() -> [(String, [Photo])] {
@@ -326,82 +285,6 @@ class GalleryViewModel: ObservableObject {
             deleteVideo(video)
         }
         exitSelectionMode()
-    }
-    
-    func bulkSavePhotosToLibrary(completion: @escaping (Bool, Error?) -> Void) {
-        let photosToSave = photos.filter { selectedPhotoIds.contains($0.id.uuidString) }
-        let group = DispatchGroup()
-        var hasError = false
-        var lastError: Error?
-        
-        PHPhotoLibrary.requestAuthorization { status in
-            guard status == .authorized else {
-                completion(false, NSError(domain: "GalleryViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Photo library access denied"]))
-                return
-            }
-            
-            PHPhotoLibrary.shared().performChanges({
-                for photo in photosToSave {
-                    group.enter()
-                    if let image = PhotoStorageService.shared.loadImage(for: photo) {
-                        PHAssetChangeRequest.creationRequestForAsset(from: image)
-                    }
-                    group.leave()
-                }
-            }) { success, error in
-                if !success {
-                    hasError = true
-                    lastError = error
-                }
-                
-                DispatchQueue.main.async {
-                    completion(!hasError, lastError)
-                    self.exitSelectionMode()
-                }
-            }
-        }
-    }
-    
-    func bulkSaveVideosToLibrary(completion: @escaping (Bool, Error?) -> Void) {
-        let videosToSave = videos.filter { selectedVideoIds.contains($0.id.uuidString) }
-        let group = DispatchGroup()
-        var hasError = false
-        var lastError: Error?
-        
-        PHPhotoLibrary.requestAuthorization { status in
-            guard status == .authorized else {
-                completion(false, NSError(domain: "GalleryViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Photo library access denied"]))
-                return
-            }
-            
-            PHPhotoLibrary.shared().performChanges({
-                for video in videosToSave {
-                    group.enter()
-                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: video.fileURL)
-                    group.leave()
-                }
-            }) { success, error in
-                if !success {
-                    hasError = true
-                    lastError = error
-                }
-                
-                DispatchQueue.main.async {
-                    completion(!hasError, lastError)
-                    self.exitSelectionMode()
-                }
-            }
-        }
-    }
-    
-    func getSelectedPhotosForSharing() -> [UIImage] {
-        let selectedPhotos = photos.filter { selectedPhotoIds.contains($0.id.uuidString) }
-        return selectedPhotos.compactMap { PhotoStorageService.shared.loadImage(for: $0) }
-    }
-    
-    func getSelectedVideosForSharing() -> [URL] {
-        let selectedVideos = videos.filter { selectedVideoIds.contains($0.id.uuidString) }
-        return selectedVideos.map { $0.fileURL }
     }
     
     // MARK: - 通知ハンドラー

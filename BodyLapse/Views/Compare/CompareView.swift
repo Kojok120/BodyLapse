@@ -84,139 +84,62 @@ struct CompareView: View {
             .sheet(isPresented: $showingFirstCalendar) {
                 CalendarPopupView(
                     selectedDate: Binding(
-                        get: { firstPhoto?.captureDate ?? Date() },
+                        get: { firstSelectedDate ?? firstPhoto?.captureDate ?? Date() },
                         set: { _ in }
                     ),
                     photos: viewModel.photos,
                     onDateSelected: { date in
-                        // Reload photos to get latest weight/body fat data
-                        print("[CompareView] Selecting first photo for date: \(date)")
-                        
-                        Task { @MainActor in
-                            // First, reload photos from disk
-                            viewModel.loadPhotos()
-                            
-                            // Also sync weight data directly from WeightStorageService for this specific date
-                            do {
-                                if let weightEntry = try await WeightStorageService.shared.getEntry(for: date) {
-                                    print("[CompareView] Found weight entry for date \(date): weight=\(weightEntry.weight), bodyFat=\(weightEntry.bodyFatPercentage ?? -1)")
-                                }
-                            } catch {
-                                print("[CompareView] Failed to get weight entry for date: \(error)")
-                            }
-                            
-                            // Wait for weight sync to complete
-                            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-                            
-                            // Get all photos for this date in the selected category
-                            let photosForDate = viewModel.photos.filter { photo in
-                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date) &&
-                                photo.categoryId == firstCategory.id
-                            }
-                            
-                            firstPhoto = photosForDate.first
-                            firstSelectedDate = date
-                            
-                            if let selected = firstPhoto {
-                                print("[CompareView] Selected first photo - id: \(selected.id), category: \(selected.categoryId), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
-                            } else {
-                                print("[CompareView] No photo found for date: \(date) in category: \(firstCategory.id)")
-                            }
-                        }
+                        firstPhoto = viewModel.photo(on: date, categoryId: firstCategory.id)
+                        firstSelectedDate = date
                         showingFirstCalendar = false
                     },
                     minDate: nil,
                     maxDate: secondSelectedDate,
-                    categoryId: firstCategory.id  // Filter by selected category
+                    categoryId: firstCategory.id
                 )
             }
             .sheet(isPresented: $showingSecondCalendar) {
                 CalendarPopupView(
                     selectedDate: Binding(
-                        get: { secondPhoto?.captureDate ?? Date() },
+                        get: { secondSelectedDate ?? secondPhoto?.captureDate ?? Date() },
                         set: { _ in }
                     ),
                     photos: viewModel.photos,
                     onDateSelected: { date in
-                        // Reload photos to get latest weight/body fat data
-                        print("[CompareView] Selecting second photo for date: \(date)")
-                        
-                        Task { @MainActor in
-                            // First, reload photos from disk
-                            viewModel.loadPhotos()
-                            
-                            // Also sync weight data directly from WeightStorageService for this specific date
-                            do {
-                                if let weightEntry = try await WeightStorageService.shared.getEntry(for: date) {
-                                    print("[CompareView] Found weight entry for date \(date): weight=\(weightEntry.weight), bodyFat=\(weightEntry.bodyFatPercentage ?? -1)")
-                                }
-                            } catch {
-                                print("[CompareView] Failed to get weight entry for date: \(error)")
-                            }
-                            
-                            // Wait for weight sync to complete
-                            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-                            
-                            // Get all photos for this date in the selected category
-                            let photosForDate = viewModel.photos.filter { photo in
-                                Calendar.current.isDate(photo.captureDate, inSameDayAs: date) &&
-                                photo.categoryId == secondCategory.id
-                            }
-                            
-                            secondPhoto = photosForDate.first
-                            secondSelectedDate = date
-                            
-                            if let selected = secondPhoto {
-                                print("[CompareView] Selected second photo - id: \(selected.id), category: \(selected.categoryId), weight: \(selected.weight ?? -1), bodyFat: \(selected.bodyFatPercentage ?? -1)")
-                            } else {
-                                print("[CompareView] No photo found for date: \(date) in category: \(secondCategory.id)")
-                            }
-                        }
+                        secondPhoto = viewModel.photo(on: date, categoryId: secondCategory.id)
+                        secondSelectedDate = date
                         showingSecondCalendar = false
                     },
                     minDate: firstSelectedDate,
                     maxDate: nil,
-                    categoryId: secondCategory.id  // Filter by selected category
+                    categoryId: secondCategory.id
                 )
             }
         }
         .onAppear {
-            print("[ComparisonView] View appeared")
-            viewModel.loadPhotos()
-            
-            // Load available categories
-            let isPremium = subscriptionManager.isPremium
-            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
-            
-            // Load any photos with today's date from selected category
-            let today = Date()
-            secondPhoto = viewModel.photos.first { photo in
-                photo.categoryId == secondCategory.id &&
-                Calendar.current.isDate(photo.captureDate, inSameDayAs: today)
-            }
-            if secondPhoto != nil {
-                secondSelectedDate = today
-            }
+            reloadData()
+            availableCategories = CategoryStorageService.shared.getActiveCategories()
+            applyDefaultPairIfNeeded()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-            // Reload photos when app comes to foreground to get latest data
-            viewModel.loadPhotos()
-            // Update selected photos with fresh data
-            if let first = firstPhoto {
-                firstPhoto = viewModel.photos.first { $0.id == first.id }
-            }
-            if let second = secondPhoto {
-                secondPhoto = viewModel.photos.first { $0.id == second.id }
-            }
+            reloadData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhotosUpdated"))) { _ in
+            reloadData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("WeightDataSyncComplete"))) { _ in
+            reloadData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("HealthKitDataSynced"))) { _ in
+            reloadData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { _ in
+            reloadData()
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("CategoriesUpdated"))) { _ in
-            print("CompareView: Received CategoriesUpdated notification")
+            availableCategories = CategoryStorageService.shared.getActiveCategories()
             
-            // Reload available categories
-            let isPremium = subscriptionManager.isPremium
-            availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
-            
-            // Check if selected categories are still available
+            // 選んでいたカテゴリが消えていたら先頭に戻す
             if !availableCategories.contains(where: { $0.id == firstCategory.id }) {
                 firstCategory = availableCategories.first ?? PhotoCategory.defaultCategory
                 firstPhoto = nil
@@ -228,226 +151,163 @@ struct CompareView: View {
                 secondPhoto = nil
                 secondSelectedDate = nil
             }
+            applyDefaultPairIfNeeded()
         }
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GuidelineUpdated"))) { _ in
-            print("CompareView: Received GuidelineUpdated notification")
-            
-            // Reload photos in case guidelines affect them
-            viewModel.loadPhotos()
-            
-            // Update selected photos with fresh data if they exist
-            if let first = firstPhoto {
-                firstPhoto = viewModel.photos.first { $0.id == first.id }
-            }
-            if let second = secondPhoto {
-                secondPhoto = viewModel.photos.first { $0.id == second.id }
-            }
+    }
+
+    // MARK: - Data
+
+    /// 写真一覧と体重の記録を読み直し、選んでいる写真を最新の内容に差し替える
+    private func reloadData() {
+        viewModel.refresh()
+        if let date = firstSelectedDate {
+            firstPhoto = viewModel.photo(on: date, categoryId: firstCategory.id)
         }
+        if let date = secondSelectedDate {
+            secondPhoto = viewModel.photo(on: date, categoryId: secondCategory.id)
+        }
+    }
+
+    /// 何も選んでいなければ、最も古い写真と最も新しい写真で開く
+    private func applyDefaultPairIfNeeded() {
+        guard firstPhoto == nil, secondPhoto == nil else { return }
+        let before = ComparePairing.defaultPair(from: viewModel.photos, categoryId: firstCategory.id).before
+        let after = ComparePairing.defaultPair(from: viewModel.photos, categoryId: secondCategory.id).after
+        firstPhoto = before
+        firstSelectedDate = before?.captureDate
+        secondPhoto = after
+        secondSelectedDate = after?.captureDate
     }
     
     private var comparisonView: some View {
         ScrollView {
             VStack(spacing: 16) {
-                // Photos and weight/body fat section
+                // 写真と体重・体脂肪率
                 HStack(alignment: .top, spacing: 2) {
-                    // First photo column
                     VStack(spacing: 0) {
-                        // Photo container
                         comparisonPhotoContent(photo: firstPhoto)
-                        .frame(height: 250)
-                        
-                        // Weight and body fat display for premium users
-                        if subscriptionManager.isPremium {
-                            VStack(spacing: 4) {
-                                if let photo = firstPhoto {
-                                    let _ = print("[CompareView] First photo - id: \(photo.id), date: \(photo.captureDate), weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
-                                    // Weight row
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "scalemass")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.secondary)
-                                        if let weight = photo.weight {
-                                            Text("\(convertedWeight(weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor(.primary)
-                                        } else {
-                                            Text("compare.no_weight".localized)
-                                                .font(.system(size: 12))
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                    
-                                    // Body fat row
-                                    if let bodyFat = photo.bodyFatPercentage {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "percent")
-                                                .font(.system(size: 12))
-                                                .foregroundColor(.secondary)
-                                            Text("\(bodyFat, specifier: "%.1f")%")
-                                                .font(.system(size: 14))
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                } else {
-                                    Text("compare.select_photo".localized)
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 60)
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 4)
-                            .background(Color(UIColor.secondarySystemGroupedBackground))
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                            .padding(.top, 4)
-                        }
+                            .frame(height: 250)
+                        measurementBox(for: firstPhoto)
                     }
                     
-                    // Divider
                     Rectangle()
                         .fill(Color.bodyLapseLightGray)
                         .frame(width: 2)
                     
-                    // Second photo column
                     VStack(spacing: 0) {
-                        // Photo container
                         comparisonPhotoContent(photo: secondPhoto)
-                        .frame(height: 250)
-                        
-                        // Weight and body fat display for premium users
-                        if subscriptionManager.isPremium {
-                            VStack(spacing: 4) {
-                                if let photo = secondPhoto {
-                                    let _ = print("[CompareView] Second photo - id: \(photo.id), date: \(photo.captureDate), weight: \(photo.weight ?? -1), bodyFat: \(photo.bodyFatPercentage ?? -1)")
-                                    // Weight row
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "scalemass")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.secondary)
-                                        if let weight = photo.weight {
-                                            Text("\(convertedWeight(weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor(.primary)
-                                        } else {
-                                            Text("compare.no_weight".localized)
-                                                .font(.system(size: 12))
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                    
-                                    // Body fat row
-                                    if let bodyFat = photo.bodyFatPercentage {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "percent")
-                                                .font(.system(size: 12))
-                                                .foregroundColor(.secondary)
-                                            Text("\(bodyFat, specifier: "%.1f")%")
-                                                .font(.system(size: 14))
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                } else {
-                                    Text("compare.select_photo".localized)
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 60)
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 4)
-                            .background(Color(UIColor.secondarySystemGroupedBackground))
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                            .padding(.top, 4)
-                        }
+                            .frame(height: 250)
+                        measurementBox(for: secondPhoto)
                     }
                 }
                 .padding(.horizontal, 2)
                 
-                // Comparison stats
+                // 差分
                 if let first = firstPhoto, let second = secondPhoto {
-                    ScrollView {
-                        VStack(spacing: 16) {
-                            // Stats display
-                            if subscriptionManager.isPremium {
-                                HStack(spacing: 20) {
-                                    // Weight difference
-                                    if let weightDiff = viewModel.getWeightDifference(first, second) {
-                                        VStack(spacing: 4) {
-                                            HStack(spacing: 2) {
-                                                Image(systemName: weightDiff > 0 ? "arrow.up" : "arrow.down")
-                                                    .font(.caption)
-                                                Text("\(abs(convertedWeight(weightDiff)), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
-                                                    .font(.title3)
-                                                    .fontWeight(.semibold)
-                                            }
-                                            .foregroundColor(weightDiff > 0 ? .red : .green)
-                                            Text("compare.weight".localized)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                    
-                                    // Body fat difference
-                                    if let bodyFatDiff = viewModel.getBodyFatDifference(first, second) {
-                                        if viewModel.getWeightDifference(first, second) != nil {
-                                            Divider()
-                                                .frame(height: 30)
-                                        }
-                                        
-                                        VStack(spacing: 4) {
-                                            HStack(spacing: 2) {
-                                                Image(systemName: bodyFatDiff > 0 ? "arrow.up" : "arrow.down")
-                                                    .font(.caption)
-                                                Text("\(abs(bodyFatDiff), specifier: "%.1f")%")
-                                                    .font(.title3)
-                                                    .fontWeight(.semibold)
-                                            }
-                                            .foregroundColor(bodyFatDiff > 0 ? .red : .green)
-                                            Text("compare.body_fat".localized)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                }
-                                .padding()
-                                .background(Color(UIColor.secondarySystemGroupedBackground))
-                                .cornerRadius(10)
-                            } else {
-                                // Free user message
-                                VStack(spacing: 8) {
-                                    Image(systemName: "lock.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.secondary)
-                                    Text("compare.upgrade_premium".localized)
-                                        .font(.headline)
-                                    Text("compare.premium_feature".localized)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color(UIColor.secondarySystemGroupedBackground))
-                                .cornerRadius(10)
-                            }
-                        }
+                    differenceSummary(first: first, second: second)
                         .padding(.horizontal)
                         .padding(.top, 16)
-                    }
                 }
                 
-                // Add extra space at bottom
                 Spacer()
                     .frame(height: 100)
             }
             .padding(.bottom, 60) // Space for banner ad
+        }
+    }
+
+    private func measurementBox(for photo: Photo?) -> some View {
+        VStack(spacing: 4) {
+            if let photo {
+                HStack(spacing: 4) {
+                    Image(systemName: "scalemass")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                    if let weight = viewModel.weight(for: photo) {
+                        Text("\(convertedWeight(weight), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                    } else {
+                        Text("compare.no_weight".localized)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                if let bodyFat = viewModel.bodyFat(for: photo) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "percent")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        Text("\(bodyFat, specifier: "%.1f")%")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            } else {
+                Text("compare.select_photo".localized)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 60)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
+        .background(Color(UIColor.secondarySystemGroupedBackground))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+        )
+        .padding(.top, 4)
+    }
+
+    @ViewBuilder
+    private func differenceSummary(first: Photo, second: Photo) -> some View {
+        let weightDiff = ComparePairing.difference(before: viewModel.weight(for: first), after: viewModel.weight(for: second))
+        let bodyFatDiff = ComparePairing.difference(before: viewModel.bodyFat(for: first), after: viewModel.bodyFat(for: second))
+        if weightDiff != nil || bodyFatDiff != nil {
+            HStack(spacing: 20) {
+                if let weightDiff {
+                    VStack(spacing: 4) {
+                        HStack(spacing: 2) {
+                            Image(systemName: weightDiff > 0 ? "arrow.up" : "arrow.down")
+                                .font(.caption)
+                            Text("\(abs(convertedWeight(weightDiff)), specifier: "%.1f") \(userSettings.settings.weightUnit.symbol)")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(weightDiff > 0 ? .red : .green)
+                        Text("compare.weight".localized)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                if let bodyFatDiff {
+                    if weightDiff != nil {
+                        Divider()
+                            .frame(height: 30)
+                    }
+                    
+                    VStack(spacing: 4) {
+                        HStack(spacing: 2) {
+                            Image(systemName: bodyFatDiff > 0 ? "arrow.up" : "arrow.down")
+                                .font(.caption)
+                            Text("\(abs(bodyFatDiff), specifier: "%.1f")%")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(bodyFatDiff > 0 ? .red : .green)
+                        Text("compare.body_fat".localized)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding()
+            .background(Color(UIColor.secondarySystemGroupedBackground))
+            .cornerRadius(10)
         }
     }
     
@@ -469,80 +329,19 @@ struct CompareView: View {
     
     private var photoSelectionButtons: some View {
         VStack(spacing: 16) {
-            // Category selection for premium users
-            if subscriptionManager.isPremium && availableCategories.count > 1 {
+            // カテゴリが複数あるときは左右それぞれ選べる
+            if availableCategories.count > 1 {
                 HStack(spacing: 20) {
-                    // First category picker
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("compare.before".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Menu {
-                            ForEach(availableCategories) { category in
-                                Button(action: {
-                                    firstCategory = category
-                                    // Try to find a photo for the same date in the new category
-                                    if let selectedDate = firstSelectedDate {
-                                        firstPhoto = viewModel.photos.first { photo in
-                                            photo.categoryId == category.id &&
-                                            Calendar.current.isDate(photo.captureDate, inSameDayAs: selectedDate)
-                                        }
-                                    }
-                                }) {
-                                    Label(category.name, systemImage: firstCategory.id == category.id ? "checkmark" : "")
-                                }
-                            }
-                        } label: {
-                            HStack {
-                                Text(firstCategory.name)
-                                    .font(.subheadline)
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                Image(systemName: "chevron.down")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color(UIColor.tertiarySystemFill))
-                            .cornerRadius(8)
+                    categoryMenu(title: "compare.before".localized, selection: firstCategory) { category in
+                        firstCategory = category
+                        if let date = firstSelectedDate {
+                            firstPhoto = viewModel.photo(on: date, categoryId: category.id)
                         }
                     }
-                    
-                    // Second category picker
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("compare.after".localized)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Menu {
-                            ForEach(availableCategories) { category in
-                                Button(action: {
-                                    secondCategory = category
-                                    // Try to find a photo for the same date in the new category
-                                    if let selectedDate = secondSelectedDate {
-                                        secondPhoto = viewModel.photos.first { photo in
-                                            photo.categoryId == category.id &&
-                                            Calendar.current.isDate(photo.captureDate, inSameDayAs: selectedDate)
-                                        }
-                                    }
-                                }) {
-                                    Label(category.name, systemImage: secondCategory.id == category.id ? "checkmark" : "")
-                                }
-                            }
-                        } label: {
-                            HStack {
-                                Text(secondCategory.name)
-                                    .font(.subheadline)
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                Image(systemName: "chevron.down")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color(UIColor.tertiarySystemFill))
-                            .cornerRadius(8)
+                    categoryMenu(title: "compare.after".localized, selection: secondCategory) { category in
+                        secondCategory = category
+                        if let date = secondSelectedDate {
+                            secondPhoto = viewModel.photo(on: date, categoryId: category.id)
                         }
                     }
                 }
@@ -608,6 +407,37 @@ struct CompareView: View {
         .padding(.top)
     }
 
+    private func categoryMenu(title: String, selection: PhotoCategory, onSelect: @escaping (PhotoCategory) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Menu {
+                ForEach(availableCategories) { category in
+                    Button {
+                        onSelect(category)
+                    } label: {
+                        Label(category.name, systemImage: selection.id == category.id ? "checkmark" : "")
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selection.name)
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color(UIColor.tertiarySystemFill))
+                .cornerRadius(8)
+            }
+        }
+    }
+
     private var comparisonPhotoWidth: CGFloat {
         (UIScreen.main.bounds.width - 6) / 2
     }
@@ -639,19 +469,11 @@ struct CompareView: View {
     }
     
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
-        return formatter.string(from: date)
-    }
-    
-    private func formatDateShort(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
-        return formatter.string(from: date)
+        AppDateFormat.medium(date)
     }
     
     private func convertedWeight(_ weight: Double) -> Double {
-        userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
+        MeasurementInput.displayWeight(kg: weight, unit: userSettings.settings.weightUnit)
     }
 
     /// 選択中の2枚からビフォーアフター共有画像を生成して共有シートを表示する。
@@ -677,11 +499,8 @@ struct CompareView: View {
         let isPro = subscriptionManager.isPro
         let beforeLabel = "compare.before".localized
         let afterLabel = "compare.after".localized
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        let beforeDateText = formatter.string(from: beforePhoto.captureDate)
-        let afterDateText = formatter.string(from: afterPhoto.captureDate)
+        let beforeDateText = AppDateFormat.medium(beforePhoto.captureDate)
+        let afterDateText = AppDateFormat.medium(afterPhoto.captureDate)
 
         // 重い画像ロード/合成はバックグラウンドで行い、UI更新のみメインに戻す（共有ボタン押下時のUIフリーズを防ぐ）
         DispatchQueue.global(qos: .userInitiated).async {

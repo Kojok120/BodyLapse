@@ -28,13 +28,16 @@ extension CalendarView {
                     self.videoGenerationProgress = 0
                     
                     switch result {
-                    case .success(let video):
+                    case .success(let outcome):
                         Haptics.success()
-                        NotificationCenter.default.post(
-                            name: NSNotification.Name("NavigateToGalleryAndPlayVideo"),
-                            object: nil,
-                            userInfo: ["videoId": video.id]
-                        )
+                        if outcome.framesWithoutDetectedFaces > 0 {
+                            // 顔が見つからずぼかしていないコマがある。確かめてもらってからギャラリーへ
+                            self.pendingVideoIdToPlay = outcome.video.id
+                            self.videoAlertMessage = "face_blur.video_frames_without_faces".localized(with: outcome.framesWithoutDetectedFaces)
+                            self.showingVideoAlert = true
+                        } else {
+                            self.openGeneratedVideo(outcome.video.id)
+                        }
                     case .failure(let error):
                         Haptics.error()
                         self.videoAlertMessage = error.localizedDescription
@@ -42,6 +45,14 @@ extension CalendarView {
                     }
                 }
             }
+        )
+    }
+
+    func openGeneratedVideo(_ videoId: UUID) {
+        NotificationCenter.default.post(
+            name: NSNotification.Name("NavigateToGalleryAndPlayVideo"),
+            object: nil,
+            userInfo: ["videoId": videoId]
         )
     }
 }

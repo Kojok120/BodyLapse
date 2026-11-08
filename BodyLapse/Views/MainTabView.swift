@@ -3,7 +3,6 @@ import SwiftUI
 struct MainTabView: View {
     @State private var selectedTab = 0
     @State private var videoToPlay: UUID?
-    @State private var shouldLaunchCamera = false
     @StateObject private var userSettings = UserSettingsManager.shared
     @State private var hasPerformedInitialSync = false
     
@@ -21,7 +20,7 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            CameraView(shouldLaunchCamera: $shouldLaunchCamera)
+            CameraView()
                 .tabItem {
                     Label("tab.photo".localized, systemImage: "camera.fill")
                 }
@@ -43,8 +42,8 @@ struct MainTabView: View {
             selectedTab = 2 // Camera tab
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCameraAndLaunch"))) { _ in
+            // カメラを開くだけにする。構図を合わせる前に勝手にシャッターを切らない
             selectedTab = 2 // Camera tab
-            shouldLaunchCamera = true
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToGalleryAndPlayVideo"))) { notification in
             if let videoId = notification.userInfo?["videoId"] as? UUID {

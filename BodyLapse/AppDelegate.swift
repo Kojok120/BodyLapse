@@ -46,11 +46,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         NotificationService.shared.rescheduleNotificationsIfNeeded()
     }
     
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        // Handle notification received while app is in background
-        completionHandler(.newData)
-    }
-    
     // Force portrait orientation
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         return .portrait

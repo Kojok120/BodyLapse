@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import StoreKit
 import ImageIO
+import UniformTypeIdentifiers
 
 class PhotoStorageService {
     static let shared = PhotoStorageService()
@@ -32,6 +33,33 @@ class PhotoStorageService {
     }
     
     private(set) var photos: [Photo] = []
+
+    // まとめて保存している間は、メタデータの書き込みと更新通知を最後に 1 回だけ行う
+    private var batchDepth = 0
+    private var batchMetadataDirty = false
+    private var batchHasPendingNotification = false
+
+    /// 取り込みのように何枚も続けて保存するときに使う。1 枚ごとにメタデータ全件を書き、
+    /// 更新通知 (と、それに反応するバックアップ) を飛ばすのを避ける
+    func performBatchUpdates<T>(_ body: () throws -> T) rethrows -> T {
+        batchDepth += 1
+        defer {
+            batchDepth -= 1
+            if batchDepth == 0 {
+                if batchMetadataDirty {
+                    batchMetadataDirty = false
+                    savePhotosMetadata()
+                }
+                if batchHasPendingNotification {
+                    batchHasPendingNotification = false
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: Notification.Name("PhotosUpdated"), object: nil)
+                    }
+                }
+            }
+        }
+        return try body()
+    }
     
     func initialize() {
         // Initializing...
@@ -60,7 +88,48 @@ class PhotoStorageService {
         }
     }
     
+    /// 保存用の JPEG を作る (向きの補正と圧縮)。重いのでメインスレッドの外で呼べるよう状態に触れない
+    static func preparedJPEGData(from image: UIImage) throws -> Data {
+        // 画像の向きを修正して常に縦向きで保存されるようにする
+        let orientedImage = image.fixedOrientation()
+        guard let imageData = orientedImage.jpegData(compressionQuality: 0.9) else {
+            throw PhotoStorageError.compressionFailed
+        }
+        return imageData
+    }
+
+    /// 取り込んだ画像のバイト列を、保存できる JPEG にする。向きが正しい JPEG (このアプリが書き出したもの) は
+    /// そのまま使い、それ以外 (HEIC・PNG・回転情報つき) だけ展開して作り直す
+    static func storableJPEGData(fromImported data: Data) throws -> Data {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              CGImageSourceGetCount(source) > 0 else {
+            throw PhotoStorageError.compressionFailed
+        }
+        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        let orientation = (properties?[kCGImagePropertyOrientation] as? NSNumber)?.intValue ?? 1
+        if let type = CGImageSourceGetType(source) as String?, type == UTType.jpeg.identifier, orientation == 1 {
+            return data
+        }
+        guard let image = UIImage(data: data) else {
+            throw PhotoStorageError.compressionFailed
+        }
+        return try preparedJPEGData(from: image)
+    }
+
     func savePhoto(_ image: UIImage, captureDate: Date = Date(), categoryId: String = PhotoCategory.defaultCategory.id, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
+        try savePhoto(
+            jpegData: Self.preparedJPEGData(from: image),
+            captureDate: captureDate,
+            categoryId: categoryId,
+            isFaceBlurred: isFaceBlurred,
+            bodyDetectionConfidence: bodyDetectionConfidence,
+            weight: weight,
+            bodyFatPercentage: bodyFatPercentage
+        )
+    }
+
+    /// preparedJPEGData(from:) で作った JPEG を保存する
+    func savePhoto(jpegData imageData: Data, captureDate: Date = Date(), categoryId: String = PhotoCategory.defaultCategory.id, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
         guard let photosDirectory = photosDirectory else {
             throw PhotoStorageError.directoryAccessFailed
         }
@@ -69,13 +138,6 @@ class PhotoStorageService {
         let categoryDir = photosDirectory.appendingPathComponent(categoryId)
         if !FileManager.default.fileExists(atPath: categoryDir.path) {
             try FileManager.default.createDirectory(at: categoryDir, withIntermediateDirectories: true)
-        }
-        
-        // 画像の向きを修正して常に縦向きで保存されるようにする
-        let orientedImage = image.fixedOrientation()
-        
-        guard let imageData = orientedImage.jpegData(compressionQuality: 0.9) else {
-            throw PhotoStorageError.compressionFailed
         }
         
         let fileName = "\(UUID().uuidString).jpg"
@@ -141,7 +203,10 @@ class PhotoStorageService {
         
         savePhotosMetadata()
         
-        // 写真をメタデータに保存
+        if batchDepth > 0 {
+            batchHasPendingNotification = true
+            return photo
+        }
         
         // 写真が更新されたことを通知
         NotificationCenter.default.post(
@@ -216,6 +281,18 @@ class PhotoStorageService {
     }
     
     func replacePhoto(for date: Date, categoryId: String = PhotoCategory.defaultCategory.id, with image: UIImage, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
+        try replacePhoto(
+            for: date,
+            categoryId: categoryId,
+            jpegData: Self.preparedJPEGData(from: image),
+            isFaceBlurred: isFaceBlurred,
+            bodyDetectionConfidence: bodyDetectionConfidence,
+            weight: weight,
+            bodyFatPercentage: bodyFatPercentage
+        )
+    }
+
+    func replacePhoto(for date: Date, categoryId: String = PhotoCategory.defaultCategory.id, jpegData: Data, isFaceBlurred: Bool = false, bodyDetectionConfidence: Double? = nil, weight: Double? = nil, bodyFatPercentage: Double? = nil) throws -> Photo {
         // 日付とカテゴリの写真を置換
         
         // 体重/体脂肪が未提供の場合、この日付/カテゴリの既存写真を確認
@@ -235,7 +312,7 @@ class PhotoStorageService {
             try deletePhoto(existingPhoto)
         }
         
-        let newPhoto = try savePhoto(image, captureDate: date, categoryId: categoryId, isFaceBlurred: isFaceBlurred, bodyDetectionConfidence: bodyDetectionConfidence, weight: finalWeight, bodyFatPercentage: finalBodyFat)
+        let newPhoto = try savePhoto(jpegData: jpegData, captureDate: date, categoryId: categoryId, isFaceBlurred: isFaceBlurred, bodyDetectionConfidence: bodyDetectionConfidence, weight: finalWeight, bodyFatPercentage: finalBodyFat)
         // 新しい写真を保存
         return newPhoto
     }
@@ -302,7 +379,13 @@ class PhotoStorageService {
         savePhotosMetadata()
     }
     
-    func loadImage(for photo: Photo, targetSize: CGSize? = nil, scale: CGFloat = UIScreen.main.scale) -> UIImage? {
+    /// キャッシュにある画像だけを返す (ディスクは読まない)
+    func cachedImage(for photo: Photo, targetSize: CGSize? = nil, scale: CGFloat = UIScreen.main.scale) -> UIImage? {
+        imageCache.object(forKey: cacheKey(for: photo, targetSize: targetSize, scale: scale))
+    }
+
+    /// - Parameter cache: false にすると共有の画像キャッシュに入れない (動画生成のように一度しか使わない大量の画像向け)
+    func loadImage(for photo: Photo, targetSize: CGSize? = nil, scale: CGFloat = UIScreen.main.scale, cache: Bool = true) -> UIImage? {
         guard let imageURL = imageURL(for: photo) else {
             // エラー: 写真ディレクトリにアクセスできません
             return nil
@@ -317,7 +400,9 @@ class PhotoStorageService {
            targetSize.width > 0,
            targetSize.height > 0,
            let downsampled = downsampleImage(at: imageURL, to: targetSize, scale: scale) {
-            imageCache.setObject(downsampled, forKey: cacheKey, cost: downsampled.cacheCost)
+            if cache {
+                imageCache.setObject(downsampled, forKey: cacheKey, cost: downsampled.cacheCost)
+            }
             return downsampled
         }
 
@@ -325,7 +410,9 @@ class PhotoStorageService {
               let image = UIImage(data: imageData, scale: scale) else {
             return nil
         }
-        imageCache.setObject(image, forKey: cacheKey, cost: image.cacheCost)
+        if cache {
+            imageCache.setObject(image, forKey: cacheKey, cost: image.cacheCost)
+        }
         return image
     }
     
@@ -390,6 +477,10 @@ class PhotoStorageService {
     }
 
     private func savePhotosMetadata() {
+        if batchDepth > 0 {
+            batchMetadataDirty = true
+            return
+        }
         guard let metadataURL = metadataURL else {
             // エラー: メタデータURLにアクセスできません
             return
@@ -403,6 +494,11 @@ class PhotoStorageService {
         } catch {
             print("[PhotoStorage] Failed to save photos metadata: \(error)")
         }
+    }
+
+    /// 写真のファイルの場所 (旧形式の置き場も探す)。無ければ nil
+    func storedFileURL(for photo: Photo) -> URL? {
+        imageURL(for: photo)
     }
 
     private func imageURL(for photo: Photo) -> URL? {
@@ -447,77 +543,7 @@ class PhotoStorageService {
         imageCache.removeAllObjects()
     }
     
-    func photosGroupedByDate() -> [(Date, [Photo])] {
-        let grouped = Dictionary(grouping: photos) { photo in
-            Calendar.current.startOfDay(for: photo.captureDate)
-        }
-        
-        return grouped.sorted { $0.key > $1.key }
-    }
-    
-    func hasPhoto(for date: Date, categoryId: String? = nil) -> Bool {
-        let calendar = Calendar.current
-        let targetDay = calendar.startOfDay(for: date)
-        
-        return photos.contains { photo in
-            (categoryId == nil || photo.categoryId == categoryId) &&
-            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
-        }
-    }
-    
-    func getPhotoID(for date: Date, categoryId: String? = nil) -> String? {
-        let calendar = Calendar.current
-        let targetDay = calendar.startOfDay(for: date)
-        
-        return photos.first { photo in
-            (categoryId == nil || photo.categoryId == categoryId) &&
-            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
-        }?.id.uuidString
-    }
-    
     // MARK: - カテゴリサポートメソッド
-    
-    func getPhotosForCategory(_ categoryId: String) -> [Photo] {
-        return photos.filter { $0.categoryId == categoryId }
-            .sorted { $0.captureDate > $1.captureDate }
-    }
-    
-    func getPhotoCategories(for date: Date) -> [String] {
-        let calendar = Calendar.current
-        let targetDay = calendar.startOfDay(for: date)
-        
-        return photos.filter { photo in
-            calendar.isDate(photo.captureDate, inSameDayAs: targetDay)
-        }.map { $0.categoryId }.uniqued()
-    }
-    
-    func photosGroupedByDateAndCategory() -> [(Date, [(String, [Photo])])] {
-        let calendar = Calendar.current
-        
-        // まず日付別にグループ化
-        let dateGrouped = Dictionary(grouping: photos) { photo in
-            calendar.startOfDay(for: photo.captureDate)
-        }
-        
-        // 各日付内でカテゴリ別にグループ化
-        let result = dateGrouped.map { (date, photosForDate) in
-            let categoryGrouped = Dictionary(grouping: photosForDate) { $0.categoryId }
-                .sorted { $0.key < $1.key }
-                .map { ($0.key, $0.value.sorted { $0.captureDate > $1.captureDate }) }
-            
-            return (date, categoryGrouped)
-        }
-        
-        return result.sorted { $0.0 > $1.0 }
-    }
-    
-    func getPhotoDatesForCategory(_ categoryId: String) -> [Date] {
-        let calendar = Calendar.current
-        let photosInCategory = photos.filter { $0.categoryId == categoryId }
-        
-        let dates = Set(photosInCategory.map { calendar.startOfDay(for: $0.captureDate) })
-        return Array(dates).sorted(by: >)
-    }
     
     func migratePhotosToCategory(_ categoryId: String = PhotoCategory.defaultCategory.id) {
         // categoryIdなしの既存写真を移行するため
@@ -613,20 +639,21 @@ class PhotoStorageService {
     private func syncWeightDataFromStorage() async {
         do {
             let weightEntries = try await WeightStorageService.shared.loadEntries()
-            print("[PhotoStorage] Syncing weight data from \(weightEntries.count) weight entries")
             var hasChanges = false
+
+            // 写真を日ごとに引けるようにしておく (記録 × 写真の総当たりにしない)
+            let calendar = Calendar.current
+            var photoIndicesByDay: [Date: [Int]] = [:]
+            for (index, photo) in photos.enumerated() {
+                photoIndicesByDay[calendar.startOfDay(for: photo.captureDate), default: []].append(index)
+            }
             
             for entry in weightEntries {
-                // 同日の全写真を検索（最初の1枚だけでなく）
-                let photosForDate = photos.enumerated().compactMap { (index, photo) in
-                    Calendar.current.isDate(photo.captureDate, inSameDayAs: entry.date) ? index : nil
-                }
-                
-                if photosForDate.isEmpty {
+                // 同日の全写真を更新（最初の1枚だけでなく）
+                guard let photosForDate = photoIndicesByDay[calendar.startOfDay(for: entry.date)] else {
                     continue
                 }
                 
-                // この日付の全写真を更新
                 for photoIndex in photosForDate {
                     var updatedPhoto = photos[photoIndex]
                     var needsUpdate = false
@@ -646,7 +673,6 @@ class PhotoStorageService {
                     if needsUpdate {
                         photos[photoIndex] = updatedPhoto
                         hasChanges = true
-                        print("[PhotoStorage] Synced weight data to photo id=\(updatedPhoto.id)")
                     }
                 }
             }
@@ -669,13 +695,6 @@ private extension UIImage {
     }
 }
 
-extension Array where Element: Hashable {
-    func uniqued() -> [Element] {
-        var seen = Set<Element>()
-        return filter { seen.insert($0).inserted }
-    }
-}
-
 enum PhotoStorageError: LocalizedError {
     case compressionFailed
     case saveFailed
@@ -684,11 +703,11 @@ enum PhotoStorageError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .compressionFailed:
-            return "Failed to compress the image"
+            return "error.photo.compression_failed".localized
         case .saveFailed:
-            return "Failed to save the photo"
+            return "error.photo.save_failed".localized
         case .directoryAccessFailed:
-            return "Failed to access the documents directory"
+            return "error.storage_unavailable".localized
         }
     }
 }

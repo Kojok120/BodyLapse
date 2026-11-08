@@ -8,11 +8,8 @@
 import SwiftUI
 
 struct CategoryManagementView: View {
-    @ObservedObject private var userSettings = UserSettingsManager.shared
-    @ObservedObject private var subscriptionManager = SubscriptionManagerService.shared
     @State private var categories: [PhotoCategory] = []
     @State private var showingAddCategory = false
-    @State private var showingEditCategory = false
     @State private var categoryToEdit: PhotoCategory?
     @State private var showingDeleteConfirmation = false
     @State private var categoryToDelete: PhotoCategory?
@@ -28,7 +25,6 @@ struct CategoryManagementView: View {
                         category: category,
                         onEdit: {
                             categoryToEdit = category
-                            showingEditCategory = true
                         },
                         onDelete: {
                             if category.canBeDeleted {

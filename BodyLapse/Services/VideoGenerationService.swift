@@ -83,17 +83,20 @@ class VideoGenerationService {
         case videoCreationFailed
         case exportFailed
         case cancelled
+        case faceBlurFailed
         
         var errorDescription: String? {
             switch self {
             case .noPhotosFound:
-                return "No photos found in the selected period"
+                return "error.video.no_photos".localized
             case .videoCreationFailed:
-                return "Failed to create video"
+                return "error.video.creation_failed".localized
             case .exportFailed:
-                return "Failed to export video"
+                return "error.video.export_failed".localized
             case .cancelled:
-                return "Video generation was cancelled"
+                return "error.video.cancelled".localized
+            case .faceBlurFailed:
+                return "face_blur.error.video_failed".localized
             }
         }
     }
@@ -101,8 +104,6 @@ class VideoGenerationService {
     struct VideoGenerationOptions {
         let frameDuration: CMTime
         let videoSize: CGSize
-        let addWatermark: Bool
-        let transitionStyle: TransitionStyle
         let blurFaces: Bool
         let layout: VideoLayout
         let selectedCategories: [String]
@@ -110,37 +111,24 @@ class VideoGenerationService {
         let showGraph: Bool
         let isWeightInLbs: Bool
         
-        enum TransitionStyle {
-            case none
-            case fade
-            case crossDissolve
-        }
-        
         enum VideoLayout {
             case single
             case sideBySide
         }
-        
-        static let `default` = VideoGenerationOptions(
-            frameDuration: CMTime(value: 1, timescale: 4), // 0.25 seconds per frame
-            videoSize: CGSize(width: 1080, height: 1920), // Portrait HD
-            addWatermark: true,
-            transitionStyle: .fade,
-            blurFaces: false,
-            layout: .single,
-            selectedCategories: [],
-            showDate: true,
-            showGraph: false,
-            isWeightInLbs: false
-        )
     }
     
+    struct GenerationOutcome {
+        let video: Video
+        /// 顔ぼかしを有効にしたのに顔が見つからず、ぼかさずに入ったコマの数
+        let framesWithoutDetectedFaces: Int
+    }
+
     func generateVideo(
         from photos: [Photo],
         in dateRange: ClosedRange<Date>,
-        options: VideoGenerationOptions = .default,
+        options: VideoGenerationOptions,
         progress: @escaping (Float) -> Void,
-        completion: @escaping (Result<Video, Error>) -> Void
+        completion: @escaping (Result<GenerationOutcome, Error>) -> Void
     ) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
@@ -183,7 +171,7 @@ class VideoGenerationService {
             
             Task {
                 do {
-                    let videoURL = try await self.createVideoAsync(
+                    let (videoURL, framesWithoutFaces) = try await self.createVideoAsync(
                         from: filteredPhotos,
                         options: options,
                         progress: progress
@@ -201,7 +189,7 @@ class VideoGenerationService {
                     try? FileManager.default.removeItem(at: videoURL)
                     
                     await MainActor.run {
-                        completion(.success(video))
+                        completion(.success(GenerationOutcome(video: video, framesWithoutDetectedFaces: framesWithoutFaces)))
                     }
                 } catch {
                     await MainActor.run {
@@ -216,7 +204,7 @@ class VideoGenerationService {
         from photos: [Photo],
         options: VideoGenerationOptions,
         progress: @escaping (Float) -> Void
-    ) async throws -> URL {
+    ) async throws -> (URL, Int) {
         let outputURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("mp4")
@@ -284,29 +272,38 @@ class VideoGenerationService {
         // 大量フレーム読み込みでのメモリスパイクを抑えるため、生成開始時にキャッシュを解放して余裕を確保
         PhotoStorageService.shared.clearImageCache()
 
+        // 顔ぼかし: 検出に失敗したコマは素顔のまま入れず生成を止める。見つからなかったコマは数えて知らせる
+        var framesWithoutFaces = 0
+        let blurMethod = await UserSettingsManager.shared.settings.faceBlurMethod.toServiceMethod
+        func blurred(_ image: UIImage) async throws -> UIImage {
+            do {
+                let outcome = try await FaceBlurService.shared.blurFaces(in: image, blurMethod: blurMethod)
+                if outcome.faceCount == 0 {
+                    framesWithoutFaces += 1
+                }
+                return outcome.image
+            } catch {
+                videoWriter.cancelWriting()
+                try? FileManager.default.removeItem(at: outputURL)
+                throw VideoGenerationError.faceBlurFailed
+            }
+        }
+
         if options.layout == .single || options.selectedCategories.count <= 1 {
             // 単一カテゴリー動画の処理
             let totalPhotos = photos.count
             
             for (index, photo) in photos.enumerated() {
-                guard let image = PhotoStorageService.shared.loadImage(for: photo) else { continue }
+                guard let image = PhotoStorageService.shared.loadImage(for: photo, targetSize: options.videoSize, scale: 1, cache: false) else { continue }
                 
                 // 有効な場合、顔のぼかしを適用
-                let imageToProcess: UIImage
-                if options.blurFaces {
-                    let userSettings = await UserSettingsManager.shared
-                    let blurMethod = await userSettings.settings.faceBlurMethod.toServiceMethod
-                    imageToProcess = await FaceBlurService.shared.processImageAsync(image, blurMethod: blurMethod)
-                } else {
-                    imageToProcess = image
-                }
+                let imageToProcess = options.blurFaces ? try await blurred(image) : image
                 
                 // ピクセルバッファに変換
                 if let pixelBuffer = autoreleasepool(invoking: { () -> CVPixelBuffer? in
                     createPixelBuffer(
                         from: imageToProcess,
                         size: options.videoSize,
-                        addWatermark: options.addWatermark,
                         showDate: options.showDate,
                         date: photo.captureDate,
                         showGraph: options.showGraph,
@@ -348,15 +345,9 @@ class VideoGenerationService {
                 var categoryPhotos: [String: UIImage] = [:]
                 for categoryId in options.selectedCategories {
                     if let photo = photosForDate.first(where: { $0.categoryId == categoryId }),
-                       let image = PhotoStorageService.shared.loadImage(for: photo) {
+                       let image = PhotoStorageService.shared.loadImage(for: photo, targetSize: options.videoSize, scale: 1, cache: false) {
                         // 有効な場合、顔のぼかしを適用
-                        if options.blurFaces {
-                            let userSettings = await UserSettingsManager.shared
-                            let blurMethod = await userSettings.settings.faceBlurMethod.toServiceMethod
-                            categoryPhotos[categoryId] = await FaceBlurService.shared.processImageAsync(image, blurMethod: blurMethod)
-                        } else {
-                            categoryPhotos[categoryId] = image
-                        }
+                        categoryPhotos[categoryId] = options.blurFaces ? try await blurred(image) : image
                     }
                 }
                 
@@ -368,7 +359,6 @@ class VideoGenerationService {
                             from: categoryPhotos,
                             categories: options.selectedCategories,
                             size: options.videoSize,
-                            addWatermark: options.addWatermark,
                             showDate: options.showDate,
                             date: date,
                             showGraph: options.showGraph,
@@ -409,12 +399,12 @@ class VideoGenerationService {
             throw VideoGenerationError.videoCreationFailed
         }
         
-        return outputURL
+        return (outputURL, framesWithoutFaces)
     }
     
     
     
-    private func createPixelBuffer(from image: UIImage, size: CGSize, addWatermark: Bool, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, weightEntries: [WeightEntry]? = nil, dateRange: ClosedRange<Date>? = nil, isWeightInLbs: Bool = false) -> CVPixelBuffer? {
+    private func createPixelBuffer(from image: UIImage, size: CGSize, showDate: Bool = false, date: Date? = nil, showGraph: Bool = false, weightEntries: [WeightEntry]? = nil, dateRange: ClosedRange<Date>? = nil, isWeightInLbs: Bool = false) -> CVPixelBuffer? {
         // 必要に応じて方向を修正
         let orientedImage = image.fixedOrientation()
         
@@ -499,71 +489,7 @@ class VideoGenerationService {
             drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size, isWeightInLbs: isWeightInLbs)
         }
         
-        // Add watermark if needed
-        if addWatermark {
-            drawWatermark(in: context, size: size)
-        }
-        
         return buffer
-    }
-    
-    private func drawWatermark(in context: CGContext, size: CGSize) {
-        // Save current context state
-        context.saveGState()
-        
-        // Watermark text
-        let watermarkText = "BodyLapse"
-        
-        // Calculate appropriate font size based on video size
-        let baseFontSize: CGFloat = min(size.width, size.height) * 0.05 // 5% of smaller dimension
-        let fontSize = max(baseFontSize, 30) // Minimum 30pt
-        
-        // Create watermark attributes with shadow
-        let shadow = NSShadow()
-        shadow.shadowColor = UIColor.black.withAlphaComponent(0.5)
-        shadow.shadowOffset = CGSize(width: 2, height: 2)
-        shadow.shadowBlurRadius = 4
-        
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: fontSize, weight: .bold),
-            .foregroundColor: UIColor.white.withAlphaComponent(0.9),
-            .shadow: shadow
-        ]
-        
-        // Calculate text size
-        let textSize = watermarkText.size(withAttributes: attributes)
-        
-        // Position in bottom right corner with padding
-        let padding: CGFloat = min(size.width, size.height) * 0.04 // 4% padding
-        let textRect = CGRect(
-            x: size.width - textSize.width - padding,
-            y: size.height - textSize.height - padding,
-            width: textSize.width,
-            height: textSize.height
-        )
-        
-        // Create a semi-transparent background for better visibility
-        let backgroundRect = textRect.insetBy(dx: -padding/2, dy: -padding/4)
-        context.setFillColor(UIColor.black.withAlphaComponent(0.3).cgColor)
-        context.fillEllipse(in: backgroundRect)
-        
-        // Flip coordinate system for text drawing
-        context.translateBy(x: 0, y: size.height)
-        context.scaleBy(x: 1.0, y: -1.0)
-        
-        // Draw the watermark text
-        UIGraphicsPushContext(context)
-        let flippedRect = CGRect(
-            x: textRect.origin.x,
-            y: textRect.origin.y,
-            width: textRect.width,
-            height: textRect.height
-        )
-        watermarkText.draw(in: flippedRect, withAttributes: attributes)
-        UIGraphicsPopContext()
-        
-        // Restore context state
-        context.restoreGState()
     }
     
     private func drawDate(_ date: Date, in context: CGContext, size: CGSize) {
@@ -727,7 +653,6 @@ class VideoGenerationService {
         from categoryPhotos: [String: UIImage],
         categories: [String],
         size: CGSize,
-        addWatermark: Bool,
         showDate: Bool = false,
         date: Date? = nil,
         showGraph: Bool = false,
@@ -863,11 +788,6 @@ class VideoGenerationService {
         // Add graph if needed (premium feature)
         if showGraph, let weightEntries = weightEntries, let dateRange = dateRange, let currentDate = date {
             drawWeightChart(weightEntries: weightEntries, currentDate: currentDate, dateRange: dateRange, in: context, size: size, isWeightInLbs: isWeightInLbs)
-        }
-        
-        // Add watermark if needed
-        if addWatermark {
-            drawWatermark(in: context, size: size)
         }
         
         return buffer

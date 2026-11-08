@@ -22,22 +22,6 @@ struct GalleryUtilities {
         formatter.dateFormat = "M/d"
         return formatter.string(from: date)
     }
-    
-    static func showSaveSuccess(message: String, showingSaveSuccess: Binding<Bool>, saveSuccessMessage: Binding<String>) {
-        saveSuccessMessage.wrappedValue = message
-        withAnimation {
-            showingSaveSuccess.wrappedValue = true
-        }
-    }
-}
-
-// MARK: - ギャラリーアクションプロトコル
-
-protocol GalleryItemActions {
-    func onTap()
-    func onDelete()
-    func onSave()
-    func onShare()
 }
 
 // MARK: - 保存成功トースト

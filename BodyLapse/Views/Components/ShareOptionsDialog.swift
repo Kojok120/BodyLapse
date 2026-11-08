@@ -12,6 +12,7 @@ struct ShareOptionsDialog: View {
     @State private var showFaceBlurPreview = false
     @State private var originalImage: UIImage?
     @State private var processedImage: UIImage?
+    @State private var detectedFaceCount = 0
     
     var body: some View {
         NavigationView {
@@ -80,7 +81,8 @@ struct ShareOptionsDialog: View {
             if let originalImg = originalImage, let processedImg = processedImage {
                 FaceBlurPreviewView(
                     originalImage: originalImg,
-                    processedImage: processedImg
+                    processedImage: processedImg,
+                    detectedFaceCount: detectedFaceCount
                 ) { finalImage in
                     showFaceBlurPreview = false
                     onShare(finalImage, true)
@@ -100,13 +102,20 @@ struct ShareOptionsDialog: View {
             
             Task {
                 let blurMethod = UserSettingsManager.shared.settings.faceBlurMethod.toServiceMethod
-                let processedImage = await FaceBlurService.shared.processImageAsync(image, blurMethod: blurMethod)
-                
-                await MainActor.run {
-                    isProcessing = false
-                    originalImage = image
-                    self.processedImage = processedImage
-                    showFaceBlurPreview = true
+                do {
+                    let outcome = try await FaceBlurService.shared.blurFaces(in: image, blurMethod: blurMethod)
+                    await MainActor.run {
+                        isProcessing = false
+                        originalImage = image
+                        processedImage = outcome.image
+                        detectedFaceCount = outcome.faceCount
+                        showFaceBlurPreview = true
+                    }
+                } catch {
+                    await MainActor.run {
+                        isProcessing = false
+                        showError(error.localizedDescription)
+                    }
                 }
             }
         } else {

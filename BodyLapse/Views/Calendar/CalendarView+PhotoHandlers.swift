@@ -12,25 +12,11 @@ extension CalendarView {
             viewModel.loadCategories()
             updateCurrentPhoto()
             
-            if photo.weight != nil || photo.bodyFatPercentage != nil {
-                Task {
-                    let remainingPhotosForDate = PhotoStorageService.shared.getPhotosForDate(photo.captureDate)
-                    
-                    if remainingPhotosForDate.isEmpty {
-                        if let existingEntry = try await WeightStorageService.shared.getEntry(for: photo.captureDate) {
-                            try await WeightStorageService.shared.deleteEntry(existingEntry)
-                        }
-                    }
-                    
-                    await MainActor.run {
-                        weightViewModel.loadEntries()
-                    }
-                }
-            }
+            // 体重・体脂肪率は写真と別の記録なので、写真を消しても残す
             
             NotificationCenter.default.post(name: Notification.Name("PhotosUpdated"), object: nil)
         } catch {
-            videoAlertMessage = "Failed to delete photo: \(error.localizedDescription)"
+            videoAlertMessage = "calendar.delete_photo_failed".localized(with: error.localizedDescription)
             showingVideoAlert = true
         }
     }
@@ -55,34 +41,14 @@ extension CalendarView {
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
         
-        PHPhotoLibrary.requestAuthorization { status in
-            guard status == .authorized else {
-                DispatchQueue.main.async {
-                    self.videoAlertMessage = "gallery.photo_library_access_denied".localized
-                    self.showingVideoAlert = true
-                }
-                return
-            }
-            
-            guard let image = PhotoStorageService.shared.loadImage(for: photo) else {
-                DispatchQueue.main.async {
-                    self.videoAlertMessage = "Failed to load image"
-                    self.showingVideoAlert = true
-                }
-                return
-            }
-            
-            PHPhotoLibrary.shared().performChanges({
-                PHAssetChangeRequest.creationRequestForAsset(from: image)
-            }) { success, error in
-                DispatchQueue.main.async {
-                    if success {
-                        self.showSaveSuccess(message: "gallery.photo_saved".localized)
-                    } else {
-                        self.videoAlertMessage = error?.localizedDescription ?? "Failed to save photo"
-                        self.showingVideoAlert = true
-                    }
-                }
+        PhotoLibrarySaver.save(photos: [photo]) { result in
+            switch result {
+            case .success:
+                self.showSaveSuccess(message: "gallery.photo_saved".localized)
+            case .failure(let error):
+                Haptics.error()
+                self.videoAlertMessage = error.localizedDescription
+                self.showingVideoAlert = true
             }
         }
     }

@@ -19,8 +19,24 @@ class AuthenticationService: ObservableObject {
     }
     
     private let passwordKey = "BodyLapsePassword"
+    private let attemptStateKey = "BodyLapsePINAttemptState"
     private let authEnabledKey = "AuthenticationEnabled"
     private let biometricEnabledKey = "BiometricAuthenticationEnabled"
+
+    /// PIN の照合結果
+    enum PINAttemptResult: Equatable {
+        case success
+        /// 違う PIN。待ち時間に入るまでに残っている回数
+        case incorrect(attemptsBeforeLockout: Int)
+        /// 失敗が続いたので、しばらく試せない
+        case lockedOut(remaining: TimeInterval)
+    }
+
+    /// 連続失敗の回数と、次に試せる時刻。再インストール後も引き継がないよう Keychain の ThisDeviceOnly に置く
+    private struct AttemptState: Codable {
+        var failureCount = 0
+        var lockoutUntil: Date?
+    }
     
     private init() {
         // アプリ起動時に認証状態をリセットしてフリーズ状態を防止
@@ -76,6 +92,9 @@ class AuthenticationService: ObservableObject {
         
         // 新しいパスワードを追加
         let status = SecItemAdd(query as CFDictionary, nil)
+        if status == errSecSuccess {
+            resetAttemptState()
+        }
         return status == errSecSuccess
     }
     
@@ -116,6 +135,51 @@ class AuthenticationService: ObservableObject {
         ]
         
         SecItemDelete(query as CFDictionary)
+        resetAttemptState()
+    }
+
+    // MARK: - 試行回数の制限
+
+    private func loadAttemptState() -> AttemptState {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: attemptStateKey,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+              let data = result as? Data,
+              let state = try? JSONDecoder().decode(AttemptState.self, from: data) else {
+            return AttemptState()
+        }
+        return state
+    }
+
+    private func saveAttemptState(_ state: AttemptState) {
+        guard let data = try? JSONEncoder().encode(state) else { return }
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: attemptStateKey
+        ]
+        SecItemDelete(query as CFDictionary)
+        var attributes = query
+        attributes[kSecValueData as String] = data
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        SecItemAdd(attributes as CFDictionary, nil)
+    }
+
+    private func resetAttemptState() {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: attemptStateKey
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
+
+    /// 次に PIN を試せるまでの残り秒数 (0 なら今すぐ試せる)
+    var pinLockoutRemaining: TimeInterval {
+        PINAttemptPolicy.remainingLockout(until: loadAttemptState().lockoutUntil, now: Date())
     }
     
     // MARK: - 認証メソッド
@@ -129,7 +193,7 @@ class AuthenticationService: ObservableObject {
             return
         }
         
-        let reason = "Authenticate to access your photos"
+        let reason = "auth.biometric_reason".localized
         
         context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, error in
             DispatchQueue.main.async {
@@ -144,42 +208,81 @@ class AuthenticationService: ObservableObject {
         }
     }
     
-    func authenticateWithPassword(_ password: String) -> Bool {
-        let success = verifyPassword(password)
-        if success {
-            isAuthenticated = true
-        } else {
-            authenticationError = "Incorrect PIN"
+    /// PIN で解除する。失敗が続くと待ち時間を課す (4 桁の総当たりを防ぐ)
+    func authenticateWithPassword(_ password: String, now: Date = Date()) -> PINAttemptResult {
+        var state = loadAttemptState()
+        let remaining = PINAttemptPolicy.remainingLockout(until: state.lockoutUntil, now: now)
+        if remaining > 0 {
+            authenticationError = Self.lockoutMessage(remaining: remaining)
+            return .lockedOut(remaining: remaining)
         }
-        return success
-    }
-    
-    func authenticate(completion: @escaping (Bool) -> Void) {
-        // 認証が有効でない場合は認証済みとしてマーク
-        guard isAuthenticationEnabled else {
+
+        if verifyPassword(password) {
+            resetAttemptState()
+            authenticationError = nil
             isAuthenticated = true
-            completion(true)
+            return .success
+        }
+
+        state.failureCount += 1
+        let lockout = PINAttemptPolicy.lockoutDuration(afterFailures: state.failureCount)
+        state.lockoutUntil = lockout > 0 ? now.addingTimeInterval(lockout) : nil
+        saveAttemptState(state)
+
+        if lockout > 0 {
+            authenticationError = Self.lockoutMessage(remaining: lockout)
+            return .lockedOut(remaining: lockout)
+        }
+        let attemptsLeft = PINAttemptPolicy.attemptsBeforeLockout(failureCount: state.failureCount)
+        authenticationError = "auth.incorrect_pin".localized(with: attemptsLeft)
+        return .incorrect(attemptsBeforeLockout: attemptsLeft)
+    }
+
+    static func lockoutMessage(remaining: TimeInterval) -> String {
+        let seconds = Int(remaining.rounded(.up))
+        let text = seconds >= 60
+            ? "auth.lockout_minutes".localized(with: Int((Double(seconds) / 60).rounded(.up)))
+            : "auth.lockout_seconds".localized(with: seconds)
+        return text
+    }
+
+    // MARK: - PIN の復旧
+
+    /// 端末のパスコード (または生体認証) で本人確認する。成功したら PIN を作り直してもらう
+    func verifyDeviceOwner(completion: @escaping (Result<Void, Error>) -> Void) {
+        let context = LAContext()
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            completion(.failure(error ?? LAError(.passcodeNotSet)))
             return
         }
-        
-        // 生体認証が有効な場合はまず試行
-        if isBiometricEnabled {
-            authenticateWithBiometric { success, error in
+        context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "auth.recovery_reason".localized) { success, error in
+            DispatchQueue.main.async {
                 if success {
-                    completion(true)
+                    completion(.success(()))
                 } else {
-                    // 生体認証失敗、パスワード入力が必要
-                    completion(false)
+                    completion(.failure(error ?? LAError(.authenticationFailed)))
                 }
             }
-        } else {
-            // 生体認証が無効、パスワード入力が必要
-            completion(false)
         }
+    }
+
+    /// 端末の本人確認のあと、新しい PIN を保存できたら解除する
+    func completeRecovery() {
+        resetAttemptState()
+        authenticationError = nil
+        isAuthenticated = true
     }
     
     func logout() {
         isAuthenticated = false
         authenticationError = nil
+    }
+
+    /// バックグラウンドに回ったらロックをかけ直す
+    func lockIfNeeded() {
+        if isAuthenticationEnabled {
+            logout()
+        }
     }
 }

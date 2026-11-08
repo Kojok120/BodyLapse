@@ -292,40 +292,6 @@ struct OnboardingView: View {
     
     // MARK: - ヘルパーメソッド
     
-    private var biometricIcon: String {
-        let context = LAContext()
-        var error: NSError?
-        
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            switch context.biometryType {
-            case .faceID:
-                return "faceid"
-            case .touchID:
-                return "touchid"
-            default:
-                return "lock.shield"
-            }
-        }
-        return "lock.shield"
-    }
-    
-    private var biometricLocalizedName: String {
-        let context = LAContext()
-        var error: NSError?
-        
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            switch context.biometryType {
-            case .faceID:
-                return "onboarding.enable_faceid".localized
-            case .touchID:
-                return "onboarding.enable_touchid".localized
-            default:
-                return "onboarding.enable_biometric".localized
-            }
-        }
-        return "onboarding.enable_biometric".localized
-    }
-    
     private func checkBiometricAvailability() {
         let context = LAContext()
         var error: NSError?
@@ -371,7 +337,7 @@ struct OnboardingView: View {
                     }
                 } else {
                     // Failed to save password
-                    passcodeErrorMessage = "Failed to save PIN"
+                    passcodeErrorMessage = "onboarding.pin_save_failed".localized
                     showingPasscodeError = true
                     return
                 }
@@ -462,26 +428,6 @@ struct SettingToggleRow: View {
         .padding(.horizontal, 15)
         .background(Color(UIColor.secondarySystemBackground))
         .cornerRadius(10)
-    }
-}
-
-struct OnboardingPremiumFeatureRow: View {
-    let text: String
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Text("•")
-                .font(.body)
-                .foregroundColor(.secondary)
-            
-            Text(text)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-            
-            Spacer()
-        }
     }
 }
 

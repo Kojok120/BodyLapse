@@ -30,10 +30,14 @@ struct FaceBlurPreviewView: View {
     private let context = CIContext(options: [.useSoftwareRenderer: true])
     
     let onShare: (UIImage) -> Void
+    /// 自動で見つけてぼかした顔の数。0 なら見つからなかったことを知らせる。
+    let detectedFaceCount: Int
+    @State private var reprocessFailed = false
     
-    init(originalImage: UIImage, processedImage: UIImage, onShare: @escaping (UIImage) -> Void) {
+    init(originalImage: UIImage, processedImage: UIImage, detectedFaceCount: Int, onShare: @escaping (UIImage) -> Void) {
         self.originalImage = originalImage
         self._processedImage = State(initialValue: processedImage)
+        self.detectedFaceCount = detectedFaceCount
         self.onShare = onShare
     }
     
@@ -42,13 +46,13 @@ struct FaceBlurPreviewView: View {
             VStack(spacing: 0) {
                 // ツールバー
                 HStack {
-                    Button("戻る") {
+                    Button("common.back".localized) {
                         dismiss()
                     }
                     
                     Spacer()
                     
-                    Text(isEditingMode ? "モザイク編集" : "顔ぼかし確認")
+                    Text(isEditingMode ? "face_blur.edit_title".localized : "face_blur.preview_title".localized)
                         .font(.headline)
                     
                     Spacer()
@@ -69,7 +73,7 @@ struct FaceBlurPreviewView: View {
                             }
                             
                             // 完了ボタン
-                            Button("完了") {
+                            Button("common.done".localized) {
                                 isEditingMode = false
                             }
                             .foregroundColor(.blue)
@@ -85,7 +89,7 @@ struct FaceBlurPreviewView: View {
                             }
                             
                             // 共有ボタン
-                            Button("共有") {
+                            Button("common.share".localized) {
                                 presentShareController()
                             }
                             .foregroundColor(.blue)
@@ -140,12 +144,32 @@ struct FaceBlurPreviewView: View {
                             .frame(width: canvasSize.width, height: canvasSize.height)
                         }
                         
+                        // 顔が見つからなかったときの案内 (素顔のまま共有しないように)
+                        if !isEditingMode && (detectedFaceCount == 0 || reprocessFailed) {
+                            VStack {
+                                HStack(alignment: .top, spacing: 8) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundColor(.yellow)
+                                    Text(reprocessFailed ? "face_blur.error.detection_failed".localized : "face_blur.no_faces_found".localized)
+                                        .font(.footnote)
+                                        .foregroundColor(.white)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Spacer(minLength: 0)
+                                }
+                                .padding(12)
+                                .background(.black.opacity(0.75))
+                                .cornerRadius(10)
+                                .padding()
+                                Spacer()
+                            }
+                        }
+                        
                         // 編集モード時のガイダンス
                         if isEditingMode {
                             VStack {
                                 Spacer()
                                 HStack {
-                                    Text("モザイクをかけたい場所をドラッグしてください")
+                                    Text("face_blur.drag_hint".localized)
                                         .font(.caption)
                                         .foregroundColor(.white)
                                         .padding(8)
@@ -259,9 +283,13 @@ struct FaceBlurPreviewView: View {
         // 元画像から再構築
         Task {
             let blurMethod = UserSettingsManager.shared.settings.faceBlurMethod.toServiceMethod
-            let baseImage = await FaceBlurService.shared.processImageAsync(originalImage, blurMethod: blurMethod)
+            guard let outcome = try? await FaceBlurService.shared.blurFaces(in: originalImage, blurMethod: blurMethod) else {
+                // 顔の検出に失敗したら素顔に戻さず、今の画像のままにする
+                await MainActor.run { reprocessFailed = true }
+                return
+            }
             
-            var currentImage = baseImage
+            var currentImage = outcome.image
             
             // 残っているパスを順番に適用
             for path in allDrawPaths {
@@ -283,10 +311,15 @@ struct FaceBlurPreviewView: View {
     private func resetToOriginal() {
         Task {
             let blurMethod = UserSettingsManager.shared.settings.faceBlurMethod.toServiceMethod
-            let reprocessedImage = await FaceBlurService.shared.processImageAsync(originalImage, blurMethod: blurMethod)
+            guard let outcome = try? await FaceBlurService.shared.blurFaces(in: originalImage, blurMethod: blurMethod) else {
+                // 顔の検出に失敗したら素顔に戻さず、今の画像のままにする
+                await MainActor.run { reprocessFailed = true }
+                return
+            }
             
             await MainActor.run {
-                processedImage = reprocessedImage
+                reprocessFailed = false
+                processedImage = outcome.image
                 allDrawPaths.removeAll()
                 currentDrawPath.removeAll()
             }
@@ -622,6 +655,7 @@ struct ImageOptimizer {
 #Preview {
     FaceBlurPreviewView(
         originalImage: UIImage(systemName: "photo") ?? UIImage(),
-        processedImage: UIImage(systemName: "photo") ?? UIImage()
+        processedImage: UIImage(systemName: "photo") ?? UIImage(),
+        detectedFaceCount: 0
     ) { _ in }
 }

@@ -18,6 +18,13 @@ class LanguageManager: ObservableObject {
         }
     }
     
+    /// 変えると画面の階層を作り直す (言語の反映に使う)
+    @Published private(set) var uiRefreshID = UUID()
+
+    func reloadUI() {
+        uiRefreshID = UUID()
+    }
+
     let supportedLanguages = [
         "en", // English
         "ja", // Japanese

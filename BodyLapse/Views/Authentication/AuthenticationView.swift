@@ -6,7 +6,13 @@ struct AuthenticationView: View {
     @State private var password = ""
     @State private var showingPasswordField = false
     @State private var isAuthenticating = false
+    /// この端末に PIN があるか (機種変更すると PIN は移らず、ロックの設定だけが移る)
+    @State private var hasPIN = true
+    @State private var lockoutRemaining: TimeInterval = 0
+    @State private var showingPINReset = false
+    @State private var recoveryError: String?
     @Environment(\.dismiss) private var dismiss
+    private let lockoutTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var onAuthenticated: () -> Void
     
@@ -31,12 +37,29 @@ struct AuthenticationView: View {
                     Text("auth.enter_pin".localized)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                        .opacity(showingPasswordField ? 1 : 0)
+                        .opacity(showingPasswordField && hasPIN ? 1 : 0)
                 }
                 
                 // Authentication UI
                 VStack(spacing: 20) {
-                    if showingPasswordField {
+                    if !hasPIN {
+                        // PIN がこの端末に無い。端末のパスコードで本人確認して作り直してもらう
+                        Text("auth.no_pin_on_device".localized)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Button(action: startRecovery) {
+                            Text("auth.recover_with_device_passcode".localized)
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.accentColor)
+                                .cornerRadius(10)
+                        }
+                    } else if showingPasswordField {
                         SecureField("auth.enter_pin_short".localized, text: $password)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
@@ -63,7 +86,7 @@ struct AuthenticationView: View {
                             .background(Color.accentColor)
                             .cornerRadius(10)
                         }
-                        .disabled(password.isEmpty || isAuthenticating)
+                        .disabled(password.isEmpty || isAuthenticating || lockoutRemaining > 0)
                         
                         if authService.isBiometricEnabled {
                             Button(action: authenticateWithBiometric) {
@@ -100,11 +123,22 @@ struct AuthenticationView: View {
                         }
                     }
                     
-                    if let error = authService.authenticationError {
+                    if lockoutRemaining > 0 {
+                        Text(AuthenticationService.lockoutMessage(remaining: lockoutRemaining))
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .multilineTextAlignment(.center)
+                    } else if let error = recoveryError ?? authService.authenticationError {
                         Text(error)
                             .font(.caption)
                             .foregroundColor(.red)
                             .multilineTextAlignment(.center)
+                    }
+
+                    if hasPIN {
+                        Button("auth.forgot_pin".localized, action: startRecovery)
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
                     }
                 }
                 .padding(.horizontal, 40)
@@ -120,7 +154,23 @@ struct AuthenticationView: View {
                     .background(Color.black.opacity(0.3))
             }
         }
+        .sheet(isPresented: $showingPINReset) {
+            PasswordSetupView {
+                authService.completeRecovery()
+                onAuthenticated()
+            }
+        }
+        .onReceive(lockoutTimer) { _ in
+            if lockoutRemaining > 0 {
+                lockoutRemaining = authService.pinLockoutRemaining
+                if lockoutRemaining == 0 {
+                    authService.authenticationError = nil
+                }
+            }
+        }
         .onAppear {
+            hasPIN = authService.hasPassword
+            lockoutRemaining = authService.pinLockoutRemaining
             // Automatically try biometric authentication when view appears
             if authService.isBiometricEnabled && !showingPasswordField {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -162,16 +212,47 @@ struct AuthenticationView: View {
     }
     
     private func authenticateWithPassword() {
-        guard !password.isEmpty else { return }
+        guard !password.isEmpty, lockoutRemaining == 0 else { return }
         
         isAuthenticating = true
         authService.authenticationError = nil
+        recoveryError = nil
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             isAuthenticating = false
             
-            if authService.authenticateWithPassword(password) {
+            switch authService.authenticateWithPassword(password) {
+            case .success:
                 onAuthenticated()
+            case .incorrect:
+                password = ""
+            case .lockedOut(let remaining):
+                password = ""
+                lockoutRemaining = remaining
+            }
+        }
+    }
+
+    /// 端末のパスコードで本人確認し、PIN を作り直す
+    private func startRecovery() {
+        recoveryError = nil
+        authService.verifyDeviceOwner { result in
+            switch result {
+            case .success:
+                showingPINReset = true
+            case .failure(let error):
+                if let laError = error as? LAError {
+                    switch laError.code {
+                    case .userCancel, .appCancel, .systemCancel:
+                        return
+                    case .passcodeNotSet:
+                        recoveryError = "auth.recovery_needs_passcode".localized
+                        return
+                    default:
+                        break
+                    }
+                }
+                recoveryError = error.localizedDescription
             }
         }
     }

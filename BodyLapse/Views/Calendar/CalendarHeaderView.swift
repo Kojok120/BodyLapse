@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct CalendarHeaderView: View {
-    let isPremium: Bool
     let availableCategories: [PhotoCategory]
     let selectedCategory: PhotoCategory
     @Binding var selectedPeriod: TimePeriod
@@ -21,8 +20,8 @@ struct CalendarHeaderView: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            // Category selection (Premium feature)
-            if isPremium {
+            // カテゴリが複数あるときは切り替えられる (全ユーザー)
+            if availableCategories.count > 1 {
                 categorySelector
             }
             

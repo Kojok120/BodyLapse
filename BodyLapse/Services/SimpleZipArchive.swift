@@ -25,60 +25,6 @@ class SimpleZipArchive {
         case invalidLength
     }
     
-    static func createZipFile(
-        atPath zipPath: String,
-        withContentsOfDirectory directory: String,
-        keepParentDirectory: Bool = false
-    ) -> Bool {
-        do {
-            let fileManager = FileManager.default
-            let directoryURL = URL(fileURLWithPath: directory)
-
-            let normalizedBasePath = directoryURL.standardizedFileURL.path.hasSuffix("/")
-                ? directoryURL.standardizedFileURL.path
-                : directoryURL.standardizedFileURL.path + "/"
-            let parentPrefix = keepParentDirectory ? directoryURL.lastPathComponent + "/" : ""
-            let enumerator = fileManager.enumerator(
-                at: directoryURL,
-                includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
-                options: [.skipsHiddenFiles]
-            )
-
-            var files: [(url: URL, path: String, size: UInt64)] = []
-
-            while let fileURL = enumerator?.nextObject() as? URL {
-                let values = try fileURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
-                guard values.isRegularFile == true else { continue }
-
-                guard fileURL.path.hasPrefix(normalizedBasePath) else {
-                    throw ArchiveError.invalidPath
-                }
-                var relativePath = String(fileURL.path.dropFirst(normalizedBasePath.count))
-                if !parentPrefix.isEmpty {
-                    relativePath = parentPrefix + relativePath
-                }
-
-                guard let safePath = sanitizedRelativePath(relativePath) else {
-                    throw ArchiveError.invalidPath
-                }
-
-                guard let size = values.fileSize, size >= 0 else {
-                    throw ArchiveError.invalidLength
-                }
-
-                files.append((url: fileURL, path: safePath, size: UInt64(size)))
-            }
-
-            let entries = files.map { file in
-                ArchiveEntry(path: file.path, source: .file(file.url))
-            }
-            return createArchive(atPath: zipPath, entries: entries)
-        } catch {
-            print("Error creating archive: \(error)")
-            return false
-        }
-    }
-
     static func createArchive(
         atPath zipPath: String,
         entries: [ArchiveEntry]
@@ -247,10 +193,15 @@ class SimpleZipArchive {
     private static func copyBytes(count: UInt64, from input: FileHandle, to output: FileHandle) throws {
         var remaining = count
         while remaining > 0 {
-            let readSize = Int(min(UInt64(chunkSize), remaining))
-            let chunk = try readExact(readSize, from: input)
-            try output.write(contentsOf: chunk)
-            remaining -= UInt64(chunk.count)
+            // FileHandle.read が返す Data は autorelease されるため、プールで包まないとループを抜けるまで
+            // 読んだ分がすべてメモリに残る (200MB のコピーでピーク 212MB → 包むと 3MB)
+            let copied: Int = try autoreleasepool {
+                let readSize = Int(min(UInt64(chunkSize), remaining))
+                let chunk = try readExact(readSize, from: input)
+                try output.write(contentsOf: chunk)
+                return chunk.count
+            }
+            remaining -= UInt64(copied)
         }
     }
 

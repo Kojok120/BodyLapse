@@ -558,16 +558,10 @@ struct SettingsView: View {
     }
 #endif
 
+    /// 画面の階層を作り直す。rootViewController を差し替えると、目隠しやロックの購読を持つ
+    /// App の階層ごと失われていたため、App 側の .id を変えて SwiftUI に作り直させる
     private func resetRootToContentView() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
-
-        window.rootViewController = UIHostingController(
-            rootView: ContentView()
-                .environmentObject(languageManager)
-                .tint(.bodyLapseTurquoise)
-        )
-        window.makeKeyAndVisible()
+        languageManager.reloadUI()
     }
 }
 
@@ -663,122 +657,5 @@ struct FeatureRow: View {
                 .font(.subheadline)
             Spacer()
         }
-    }
-}
-
-struct PremiumUpgradeView: View {
-    let userSettings: UserSettingsManager
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                Image(systemName: "crown.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.yellow)
-                
-                Text("settings.upgrade_premium".localized)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
-                VStack(alignment: .leading, spacing: 15) {
-                    PremiumFeatureRow(icon: "rectangle.badge.xmark", text: "premium.feature.no_ads".localized)
-                    PremiumFeatureRow(icon: "drop.fill", text: "premium.feature.no_watermark".localized)
-                    PremiumFeatureRow(icon: "scalemass", text: "premium.feature.tracking".localized)
-                    PremiumFeatureRow(icon: "chart.line.uptrend.xyaxis", text: "premium.feature.reminders".localized)
-                }
-                .padding()
-                .background(Color(UIColor.secondarySystemBackground))
-                .cornerRadius(15)
-                .padding(.horizontal)
-                
-                Spacer()
-                
-                VStack(spacing: 15) {
-                    Text("settings.premium_price".localized)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    Button(action: {
-                        // TODO: Implement in-app purchase
-                        // プレミアム status is managed by SubscriptionManagerService
-                        dismiss()
-                    }) {
-                        Text("premium.subscribe".localized)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor)
-                            .cornerRadius(15)
-                    }
-                    .padding(.horizontal)
-                    
-                    // Restore purchase feature - handled by StoreKit automatically
-                    /*
-                    Button("premium.restore".localized) {
-                        // Implement restore purchase
-                    }
-                    */
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                }
-            }
-            .padding()
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("common.cancel".localized) {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct PremiumFeatureRow: View {
-    let icon: String
-    let text: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(.yellow)
-                .frame(width: 30)
-            Text(text)
-                .font(.headline)
-            Spacer()
-        }
-    }
-}
-
-struct ExportView: View {
-    var body: some View {
-        VStack(spacing: 20) {
-            Text("export.description".localized)
-                .multilineTextAlignment(.center)
-                .padding()
-            
-            // Export feature - to be implemented in future version
-            /*
-            Button(action: {
-                // Implement export functionality
-            }) {
-                Label("export.all_photos".localized, systemImage: "square.and.arrow.up")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-            .padding(.horizontal)
-            */
-            
-            Spacer()
-        }
-        .navigationTitle("export.title".localized)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

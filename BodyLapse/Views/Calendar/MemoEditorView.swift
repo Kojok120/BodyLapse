@@ -8,8 +8,16 @@ struct MemoEditorView: View {
     let onDelete: () -> Void
     
     @State private var memoText: String = ""
+    @State private var showingDeleteConfirmation = false
+    @State private var showingDiscardConfirmation = false
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isTextFieldFocused: Bool
+
+    /// 書きかけがあるか (閉じる前に確かめる)
+    private var hasUnsavedChanges: Bool {
+        memoText.trimmingCharacters(in: .whitespacesAndNewlines)
+            != initialContent.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     
     var body: some View {
         NavigationView {
@@ -105,7 +113,10 @@ struct MemoEditorView: View {
                         .disabled(memoText.isEmpty || memoText.count > 500)
                         
                         if !initialContent.isEmpty {
-                            Button(action: delete) {
+                            Button {
+                                isTextFieldFocused = false
+                                showingDeleteConfirmation = true
+                            } label: {
                                 Text("memo.delete".localized)
                                     .font(.subheadline)
                                     .foregroundColor(.red)
@@ -121,11 +132,35 @@ struct MemoEditorView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("common.cancel".localized) {
-                        dismiss()
+                        if hasUnsavedChanges {
+                            isTextFieldFocused = false
+                            showingDiscardConfirmation = true
+                        } else {
+                            dismiss()
+                        }
                     }
                 }
             }
+            .confirmationDialog(
+                "memo.delete_confirm".localized,
+                isPresented: $showingDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("memo.delete".localized, role: .destructive, action: delete)
+                Button("common.cancel".localized, role: .cancel) {}
+            }
+            .confirmationDialog(
+                "memo.discard_confirm".localized,
+                isPresented: $showingDiscardConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("memo.discard".localized, role: .destructive) {
+                    dismiss()
+                }
+                Button("memo.keep_editing".localized, role: .cancel) {}
+            }
         }
+        .interactiveDismissDisabled(hasUnsavedChanges)
         .onAppear {
             memoText = initialContent
             // Auto-focus the text field when view appears

@@ -3,7 +3,6 @@ import Combine
 
 @MainActor
 class CalendarViewModel: ObservableObject {
-    @Published var currentMonth = Date()
     @Published var photos: [Photo] = [] {
         didSet { statistics = Self.computeStatistics(from: photos) }
     }
@@ -27,8 +26,12 @@ class CalendarViewModel: ObservableObject {
         loadPhotos()
         loadDailyNotes()
         
-        Timer.publish(every: 60, on: .main, in: .common)
-            .autoconnect()
+        // 60 秒ごとに無条件で読み直すのをやめ、変わりうる時だけ読み直す
+        // (写真・カテゴリは各通知で、日付をまたいだときとアプリに戻ったときはストリークのために)
+        NotificationCenter.default.publisher(for: Notification.Name("PhotosUpdated"))
+            .merge(with: NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification))
+            .merge(with: NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification))
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.loadPhotos()
                 self?.loadCategories()
@@ -62,25 +65,9 @@ class CalendarViewModel: ObservableObject {
     }
     
     func loadCategories() {
-        let isPremium = SubscriptionManagerService.shared.isPremium
-        availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: isPremium)
+        availableCategories = CategoryStorageService.shared.getActiveCategories()
         if !availableCategories.contains(where: { $0.id == selectedCategory.id }) {
             selectedCategory = availableCategories.first ?? PhotoCategory.defaultCategory
-        }
-    }
-    
-    var photosForCurrentMonth: [Photo] {
-        photos.filter { photo in
-            photo.categoryId == selectedCategory.id &&
-            Calendar.current.isDate(photo.captureDate, equalTo: currentMonth, toGranularity: .month)
-        }
-    }
-
-    
-    func photo(for date: Date) -> Photo? {
-        photos.first { photo in
-            photo.categoryId == selectedCategory.id &&
-            Calendar.current.isDate(photo.captureDate, inSameDayAs: date)
         }
     }
     
@@ -92,24 +79,6 @@ class CalendarViewModel: ObservableObject {
     
     func selectCategory(_ category: PhotoCategory) {
         selectedCategory = category
-    }
-    
-    func previousMonth() {
-        withAnimation {
-            currentMonth = Calendar.current.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
-        }
-    }
-    
-    func nextMonth() {
-        withAnimation {
-            currentMonth = Calendar.current.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
-        }
-    }
-    
-    func goToToday() {
-        withAnimation {
-            currentMonth = Date()
-        }
     }
     
     // MARK: - デイリーノート

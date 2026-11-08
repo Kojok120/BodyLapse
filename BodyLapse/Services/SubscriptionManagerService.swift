@@ -100,28 +100,6 @@ class SubscriptionManagerService: ObservableObject {
         storeManager.isLoadingProducts
     }
     
-    // MARK: - プレミアム機能確認
-    
-    /// ユーザーが体重記録機能にアクセスできるか確認
-    func canAccessWeightTracking() -> Bool {
-        return true // Now available for all users
-    }
-    
-    /// 動画からウォーターマークを削除すべきか確認
-    func canRemoveWatermark() -> Bool {
-        return true // No watermark for all users
-    }
-    
-    /// 広告を表示すべきか確認
-    func shouldShowAds() -> Bool {
-        return !isPremium // Only premium feature is ad removal
-    }
-    
-    /// ユーザーが高度なチャート機能にアクセスできるか確認
-    func canAccessAdvancedCharts() -> Bool {
-        return true // Now available for all users
-    }
-
     // MARK: - Pro限定機能
 
     /// クラウドバックアップ（Pro限定）を利用できるか。
@@ -255,17 +233,6 @@ class SubscriptionManagerService: ObservableObject {
         expirationDate = enable ? Date().addingTimeInterval(30 * 24 * 60 * 60) : nil
 
         NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
-    }
-
-    /// デバッグティアをリセット
-    func resetDebugPremium() {
-        UserDefaults.standard.removeObject(forKey: "debug_isPremium")
-        UserDefaults.standard.removeObject(forKey: "debug_isPro")
-        UserDefaults.standard.synchronize()
-
-        Task {
-            await updateSubscriptionStatus()
-        }
     }
     #endif
 }

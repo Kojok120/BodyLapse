@@ -1,7 +1,58 @@
 import SwiftUI
 import Charts
 
-@available(iOS 16.0, *)
+/// チャートに描く点と縦軸の範囲。body の評価ごとに一度だけ作る
+/// (点ごとに並べ替えや範囲の計算をやり直すと、記録が増えるほど描画が遅くなる)。
+struct WeightChartData {
+    struct Point: Identifiable {
+        let id: UUID
+        let date: Date
+        let value: Double
+    }
+
+    let weightPoints: [Point]
+    let bodyFatPoints: [Point]
+    let weightRange: ClosedRange<Double>
+    let bodyFatRange: ClosedRange<Double>
+
+    static let defaultWeightRange: ClosedRange<Double> = 70...80
+    static let defaultBodyFatRange: ClosedRange<Double> = 15...25
+
+    init(entries: [WeightEntry], unit: UserSettings.WeightUnit) {
+        let sorted = entries.sorted { $0.date < $1.date }
+        // 体重 0 は「体重なし」(過去に体脂肪率だけ保存したときの値)。体重の線には載せない
+        weightPoints = sorted
+            .filter { $0.weight > 0 }
+            .map { Point(id: $0.id, date: $0.date, value: MeasurementInput.displayWeight(kg: $0.weight, unit: unit)) }
+        bodyFatPoints = sorted.compactMap { entry in
+            entry.bodyFatPercentage.map { Point(id: entry.id, date: entry.date, value: $0) }
+        }
+        weightRange = Self.paddedRange(for: weightPoints.map(\.value), default: Self.defaultWeightRange)
+        bodyFatRange = Self.paddedRange(for: bodyFatPoints.map(\.value), default: Self.defaultBodyFatRange)
+    }
+
+    /// 値の最小〜最大に 10% の余白を足した範囲。幅が 5 未満なら中心から ±5 にする。
+    static func paddedRange(for values: [Double], default defaultRange: ClosedRange<Double>) -> ClosedRange<Double> {
+        guard let minValue = values.min(), let maxValue = values.max() else {
+            return defaultRange
+        }
+        let span = maxValue - minValue
+        if span < 5 {
+            let center = (minValue + maxValue) / 2
+            return (center - 5)...(center + 5)
+        }
+        let padding = span * 0.1
+        return (minValue - padding)...(maxValue + padding)
+    }
+
+    /// 範囲の中での位置 (0 = 下端、1 = 上端)
+    static func normalized(_ value: Double, in range: ClosedRange<Double>) -> Double {
+        let span = range.upperBound - range.lowerBound
+        guard span > 0 else { return 0.5 }
+        return (value - range.lowerBound) / span
+    }
+}
+
 struct InteractiveWeightChartView: View {
     let entries: [WeightEntry]
     @Binding var selectedDate: Date?
@@ -10,84 +61,32 @@ struct InteractiveWeightChartView: View {
     
     @State private var isDragging = false
     
-    private var sortedEntries: [WeightEntry] {
-        entries.sorted { $0.date < $1.date }
-    }
-    
-    private var bodyFatEntries: [WeightEntry] {
-        sortedEntries.filter { $0.bodyFatPercentage != nil }
-    }
-    
     // 制約付き日付範囲 - 今日を超えない
-    private var constrainedDateRange: ClosedRange<Date> {
+    private func constrainedDateRange(_ data: WeightChartData) -> ClosedRange<Date> {
         let today = Date()
         
         if let fullRange = fullDateRange {
             // fullDateRangeを使用するが今日が上限
-            let upperBound = min(fullRange.upperBound, today)
+            let upperBound = max(fullRange.lowerBound, min(fullRange.upperBound, today))
             return fullRange.lowerBound...upperBound
         }
         
         // エントリーベースの範囲にフォールバック
-        guard let first = sortedEntries.first?.date,
-              let last = sortedEntries.last?.date else {
+        let dates = (data.weightPoints + data.bodyFatPoints).map(\.date)
+        guard let first = dates.min(), let last = dates.max() else {
             return today...today
         }
         
-        let upperBound = min(last, today)
+        let upperBound = max(first, min(last, today))
         return first...upperBound
     }
     
-    // 適切な正規化でY軸範囲を計算
-    private var weightRange: ClosedRange<Double> {
-        let weights = sortedEntries.map { convertedWeight($0.weight) }
-        guard let min = weights.min(), let max = weights.max() else {
-            return 70...80 // Default range
-        }
-        
-        // 単一データポイントの最小範囲を確保
-        let range = max - min
-        if range < 5 {
-            let center = (min + max) / 2
-            return (center - 5)...(center + 5)
-        }
-        
-        // 10%のパディングを追加
-        let padding = range * 0.1
-        return (min - padding)...(max + padding)
-    }
-    
-    private var bodyFatRange: ClosedRange<Double> {
-        let bodyFats = bodyFatEntries.compactMap { $0.bodyFatPercentage }
-        guard let min = bodyFats.min(), let max = bodyFats.max() else {
-            return 15...25 // Default range
-        }
-        
-        // 単一データポイントの最小範囲を確保
-        let range = max - min
-        if range < 5 {
-            let center = (min + max) / 2
-            return (center - 5)...(center + 5)
-        }
-        
-        // 10%のパディングを追加
-        let padding = range * 0.1
-        return (min - padding)...(max + padding)
-    }
-    
-    // 正確な位置決めのため値を0-1範囲に正規化
-    private func normalizeWeight(_ weight: Double) -> Double {
-        let range = weightRange.upperBound - weightRange.lowerBound
-        return (weight - weightRange.lowerBound) / range
-    }
-    
-    private func normalizeBodyFat(_ bodyFat: Double) -> Double {
-        let range = bodyFatRange.upperBound - bodyFatRange.lowerBound
-        return (bodyFat - bodyFatRange.lowerBound) / range
-    }
-    
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let data = WeightChartData(entries: entries, unit: userSettings.settings.weightUnit)
+        let weightRange = data.weightRange
+        let bodyFatRange = data.bodyFatRange
+        let dateRange = constrainedDateRange(data)
+        return VStack(alignment: .leading, spacing: 8) {
             // 正規化Y軸付きチャート
             HStack(spacing: 0) {
                 // 体重用の左Y軸ラベル
@@ -132,13 +131,13 @@ struct InteractiveWeightChartView: View {
                         .stroke(Color.gray.opacity(0.2), lineWidth: 0.5)
                         
                         // Weight data
-                        if !sortedEntries.isEmpty {
+                        if !data.weightPoints.isEmpty {
                             // Line
-                            if sortedEntries.count > 1 {
+                            if data.weightPoints.count > 1 {
                                 Path { path in
-                                    for (index, entry) in sortedEntries.enumerated() {
-                                        let x = padding + xPosition(for: entry.date, in: chartWidth - 2 * padding)
-                                        let normalizedY = 1 - normalizeWeight(convertedWeight(entry.weight))
+                                    for (index, point) in data.weightPoints.enumerated() {
+                                        let x = padding + xPosition(for: point.date, in: chartWidth - 2 * padding, dateRange: dateRange)
+                                        let normalizedY = 1 - WeightChartData.normalized(point.value, in: weightRange)
                                         let y = chartHeight * normalizedY
                                         
                                         if index == 0 {
@@ -152,35 +151,33 @@ struct InteractiveWeightChartView: View {
                             }
                             
                             // Points
-                            ForEach(sortedEntries) { entry in
-                                let x = padding + xPosition(for: entry.date, in: chartWidth - 2 * padding)
-                                let normalizedY = 1 - normalizeWeight(convertedWeight(entry.weight))
+                            let weightDotSize: CGFloat = data.weightPoints.count == 1 ? 10 : 6
+                            ForEach(data.weightPoints) { point in
+                                let x = padding + xPosition(for: point.date, in: chartWidth - 2 * padding, dateRange: dateRange)
+                                let normalizedY = 1 - WeightChartData.normalized(point.value, in: weightRange)
                                 let y = chartHeight * normalizedY
                                 
                                 Circle()
                                     .fill(Color.bodyLapseTurquoise)
-                                    .frame(width: sortedEntries.count == 1 ? 10 : 6, 
-                                           height: sortedEntries.count == 1 ? 10 : 6)
+                                    .frame(width: weightDotSize, height: weightDotSize)
                                     .position(x: x, y: y)
                             }
                         }
                         
                         // Body fat data
-                        if !bodyFatEntries.isEmpty {
+                        if !data.bodyFatPoints.isEmpty {
                             // Line
-                            if bodyFatEntries.count > 1 {
+                            if data.bodyFatPoints.count > 1 {
                                 Path { path in
-                                    for (index, entry) in bodyFatEntries.enumerated() {
-                                        if let bodyFat = entry.bodyFatPercentage {
-                                            let x = padding + xPosition(for: entry.date, in: chartWidth - 2 * padding)
-                                            let normalizedY = 1 - normalizeBodyFat(bodyFat)
-                                            let y = chartHeight * normalizedY
-                                            
-                                            if index == 0 {
-                                                path.move(to: CGPoint(x: x, y: y))
-                                            } else {
-                                                path.addLine(to: CGPoint(x: x, y: y))
-                                            }
+                                    for (index, point) in data.bodyFatPoints.enumerated() {
+                                        let x = padding + xPosition(for: point.date, in: chartWidth - 2 * padding, dateRange: dateRange)
+                                        let normalizedY = 1 - WeightChartData.normalized(point.value, in: bodyFatRange)
+                                        let y = chartHeight * normalizedY
+                                        
+                                        if index == 0 {
+                                            path.move(to: CGPoint(x: x, y: y))
+                                        } else {
+                                            path.addLine(to: CGPoint(x: x, y: y))
                                         }
                                     }
                                 }
@@ -188,24 +185,22 @@ struct InteractiveWeightChartView: View {
                             }
                             
                             // Points
-                            ForEach(bodyFatEntries) { entry in
-                                if let bodyFat = entry.bodyFatPercentage {
-                                    let x = padding + xPosition(for: entry.date, in: chartWidth - 2 * padding)
-                                    let normalizedY = 1 - normalizeBodyFat(bodyFat)
-                                    let y = chartHeight * normalizedY
-                                    
-                                    Circle()
-                                        .fill(Color.orange)
-                                        .frame(width: bodyFatEntries.count == 1 ? 10 : 6,
-                                               height: bodyFatEntries.count == 1 ? 10 : 6)
-                                        .position(x: x, y: y)
-                                }
+                            let bodyFatDotSize: CGFloat = data.bodyFatPoints.count == 1 ? 10 : 6
+                            ForEach(data.bodyFatPoints) { point in
+                                let x = padding + xPosition(for: point.date, in: chartWidth - 2 * padding, dateRange: dateRange)
+                                let normalizedY = 1 - WeightChartData.normalized(point.value, in: bodyFatRange)
+                                let y = chartHeight * normalizedY
+                                
+                                Circle()
+                                    .fill(Color.orange)
+                                    .frame(width: bodyFatDotSize, height: bodyFatDotSize)
+                                    .position(x: x, y: y)
                             }
                         }
                         
                         // Selection indicator
                         if let selectedDate = selectedDate {
-                            let x = padding + xPosition(for: selectedDate, in: chartWidth - 2 * padding)
+                            let x = padding + xPosition(for: selectedDate, in: chartWidth - 2 * padding, dateRange: dateRange)
                             
                             Rectangle()
                                 .fill(Color.primary.opacity(0.2))
@@ -229,14 +224,14 @@ struct InteractiveWeightChartView: View {
                             .contentShape(Rectangle())
                             .onTapGesture { location in
                                 let adjustedX = location.x - padding
-                                updateSelection(at: adjustedX, width: chartWidth - 2 * padding)
+                                updateSelection(at: adjustedX, width: chartWidth - 2 * padding, data: data, dateRange: dateRange)
                             }
                             .gesture(
                                 DragGesture(minimumDistance: 0)
                                     .onChanged { value in
                                         isDragging = true
                                         let adjustedX = value.location.x - padding
-                                        updateSelection(at: adjustedX, width: chartWidth - 2 * padding)
+                                        updateSelection(at: adjustedX, width: chartWidth - 2 * padding, data: data, dateRange: dateRange)
                                     }
                                     .onEnded { _ in
                                         isDragging = false
@@ -249,7 +244,7 @@ struct InteractiveWeightChartView: View {
                 }
                 
                 // Right Y-axis labels for body fat
-                if !bodyFatEntries.isEmpty {
+                if !data.bodyFatPoints.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
                         // 4つの等間隔ラベルを作成
                         ForEach(0..<4) { index in
@@ -268,21 +263,14 @@ struct InteractiveWeightChartView: View {
             }
         }
         .onAppear {
-            // Select the most recent entry by default
-            if selectedDate == nil, let lastEntry = sortedEntries.last {
-                selectedDate = lastEntry.date
-            }
-        }
-        .onChange(of: entries) { _, newEntries in
-            // Update selection when entries change
-            let sorted = newEntries.sorted { $0.date < $1.date }
-            if let lastEntry = sorted.last {
-                selectedDate = lastEntry.date
+            // 未選択のときだけ最新の記録を選ぶ (選んでいる日は保存や期間の切り替えで動かさない)
+            if selectedDate == nil, let latest = (data.weightPoints + data.bodyFatPoints).map(\.date).max() {
+                selectedDate = latest
             }
         }
     }
     
-    private func xPosition(for date: Date, in width: CGFloat) -> CGFloat {
+    private func xPosition(for date: Date, in width: CGFloat, dateRange: ClosedRange<Date>) -> CGFloat {
         // If we have a fullDateRange, use index-based positioning for even spacing
         if let fullRange = fullDateRange {
             let calendar = Calendar.current
@@ -306,7 +294,7 @@ struct InteractiveWeightChartView: View {
         }
         
         // Fallback to time-based positioning
-        let range = constrainedDateRange
+        let range = dateRange
         let totalInterval = range.upperBound.timeIntervalSince(range.lowerBound)
         
         if totalInterval <= 0 {
@@ -320,7 +308,7 @@ struct InteractiveWeightChartView: View {
         return width * CGFloat(clampedFraction)
     }
     
-    private func updateSelection(at x: CGFloat, width: CGFloat) {
+    private func updateSelection(at x: CGFloat, width: CGFloat, data: WeightChartData, dateRange: ClosedRange<Date>) {
         // Calculate fraction directly
         let fraction = x / width
         let clampedFraction = max(0, min(1, fraction))
@@ -347,7 +335,7 @@ struct InteractiveWeightChartView: View {
         }
         
         // Fallback to time-based selection
-        let range = constrainedDateRange
+        let range = dateRange
         let totalInterval = range.upperBound.timeIntervalSince(range.lowerBound)
         let selectedInterval = totalInterval * Double(clampedFraction)
         let selectedTime = range.lowerBound.addingTimeInterval(selectedInterval)
@@ -357,21 +345,16 @@ struct InteractiveWeightChartView: View {
         let constrainedTime = min(selectedTime, today)
         
         // Snap to nearest data point
-        if let closestEntry = sortedEntries.min(by: { entry1, entry2 in
-            abs(entry1.date.timeIntervalSince(constrainedTime)) < abs(entry2.date.timeIntervalSince(constrainedTime))
+        if let closestPoint = (data.weightPoints + data.bodyFatPoints).min(by: { point1, point2 in
+            abs(point1.date.timeIntervalSince(constrainedTime)) < abs(point2.date.timeIntervalSince(constrainedTime))
         }) {
-            selectedDate = closestEntry.date
+            selectedDate = closestPoint.date
         } else {
             selectedDate = constrainedTime
         }
     }
-    
-    private func convertedWeight(_ weight: Double) -> Double {
-        userSettings.settings.weightUnit == .kg ? weight : weight * 2.20462
-    }
 }
 
-@available(iOS 16.0, *)
 struct InteractiveWeightChartView_Previews: PreviewProvider {
     static var previews: some View {
         InteractiveWeightChartView(

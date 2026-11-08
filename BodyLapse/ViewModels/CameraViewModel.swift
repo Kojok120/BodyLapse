@@ -7,13 +7,14 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var showingAlert = false
     @Published var alertMessage = ""
     @Published var capturedImage: UIImage?
+    /// 保存中か。JPEG 化を裏で行う間に「この写真を使う」を二度押ししても、二重に保存しない
+    private var isSavingPhoto = false
     @Published var bodyDetected = false
     @Published var bodyConfidence: Double = 0.0
     @Published var showingReplaceAlert = false
     @Published var tempWeight: Double?
     @Published var tempBodyFat: Double?
     @Published var showGuidelines = true
-    @Published var shouldBlurFace = true
     @Published var capturedPhoto: Photo?
     @Published var savedGuideline: BodyGuideline?
     @Published var selectedCategory: PhotoCategory = PhotoCategory.defaultCategory
@@ -281,87 +282,96 @@ class CameraViewModel: NSObject, ObservableObject {
     
     @MainActor
     private func saveProcessedPhoto(_ image: UIImage, wasBlurred: Bool, isReplacement: Bool) {
-        do {
-            #if DEBUG
-            let saveDate = UserSettingsManager.shared.settings.debugAllowPastDatePhotos ? debugSelectedDate : Date()
-            #else
-            let saveDate = Date()
-            #endif
-            
-            if isReplacement {
-                _ = try PhotoStorageService.shared.replacePhoto(
-                    for: saveDate,
-                    categoryId: selectedCategory.id,
-                    with: image,
-                    isFaceBlurred: wasBlurred,
-                    bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil,
-                    weight: tempWeight,
-                    bodyFatPercentage: tempBodyFat
-                )
-            } else {
-                _ = try PhotoStorageService.shared.savePhoto(
-                    image,
-                    captureDate: saveDate,
-                    categoryId: selectedCategory.id,
-                    isFaceBlurred: wasBlurred,
-                    bodyDetectionConfidence: bodyDetected ? bodyConfidence : nil,
-                    weight: tempWeight,
-                    bodyFatPercentage: tempBodyFat
-                )
-            }
-            // Photo saved successfully
-            
-            // Cancel today's 21:00 notification since photo was taken
-            NotificationService.shared.cancelTodaysMissedPhotoNotification()
-            
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
+        #if DEBUG
+        let saveDate = UserSettingsManager.shared.settings.debugAllowPastDatePhotos ? debugSelectedDate : Date()
+        #else
+        let saveDate = Date()
+        #endif
+        let categoryId = selectedCategory.id
+        let confidence = bodyDetected ? bodyConfidence : nil
+        let weight = tempWeight
+        let bodyFat = tempBodyFat
+        guard !isSavingPhoto else { return }
+        isSavingPhoto = true
 
-                // 保存完了の達成フィードバック
-                Haptics.success()
+        Task { @MainActor [weak self] in
+            defer { self?.isSavingPhoto = false }
+            do {
+                // 向きの補正と JPEG 化は重いのでメインスレッドの外で行う
+                let jpegData = try await Task.detached(priority: .userInitiated) {
+                    try PhotoStorageService.preparedJPEGData(from: image)
+                }.value
 
-                self.tempWeight = nil
-                self.tempBodyFat = nil
-                self.capturedImage = nil // Clear the captured image to close the sheet
-                
-                // Check if there are more categories to capture (now available for all users)
-                if let nextCategory = CategoryStorageService.shared.getNextUncapturedCategory(
-                    for: saveDate,
-                    currentCategoryId: self.selectedCategory.id,
-                    isPremium: true // All users can now access multiple categories
-                ) {
-                    // Show transition to next category
-                    self.nextCategory = nextCategory
-                    self.showingCategoryTransition = true
-                    
-                    // Auto-transition after 2 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                        if self.shouldAutoTransition && self.showingCategoryTransition {
-                            self.transitionToNextCategory()
-                        }
-                    }
+                if isReplacement {
+                    _ = try PhotoStorageService.shared.replacePhoto(
+                        for: saveDate,
+                        categoryId: categoryId,
+                        jpegData: jpegData,
+                        isFaceBlurred: wasBlurred,
+                        bodyDetectionConfidence: confidence,
+                        weight: weight,
+                        bodyFatPercentage: bodyFat
+                    )
                 } else {
-                    // No more categories - navigate to Calendar
-                    // Force reload photos from disk before navigating
-                    PhotoStorageService.shared.reloadPhotosFromDisk()
-                    
-                    // Small delay to ensure data is fully loaded
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        NotificationCenter.default.post(
-                            name: NSNotification.Name("NavigateToCalendarToday"),
-                            object: nil
-                        )
-                    }
+                    _ = try PhotoStorageService.shared.savePhoto(
+                        jpegData: jpegData,
+                        captureDate: saveDate,
+                        categoryId: categoryId,
+                        isFaceBlurred: wasBlurred,
+                        bodyDetectionConfidence: confidence,
+                        weight: weight,
+                        bodyFatPercentage: bodyFat
+                    )
                 }
-            }
-        } catch {
-            // Failed to save photo
-            DispatchQueue.main.async { [weak self] in
+                self?.handlePhotoSaved(saveDate: saveDate)
+            } catch {
                 Haptics.error()
                 self?.alertMessage = "camera.error.save_failed".localized(with: error.localizedDescription)
                 self?.showingAlert = true
                 self?.capturedImage = nil // Clear even on error
             }
+        }
+    }
+
+    @MainActor
+    private func handlePhotoSaved(saveDate: Date) {
+        // Cancel today's 21:00 notification since photo was taken
+        NotificationService.shared.cancelTodaysMissedPhotoNotification()
+
+        // 保存完了の達成フィードバック
+        Haptics.success()
+
+        tempWeight = nil
+        tempBodyFat = nil
+        capturedImage = nil // Clear the captured image to close the sheet
+
+        // 体重を先に入れていた日なら、新しい写真にも体重を写す
+        Task { @MainActor in
+            await PhotoStorageService.shared.syncWeightData()
+        }
+
+        // Check if there are more categories to capture (now available for all users)
+        if let nextCategory = CategoryStorageService.shared.getNextUncapturedCategory(
+            for: saveDate,
+            currentCategoryId: selectedCategory.id
+        ) {
+            // Show transition to next category
+            self.nextCategory = nextCategory
+            showingCategoryTransition = true
+
+            // Auto-transition after 2 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                guard let self else { return }
+                if self.shouldAutoTransition && self.showingCategoryTransition {
+                    self.transitionToNextCategory()
+                }
+            }
+        } else {
+            // No more categories - navigate to Calendar (写真の一覧はメモリ上で更新済み)
+            NotificationCenter.default.post(
+                name: NSNotification.Name("NavigateToCalendarToday"),
+                object: nil
+            )
         }
     }
     
@@ -424,12 +434,6 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         }
     }
     
-    func resetCapture() {
-        capturedImage = nil
-        bodyDetected = false
-        bodyConfidence = 0.0
-    }
-    
     func switchCamera() {
         guard let currentInput = self.currentInput else { return }
         
@@ -467,37 +471,12 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
         session.commitConfiguration()
     }
     
-    func processCapture(_ image: UIImage) {
-        self.capturedImage = image
-    }
-    
-    func cleanup() {
-        initializationTask?.cancel()
-        initializationTask = nil
-        
-        stopSession()
-        cleanupPreviewLayer()
-        
-        // Remove all inputs and outputs from the session
-        session.beginConfiguration()
-        for input in session.inputs {
-            session.removeInput(input)
-        }
-        for output in session.outputs {
-            session.removeOutput(output)
-        }
-        session.commitConfiguration()
-        
-        // Clear the current input reference
-        currentInput = nil
-    }
-    
     // MARK: - Category Support
     
     @MainActor
     private func loadCategories() {
         // All users can now access all categories
-        availableCategories = CategoryStorageService.shared.getActiveCategoriesForUser(isPremium: true)
+        availableCategories = CategoryStorageService.shared.getActiveCategories()
         
         // Update the selected category with fresh data from storage
         if let updatedCategory = availableCategories.first(where: { $0.id == selectedCategory.id }) {

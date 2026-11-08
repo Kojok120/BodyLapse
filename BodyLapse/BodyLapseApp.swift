@@ -10,14 +10,15 @@ import SwiftUI
 @main
 struct BodyLapseApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var storeManager = StoreManager.shared
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @StateObject private var languageManager = LanguageManager.shared
-    @StateObject private var authService = AuthenticationService.shared
-    @Environment(\.scenePhase) private var scenePhase
-    @State private var isShowingPrivacyScreen = false
     
     init() {
+        // アプリスイッチャー用の目隠しと、バックグラウンド時のロック
+        MainActor.assumeIsolated {
+            PrivacyShieldController.shared.start()
+        }
+
         // Check if this is a fresh install and clear keychain if needed
         checkAndClearKeychainOnFreshInstall()
         
@@ -55,45 +56,15 @@ struct BodyLapseApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                ContentView()
-                    .environmentObject(languageManager)
-                    .tint(.bodyLapseTurquoise)
-                
-                // Privacy screen overlay
-                if isShowingPrivacyScreen {
-                    PrivacyScreenView()
-                        .ignoresSafeArea()
-                        .transition(.opacity)
-                }
-            }
-            .onChange(of: scenePhase) { oldPhase, newPhase in
-                switch newPhase {
-                case .inactive:
-                        isShowingPrivacyScreen = true
-                case .active:
-                        isShowingPrivacyScreen = false
-                case .background:
-                    // Keep privacy screen shown in background
-                    isShowingPrivacyScreen = true
-                    if authService.isAuthenticationEnabled {
-                        authService.logout()
-                    }
-                @unknown default:
-                    break
-                }
-            }
-            .task {
-                    // App launched - initializing StoreKit...
-                    // Initialize StoreKit and subscription status on app launch
+            // 言語を切り替えたら、画面の根元を差し替えずに階層ごと作り直す
+            ContentView()
+                .id(languageManager.uiRefreshID)
+                .environmentObject(languageManager)
+                .tint(.bodyLapseTurquoise)
+                .task {
+                    // 起動時に商品とサブスクの状態を読み込む
                     await subscriptionManager.loadProducts()
-                    // Products loaded - refreshing subscription status...
                     await subscriptionManager.refreshSubscriptionStatus()
-                    // Subscription status refreshed
-                }
-                .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCamera"))) { _ in
-                    // Handle navigation to camera when notification is tapped
-                    // This will be handled by ContentView
                 }
         }
     }

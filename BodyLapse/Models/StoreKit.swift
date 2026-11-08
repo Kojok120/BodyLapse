@@ -120,15 +120,6 @@ class StoreManager: ObservableObject {
         await updatePurchasedProducts()
     }
     
-    // MARK: - プレミアムステータスの確認
-    var isPremium: Bool {
-        return !purchasedProductIDs.isEmpty
-    }
-    
-    var activePremiumProductID: String? {
-        purchasedProductIDs.first
-    }
-    
     // MARK: - プライベートメソッド
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
@@ -204,30 +195,5 @@ enum StoreError: LocalizedError {
         case .unknown:
             return "An unknown error occurred"
         }
-    }
-}
-
-// MARK: - プロダクト拡張
-extension Product {
-    var localizedPeriod: String {
-        switch self.subscription?.subscriptionPeriod.unit {
-        case .day:
-            return "daily"
-        case .week:
-            return "weekly"
-        case .month:
-            return "monthly"
-        case .year:
-            return "yearly"
-        default:
-            return ""
-        }
-    }
-    
-    var localizedPriceString: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = Locale(identifier: self.priceFormatStyle.locale.identifier)
-        return formatter.string(from: self.price as NSDecimalNumber) ?? ""
     }
 }

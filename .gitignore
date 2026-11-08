@@ -1,12 +1,16 @@
 # CocoaPods
 Pods/
 *.xcworkspace
+# プロジェクト内の workspace (SwiftPM の Package.resolved を含む) は追跡する
+!BodyLapse.xcodeproj/project.xcworkspace
 
 # Build
 build/
 build_output/
 DerivedData/
 *.xcuserstate
+xcuserdata/
+*.o
 bodylapse-lp/
 .env
 bodylapse-marketing/
