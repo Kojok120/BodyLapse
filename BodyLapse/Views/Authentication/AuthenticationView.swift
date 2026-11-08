@@ -37,7 +37,7 @@ struct AuthenticationView: View {
                     Text("auth.enter_pin".localized)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                        .opacity(showingPasswordField ? 1 : 0)
+                        .opacity(showingPasswordField && hasPIN ? 1 : 0)
                 }
                 
                 // Authentication UI
