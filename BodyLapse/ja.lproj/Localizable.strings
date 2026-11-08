@@ -74,6 +74,7 @@
 "calendar.ios16_required" = "体重追跡にはiOS 16以降が必要です";
 "calendar.add_memo" = "メモを追加";
 "calendar.upload_photo" = "写真をアップロード";
+"calendar.photo_actions" = "写真の操作";
 "calendar.invalid_image" = "無効な画像形式";
 "calendar.photo_already_exists" = "この日付とカテゴリには既に写真が存在します";
 "calendar.photo_imported" = "写真がインポートされました";

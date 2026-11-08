@@ -74,6 +74,7 @@
 "calendar.ios16_required" = "Weight tracking requires iOS 16 or later";
 "calendar.add_memo" = "Add memo";
 "calendar.upload_photo" = "Upload Photo";
+"calendar.photo_actions" = "Photo actions";
 "calendar.invalid_image" = "Invalid image format";
 "calendar.photo_already_exists" = "A photo already exists for this date and category";
 "calendar.photo_imported" = "Photo imported successfully";

@@ -74,6 +74,7 @@
 "calendar.ios16_required" = "El seguimiento de peso requiere iOS 16 o posterior";
 "calendar.add_memo" = "Añadir nota";
 "calendar.upload_photo" = "Subir Foto";
+"calendar.photo_actions" = "Acciones de la foto";
 "calendar.invalid_image" = "Formato de imagen no válido";
 "calendar.photo_already_exists" = "Ya existe una foto para esta fecha y categoría";
 "calendar.photo_imported" = "Foto importada con éxito";

@@ -74,6 +74,7 @@
 "calendar.ios16_required" = "체중 추적에는 iOS 16 이상이 필요합니다";
 "calendar.add_memo" = "메모 추가";
 "calendar.upload_photo" = "사진 업로드";
+"calendar.photo_actions" = "사진 작업";
 "calendar.invalid_image" = "잘못된 이미지 형식";
 "calendar.photo_already_exists" = "이 날짜와 카테고리에 이미 사진이 있습니다";
 "calendar.photo_imported" = "사진을 성공적으로 가져왔습니다";

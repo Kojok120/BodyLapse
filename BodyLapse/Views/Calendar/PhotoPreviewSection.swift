@@ -168,6 +168,9 @@ struct PhotoPreviewSection: View {
                         .contextMenu {
                             photoContextMenu(photo: photo)
                         }
+                        .overlay(alignment: .topTrailing) {
+                            photoActionsButton(photo: photo)
+                        }
                             .tag(index)
                     } else {
                         categoryPlaceholder(categoryId: categoriesForSelectedDate[index].id, geometry: geometry)
@@ -201,6 +204,9 @@ struct PhotoPreviewSection: View {
                 .frame(width: geometry.size.width, height: geometry.size.height)
                 .contextMenu {
                     photoContextMenu(photo: photo)
+                }
+                .overlay(alignment: .topTrailing) {
+                    photoActionsButton(photo: photo)
                 }
             } else {
                 categoryPlaceholder(categoryId: viewModel.selectedCategory.id, geometry: geometry)
@@ -257,6 +263,22 @@ struct PhotoPreviewSection: View {
         .frame(width: geometry.size.width, height: geometry.size.height)
     }
     
+    /// 長押しと同じ操作を、見えるボタンからも開けるようにする (長押しは知らないと見つからない)
+    private func photoActionsButton(photo: Photo) -> some View {
+        Menu {
+            photoContextMenu(photo: photo)
+        } label: {
+            Image(systemName: "ellipsis.circle.fill")
+                .font(.system(size: 26))
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(.white, Color.black.opacity(0.45))
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .accessibilityLabel("calendar.photo_actions".localized)
+        .padding(4)
+    }
+
     @ViewBuilder
     private func photoContextMenu(photo: Photo) -> some View {
         Button {
