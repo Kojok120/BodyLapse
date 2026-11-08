@@ -7,6 +7,8 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var showingAlert = false
     @Published var alertMessage = ""
     @Published var capturedImage: UIImage?
+    /// 保存中か。JPEG 化を裏で行う間に「この写真を使う」を二度押ししても、二重に保存しない
+    private var isSavingPhoto = false
     @Published var bodyDetected = false
     @Published var bodyConfidence: Double = 0.0
     @Published var showingReplaceAlert = false
@@ -289,8 +291,11 @@ class CameraViewModel: NSObject, ObservableObject {
         let confidence = bodyDetected ? bodyConfidence : nil
         let weight = tempWeight
         let bodyFat = tempBodyFat
+        guard !isSavingPhoto else { return }
+        isSavingPhoto = true
 
         Task { @MainActor [weak self] in
+            defer { self?.isSavingPhoto = false }
             do {
                 // 向きの補正と JPEG 化は重いのでメインスレッドの外で行う
                 let jpegData = try await Task.detached(priority: .userInitiated) {
