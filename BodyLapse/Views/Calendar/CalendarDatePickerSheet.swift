@@ -2,15 +2,16 @@ import SwiftUI
 
 struct CalendarDatePickerSheet: View {
     @Binding var selectedDate: Date
-    @Binding var selectedChartDate: Date?
-    @Binding var selectedIndex: Int
     @Binding var showingDatePicker: Bool
     
     let dateRange: [Date]
+    /// 選べるいちばん古い日 (今の表示期間より前の記録の日も選べる)
+    let earliestSelectableDate: Date
     let photoDates: Set<Date>
     let dataDates: Set<Date>
     
-    let onDateSelected: () -> Void
+    /// 選んだ日。表示期間の外なら、呼び出し側が期間を広げる
+    let onDateSelected: (Date) -> Void
     
     var body: some View {
         NavigationView {
@@ -52,18 +53,11 @@ struct CalendarDatePickerSheet: View {
                     selection: Binding(
                         get: { selectedDate },
                         set: { newDate in
-                            selectedDate = newDate
-                            selectedChartDate = newDate
-                            
-                            if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: newDate) }) {
-                                selectedIndex = index
-                            }
-                            
-                            onDateSelected()
+                            onDateSelected(newDate)
                             showingDatePicker = false
                         }
                     ),
-                    dateRange: (dateRange.first ?? Date())...(dateRange.last ?? Date()),
+                    dateRange: earliestSelectableDate...(dateRange.last ?? Date()),
                     photoDates: photoDates,
                     dataDates: dataDates
                 )

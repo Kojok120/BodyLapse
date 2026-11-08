@@ -27,6 +27,7 @@ import { createServer } from 'node:http';
 import { homedir } from 'node:os';
 import { resolve, dirname } from 'node:path';
 import { spawn } from 'node:child_process';
+import { createHash, randomBytes } from 'node:crypto';
 
 const SCOPE = 'https://www.googleapis.com/auth/admob.readonly';
 const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -84,9 +85,9 @@ function startLoopbackServer() {
     });
 }
 
-async function exchangeCode({ clientId, clientSecret, code, redirectUri }) {
+async function exchangeCode({ clientId, clientSecret, code, redirectUri, codeVerifier }) {
     const body = new URLSearchParams({
-        code, client_id: clientId, client_secret: clientSecret,
+        code, client_id: clientId, client_secret: clientSecret, code_verifier: codeVerifier,
         redirect_uri: redirectUri, grant_type: 'authorization_code',
     });
     const res = await fetch(TOKEN_ENDPOINT, {
@@ -97,7 +98,8 @@ async function exchangeCode({ clientId, clientSecret, code, redirectUri }) {
 }
 
 function saveEnv({ clientId, clientSecret, refreshToken }) {
-    mkdirSync(CONFIG_DIR, { recursive: true });
+    // 秘密を書くので、作った瞬間から本人だけが読める権限にする (後から chmod すると一瞬 644 になる)
+    mkdirSync(CONFIG_DIR, { recursive: true, mode: 0o700 });
     const content =
         '# グロース分析ハーネス — AdMob OAuth 資格情報 (git 外・BodyLapse 用)\n' +
         `# 生成: ${new Date().toISOString()} — admob-auth.mjs による一度きり認証\n` +
@@ -106,7 +108,8 @@ function saveEnv({ clientId, clientSecret, refreshToken }) {
         `GOOGLE_OAUTH_CLIENT_SECRET=${clientSecret}\n` +
         `ADMOB_REFRESH_TOKEN=${refreshToken}\n` +
         '# ADMOB_PUBLISHER_ID=pub-XXXXXXXXXXXXXXXX   # 任意。未設定なら accounts.list で自動解決\n';
-    writeFileSync(OUT_ENV, content);
+    writeFileSync(OUT_ENV, content, { mode: 0o600 });
+    // 既にあったファイルは mode が効かないので、上書きのあとにも絞る
     try { chmodSync(OUT_ENV, 0o600); } catch { /* best-effort */ }
 }
 
@@ -119,7 +122,10 @@ async function main() {
     const { clientId, clientSecret } = loadClient(clientPath);
 
     const { port, codePromise, redirectUri } = await startLoopbackServer();
-    const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    // state と PKCE (S256) は推測できない乱数で作る
+    const state = randomBytes(24).toString('base64url');
+    const codeVerifier = randomBytes(48).toString('base64url');
+    const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
     const authUrl = `${AUTH_ENDPOINT}?${new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
@@ -128,11 +134,13 @@ async function main() {
         access_type: 'offline',   // refresh_token を得るために必須
         prompt: 'consent',        // 毎回 refresh_token を確実に返させる
         state,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
     })}`;
 
     process.stderr.write(
         `▶ AdMob OAuth を開始します (ポート ${port} で待受)。\n` +
-        '  ブラウザが開きます。AdMob を所有する Google アカウント (例: kojokamo120@gmail.com) を選び、\n' +
+        '  ブラウザが開きます。AdMob を所有する Google アカウントを選び、\n' +
         '  「未確認アプリ」の警告が出たら 詳細 → 続行 で突破してください。\n' +
         '  ブラウザが自動で開かない場合は次の URL を手動で開いてください:\n\n' +
         `  ${authUrl}\n\n`,
@@ -142,7 +150,7 @@ async function main() {
     const { code, state: gotState } = await codePromise;
     if (gotState !== state) throw new Error('state 不一致 (CSRF 防止のため中断)');
 
-    const tok = await exchangeCode({ clientId, clientSecret, code, redirectUri });
+    const tok = await exchangeCode({ clientId, clientSecret, code, redirectUri, codeVerifier });
     if (!tok.refresh_token) {
         throw new Error(
             'refresh_token が返らなかった。既に同意済みのクライアントだと再取得されないことがある。\n' +

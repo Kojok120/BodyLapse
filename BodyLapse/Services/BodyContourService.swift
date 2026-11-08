@@ -7,6 +7,9 @@ import UIKit
 
 class BodyContourService {
     static let shared = BodyContourService()
+
+    /// CIContext は作るのが重く、スレッドをまたいで使い回せるので 1 つだけ持つ
+    private let ciContext = CIContext()
     
     private init() {}
 
@@ -162,7 +165,7 @@ class BodyContourService {
             
             // マスクをUIImageに変換
             let ciImage = CIImage(cvPixelBuffer: maskedPixelBuffer)
-            let context = CIContext()
+            let context = ciContext
             
             if let cgMask = context.createCGImage(ciImage, from: ciImage.extent) {
                 let maskImage = UIImage(cgImage: cgMask)
@@ -224,7 +227,7 @@ class BodyContourService {
     #if DEBUG
     private func debugSaveMask(pixelBuffer: CVPixelBuffer) {
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-        let context = CIContext()
+        let context = ciContext
         
         if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
             let uiImage = UIImage(cgImage: cgImage)
@@ -559,7 +562,7 @@ class BodyContourService {
         let pixelBuffer = observation.pixelBuffer
         
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-        let context = CIContext()
+        let context = ciContext
         
         guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
             completion(.failure(ContourError.imageProcessingFailed))
@@ -645,7 +648,7 @@ class BodyContourService {
     private func extractContourUsingEdgeDetection(from cgImage: CGImage, originalSize: CGSize) -> [CGPoint] {
         // エッジ検出を使用した代替アプローチ
         let ciImage = CIImage(cgImage: cgImage)
-        let context = CIContext()
+        let context = ciContext
         
         // エッジ検出を適用
         guard let edgeFilter = CIFilter(name: "CIEdges") else {

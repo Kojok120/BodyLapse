@@ -7,13 +7,6 @@ struct ProgressInsightCard: View {
     let unit: UserSettings.WeightUnit
     let onSetGoal: () -> Void
 
-    private static let dateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateStyle = .medium
-        f.timeStyle = .none
-        return f
-    }()
-
     var body: some View {
         VStack(spacing: 12) {
             changeRow
@@ -120,7 +113,7 @@ struct ProgressInsightCard: View {
                     }
                     Spacer()
                     if let projected = insight.projectedGoalDate {
-                        Text("goal.projected".localized(with: Self.dateFormatter.string(from: projected)))
+                        Text("goal.projected".localized(with: AppDateFormat.medium(projected)))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     } else {

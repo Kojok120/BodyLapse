@@ -202,10 +202,7 @@ struct MemoEditorView: View {
     }
     
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        formatter.timeStyle = .none
-        return formatter.string(from: date)
+        AppDateFormat.long(date)
     }
 }
 

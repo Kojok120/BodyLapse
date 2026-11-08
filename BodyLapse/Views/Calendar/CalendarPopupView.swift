@@ -15,12 +15,6 @@ struct CalendarPopupView: View {
         Calendar.current
     }
     
-    private var monthYearFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter
-    }
-    
     private var daysInMonth: [Date] {
         guard let monthInterval = calendar.dateInterval(of: .month, for: displayedMonth) else {
             return []
@@ -88,7 +82,7 @@ struct CalendarPopupView: View {
                     
                     Spacer()
                     
-                    Text(monthYearFormatter.string(from: displayedMonth))
+                    Text(AppDateFormat.monthYear(displayedMonth))
                         .font(.title2)
                         .fontWeight(.semibold)
                     

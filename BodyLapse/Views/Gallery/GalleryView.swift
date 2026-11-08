@@ -193,19 +193,19 @@ extension GalleryView {
                 filterChips
             }
             
+            // 絞り込みと月ごとのまとめは body の評価ごとに 1 回だけにする
+            let groupedPhotos = viewModel.photos.isEmpty ? [] : viewModel.photosGroupedByMonth()
             ScrollView {
                 if viewModel.photos.isEmpty {
                     emptyStateView(message: "gallery.no_photos".localized, icon: "photo")
-                } else if viewModel.filteredPhotos.isEmpty {
+                } else if groupedPhotos.isEmpty {
                     emptyStateView(message: "gallery.no_photos_matching_filter".localized, icon: "photo.on.rectangle.angled")
                 } else {
-                    let groupedPhotos = viewModel.photosGroupedByMonth()
+                    let lastMonth = groupedPhotos.last?.month
                     LazyVStack(pinnedViews: .sectionHeaders) {
-                        ForEach(Array(groupedPhotos.enumerated()), id: \.offset) { group in
-                            let index = group.offset
-                            let month = group.element.0
-                            let photos = group.element.1
-                            Section(header: sectionHeader(title: month)) {
+                        ForEach(groupedPhotos) { group in
+                            let photos = group.items
+                            Section(header: sectionHeader(title: AppDateFormat.monthYear(group.month))) {
                                 LazyVGrid(columns: columns, spacing: 2) {
                                     ForEach(photos) { photo in
                                         PhotoGridItem(
@@ -234,7 +234,7 @@ extension GalleryView {
                                 }
                                 .padding(.horizontal, 2)
                                 
-                                if index < groupedPhotos.count - 1 {
+                                if group.month != lastMonth {
                                     Divider()
                                         .background(Color.bodyLapseLightGray)
                                         .padding(.vertical, 8)
@@ -262,12 +262,11 @@ extension GalleryView {
                 emptyStateView(message: "gallery.no_videos".localized, icon: "video")
             } else {
                 let groupedVideos = viewModel.videosGroupedByMonth()
+                let lastMonth = groupedVideos.last?.month
                 LazyVStack(pinnedViews: .sectionHeaders) {
-                    ForEach(Array(groupedVideos.enumerated()), id: \.offset) { group in
-                        let index = group.offset
-                        let month = group.element.0
-                        let videos = group.element.1
-                        Section(header: sectionHeader(title: month)) {
+                    ForEach(groupedVideos) { group in
+                        let videos = group.items
+                        Section(header: sectionHeader(title: AppDateFormat.monthYear(group.month))) {
                             LazyVGrid(columns: columns, spacing: 2) {
                                 ForEach(videos) { video in
                                     VideoGridItem(
@@ -296,7 +295,7 @@ extension GalleryView {
                             }
                             .padding(.horizontal, 2)
                             
-                            if index < groupedVideos.count - 1 {
+                            if group.month != lastMonth {
                                 Divider()
                                     .background(Color.bodyLapseLightGray)
                                     .padding(.vertical, 8)

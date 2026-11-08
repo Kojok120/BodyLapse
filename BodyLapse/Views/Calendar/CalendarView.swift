@@ -39,10 +39,6 @@ struct CalendarView: View {
     /// 警告を閉じた後に再生する生成済みの動画
     @State var pendingVideoIdToPlay: UUID?
     
-    // MARK: - Guidance States
-    @State var showingVideoGuidance = false
-    @State var showingCategoryGuidance = false
-    
     // MARK: - UI States
     @State var showingSaveSuccess = false
     @State var saveSuccessMessage = ""
@@ -63,34 +59,12 @@ struct CalendarView: View {
     }
     
     var dateRange: [Date] {
-        let calendar = Calendar.current
-        let endDate = calendar.startOfDay(for: Date())
-        let startDate = calendar.date(byAdding: .day, value: -(selectedPeriod.days - 1), to: endDate) ?? endDate
-        
-        var dates: [Date] = []
-        var currentDate = startDate
-        
-        while currentDate <= endDate {
-            dates.append(currentDate)
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
-        }
-        
-        return dates
+        CalendarDateRange.dates(days: selectedPeriod.days)
     }
     
     var body: some View {
         NavigationView {
-            ZStack {
-                mainContent
-                
-                // Guidance overlays
-                CalendarGuidanceView(
-                    showingVideoGuidance: $showingVideoGuidance,
-                    showingCategoryGuidance: $showingCategoryGuidance,
-                    showingVideoGeneration: $showingVideoGeneration,
-                    showingAddCategory: $showingAddCategory
-                )
-            }
+            mainContent
         }
     }
     
@@ -109,12 +83,6 @@ struct CalendarView: View {
                 onCategorySelect: { category in
                     viewModel.selectCategory(category)
                     updateCurrentPhoto()
-                },
-                onVideoGuidanceRequested: {
-                    showingVideoGuidance = true
-                },
-                onCategoryGuidanceRequested: {
-                    showingCategoryGuidance = true
                 }
             )
 
@@ -220,15 +188,19 @@ struct CalendarView: View {
             }
         }
         .sheet(isPresented: $showingDatePicker) {
+            let photoDates = getPhotoDates()
+            let dataDates = getDataDates()
             CalendarDatePickerSheet(
                 selectedDate: $selectedDate,
-                selectedChartDate: $selectedChartDate,
-                selectedIndex: $selectedIndex,
                 showingDatePicker: $showingDatePicker,
                 dateRange: dateRange,
-                photoDates: getPhotoDates(),
-                dataDates: getDataDates(),
-                onDateSelected: updateCurrentPhoto
+                earliestSelectableDate: TimePeriod.earliestSelectableDate(
+                    earliestRecord: photoDates.union(dataDates).min(),
+                    current: selectedPeriod
+                ),
+                photoDates: photoDates,
+                dataDates: dataDates,
+                onDateSelected: selectDateFromPicker
             )
         }
         .sheet(isPresented: $showingAchievements) {
@@ -399,7 +371,7 @@ extension CalendarView {
         selectedDate = today
         selectedChartDate = today
         
-        if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: today) }) {
+        if let index = CalendarDateRange.index(of: today, in: dateRange) {
             selectedIndex = index
         }
         
@@ -416,12 +388,26 @@ extension CalendarView {
         selectedChartDate = dateRange[selectedIndex]
     }
     
+    /// 日付シートで選んだ日を出す。今の表示期間の外なら、その日が入るまで期間を広げる
+    private func selectDateFromPicker(_ date: Date) {
+        let period = TimePeriod.expanded(selectedPeriod, toInclude: date)
+        if period != selectedPeriod {
+            selectedPeriod = period
+        }
+        selectedDate = date
+        selectedChartDate = date
+        if let index = CalendarDateRange.index(of: date, in: dateRange) {
+            selectedIndex = index
+        }
+        updateCurrentPhoto()
+    }
+
     private func handleChartDateChange(_ newDate: Date?) {
         if let date = newDate {
             selectedDate = date
             updateCurrentPhoto()
             
-            if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
+            if let index = CalendarDateRange.index(of: date, in: dateRange) {
                 selectedIndex = index
             }
         }

@@ -50,8 +50,6 @@ extension Video {
     }
     
     var dateRangeText: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
-        return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+        "\(AppDateFormat.medium(startDate)) - \(AppDateFormat.medium(endDate))"
     }
 }

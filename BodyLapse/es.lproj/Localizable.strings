@@ -49,7 +49,7 @@
 "calendar.update_measurements" = "Actualizar Medidas";
 "calendar.weight" = "Peso";
 "calendar.enter_weight" = "Ingrese peso";
-"calendar.body_fat_optional" = "% Grasa Corporal (Opcional)";
+"calendar.body_fat_optional" = "Grasa Corporal (Opcional)";
 "calendar.enter_body_fat" = "Ingrese grasa corporal";
 "calendar.period_label" = "Período";
 "calendar.start_date" = "Fecha de Inicio";
@@ -74,6 +74,7 @@
 "calendar.ios16_required" = "El seguimiento de peso requiere iOS 16 o posterior";
 "calendar.add_memo" = "Añadir nota";
 "calendar.upload_photo" = "Subir Foto";
+"calendar.photo_actions" = "Acciones de la foto";
 "calendar.invalid_image" = "Formato de imagen no válido";
 "calendar.photo_already_exists" = "Ya existe una foto para esta fecha y categoría";
 "calendar.photo_imported" = "Foto importada con éxito";
@@ -136,10 +137,10 @@
 "settings.security" = "Seguridad";
 "settings.app_lock" = "Bloqueo de App";
 "settings.change_pin" = "Cambiar PIN";
+"settings.set_pin" = "Configurar PIN";
 "settings.reminders" = "Recordatorios";
 "settings.daily_reminder" = "Recordatorio Diario";
 "settings.reminder_time" = "Hora del Recordatorio";
-"settings.reminder_time_description" = "Elige cuándo recibir tu recordatorio diario de fotos";
 "settings.premium_features" = "Suscripción Sin Anuncios";
 "settings.premium_active" = "Sin Anuncios Activo";
 "settings.manage_subscription" = "Gestionar Suscripción";
@@ -149,12 +150,12 @@
 "settings.upgrade_premium" = "Eliminar Anuncios";
 "settings.no_ads_only" = "Eliminar anuncios - Todas las demás funciones son gratuitas";
 "settings.health_integration" = "Integración con Salud";
-"settings.premium_price" = "$0.99 al mes";
 "settings.data" = "Datos";
 "settings.clear_all_data" = "Borrar Todos los Datos";
 "settings.about" = "Acerca de";
 "settings.about_bodylapse" = "Acerca de BodyLapse";
 "settings.privacy_policy" = "Política de Privacidad";
+"settings.ad_privacy_options" = "Preferencias de privacidad de anuncios";
 "settings.terms_use" = "Términos de Uso";
 "settings.notification_required" = "Se Requiere Permiso de Notificación";
 "settings.notification_message" = "Por favor, habilite las notificaciones en Configuración para recibir recordatorios diarios de fotos.";
@@ -469,20 +470,8 @@
 "onboarding.start_now" = "Comenzar ahora";
 "onboarding.complete" = "Completar";
 
-/* Guidance System */
-"guidance.got_it" = "Entendido";
-"guidance.video_generation.title" = "Crear Videos Time-lapse";
-"guidance.video_generation.description" = "Genera videos time-lapse desde tus fotos de progreso. ¡Toca aquí para ver tu transformación a lo largo del tiempo!";
-"guidance.category_adding.title" = "Agregar Categorías de Fotos";
-"guidance.category_adding.description" = "Crea categorías personalizadas como 'Frontal', 'Lateral', 'Trasera' para rastrear diferentes ángulos de tu progreso.";
-"guidance.premium_features.title" = "Experiencia sin anuncios";
-"guidance.premium_features.description" = "Suscríbete solo si quieres eliminar los anuncios; todas las demás funciones ya están gratis.";
-"guidance.category_management.title" = "Gestión de Categorías";
-"guidance.category_management.description" = "Crea, edita y organiza tus categorías de fotos. Configura diferentes ángulos y poses para un seguimiento completo.";
-
 /* Share Options Dialog */
 "share.options.title" = "Opciones de Compartir";
-"share.options.description" = "Elige cómo quieres compartir tu foto";
 "share.options.normal" = "Compartir Original";
 "share.options.normal.description" = "Compartir foto sin modificaciones";
 "share.options.blur" = "Compartir con Desenfocar Rostro";

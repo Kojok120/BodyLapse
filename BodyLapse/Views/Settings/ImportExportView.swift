@@ -239,7 +239,7 @@ struct ImportExportView: View {
             
             // アクセス用に一時的な場所にファイルをコピー
             let tempURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent("BodyLapseImport_\(UUID().uuidString)_\(url.lastPathComponent)")
+                .appendingPathComponent("\(ImportExportService.importTemporaryPrefix)\(UUID().uuidString)_\(url.lastPathComponent)")
             
             do {
                 if FileManager.default.fileExists(atPath: tempURL.path) {
@@ -323,6 +323,10 @@ struct ImportExportView: View {
         }
         
         let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        // 書き出したファイルは全データの平文なので、共有を終えたら (取り消しても) 一時フォルダから消す
+        activityVC.completionWithItemsHandler = { _, _, _, _ in
+            ImportExportService.shared.removeExportedFile(at: url)
+        }
         
         if let popover = activityVC.popoverPresentationController {
             popover.sourceView = rootViewController.view

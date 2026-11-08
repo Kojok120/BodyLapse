@@ -13,7 +13,7 @@ struct PasswordSetupView: View {
         NavigationView {
             VStack(spacing: 30) {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("settings.change_pin".localized)
+                    Text("settings.set_pin".localized)
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
@@ -119,7 +119,7 @@ struct ChangePasswordView: View {
         NavigationView {
             VStack(spacing: 30) {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("settings.change_pin".localized)
+                    Text("settings.set_pin".localized)
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
@@ -169,7 +169,7 @@ struct ChangePasswordView: View {
                 Spacer()
                 
                 Button(action: changePassword) {
-                    Text("settings.change_pin".localized)
+                    Text("settings.set_pin".localized)
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)

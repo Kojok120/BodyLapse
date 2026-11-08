@@ -2,7 +2,6 @@
 //  BodyLapseApp.swift
 //  BodyLapse
 //
-//  Created by Koji Okamoto on 2025/06/24.
 //
 
 import SwiftUI
@@ -31,6 +30,18 @@ struct BodyLapseApp: App {
         // Initialize PhotoStorageService on app launch
         PhotoStorageService.shared.initialize()
         
+        // 前回までの取り込み・書き出しの一時ファイルが残っていれば消す (書き出しは全データの平文)。
+        // 写真・動画・サムネイルのファイル保護を、まだなら一度だけ強める
+        let mediaDirectories = [
+            PhotoStorageService.shared.photosDirectoryURL,
+            VideoStorageService.shared.videosDirectory,
+            VideoStorageService.shared.thumbnailsDirectory
+        ].compactMap { $0 }
+        DispatchQueue.global(qos: .utility).async {
+            ImportExportService.shared.cleanupLeftoverTemporaryFiles()
+            MediaFileProtection.migrateIfNeeded(directories: mediaDirectories)
+        }
+
         // Set up daily photo reminder check
         NotificationService.shared.setupDailyPhotoCheck()
         
@@ -65,6 +76,8 @@ struct BodyLapseApp: App {
                     // 起動時に商品とサブスクの状態を読み込む
                     await subscriptionManager.loadProducts()
                     await subscriptionManager.refreshSubscriptionStatus()
+                    // 広告を出す人にだけ、必要な地域で広告の同意を求めてから広告 SDK を起動する
+                    await AdConsentService.shared.gatherConsentIfNeeded(isAdFree: subscriptionManager.isPremium)
                 }
         }
     }

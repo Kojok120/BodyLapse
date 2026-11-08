@@ -16,22 +16,8 @@ struct ShareOptionsDialog: View {
     
     var body: some View {
         NavigationView {
+            // 題はナビゲーションバーの 1 回だけにし、選択肢 2 つのために画面の高さを使わない
             VStack(spacing: 0) {
-                // Header
-                VStack(spacing: 16) {
-                    Text("share.options.title".localized)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                    
-                    Text("share.options.description".localized)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 24)
-                
                 // Options
                 VStack(spacing: 12) {
                     // Share without face blur
@@ -57,7 +43,7 @@ struct ShareOptionsDialog: View {
                     }
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, 32)
+                .padding(.top, 16)
                 
                 Spacer()
             }
@@ -72,6 +58,7 @@ struct ShareOptionsDialog: View {
             }
             .background(Color(.systemBackground))
         }
+        .presentationDetents([.medium])
         .alert("share.error.title".localized, isPresented: $showingError) {
             Button("common.ok".localized, role: .cancel) { }
         } message: {

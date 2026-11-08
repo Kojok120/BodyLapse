@@ -76,7 +76,7 @@ AdMob API はサービスアカウント非対応で、AdMob を所有する Goo
 ```
 # 1. Google Cloud Console でデスクトップ型 OAuth クライアントを作り、JSON を ~/.config/growth/admob-oauth-client.json に置く
 #    (対象プロジェクトで AdMob API を有効化しておく)
-# 2. 一度きり認証 (ブラウザが開く。AdMob 所有アカウント kojokamo120@gmail.com を選ぶ)
+# 2. 一度きり認証 (ブラウザが開く。AdMob を所有する Google アカウントを選ぶ)
 node scripts/analytics/admob-auth.mjs
 #    → refresh token が ~/.config/growth/admob.env に保存される
 # 3. 以後 pull-admob.mjs / snapshot.mjs が refresh token から access token を都度発行して収集 (再ログイン不要)

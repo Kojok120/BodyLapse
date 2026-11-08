@@ -24,6 +24,13 @@ class CategoryStorageService {
         categoriesDirectory?.appendingPathComponent(categoriesFileName)
     }
     
+    /// ディスクの categories.json をデコードしたもの。nil は「まだ読んでいない」、
+    /// .some(nil) は「ファイルが無い・読めない」。body やフレームごとのループから何度も呼ばれるので、
+    /// 保存したときだけ入れ替え、読むたびにディスクから JSON をデコードしない。
+    /// 動画生成や取り込みはメインの外から読むので、ロックで守る
+    private var cachedCategories: [PhotoCategory]??
+    private let cacheLock = NSLock()
+
     private init() {
         createDirectoriesIfNeeded()
         initializeDefaultCategoryIfNeeded()
@@ -46,27 +53,48 @@ class CategoryStorageService {
     }
     
     func loadCategories() -> [PhotoCategory] {
-        guard let url = categoriesFileURL,
-              FileManager.default.fileExists(atPath: url.path),
-              let data = try? Data(contentsOf: url),
-              let categories = try? JSONDecoder().decode([PhotoCategory].self, from: data) else {
-            return []
-        }
-        
+        guard let categories = storedCategories() else { return [] }
         return categories.filter { $0.isActive }.sorted { $0.order < $1.order }
     }
     
     func saveCategories(_ categories: [PhotoCategory]) {
         guard let url = categoriesFileURL else { return }
         
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             let data = try encoder.encode(categories)
             try data.write(to: url, options: .atomic)
+            cachedCategories = .some(categories)
         } catch {
+            // 書けなかったときは、次に読むときディスクの中身を読み直す
+            cachedCategories = nil
             print("Error saving categories: \(error)")
         }
+    }
+
+    /// 保存してあるカテゴリ (無効にしたものも含む)。ファイルが無い・読めないときは nil
+    private func storedCategories() -> [PhotoCategory]? {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        if let cachedCategories {
+            return cachedCategories
+        }
+        let loaded = readCategoriesFromDisk()
+        cachedCategories = .some(loaded)
+        return loaded
+    }
+
+    private func readCategoriesFromDisk() -> [PhotoCategory]? {
+        guard let url = categoriesFileURL,
+              FileManager.default.fileExists(atPath: url.path),
+              let data = try? Data(contentsOf: url),
+              let categories = try? JSONDecoder().decode([PhotoCategory].self, from: data) else {
+            return nil
+        }
+        return categories
     }
     
     func addCategory(_ category: PhotoCategory) -> Bool {
@@ -169,14 +197,7 @@ class CategoryStorageService {
     }
     
     private func loadAllCategories() -> [PhotoCategory] {
-        guard let url = categoriesFileURL,
-              FileManager.default.fileExists(atPath: url.path),
-              let data = try? Data(contentsOf: url),
-              let categories = try? JSONDecoder().decode([PhotoCategory].self, from: data) else {
-            return [PhotoCategory.defaultCategory]
-        }
-        
-        return categories
+        storedCategories() ?? [PhotoCategory.defaultCategory]
     }
     
     private func createCategoryDirectory(for category: PhotoCategory) {
@@ -200,11 +221,6 @@ class CategoryStorageService {
             saveCategories(categories)
             print("CategoryStorageService: Guideline saved successfully")
             
-            // 保存されたことを検証
-            let verifyCategories = loadAllCategories()
-            if let savedCategory = verifyCategories.first(where: { $0.id == categoryId }) {
-                print("CategoryStorageService: Verification - Category \(savedCategory.name) has guideline: \(savedCategory.guideline != nil)")
-            }
         } else {
             print("CategoryStorageService: ERROR - Category not found with ID: \(categoryId)")
         }

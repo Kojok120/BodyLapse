@@ -322,20 +322,7 @@ struct WeightInputView: View {
     }
     
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        
-        // 現在の言語を確認して適切なフォーマットを設定
-        let currentLanguage = LanguageManager.shared.currentLanguage
-        switch currentLanguage {
-        case "ja":
-            formatter.dateFormat = "yyyy/MM/dd"
-        case "ko":
-            formatter.dateFormat = "yyyy.MM.dd"
-        default:
-            formatter.dateFormat = "MMM d, yyyy"
-        }
-        
-        return formatter.string(from: date)
+        AppDateFormat.medium(date)
     }
     
     private func fetchHealthKitData() {

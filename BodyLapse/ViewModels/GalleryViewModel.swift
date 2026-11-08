@@ -27,12 +27,6 @@ class GalleryViewModel: ObservableObject {
     @Published var selectedDates: Set<Date> = []
     @Published var showingDatePicker = false
 
-    private static let monthYearFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter
-    }()
-    
     enum GallerySection: String, CaseIterable {
         case videos = "Videos"
         case photos = "Photos"
@@ -125,14 +119,11 @@ class GalleryViewModel: ObservableObject {
             result = result.filter { selectedCategories.contains($0.categoryId) }
         }
         
-        // 日付フィルターを適用
+        // 日付フィルターを適用 (選んだ日を先に 0:00 に揃え、写真ごとに全部の日と比べない)
         if !selectedDates.isEmpty {
-            result = result.filter { photo in
-                let calendar = Calendar.current
-                return selectedDates.contains { date in
-                    calendar.isDate(photo.captureDate, inSameDayAs: date)
-                }
-            }
+            let calendar = Calendar.current
+            let days = Set(selectedDates.map { calendar.startOfDay(for: $0) })
+            result = result.filter { days.contains(calendar.startOfDay(for: $0.captureDate)) }
         }
         
         // ソート順を適用
@@ -150,25 +141,8 @@ class GalleryViewModel: ObservableObject {
         CategoryStorageService.shared.getActiveCategories()
     }
     
-    func photosGroupedByMonth() -> [(String, [Photo])] {
-        let grouped = Dictionary(grouping: filteredPhotos) { photo in
-            formatMonthYear(from: photo.captureDate)
-        }
-        
-        return grouped.sorted { lhs, rhs in
-            guard let lhsDate = dateFromMonthYear(lhs.key),
-                  let rhsDate = dateFromMonthYear(rhs.key) else {
-                return false
-            }
-            
-            // 現在のソート順に基づいて月をソート
-            switch sortOrder {
-            case .newest:
-                return lhsDate > rhsDate
-            case .oldest:
-                return lhsDate < rhsDate
-            }
-        }
+    func photosGroupedByMonth() -> [MonthGroup<Photo>] {
+        MonthGrouping.group(filteredPhotos, date: \.captureDate, newestFirst: sortOrder == .newest)
     }
     
     func toggleCategory(_ categoryId: String) {
@@ -196,26 +170,8 @@ class GalleryViewModel: ObservableObject {
         }
     }
     
-    func videosGroupedByMonth() -> [(String, [Video])] {
-        let grouped = Dictionary(grouping: videos) { video in
-            formatMonthYear(from: video.createdDate)
-        }
-        
-        return grouped.sorted { lhs, rhs in
-            guard let lhsDate = dateFromMonthYear(lhs.key),
-                  let rhsDate = dateFromMonthYear(rhs.key) else {
-                return false
-            }
-            return lhsDate > rhsDate
-        }
-    }
-    
-    private func formatMonthYear(from date: Date) -> String {
-        Self.monthYearFormatter.string(from: date)
-    }
-    
-    private func dateFromMonthYear(_ monthYear: String) -> Date? {
-        Self.monthYearFormatter.date(from: monthYear)
+    func videosGroupedByMonth() -> [MonthGroup<Video>] {
+        MonthGrouping.group(videos, date: \.createdDate, newestFirst: true)
     }
     
     // MARK: - 選択モードメソッド

@@ -49,7 +49,7 @@
 "calendar.update_measurements" = "Update Measurements";
 "calendar.weight" = "Weight";
 "calendar.enter_weight" = "Enter weight";
-"calendar.body_fat_optional" = "Body Fat % (Optional)";
+"calendar.body_fat_optional" = "Body Fat (Optional)";
 "calendar.enter_body_fat" = "Enter body fat";
 "calendar.period_label" = "Period";
 "calendar.start_date" = "Start Date";
@@ -74,6 +74,7 @@
 "calendar.ios16_required" = "Weight tracking requires iOS 16 or later";
 "calendar.add_memo" = "Add memo";
 "calendar.upload_photo" = "Upload Photo";
+"calendar.photo_actions" = "Photo actions";
 "calendar.invalid_image" = "Invalid image format";
 "calendar.photo_already_exists" = "A photo already exists for this date and category";
 "calendar.photo_imported" = "Photo imported successfully";
@@ -136,10 +137,10 @@
 "settings.security" = "Security";
 "settings.app_lock" = "App Lock";
 "settings.change_pin" = "Change PIN";
+"settings.set_pin" = "Set PIN";
 "settings.reminders" = "Reminders";
 "settings.daily_reminder" = "Daily Reminder";
 "settings.reminder_time" = "Reminder Time";
-"settings.reminder_time_description" = "Choose when to receive your daily photo reminder";
 "settings.premium_features" = "Ad-Free Subscription";
 "settings.premium_active" = "Ad-Free Active";
 "settings.manage_subscription" = "Manage Subscription";
@@ -149,12 +150,12 @@
 "settings.upgrade_premium" = "Remove Ads";
 "settings.no_ads_only" = "Remove ads - All other features are free";
 "settings.health_integration" = "Health Integration";
-"settings.premium_price" = "$0.99(USD)/month";
 "settings.data" = "Data";
 "settings.clear_all_data" = "Clear All Data";
 "settings.about" = "About";
 "settings.about_bodylapse" = "About BodyLapse";
 "settings.privacy_policy" = "Privacy Policy";
+"settings.ad_privacy_options" = "Ad Privacy Choices";
 "settings.terms_use" = "Terms of Use";
 "settings.notification_required" = "Notification Permission Required";
 "settings.notification_message" = "Please enable notifications in Settings to receive daily photo reminders.";
@@ -469,20 +470,8 @@
 /* Apple Health Integration */
 "settings.apple_health_integration" = "Apple Health Integration";
 
-/* Guidance System */
-"guidance.got_it" = "Got it";
-"guidance.video_generation.title" = "Create Time-lapse Videos";
-"guidance.video_generation.description" = "Generate your own time-lapse videos from your progress photos. Tap here to see your transformation over time!";
-"guidance.category_adding.title" = "Add Photo Categories";
-"guidance.category_adding.description" = "Create custom categories like 'Front', 'Side', 'Back' to track different angles of your progress.";
-"guidance.premium_features.title" = "Go Ad-Free";
-"guidance.premium_features.description" = "Subscribe only if you want to remove ads—everything else is already free.";
-"guidance.category_management.title" = "Manage Categories";
-"guidance.category_management.description" = "Create, edit, and organize your photo categories. Set up different angles and poses for comprehensive tracking.";
-
 /* Share Options Dialog */
 "share.options.title" = "Share Options";
-"share.options.description" = "Choose how you want to share your photo";
 "share.options.normal" = "Share Original";
 "share.options.normal.description" = "Share photo without any modifications";
 "share.options.blur" = "Share with Face Blur";

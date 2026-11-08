@@ -23,10 +23,7 @@ struct DailyNote: Codable, Identifiable, Equatable {
     }
     
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter.string(from: date)
+        AppDateFormat.medium(date)
     }
     
     var dateOnly: Date {

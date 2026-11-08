@@ -88,8 +88,8 @@ struct PhotoGridItem: View {
         .contextMenu {
             if !isSelectionMode {
                 Button {
-                    if let image = image {
-                        UIPasteboard.general.image = image
+                    // セルの画像は縮小版なので、保存してある元の写真を置く
+                    if PhotoPasteboard.copy(photo) {
                         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
                         impactFeedback.impactOccurred()
                     }

@@ -272,6 +272,70 @@ struct BodyLapseTests {
         try Self.resetAppData()
     }
 
+    /// 画面は選んだファイルを「BodyLapseImport_<UUID>_<名前>」で一時フォルダへ写してから渡す。
+    /// 取り込みの最初の掃除が、その取り込む元まで消していた (2026-06 から、ファイルからの取り込みが必ず失敗していた)
+    @Test
+    func testImportKeepsStagedSourceFileWhileCleaningLeftovers() async throws {
+        try Self.resetAppData()
+
+        let fileManager = FileManager.default
+        let captureDate = Date(timeIntervalSince1970: 1_700_000_000)
+        try await WeightStorageService.shared.saveEntry(
+            WeightEntry(date: captureDate, weight: 68.5, bodyFatPercentage: nil)
+        )
+        let exportURL = try await Self.exportArchive(
+            options: ImportExportService.ExportOptions(
+                includePhotos: false,
+                includeVideos: false,
+                includeSettings: false,
+                includeWeightData: true,
+                includeNotes: false,
+                dateRange: nil,
+                categories: nil
+            )
+        )
+        #expect(exportURL.lastPathComponent.hasPrefix(ImportExportService.exportTemporaryPrefix))
+
+        let staged = fileManager.temporaryDirectory
+            .appendingPathComponent("\(ImportExportService.importTemporaryPrefix)\(UUID().uuidString)_backup.bodylapse")
+        try fileManager.copyItem(at: exportURL, to: staged)
+        defer { try? fileManager.removeItem(at: staged) }
+
+        // 前回の取り込みの残り
+        let leftover = fileManager.temporaryDirectory
+            .appendingPathComponent("\(ImportExportService.importTemporaryPrefix)\(UUID().uuidString)", isDirectory: true)
+        try fileManager.createDirectory(at: leftover, withIntermediateDirectories: true)
+
+        try Self.resetAppData()
+        let summary = try await Self.importArchive(from: staged, options: .default)
+        #expect(summary.weightEntriesImported == 1)
+        #expect(!fileManager.fileExists(atPath: leftover.path))
+
+        // 起動時の掃除: 書き出しの残りも消える
+        #expect(fileManager.fileExists(atPath: exportURL.path))
+        ImportExportService.shared.cleanupLeftoverTemporaryFiles()
+        #expect(!fileManager.fileExists(atPath: exportURL.path))
+
+        try Self.resetAppData()
+    }
+
+    @Test
+    func testRemoveExportedFileOnlyTouchesExportsInTemporaryDirectory() throws {
+        let fileManager = FileManager.default
+        let export = fileManager.temporaryDirectory
+            .appendingPathComponent("\(ImportExportService.exportTemporaryPrefix)\(UUID().uuidString).bodylapse")
+        try Data("x".utf8).write(to: export)
+        ImportExportService.shared.removeExportedFile(at: export)
+        #expect(!fileManager.fileExists(atPath: export.path))
+
+        let documents = try #require(fileManager.urls(for: .documentDirectory, in: .userDomainMask).first)
+        let lookalike = documents.appendingPathComponent("\(ImportExportService.exportTemporaryPrefix)keep.bodylapse")
+        try Data("x".utf8).write(to: lookalike)
+        defer { try? fileManager.removeItem(at: lookalike) }
+        ImportExportService.shared.removeExportedFile(at: lookalike)
+        #expect(fileManager.fileExists(atPath: lookalike.path))
+    }
+
     private static func importArchive(
         from url: URL,
         options: ImportExportService.ImportOptions

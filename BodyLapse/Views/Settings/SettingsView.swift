@@ -20,8 +20,6 @@ struct SettingsView: View {
     @State private var isNotificationEnabled = false
     
     // カテゴリー管理ガイダンス
-    @StateObject private var tooltipManager = TooltipManager.shared
-    @State private var showingCategoryManagementGuidance = false
     
     
     // App Store ID - アプリ公開時に実際のIDに置き換え
@@ -29,15 +27,7 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
-                mainContent
-                
-                // カテゴリー管理ガイダンスオーバーレイ
-                if showingCategoryManagementGuidance {
-                    categoryManagementGuidanceOverlay
-                }
-                
-            }
+            mainContent
         }
     }
     
@@ -47,13 +37,6 @@ struct SettingsView: View {
                     // カテゴリー管理は全ユーザーに利用可能
                     NavigationLink(destination: CategoryManagementView()) {
                         Label("settings.category_management".localized, systemImage: "folder.badge.gearshape")
-                    }
-                    .withGuidanceBadge(for: .categoryManagement, size: 10, offset: CGPoint(x: 8, y: -8))
-                    .onTapGesture {
-                        if tooltipManager.needsGuidance(for: .categoryManagement) && !tooltipManager.hasShownTooltip(for: .categoryManagement) {
-                            showingCategoryManagementGuidance = true
-                            tooltipManager.markTooltipShown(for: .categoryManagement)
-                        }
                     }
                     
                     Toggle("settings.show_guidelines".localized, isOn: $userSettings.settings.showBodyGuidelines)
@@ -182,39 +165,26 @@ struct SettingsView: View {
                                 ),
                                 displayedComponents: .hourAndMinute
                             )
-                            
-                            Text("settings.reminder_time_description".localized)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
                         }
                     }
                 }
                 
                 // HealthKit連携 - 全ユーザーに利用可能
+                // 見出しは節の 1 回だけにし、切り替えは 1 行にする (「ヘルス連携」「Apple ヘルスケア連携」「ヘルスと同期」の 3 段だった)
                 Section("settings.health_integration".localized) {
-                    VStack(spacing: 12) {
-                        HStack {
-                            Image(systemName: "heart.text.square.fill")
-                                .font(.title2)
-                                .foregroundColor(.red)
-                            Text("settings.apple_health_integration".localized)
-                                .font(.headline)
-                            Spacer()
-                        }
-                        
-                        Toggle(isOn: $healthKitEnabled) {
-                            VStack(alignment: .leading, spacing: 4) {
+                    Toggle(isOn: $healthKitEnabled) {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text("settings.sync_health".localized)
-                                    .font(.subheadline)
                                 Text("settings.auto_import".localized)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+                        } icon: {
+                            Image(systemName: "heart.text.square.fill")
+                                .foregroundColor(.red)
                         }
                     }
-                    .padding()
-                    .background(Color.red.opacity(0.05))
-                    .cornerRadius(12)
                     .onChange(of: healthKitEnabled) { _, newValue in
                         if newValue {
                             requestHealthKitPermission()
@@ -285,10 +255,8 @@ struct SettingsView: View {
                         }
                         .foregroundColor(.primary)
                     } else {
-                        Button(action: { 
-                            showingPremiumUpgrade = true 
-                            // ボタンタップ時にプレミアム機能ガイダンスを完了済みとしてマーク
-                            tooltipManager.markFeatureCompleted(for: .premiumFeatures)
+                        Button(action: {
+                            showingPremiumUpgrade = true
                         }) {
                             HStack {
                                 VStack(alignment: .leading) {
@@ -299,16 +267,14 @@ struct SettingsView: View {
                                         .foregroundColor(.secondary)
                                 }
                                 Spacer()
-                                if let product = subscriptionManager.products.first {
+                                // 広告を消すだけの Standard の値段を出す。並び順任せにせず商品 ID で引き、
+                                // 取れないときは固定の値段 (通貨が合わないことがある) を出さない
+                                if let product = subscriptionManager.products.first(where: { $0.id == StoreProducts.premiumMonthly }) {
                                     Text(product.displayPrice)
-                                        .fontWeight(.semibold)
-                                } else {
-                                    Text("settings.premium_price".localized)
                                         .fontWeight(.semibold)
                                 }
                             }
                         }
-                        .withGuidanceBadge(for: .premiumFeatures, size: 10, offset: CGPoint(x: 8, y: -8))
                     }
                 }
                 
@@ -361,6 +327,15 @@ struct SettingsView: View {
                     
                     Link(destination: URL(string: "https://kojok120.github.io/bodylapse-legal/privacy_policy.html")!) {
                         Label("settings.privacy_policy".localized, systemImage: "hand.raised")
+                    }
+
+                    // 広告の同意を取った地域 (EEA・英国など) でだけ、同意の内容を変える入口を出す
+                    if AdConsentService.shared.isPrivacyOptionsRequired {
+                        Button {
+                            Task { await AdConsentService.shared.presentPrivacyOptions() }
+                        } label: {
+                            Label("settings.ad_privacy_options".localized, systemImage: "checkmark.shield")
+                        }
                     }
                     
                     Link(destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!) {
@@ -471,36 +446,6 @@ struct SettingsView: View {
                 checkNotificationStatus()
             }
     }
-    
-    private var categoryManagementGuidanceOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.1)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    showingCategoryManagementGuidance = false
-                    tooltipManager.markFeatureCompleted(for: .categoryManagement)
-                }
-            
-            VStack {
-                Spacer()
-                
-                GuidanceTooltip(
-                    title: tooltipManager.getTitle(for: .categoryManagement),
-                    description: tooltipManager.getDescription(for: .categoryManagement),
-                    isVisible: showingCategoryManagementGuidance,
-                    onDismiss: {
-                        showingCategoryManagementGuidance = false
-                        tooltipManager.markFeatureCompleted(for: .categoryManagement)
-                    }
-                )
-                .padding(.horizontal, 20)
-                .padding(.bottom, 100)
-                
-                Spacer()
-            }
-        }
-    }
-    
     
     private func requestHealthKitPermission() {
         HealthKitService.shared.requestAuthorization { success, error in
