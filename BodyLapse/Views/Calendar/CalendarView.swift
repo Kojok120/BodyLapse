@@ -188,15 +188,19 @@ struct CalendarView: View {
             }
         }
         .sheet(isPresented: $showingDatePicker) {
+            let photoDates = getPhotoDates()
+            let dataDates = getDataDates()
             CalendarDatePickerSheet(
                 selectedDate: $selectedDate,
-                selectedChartDate: $selectedChartDate,
-                selectedIndex: $selectedIndex,
                 showingDatePicker: $showingDatePicker,
                 dateRange: dateRange,
-                photoDates: getPhotoDates(),
-                dataDates: getDataDates(),
-                onDateSelected: updateCurrentPhoto
+                earliestSelectableDate: TimePeriod.earliestSelectableDate(
+                    earliestRecord: photoDates.union(dataDates).min(),
+                    current: selectedPeriod
+                ),
+                photoDates: photoDates,
+                dataDates: dataDates,
+                onDateSelected: selectDateFromPicker
             )
         }
         .sheet(isPresented: $showingAchievements) {
@@ -384,6 +388,20 @@ extension CalendarView {
         selectedChartDate = dateRange[selectedIndex]
     }
     
+    /// 日付シートで選んだ日を出す。今の表示期間の外なら、その日が入るまで期間を広げる
+    private func selectDateFromPicker(_ date: Date) {
+        let period = TimePeriod.expanded(selectedPeriod, toInclude: date)
+        if period != selectedPeriod {
+            selectedPeriod = period
+        }
+        selectedDate = date
+        selectedChartDate = date
+        if let index = CalendarDateRange.index(of: date, in: dateRange) {
+            selectedIndex = index
+        }
+        updateCurrentPhoto()
+    }
+
     private func handleChartDateChange(_ newDate: Date?) {
         if let date = newDate {
             selectedDate = date
