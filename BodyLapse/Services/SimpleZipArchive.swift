@@ -247,10 +247,15 @@ class SimpleZipArchive {
     private static func copyBytes(count: UInt64, from input: FileHandle, to output: FileHandle) throws {
         var remaining = count
         while remaining > 0 {
-            let readSize = Int(min(UInt64(chunkSize), remaining))
-            let chunk = try readExact(readSize, from: input)
-            try output.write(contentsOf: chunk)
-            remaining -= UInt64(chunk.count)
+            // FileHandle.read が返す Data は autorelease されるため、プールで包まないとループを抜けるまで
+            // 読んだ分がすべてメモリに残る (200MB のコピーでピーク 212MB → 包むと 3MB)
+            let copied: Int = try autoreleasepool {
+                let readSize = Int(min(UInt64(chunkSize), remaining))
+                let chunk = try readExact(readSize, from: input)
+                try output.write(contentsOf: chunk)
+                return chunk.count
+            }
+            remaining -= UInt64(copied)
         }
     }
 
