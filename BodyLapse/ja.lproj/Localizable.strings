@@ -119,7 +119,6 @@
 "gallery.save_to_photos" = "写真に保存";
 "gallery.photo_saved" = "写真をライブラリに保存しました";
 "gallery.video_saved" = "動画をライブラリに保存しました";
-"gallery.photos_count" = "枚";
 "gallery.action_cannot_be_undone" = "この操作は取り消せません。";
 "gallery.play" = "再生";
 "gallery.select_dates" = "日付を選択";
@@ -671,14 +670,6 @@
 "import_export.help_tip4" = "個別の写真インポートは、逃した日を追加するのに最適";
 
 /* Import Errors */
-"import_export.permission_error" = "選択したファイルにアクセスできません。ファイルアプリから再度選択してください。";
-"import_export.file_access_error" = "選択したファイルを読み込めません。ファイルがダウンロードされていることを確認してから再試行してください。";
-"import_export.error_export_failed" = "エクスポート失敗: %@";
-"import_export.error_import_failed" = "インポート失敗: %@";
-"import_export.error_invalid_format" = "無効なファイル形式";
-"import_export.error_no_data" = "エクスポートするデータがありません";
-"import_export.error_file_not_found" = "ファイルが見つかりません";
-"import_export.error_zip_failed" = "ZIP操作に失敗しました";
 
 /* Photo Capture */
 "photo.replace_today_title" = "今日の写真を置き換えますか？";
@@ -864,3 +855,17 @@
 "face_blur.preview_title" = "顔ぼかし確認";
 "face_blur.drag_hint" = "モザイクをかけたい場所をドラッグしてください";
 "face_blur.video_frames_without_faces" = "動画を作成しました。%d コマで顔が見つからず、ぼかしていません。共有する前に動画を確かめてください。";
+
+/* User-facing error messages */
+"error.photo.compression_failed" = "画像を処理できませんでした。";
+"error.photo.save_failed" = "写真を保存できませんでした。";
+"error.storage_unavailable" = "アプリの保存領域にアクセスできませんでした。";
+"error.video.save_failed" = "動画を保存できませんでした。";
+"error.video.thumbnail_failed" = "動画のサムネイルを作成できませんでした。";
+"error.video.no_photos" = "選んだ期間に写真がありません。";
+"error.video.creation_failed" = "動画を作成できませんでした。";
+"error.video.export_failed" = "動画を書き出せませんでした。";
+"error.video.cancelled" = "動画の作成を中止しました。";
+"error.weight.not_found" = "体重の記録が見つかりません。";
+"error.weight.invalid_data" = "データの形式が正しくありません。";
+"calendar.delete_photo_failed" = "写真を削除できませんでした: %@";

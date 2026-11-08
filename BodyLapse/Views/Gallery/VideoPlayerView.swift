@@ -23,7 +23,7 @@ struct VideoPlayerView: View {
                         .font(.headline)
                     
                     HStack {
-                        Label("\(video.frameCount) " + "gallery.photos_count".localized, systemImage: "photo.stack")
+                        Label("gallery.photos_count".localized(with: video.frameCount), systemImage: "photo.stack")
                         Spacer()
                         Label(video.formattedDuration, systemImage: "timer")
                     }

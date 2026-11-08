@@ -16,7 +16,7 @@ extension CalendarView {
             
             NotificationCenter.default.post(name: Notification.Name("PhotosUpdated"), object: nil)
         } catch {
-            videoAlertMessage = "Failed to delete photo: \(error.localizedDescription)"
+            videoAlertMessage = "calendar.delete_photo_failed".localized(with: error.localizedDescription)
             showingVideoAlert = true
         }
     }

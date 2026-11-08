@@ -88,13 +88,13 @@ class VideoGenerationService {
         var errorDescription: String? {
             switch self {
             case .noPhotosFound:
-                return "No photos found in the selected period"
+                return "error.video.no_photos".localized
             case .videoCreationFailed:
-                return "Failed to create video"
+                return "error.video.creation_failed".localized
             case .exportFailed:
-                return "Failed to export video"
+                return "error.video.export_failed".localized
             case .cancelled:
-                return "Video generation was cancelled"
+                return "error.video.cancelled".localized
             case .faceBlurFailed:
                 return "face_blur.error.video_failed".localized
             }

@@ -158,9 +158,9 @@ enum VideoStorageError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .saveFailed:
-            return "Failed to save the video"
+            return "error.video.save_failed".localized
         case .thumbnailGenerationFailed:
-            return "Failed to generate video thumbnail"
+            return "error.video.thumbnail_failed".localized
         }
     }
 }

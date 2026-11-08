@@ -119,7 +119,6 @@
 "gallery.save_to_photos" = "Save to Photos";
 "gallery.photo_saved" = "Photo saved to library";
 "gallery.video_saved" = "Video saved to library";
-"gallery.photos_count" = "photos";
 "gallery.action_cannot_be_undone" = "This action cannot be undone.";
 "gallery.play" = "Play";
 "gallery.select_dates" = "Select Dates";
@@ -856,3 +855,17 @@
 "face_blur.preview_title" = "Check Face Blur";
 "face_blur.drag_hint" = "Drag over the areas you want to cover with a mosaic";
 "face_blur.video_frames_without_faces" = "The video was created, but no face was found in %d frames, so they weren't blurred. Please check the video before sharing it.";
+
+/* User-facing error messages */
+"error.photo.compression_failed" = "Couldn't process the image.";
+"error.photo.save_failed" = "Couldn't save the photo.";
+"error.storage_unavailable" = "Couldn't access the app's storage.";
+"error.video.save_failed" = "Couldn't save the video.";
+"error.video.thumbnail_failed" = "Couldn't create the video thumbnail.";
+"error.video.no_photos" = "There are no photos in the selected period.";
+"error.video.creation_failed" = "Couldn't create the video.";
+"error.video.export_failed" = "Couldn't export the video.";
+"error.video.cancelled" = "Video creation was cancelled.";
+"error.weight.not_found" = "The weight record wasn't found.";
+"error.weight.invalid_data" = "The data format is invalid.";
+"calendar.delete_photo_failed" = "Couldn't delete the photo: %@";

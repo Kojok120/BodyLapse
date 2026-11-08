@@ -684,11 +684,11 @@ enum PhotoStorageError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .compressionFailed:
-            return "Failed to compress the image"
+            return "error.photo.compression_failed".localized
         case .saveFailed:
-            return "Failed to save the photo"
+            return "error.photo.save_failed".localized
         case .directoryAccessFailed:
-            return "Failed to access the documents directory"
+            return "error.storage_unavailable".localized
         }
     }
 }

@@ -241,9 +241,9 @@ enum WeightStorageError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .entryNotFound:
-            return "Weight entry not found"
+            return "error.weight.not_found".localized
         case .invalidData:
-            return "Invalid data format"
+            return "error.weight.invalid_data".localized
         }
     }
 }
