@@ -11,6 +11,16 @@ actor WeightStorageService {
     private let documentsDirectory: URL
     private let weightsDirectory: URL
     private let weightsFile: URL
+    /// アプリで消した日と消した時刻。ヘルスケアの同期で消した値を書き戻さないために使う
+    private var deletedDaysFile: URL {
+        weightsDirectory.appendingPathComponent("deleted_days.json")
+    }
+
+    /// 日の識別子 (端末の暦とタイムゾーンでの yyyy-MM-dd)
+    nonisolated static func dayKey(for date: Date) -> String {
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
+    }
     
     private init() {
         // ドキュメントディレクトリを取得
@@ -76,6 +86,7 @@ actor WeightStorageService {
         // ソートして保存
         entries.sort { $0.date > $1.date }
         try saveEntries(entries)
+        try clearDeletionMark(for: entry.date)
         print("[WeightStorage] Total entries after save: \(entries.count)")
     }
     
@@ -87,12 +98,38 @@ actor WeightStorageService {
     }
     
     /// 指定日の記録をすべて消す (同じ日に複数あっても残さない)。
-    func deleteEntries(on date: Date) throws {
+    func deleteEntries(on date: Date, deletedAt: Date = Date()) throws {
         var entries = try loadEntries()
         let before = entries.count
         entries.removeAll { Calendar.current.isDate($0.date, inSameDayAs: date) }
-        guard entries.count != before else { return }
-        try saveEntries(entries)
+        if entries.count != before {
+            try saveEntries(entries)
+        }
+        var deleted = try deletedDays()
+        deleted[Self.dayKey(for: date)] = deletedAt
+        try saveDeletedDays(deleted)
+    }
+
+    /// アプリで消した日 (yyyy-MM-dd) と消した時刻
+    func deletedDays() throws -> [String: Date] {
+        guard FileManager.default.fileExists(atPath: deletedDaysFile.path) else { return [:] }
+        let data = try Data(contentsOf: deletedDaysFile)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode([String: Date].self, from: data)
+    }
+
+    private func saveDeletedDays(_ days: [String: Date]) throws {
+        try FileManager.default.createDirectory(at: weightsDirectory, withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(days).write(to: deletedDaysFile, options: .atomic)
+    }
+
+    private func clearDeletionMark(for date: Date) throws {
+        var deleted = try deletedDays()
+        guard deleted.removeValue(forKey: Self.dayKey(for: date)) != nil else { return }
+        try saveDeletedDays(deleted)
     }
     
     // MARK: - エントリ更新
