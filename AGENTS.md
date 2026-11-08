@@ -31,7 +31,9 @@ Commits in this repo are narrative and impact-focused, often written in Japanese
 - ストリーク・実績・進捗インサイト・目標は全ユーザー無料に保つ（続けるための機能なので壁にしない）
 - Pro の価値は新しい機能を足して作る。未実装の機能（「高度な動画」など）をペイウォールや説明文で訴求しない
 - 文脈ペイウォールは種類ごとに原則 1 回きり（撮影 30 日達成時のクラウド誘導と、初回の比較共有時の透かし誘導。`PaywallPromptManager`）。新しく足すときも同じ作法でしつこくしない
-- Pro の iCloud バックアップは CloudKit のプライベート DB に、動画を含めて 1 日 1 回・Wi-Fi 接続時に自動で上げる（`CloudBackupService`）
+- Pro の iCloud バックアップは CloudKit のプライベート DB に、動画を含めて 1 日 1 回・Wi-Fi 接続時に自動で上げる（`CloudBackupService`）。写真・動画はカスタムゾーン `BodyLapseBackup` に 1 ファイル 1 レコードで置いてまだ上げていない分だけを上げ、体重・メモなどの小さなデータは目録 `manifest` 1 件にまとめる（`CloudBackupEngine`）
+- 本番の CloudKit スキーマは変えない。レコード型は既存の `Backup`、フィールドは既存の `bundle`（Asset）と `createdAt`（Date）だけを使う。型やフィールドを足すときは、CloudKit Console で Development から Production へスキーマを反映してから出す（反映しないと本番の保存が失敗する）
+- 端末は自分が保存・復元した目録の recordChangeTag を覚え、クラウドの tag と違う（別の端末やまっさらな端末）ときは自動で上書きせず、復元するか置き換えるかを選んでもらう（`CloudBackupPlanner.decide`）。この判定を外したり、自動バックアップで force にしたりしない
 - App Store Connect のサブスクグループでは Pro（月額・年額）がレベル 1、Standard がレベル 2（アップグレードの按分が効く順）。商品を足すときもこの順を崩さない
 
 ## 人物ビジュアル（オンボーディング・ストア画像・LP）
