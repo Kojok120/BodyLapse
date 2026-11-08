@@ -41,34 +41,14 @@ extension CalendarView {
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
         
-        PHPhotoLibrary.requestAuthorization { status in
-            guard status == .authorized else {
-                DispatchQueue.main.async {
-                    self.videoAlertMessage = "gallery.photo_library_access_denied".localized
-                    self.showingVideoAlert = true
-                }
-                return
-            }
-            
-            guard let image = PhotoStorageService.shared.loadImage(for: photo) else {
-                DispatchQueue.main.async {
-                    self.videoAlertMessage = "Failed to load image"
-                    self.showingVideoAlert = true
-                }
-                return
-            }
-            
-            PHPhotoLibrary.shared().performChanges({
-                PHAssetChangeRequest.creationRequestForAsset(from: image)
-            }) { success, error in
-                DispatchQueue.main.async {
-                    if success {
-                        self.showSaveSuccess(message: "gallery.photo_saved".localized)
-                    } else {
-                        self.videoAlertMessage = error?.localizedDescription ?? "Failed to save photo"
-                        self.showingVideoAlert = true
-                    }
-                }
+        PhotoLibrarySaver.save(photos: [photo]) { result in
+            switch result {
+            case .success:
+                self.showSaveSuccess(message: "gallery.photo_saved".localized)
+            case .failure(let error):
+                Haptics.error()
+                self.videoAlertMessage = error.localizedDescription
+                self.showingVideoAlert = true
             }
         }
     }

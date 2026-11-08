@@ -10,6 +10,8 @@ struct GalleryView: View {
     @State private var itemToDelete: Any?
     @State private var showingSaveSuccess = false
     @State private var saveSuccessMessage = ""
+    @State private var showingSaveError = false
+    @State private var saveErrorMessage = ""
     @State private var showingBulkDeleteAlert = false
     @State private var currentGridColumns: Int = 3
     
@@ -104,6 +106,11 @@ struct GalleryView: View {
                 Button("common.cancel".localized, role: .cancel) { }
             } message: {
                 Text("gallery.action_cannot_be_undone".localized)
+            }
+            .alert("photo_library.error.title".localized, isPresented: $showingSaveError) {
+                Button("common.ok".localized, role: .cancel) { }
+            } message: {
+                Text(saveErrorMessage)
             }
             .overlay(alignment: .top) {
                 if showingSaveSuccess {
@@ -524,26 +531,31 @@ extension GalleryView {
 
 extension GalleryView {
     private func savePhoto(_ photo: Photo) {
-        GalleryActionService.shared.savePhoto(photo) { [self] success, error in
-            if success {
-                GalleryActionService.shared.showSaveSuccess(
-                    message: "gallery.photo_saved".localized,
-                    showingSaveSuccess: $showingSaveSuccess,
-                    saveSuccessMessage: $saveSuccessMessage
-                )
-            }
+        GalleryActionService.shared.savePhoto(photo) { [self] result in
+            handleSaveResult(result, successMessage: "gallery.photo_saved".localized)
         }
     }
     
     private func saveVideo(_ video: Video) {
-        GalleryActionService.shared.saveVideo(video) { [self] success, error in
-            if success {
-                GalleryActionService.shared.showSaveSuccess(
-                    message: "gallery.video_saved".localized,
-                    showingSaveSuccess: $showingSaveSuccess,
-                    saveSuccessMessage: $saveSuccessMessage
-                )
-            }
+        GalleryActionService.shared.saveVideo(video) { [self] result in
+            handleSaveResult(result, successMessage: "gallery.video_saved".localized)
+        }
+    }
+
+    /// 写真アプリへの保存の結果を出す。失敗も黙って捨てない
+    private func handleSaveResult(_ result: Result<Void, Error>, successMessage: String) {
+        switch result {
+        case .success:
+            Haptics.success()
+            GalleryActionService.shared.showSaveSuccess(
+                message: successMessage,
+                showingSaveSuccess: $showingSaveSuccess,
+                saveSuccessMessage: $saveSuccessMessage
+            )
+        case .failure(let error):
+            Haptics.error()
+            saveErrorMessage = error.localizedDescription
+            showingSaveError = true
         }
     }
     
@@ -557,9 +569,9 @@ extension GalleryView {
     
     private func shareSelectedItems() {
         if viewModel.selectedSection == .photos {
-            let images = GalleryActionService.shared.getSelectedPhotosForSharing(from: viewModel)
-            if !images.isEmpty {
-                activeSheet = .share(images)
+            let urls = GalleryActionService.shared.getSelectedPhotosForSharing(from: viewModel)
+            if !urls.isEmpty {
+                activeSheet = .share(urls)
             }
         } else {
             let urls = GalleryActionService.shared.getSelectedVideosForSharing(from: viewModel)
@@ -571,24 +583,14 @@ extension GalleryView {
     
     private func saveSelectedItems() {
         if viewModel.selectedSection == .photos {
-            GalleryActionService.shared.bulkSavePhotosToLibrary(from: viewModel) { [self] success, error in
-                if success {
-                    GalleryActionService.shared.showSaveSuccess(
-                        message: String(format: "gallery.photos_saved_count".localized, viewModel.selectedPhotoIds.count),
-                        showingSaveSuccess: $showingSaveSuccess,
-                        saveSuccessMessage: $saveSuccessMessage
-                    )
-                }
+            let count = viewModel.selectedPhotoIds.count
+            GalleryActionService.shared.bulkSavePhotosToLibrary(from: viewModel) { [self] result in
+                handleSaveResult(result, successMessage: String(format: "gallery.photos_saved_count".localized, count))
             }
         } else {
-            GalleryActionService.shared.bulkSaveVideosToLibrary(from: viewModel) { [self] success, error in
-                if success {
-                    GalleryActionService.shared.showSaveSuccess(
-                        message: String(format: "gallery.videos_saved_count".localized, viewModel.selectedVideoIds.count),
-                        showingSaveSuccess: $showingSaveSuccess,
-                        saveSuccessMessage: $saveSuccessMessage
-                    )
-                }
+            let count = viewModel.selectedVideoIds.count
+            GalleryActionService.shared.bulkSaveVideosToLibrary(from: viewModel) { [self] result in
+                handleSaveResult(result, successMessage: String(format: "gallery.videos_saved_count".localized, count))
             }
         }
     }

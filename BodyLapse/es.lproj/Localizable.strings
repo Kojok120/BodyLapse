@@ -881,3 +881,10 @@
 "auth.recover_with_device_passcode" = "Desbloquear con el código del iPhone";
 "auth.recovery_needs_passcode" = "Para restablecer el PIN, configura un código para este iPhone en Ajustes.";
 "onboarding.pin_save_failed" = "No se pudo guardar el PIN. Inténtalo de nuevo.";
+
+/* Saving to the photo library */
+"photo_library.error.title" = "No se pudo guardar en Fotos";
+"photo_library.error.access_denied" = "BodyLapse no tiene permiso para añadir a tu fototeca. Actívalo en Ajustes > BodyLapse > Fotos.";
+"photo_library.error.nothing_to_save" = "No hay nada que guardar.";
+"photo_library.error.failed" = "No se pudo guardar. Inténtalo de nuevo.";
+"photo_library.error.failed_with_reason" = "No se pudo guardar: %@";

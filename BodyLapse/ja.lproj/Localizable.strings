@@ -881,3 +881,10 @@
 "auth.recover_with_device_passcode" = "iPhoneのパスコードで解除";
 "auth.recovery_needs_passcode" = "PINを設定し直すには、設定アプリでiPhoneのパスコードを設定してください。";
 "onboarding.pin_save_failed" = "PINを保存できませんでした。もう一度お試しください。";
+
+/* Saving to the photo library */
+"photo_library.error.title" = "写真アプリに保存できませんでした";
+"photo_library.error.access_denied" = "写真ライブラリへの追加が許可されていません。設定 > BodyLapse > 写真 から許可してください。";
+"photo_library.error.nothing_to_save" = "保存できるものがありません。";
+"photo_library.error.failed" = "保存できませんでした。もう一度お試しください。";
+"photo_library.error.failed_with_reason" = "保存できませんでした: %@";

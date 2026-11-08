@@ -16,15 +16,8 @@ class GalleryActionService {
         activeSheet.wrappedValue = .share([image])
     }
     
-    func savePhoto(_ photo: Photo, completion: @escaping (Bool, Error?) -> Void) {
-        guard let image = PhotoStorageService.shared.loadImage(for: photo) else {
-            completion(false, NSError(domain: "GalleryActionService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"]))
-            return
-        }
-        
-        PHPhotoLibrary.shared().performChanges({
-            PHAssetChangeRequest.creationRequestForAsset(from: image)
-        }, completionHandler: completion)
+    func savePhoto(_ photo: Photo, completion: @escaping (Result<Void, Error>) -> Void) {
+        PhotoLibrarySaver.save(photos: [photo], completion: completion)
     }
     
     // MARK: - 動画アクション
@@ -33,20 +26,16 @@ class GalleryActionService {
         activeSheet.wrappedValue = .share([video.fileURL])
     }
     
-    func saveVideo(_ video: Video, completion: @escaping (Bool, Error?) -> Void) {
-        PHPhotoLibrary.shared().performChanges({
-            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: video.fileURL)
-        }, completionHandler: completion)
+    func saveVideo(_ video: Video, completion: @escaping (Result<Void, Error>) -> Void) {
+        PhotoLibrarySaver.save(videos: [video], completion: completion)
     }
     
     // MARK: - 一括アクション
     
+    /// 選んだ写真のファイル。画像を展開せずにファイルのまま共有する (枚数が多くてもメモリを抱えない)
     @MainActor
-    func getSelectedPhotosForSharing(from viewModel: GalleryViewModel) -> [UIImage] {
-        return viewModel.selectedPhotoIds.compactMap { photoId in
-            guard let photo = viewModel.photos.first(where: { $0.id.uuidString == photoId }) else { return nil }
-            return PhotoStorageService.shared.loadImage(for: photo)
-        }
+    func getSelectedPhotosForSharing(from viewModel: GalleryViewModel) -> [URL] {
+        selectedPhotos(from: viewModel).compactMap { PhotoStorageService.shared.storedFileURL(for: $0) }
     }
     
     @MainActor
@@ -58,41 +47,23 @@ class GalleryActionService {
     }
     
     @MainActor
-    func bulkSavePhotosToLibrary(from viewModel: GalleryViewModel, completion: @escaping (Bool, Error?) -> Void) {
-        let selectedPhotos = viewModel.selectedPhotoIds.compactMap { photoId in
-            viewModel.photos.first(where: { $0.id.uuidString == photoId })
-        }
-        
-        let images = selectedPhotos.compactMap { PhotoStorageService.shared.loadImage(for: $0) }
-        
-        guard !images.isEmpty else {
-            completion(false, NSError(domain: "GalleryActionService", code: 2, userInfo: [NSLocalizedDescriptionKey: "No images to save"]))
-            return
-        }
-        
-        PHPhotoLibrary.shared().performChanges({
-            for image in images {
-                PHAssetChangeRequest.creationRequestForAsset(from: image)
-            }
-        }, completionHandler: completion)
+    func bulkSavePhotosToLibrary(from viewModel: GalleryViewModel, completion: @escaping (Result<Void, Error>) -> Void) {
+        PhotoLibrarySaver.save(photos: selectedPhotos(from: viewModel), completion: completion)
     }
     
     @MainActor
-    func bulkSaveVideosToLibrary(from viewModel: GalleryViewModel, completion: @escaping (Bool, Error?) -> Void) {
+    func bulkSaveVideosToLibrary(from viewModel: GalleryViewModel, completion: @escaping (Result<Void, Error>) -> Void) {
         let selectedVideos = viewModel.selectedVideoIds.compactMap { videoId in
             viewModel.videos.first(where: { $0.id.uuidString == videoId })
         }
-        
-        guard !selectedVideos.isEmpty else {
-            completion(false, NSError(domain: "GalleryActionService", code: 3, userInfo: [NSLocalizedDescriptionKey: "No videos to save"]))
-            return
+        PhotoLibrarySaver.save(videos: selectedVideos, completion: completion)
+    }
+
+    @MainActor
+    private func selectedPhotos(from viewModel: GalleryViewModel) -> [Photo] {
+        viewModel.selectedPhotoIds.compactMap { photoId in
+            viewModel.photos.first(where: { $0.id.uuidString == photoId })
         }
-        
-        PHPhotoLibrary.shared().performChanges({
-            for video in selectedVideos {
-                PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: video.fileURL)
-            }
-        }, completionHandler: completion)
     }
     
     // MARK: - ユーティリティメソッド
@@ -101,6 +72,60 @@ class GalleryActionService {
         saveSuccessMessage.wrappedValue = message
         withAnimation {
             showingSaveSuccess.wrappedValue = true
+        }
+    }
+}
+// MARK: - 写真アプリへの保存
+
+enum PhotoLibrarySaveError: LocalizedError {
+    case accessDenied
+    case nothingToSave
+    case failed(Error?)
+
+    var errorDescription: String? {
+        switch self {
+        case .accessDenied:
+            return "photo_library.error.access_denied".localized
+        case .nothingToSave:
+            return "photo_library.error.nothing_to_save".localized
+        case .failed(let error):
+            if let error {
+                return "photo_library.error.failed_with_reason".localized(with: error.localizedDescription)
+            }
+            return "photo_library.error.failed".localized
+        }
+    }
+}
+
+/// 写真アプリへ保存する。追加のみの権限で足りるので、ライブラリ全体の読み書きは求めない。
+/// 写真はファイルのまま渡し、画像を展開しない。完了はメインスレッドで返す。
+enum PhotoLibrarySaver {
+    static func save(photos: [Photo] = [], videos: [Video] = [], completion: @escaping (Result<Void, Error>) -> Void) {
+        let photoURLs = photos.compactMap { PhotoStorageService.shared.storedFileURL(for: $0) }
+        let videoURLs = videos.map(\.fileURL).filter { FileManager.default.fileExists(atPath: $0.path) }
+        func finish(_ result: Result<Void, Error>) {
+            DispatchQueue.main.async { completion(result) }
+        }
+        guard !photoURLs.isEmpty || !videoURLs.isEmpty else {
+            finish(.failure(PhotoLibrarySaveError.nothingToSave))
+            return
+        }
+
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+            guard status == .authorized || status == .limited else {
+                finish(.failure(PhotoLibrarySaveError.accessDenied))
+                return
+            }
+            PHPhotoLibrary.shared().performChanges({
+                for url in photoURLs {
+                    PHAssetCreationRequest.forAsset().addResource(with: .photo, fileURL: url, options: nil)
+                }
+                for url in videoURLs {
+                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+                }
+            }) { success, error in
+                finish(success ? .success(()) : .failure(PhotoLibrarySaveError.failed(error)))
+            }
         }
     }
 }

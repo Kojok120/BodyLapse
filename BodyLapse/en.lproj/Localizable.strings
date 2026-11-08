@@ -881,3 +881,10 @@
 "auth.recover_with_device_passcode" = "Unlock with iPhone Passcode";
 "auth.recovery_needs_passcode" = "To reset your PIN, set a passcode for this iPhone in Settings.";
 "onboarding.pin_save_failed" = "Couldn't save the PIN. Please try again.";
+
+/* Saving to the photo library */
+"photo_library.error.title" = "Couldn't Save to Photos";
+"photo_library.error.access_denied" = "BodyLapse isn't allowed to add to your photo library. Turn on access in Settings > BodyLapse > Photos.";
+"photo_library.error.nothing_to_save" = "There's nothing to save.";
+"photo_library.error.failed" = "Couldn't save. Please try again.";
+"photo_library.error.failed_with_reason" = "Couldn't save: %@";
