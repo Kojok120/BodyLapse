@@ -2,8 +2,8 @@ import Foundation
 import Testing
 @testable import BodyLapse
 
-@Suite(.serialized)
-struct VideoStorageServiceTests {
+// アプリの Documents を共有する他のテスト (取り込み・書き出し) と競合しないよう、直列の BodyLapseTests に入れる
+extension BodyLapseTests {
 
     /// 動画の置き場が無い状態 (ギャラリーを一度も開いていない) でも保存できる
     @Test
