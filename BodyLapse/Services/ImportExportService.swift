@@ -121,140 +121,151 @@ class ImportExportService {
         }
     }
     
+    /// 書き出しの中身 (zip に入れる一覧)。写真・動画は .file、それ以外は .data になる。
+    /// iCloud バックアップは、これを写真・動画と小さなデータに分けて上げる
+    func makeExportEntries(
+        options: ExportOptions,
+        progress: @escaping (Float) -> Void = { _ in }
+    ) async throws -> [SimpleZipArchive.ArchiveEntry] {
+        let photosToExport = options.includePhotos ? filterPhotos(options: options) : []
+        let videosToExport = options.includeVideos ? filterVideos(options: options) : []
+        let categories = filterCategories(CategoryStorageService.shared.getActiveCategories(), options: options)
+
+        var totalSteps = Float(photosToExport.count + videosToExport.count + 5)
+        if totalSteps <= 0 {
+            totalSteps = 1
+        }
+
+        var currentStep: Float = 0
+        var archiveEntries: [SimpleZipArchive.ArchiveEntry] = []
+
+        // 写真をエクスポート
+        let exportedPhotos: [Photo]
+        if options.includePhotos {
+            let photoResult = try self.exportPhotos(
+                photosToExport,
+                progress: { photoProgress in
+                    let stepProgress = currentStep + (photoProgress * Float(max(photosToExport.count, 1)))
+                    progress(stepProgress / totalSteps)
+                }
+            )
+            archiveEntries.append(contentsOf: photoResult.entries)
+            exportedPhotos = photoResult.photos
+            currentStep += Float(photosToExport.count)
+        } else {
+            exportedPhotos = []
+        }
+
+        // 動画をエクスポート
+        let exportedVideos: [Video]
+        if options.includeVideos {
+            let videoResult = try self.exportVideos(
+                videosToExport,
+                progress: { videoProgress in
+                    let stepProgress = currentStep + (videoProgress * Float(max(videosToExport.count, 1)))
+                    progress(stepProgress / totalSteps)
+                }
+            )
+            archiveEntries.append(contentsOf: videoResult.entries)
+            exportedVideos = videoResult.videos
+            currentStep += Float(videosToExport.count)
+        } else {
+            exportedVideos = []
+        }
+
+        // カテゴリーをエクスポート
+        let categoriesData = try encodeJSON(categories)
+        archiveEntries.append(
+            SimpleZipArchive.ArchiveEntry(
+                path: "data/categories.json",
+                source: .data(categoriesData)
+            )
+        )
+
+        currentStep += 1
+        progress(currentStep / totalSteps)
+
+        // 体重データをエクスポート
+        var filteredWeightEntries: [WeightEntry] = []
+        if options.includeWeightData {
+            let weightEntries = try await WeightStorageService.shared.loadEntries()
+            filteredWeightEntries = self.filterWeightEntries(weightEntries, options: options)
+            let weightData = try encodeJSON(filteredWeightEntries)
+            archiveEntries.append(
+                SimpleZipArchive.ArchiveEntry(
+                    path: "data/weight_data.json",
+                    source: .data(weightData)
+                )
+            )
+        }
+
+        currentStep += 1
+        progress(currentStep / totalSteps)
+
+        // ノートをエクスポート
+        var filteredNotes: [DailyNote] = []
+        if options.includeNotes {
+            let notes = await DailyNoteStorageService.shared.getAllNotes()
+            filteredNotes = self.filterNotes(notes, options: options)
+            let notesData = try encodeJSON(filteredNotes)
+            archiveEntries.append(
+                SimpleZipArchive.ArchiveEntry(
+                    path: "data/notes.json",
+                    source: .data(notesData)
+                )
+            )
+        }
+
+        currentStep += 1
+        progress(currentStep / totalSteps)
+
+        // リクエストに応じて設定をエクスポート
+        if options.includeSettings {
+            let settings = await MainActor.run {
+                UserSettingsManager.shared.settings
+            }
+            let settingsData = try encodeJSON(settings)
+            archiveEntries.append(
+                SimpleZipArchive.ArchiveEntry(
+                    path: "data/settings.json",
+                    source: .data(settingsData)
+                )
+            )
+        }
+
+        currentStep += 1
+        progress(currentStep / totalSteps)
+
+        // マニフェストを作成
+        let manifest = self.createManifest(
+            photos: exportedPhotos,
+            videos: exportedVideos,
+            categories: categories,
+            weightEntries: filteredWeightEntries,
+            notes: filteredNotes,
+            options: options
+        )
+        let manifestData = try encodeJSON(manifest)
+        archiveEntries.append(
+            SimpleZipArchive.ArchiveEntry(
+                path: "manifest.json",
+                source: .data(manifestData)
+            )
+        )
+
+        currentStep += 1
+        progress(currentStep / totalSteps)
+
+        return archiveEntries
+    }
+
     private func performExport(
         options: ExportOptions,
         progress: @escaping (Float) -> Void,
         completion: @escaping (Result<URL, Error>) -> Void
     ) async {
         do {
-            let photosToExport = options.includePhotos ? filterPhotos(options: options) : []
-            let videosToExport = options.includeVideos ? filterVideos(options: options) : []
-            let categories = filterCategories(CategoryStorageService.shared.getActiveCategories(), options: options)
-
-            var totalSteps = Float(photosToExport.count + videosToExport.count + 5)
-            if totalSteps <= 0 {
-                totalSteps = 1
-            }
-
-            var currentStep: Float = 0
-            var archiveEntries: [SimpleZipArchive.ArchiveEntry] = []
-
-            // 写真をエクスポート
-            let exportedPhotos: [Photo]
-            if options.includePhotos {
-                let photoResult = try self.exportPhotos(
-                    photosToExport,
-                    progress: { photoProgress in
-                        let stepProgress = currentStep + (photoProgress * Float(max(photosToExport.count, 1)))
-                        progress(stepProgress / totalSteps)
-                    }
-                )
-                archiveEntries.append(contentsOf: photoResult.entries)
-                exportedPhotos = photoResult.photos
-                currentStep += Float(photosToExport.count)
-            } else {
-                exportedPhotos = []
-            }
-
-            // 動画をエクスポート
-            let exportedVideos: [Video]
-            if options.includeVideos {
-                let videoResult = try self.exportVideos(
-                    videosToExport,
-                    progress: { videoProgress in
-                        let stepProgress = currentStep + (videoProgress * Float(max(videosToExport.count, 1)))
-                        progress(stepProgress / totalSteps)
-                    }
-                )
-                archiveEntries.append(contentsOf: videoResult.entries)
-                exportedVideos = videoResult.videos
-                currentStep += Float(videosToExport.count)
-            } else {
-                exportedVideos = []
-            }
-
-            // カテゴリーをエクスポート
-            let categoriesData = try encodeJSON(categories)
-            archiveEntries.append(
-                SimpleZipArchive.ArchiveEntry(
-                    path: "data/categories.json",
-                    source: .data(categoriesData)
-                )
-            )
-
-            currentStep += 1
-            progress(currentStep / totalSteps)
-
-            // 体重データをエクスポート
-            var filteredWeightEntries: [WeightEntry] = []
-            if options.includeWeightData {
-                let weightEntries = try await WeightStorageService.shared.loadEntries()
-                filteredWeightEntries = self.filterWeightEntries(weightEntries, options: options)
-                let weightData = try encodeJSON(filteredWeightEntries)
-                archiveEntries.append(
-                    SimpleZipArchive.ArchiveEntry(
-                        path: "data/weight_data.json",
-                        source: .data(weightData)
-                    )
-                )
-            }
-
-            currentStep += 1
-            progress(currentStep / totalSteps)
-
-            // ノートをエクスポート
-            var filteredNotes: [DailyNote] = []
-            if options.includeNotes {
-                let notes = await DailyNoteStorageService.shared.getAllNotes()
-                filteredNotes = self.filterNotes(notes, options: options)
-                let notesData = try encodeJSON(filteredNotes)
-                archiveEntries.append(
-                    SimpleZipArchive.ArchiveEntry(
-                        path: "data/notes.json",
-                        source: .data(notesData)
-                    )
-                )
-            }
-
-            currentStep += 1
-            progress(currentStep / totalSteps)
-
-            // リクエストに応じて設定をエクスポート
-            if options.includeSettings {
-                let settings = await MainActor.run {
-                    UserSettingsManager.shared.settings
-                }
-                let settingsData = try encodeJSON(settings)
-                archiveEntries.append(
-                    SimpleZipArchive.ArchiveEntry(
-                        path: "data/settings.json",
-                        source: .data(settingsData)
-                    )
-                )
-            }
-
-            currentStep += 1
-            progress(currentStep / totalSteps)
-
-            // マニフェストを作成
-            let manifest = self.createManifest(
-                photos: exportedPhotos,
-                videos: exportedVideos,
-                categories: categories,
-                weightEntries: filteredWeightEntries,
-                notes: filteredNotes,
-                options: options
-            )
-            let manifestData = try encodeJSON(manifest)
-            archiveEntries.append(
-                SimpleZipArchive.ArchiveEntry(
-                    path: "manifest.json",
-                    source: .data(manifestData)
-                )
-            )
-
-            currentStep += 1
-            progress(currentStep / totalSteps)
+            let archiveEntries = try await makeExportEntries(options: options, progress: progress)
 
             // .bodylapseファイルを直接生成
             let zipPath = FileManager.default.temporaryDirectory
@@ -355,164 +366,7 @@ class ImportExportService {
                 }
                 print("[ImportExport] Archive extracted successfully")
                 
-                // マニフェストを読み取り
-                let manifestPath = tempDir.appendingPathComponent("manifest.json")
-                guard FileManager.default.fileExists(atPath: manifestPath.path) else {
-                    throw ImportExportError.invalidFormat
-                }
-                
-                // マニフェストデータを安全に読み取り・検証
-                print("[ImportExport] Reading manifest...")
-                let manifest = try safelyDecodeJSON(ExportManifest.self, from: manifestPath)
-                print("[ImportExport] Manifest loaded successfully")
-                print("[ImportExport] - Version: \(manifest.version)")
-                print("[ImportExport] - Export date: \(manifest.exportDate)")
-                print("[ImportExport] - Photos: \(manifest.dataInfo.photoCount)")
-                print("[ImportExport] - Videos: \(manifest.dataInfo.videoCount)")
-                print("[ImportExport] - Categories: \(manifest.dataInfo.categoryCount)")
-                
-                // デバッグ: 展開されたファイルを一覧表示
-                print("[ImportExport] Temp directory structure:")
-                if let enumerator = FileManager.default.enumerator(atPath: tempDir.path) {
-                    while let element = enumerator.nextObject() as? String {
-                        print("[ImportExport]   - \(element)")
-                    }
-                }
-                
-                var summary = ImportSummary()
-                var totalSteps: Float = 0
-                var currentStep: Float = 0
-                
-                // デバッグ: インポートオプション
-                print("[ImportExport] Import options:")
-                print("[ImportExport] - Merge strategy: \(options.mergeStrategy)")
-                print("[ImportExport] - Import photos: \(options.importPhotos)")
-                print("[ImportExport] - Import videos: \(options.importVideos)")
-                print("[ImportExport] - Import settings: \(options.importSettings)")
-                print("[ImportExport] - Import weight data: \(options.importWeightData)")
-                print("[ImportExport] - Import notes: \(options.importNotes)")
-                
-                // 総ステップ数を計算
-                if options.importPhotos {
-                    totalSteps += Float(manifest.dataInfo.photoCount)
-                }
-                if options.importVideos {
-                    totalSteps += Float(manifest.dataInfo.videoCount)
-                }
-                totalSteps += 5 // For other operations
-                
-                // 最初にカテゴリーをインポート
-                let categoriesPath = tempDir.appendingPathComponent("data/categories.json")
-                print("[ImportExport] Checking for categories at: \(categoriesPath.path)")
-                if FileManager.default.fileExists(atPath: categoriesPath.path) {
-                    print("[ImportExport] Categories file found, loading...")
-                    let categories = try safelyDecodeJSON([PhotoCategory].self, from: categoriesPath)
-                    print("[ImportExport] Loaded \(categories.count) categories")
-                    let sanitizedCategories = categories.compactMap { self.sanitizedImportedCategory(from: $0) }
-                    summary.categoriesImported = try self.importCategories(sanitizedCategories, options: options)
-                    print("[ImportExport] Categories imported: \(summary.categoriesImported)")
-                } else {
-                    print("[ImportExport] Categories file not found")
-                }
-                
-                currentStep += 1
-                progress(currentStep / totalSteps)
-                
-                // 写真をインポート
-                if options.importPhotos {
-                    let photosDir = tempDir.appendingPathComponent("photos")
-                    print("[ImportExport] Starting photo import from: \(photosDir.path)")
-                    print("[ImportExport] Photos directory exists: \(FileManager.default.fileExists(atPath: photosDir.path))")
-                    
-                    do {
-                        let photoResult = try self.importPhotos(
-                            from: photosDir,
-                            options: options,
-                            progress: { photoProgress in
-                                let stepProgress = currentStep + (photoProgress * Float(manifest.dataInfo.photoCount))
-                                progress(stepProgress / totalSteps)
-                            }
-                        )
-                        summary.photosImported = photoResult.imported
-                        summary.photosFailed = photoResult.failed
-                        print("[ImportExport] Photos imported: \(summary.photosImported), failed: \(summary.photosFailed)")
-                    } catch {
-                        print("[ImportExport] Error importing photos: \(error)")
-                        throw error
-                    }
-                    currentStep += Float(manifest.dataInfo.photoCount)
-                }
-                
-                // 動画をインポート
-                if options.importVideos {
-                    let videosDir = tempDir.appendingPathComponent("videos")
-                    print("[ImportExport] Starting video import from: \(videosDir.path)")
-                    print("[ImportExport] Videos directory exists: \(FileManager.default.fileExists(atPath: videosDir.path))")
-                    
-                    do {
-                        let videoResult = try await self.importVideos(
-                            from: videosDir,
-                            options: options,
-                            progress: { videoProgress in
-                                let stepProgress = currentStep + (videoProgress * Float(manifest.dataInfo.videoCount))
-                                progress(stepProgress / totalSteps)
-                            }
-                        )
-                        summary.videosImported = videoResult.imported
-                        summary.videosFailed = videoResult.failed
-                        print("[ImportExport] Videos imported: \(summary.videosImported), failed: \(summary.videosFailed)")
-                    } catch {
-                        print("[ImportExport] Error importing videos: \(error)")
-                        throw error
-                    }
-                    currentStep += Float(manifest.dataInfo.videoCount)
-                }
-                
-                // 体重データをインポート
-                if options.importWeightData {
-                    let weightPath = tempDir.appendingPathComponent("data/weight_data.json")
-                    if FileManager.default.fileExists(atPath: weightPath.path) {
-                        let entries = try safelyDecodeJSON([WeightEntry].self, from: weightPath)
-                        summary.weightEntriesImported = try await self.importWeightEntries(entries, options: options)
-                    }
-                }
-                
-                currentStep += 1
-                progress(currentStep / totalSteps)
-                
-                // ノートをインポート
-                if options.importNotes {
-                    let notesPath = tempDir.appendingPathComponent("data/notes.json")
-                    if FileManager.default.fileExists(atPath: notesPath.path) {
-                        let notes = try safelyDecodeJSON([DailyNote].self, from: notesPath)
-                        summary.notesImported = try await self.importNotes(notes, options: options)
-                    }
-                }
-                
-                currentStep += 1
-                progress(currentStep / totalSteps)
-                
-                // リクエストに応じて設定をインポート
-                if options.importSettings {
-                    let settingsPath = tempDir.appendingPathComponent("data/settings.json")
-                    if FileManager.default.fileExists(atPath: settingsPath.path) {
-                        let settings = try safelyDecodeJSON(UserSettings.self, from: settingsPath)
-                        await MainActor.run {
-                            UserSettingsManager.shared.settings = settings
-                        }
-                        summary.settingsImported = true
-                    }
-                }
-                
-                print("[ImportExport] Import completed - Summary:")
-                print("[ImportExport] - Photos imported: \(summary.photosImported)")
-                print("[ImportExport] - Videos imported: \(summary.videosImported)")
-                print("[ImportExport] - Categories imported: \(summary.categoriesImported)")
-                print("[ImportExport] - Weight entries imported: \(summary.weightEntriesImported)")
-                print("[ImportExport] - Notes imported: \(summary.notesImported)")
-                print("[ImportExport] - Total items: \(summary.totalItemsImported)")
-                
-                let finalSummary = summary
+                let finalSummary = try await importExtractedBundle(at: tempDir, options: options, progress: progress)
                 await MainActor.run {
                     completion(.success(finalSummary))
                 }
@@ -523,6 +377,173 @@ class ImportExportService {
             }
     }
     
+    /// 展開済みの書き出しのフォルダを取り込む。iCloud バックアップの復元は zip を作り直さずにここへ渡す
+    /// (zip の 2GB の上限を通らない)
+    func importExtractedBundle(
+        at tempDir: URL,
+        options: ImportOptions,
+        progress: @escaping (Float) -> Void = { _ in }
+    ) async throws -> ImportSummary {
+        // マニフェストを読み取り
+        let manifestPath = tempDir.appendingPathComponent("manifest.json")
+        guard FileManager.default.fileExists(atPath: manifestPath.path) else {
+            throw ImportExportError.invalidFormat
+        }
+        
+        // マニフェストデータを安全に読み取り・検証
+        print("[ImportExport] Reading manifest...")
+        let manifest = try safelyDecodeJSON(ExportManifest.self, from: manifestPath)
+        print("[ImportExport] Manifest loaded successfully")
+        print("[ImportExport] - Version: \(manifest.version)")
+        print("[ImportExport] - Export date: \(manifest.exportDate)")
+        print("[ImportExport] - Photos: \(manifest.dataInfo.photoCount)")
+        print("[ImportExport] - Videos: \(manifest.dataInfo.videoCount)")
+        print("[ImportExport] - Categories: \(manifest.dataInfo.categoryCount)")
+        
+        // デバッグ: 展開されたファイルを一覧表示
+        print("[ImportExport] Temp directory structure:")
+        if let enumerator = FileManager.default.enumerator(atPath: tempDir.path) {
+            while let element = enumerator.nextObject() as? String {
+                print("[ImportExport]   - \(element)")
+            }
+        }
+        
+        var summary = ImportSummary()
+        var totalSteps: Float = 0
+        var currentStep: Float = 0
+        
+        // デバッグ: インポートオプション
+        print("[ImportExport] Import options:")
+        print("[ImportExport] - Merge strategy: \(options.mergeStrategy)")
+        print("[ImportExport] - Import photos: \(options.importPhotos)")
+        print("[ImportExport] - Import videos: \(options.importVideos)")
+        print("[ImportExport] - Import settings: \(options.importSettings)")
+        print("[ImportExport] - Import weight data: \(options.importWeightData)")
+        print("[ImportExport] - Import notes: \(options.importNotes)")
+        
+        // 総ステップ数を計算
+        if options.importPhotos {
+            totalSteps += Float(manifest.dataInfo.photoCount)
+        }
+        if options.importVideos {
+            totalSteps += Float(manifest.dataInfo.videoCount)
+        }
+        totalSteps += 5 // For other operations
+        
+        // 最初にカテゴリーをインポート
+        let categoriesPath = tempDir.appendingPathComponent("data/categories.json")
+        print("[ImportExport] Checking for categories at: \(categoriesPath.path)")
+        if FileManager.default.fileExists(atPath: categoriesPath.path) {
+            print("[ImportExport] Categories file found, loading...")
+            let categories = try safelyDecodeJSON([PhotoCategory].self, from: categoriesPath)
+            print("[ImportExport] Loaded \(categories.count) categories")
+            let sanitizedCategories = categories.compactMap { self.sanitizedImportedCategory(from: $0) }
+            summary.categoriesImported = try self.importCategories(sanitizedCategories, options: options)
+            print("[ImportExport] Categories imported: \(summary.categoriesImported)")
+        } else {
+            print("[ImportExport] Categories file not found")
+        }
+        
+        currentStep += 1
+        progress(currentStep / totalSteps)
+        
+        // 写真をインポート
+        if options.importPhotos {
+            let photosDir = tempDir.appendingPathComponent("photos")
+            print("[ImportExport] Starting photo import from: \(photosDir.path)")
+            print("[ImportExport] Photos directory exists: \(FileManager.default.fileExists(atPath: photosDir.path))")
+            
+            do {
+                let photoResult = try self.importPhotos(
+                    from: photosDir,
+                    options: options,
+                    progress: { photoProgress in
+                        let stepProgress = currentStep + (photoProgress * Float(manifest.dataInfo.photoCount))
+                        progress(stepProgress / totalSteps)
+                    }
+                )
+                summary.photosImported = photoResult.imported
+                summary.photosFailed = photoResult.failed
+                print("[ImportExport] Photos imported: \(summary.photosImported), failed: \(summary.photosFailed)")
+            } catch {
+                print("[ImportExport] Error importing photos: \(error)")
+                throw error
+            }
+            currentStep += Float(manifest.dataInfo.photoCount)
+        }
+        
+        // 動画をインポート
+        if options.importVideos {
+            let videosDir = tempDir.appendingPathComponent("videos")
+            print("[ImportExport] Starting video import from: \(videosDir.path)")
+            print("[ImportExport] Videos directory exists: \(FileManager.default.fileExists(atPath: videosDir.path))")
+            
+            do {
+                let videoResult = try await self.importVideos(
+                    from: videosDir,
+                    options: options,
+                    progress: { videoProgress in
+                        let stepProgress = currentStep + (videoProgress * Float(manifest.dataInfo.videoCount))
+                        progress(stepProgress / totalSteps)
+                    }
+                )
+                summary.videosImported = videoResult.imported
+                summary.videosFailed = videoResult.failed
+                print("[ImportExport] Videos imported: \(summary.videosImported), failed: \(summary.videosFailed)")
+            } catch {
+                print("[ImportExport] Error importing videos: \(error)")
+                throw error
+            }
+            currentStep += Float(manifest.dataInfo.videoCount)
+        }
+        
+        // 体重データをインポート
+        if options.importWeightData {
+            let weightPath = tempDir.appendingPathComponent("data/weight_data.json")
+            if FileManager.default.fileExists(atPath: weightPath.path) {
+                let entries = try safelyDecodeJSON([WeightEntry].self, from: weightPath)
+                summary.weightEntriesImported = try await self.importWeightEntries(entries, options: options)
+            }
+        }
+        
+        currentStep += 1
+        progress(currentStep / totalSteps)
+        
+        // ノートをインポート
+        if options.importNotes {
+            let notesPath = tempDir.appendingPathComponent("data/notes.json")
+            if FileManager.default.fileExists(atPath: notesPath.path) {
+                let notes = try safelyDecodeJSON([DailyNote].self, from: notesPath)
+                summary.notesImported = try await self.importNotes(notes, options: options)
+            }
+        }
+        
+        currentStep += 1
+        progress(currentStep / totalSteps)
+        
+        // リクエストに応じて設定をインポート
+        if options.importSettings {
+            let settingsPath = tempDir.appendingPathComponent("data/settings.json")
+            if FileManager.default.fileExists(atPath: settingsPath.path) {
+                let settings = try safelyDecodeJSON(UserSettings.self, from: settingsPath)
+                await MainActor.run {
+                    UserSettingsManager.shared.settings = settings
+                }
+                summary.settingsImported = true
+            }
+        }
+        
+        print("[ImportExport] Import completed - Summary:")
+        print("[ImportExport] - Photos imported: \(summary.photosImported)")
+        print("[ImportExport] - Videos imported: \(summary.videosImported)")
+        print("[ImportExport] - Categories imported: \(summary.categoriesImported)")
+        print("[ImportExport] - Weight entries imported: \(summary.weightEntriesImported)")
+        print("[ImportExport] - Notes imported: \(summary.notesImported)")
+        print("[ImportExport] - Total items: \(summary.totalItemsImported)")
+
+        return summary
+    }
+
     // MARK: - ヘルパーメソッド
     
     private func safelyDecodeJSON<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {
