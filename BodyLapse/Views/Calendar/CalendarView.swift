@@ -63,19 +63,7 @@ struct CalendarView: View {
     }
     
     var dateRange: [Date] {
-        let calendar = Calendar.current
-        let endDate = calendar.startOfDay(for: Date())
-        let startDate = calendar.date(byAdding: .day, value: -(selectedPeriod.days - 1), to: endDate) ?? endDate
-        
-        var dates: [Date] = []
-        var currentDate = startDate
-        
-        while currentDate <= endDate {
-            dates.append(currentDate)
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
-        }
-        
-        return dates
+        CalendarDateRange.dates(days: selectedPeriod.days)
     }
     
     var body: some View {
@@ -399,7 +387,7 @@ extension CalendarView {
         selectedDate = today
         selectedChartDate = today
         
-        if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: today) }) {
+        if let index = CalendarDateRange.index(of: today, in: dateRange) {
             selectedIndex = index
         }
         
@@ -421,7 +409,7 @@ extension CalendarView {
             selectedDate = date
             updateCurrentPhoto()
             
-            if let index = dateRange.firstIndex(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
+            if let index = CalendarDateRange.index(of: date, in: dateRange) {
                 selectedIndex = index
             }
         }

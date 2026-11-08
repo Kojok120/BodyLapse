@@ -103,10 +103,8 @@ class CalendarViewModel: ObservableObject {
     }
     
     func note(for date: Date) -> DailyNote? {
-        let calendar = Calendar.current
-        return dailyNotes.values.first { note in
-            calendar.isDate(note.date, inSameDayAs: date)
-        }
+        // dailyNotes は日の 0:00 をキーにしているので、全件を探さずに引く
+        dailyNotes[Calendar.current.startOfDay(for: date)]
     }
     
     func saveNote(content: String, for date: Date) {
