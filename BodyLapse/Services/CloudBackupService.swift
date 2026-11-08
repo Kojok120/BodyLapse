@@ -204,7 +204,8 @@ class CloudBackupService: ObservableObject {
         let options = ImportExportService.ExportOptions(
             includePhotos: true,
             includeVideos: includeVideos,
-            includeSettings: true,
+            // アプリの設定は端末ごとに持つ (復元でも取り込まない) ので、上げない
+            includeSettings: false,
             includeWeightData: true,
             includeNotes: true,
             dateRange: nil,
