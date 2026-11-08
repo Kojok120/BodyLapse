@@ -465,26 +465,6 @@ struct SettingToggleRow: View {
     }
 }
 
-struct OnboardingPremiumFeatureRow: View {
-    let text: String
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Text("•")
-                .font(.body)
-                .foregroundColor(.secondary)
-            
-            Text(text)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-            
-            Spacer()
-        }
-    }
-}
-
 // MARK: - Modified Baseline Photo Capture View with Skip
 
 struct BaselinePhotoCaptureViewWithSkip: View {

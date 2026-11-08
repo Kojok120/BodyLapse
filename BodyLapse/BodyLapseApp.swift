@@ -10,7 +10,6 @@ import SwiftUI
 @main
 struct BodyLapseApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var storeManager = StoreManager.shared
     @StateObject private var subscriptionManager = SubscriptionManagerService.shared
     @StateObject private var languageManager = LanguageManager.shared
     

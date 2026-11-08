@@ -1,32 +1,5 @@
 import SwiftUI
 
-// MARK: - Filter Chip
-
-struct FilterChip: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(isSelected ? .white : .primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    isSelected ? Color.bodyLapseTurquoise : Color(UIColor.tertiarySystemBackground)
-                )
-                .cornerRadius(15)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(isSelected ? Color.clear : Color(UIColor.separator).opacity(0.5), lineWidth: 1)
-                )
-        }
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
-    }
-}
-
 // MARK: - Category Chip
 
 struct CategoryChip: View {

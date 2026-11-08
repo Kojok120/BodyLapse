@@ -3,7 +3,6 @@ import StoreKit
 
 @MainActor
 class PremiumViewModel: ObservableObject {
-    @Published var isShowingPremiumView = false
     @Published var isPurchasing = false
     @Published var purchaseError: String?
     /// 無料体験を使える商品の ID (体験を使い切った人には出さない)
@@ -23,10 +22,6 @@ class PremiumViewModel: ObservableObject {
         subscriptionManager.isPro
     }
 
-    var tier: SubscriptionTier {
-        subscriptionManager.tier
-    }
-
     var standardProduct: Product? {
         products.first { $0.id == StoreProducts.premiumMonthly }
     }
@@ -41,18 +36,6 @@ class PremiumViewModel: ObservableObject {
 
     var isLoadingProducts: Bool {
         subscriptionManager.isLoadingProducts
-    }
-    
-    var subscriptionStatusDescription: String {
-        subscriptionManager.subscriptionStatusDescription
-    }
-    
-    var expirationDate: Date? {
-        subscriptionManager.expirationDate
-    }
-    
-    var isAboutToExpire: Bool {
-        subscriptionManager.isAboutToExpire
     }
     
     func loadProducts() async {
@@ -87,7 +70,6 @@ class PremiumViewModel: ObservableObject {
         
         do {
             try await subscriptionManager.purchase(product)
-            isShowingPremiumView = false
         } catch {
             purchaseError = error.localizedDescription
         }
@@ -101,28 +83,10 @@ class PremiumViewModel: ObservableObject {
         
         do {
             try await subscriptionManager.restorePurchases()
-            isShowingPremiumView = false
         } catch {
             purchaseError = error.localizedDescription
         }
         
         isPurchasing = false
-    }
-    
-    // MARK: - プレミアム機能チェック
-    func canAccessWeightTracking() -> Bool {
-        return subscriptionManager.canAccessWeightTracking()
-    }
-    
-    func canRemoveWatermark() -> Bool {
-        return subscriptionManager.canRemoveWatermark()
-    }
-    
-    func shouldShowAds() -> Bool {
-        return subscriptionManager.shouldShowAds()
-    }
-    
-    func canAccessAdvancedCharts() -> Bool {
-        return subscriptionManager.canAccessAdvancedCharts()
     }
 }
