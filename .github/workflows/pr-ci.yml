@@ -20,19 +20,26 @@ permissions:
 jobs:
   build-and-test:
     if: ${{ github.event.pull_request.draft == false }}
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 45
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 配信 (testflight.yml) と同じ Xcode 26 で確かめる。macos-15 の Xcode 16.4 は 2026-11-04 のイメージから
-      # opencv2.xcframework.zip の取得が「already exists in file system」で失敗し、キャッシュを消しても直らなかった
-      - name: Select Xcode 26
+      # 配信 (testflight.yml) と同じ Xcode 27.2 で確かめる。Xcode 27 は xcode-27 イメージ (2026-11 時点で preview) にだけある。
+      # macos-15 の Xcode 16.4 は 2026-11-04 のイメージから opencv2.xcframework.zip の取得が
+      # 「already exists in file system」で失敗し、キャッシュを消しても直らなかった
+      - name: Select Xcode 27.2
         run: |
-          latest="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)"
-          if [ -n "$latest" ]; then sudo xcode-select -s "$latest/Contents/Developer"; fi
+          set -euo pipefail
+          # イメージの既定 (27.1) でなく、手元と同じ版を名指しで選ぶ。手元の Xcode を上げたらここも上げる
+          xcode=/Applications/Xcode_27.2.app
+          if [ ! -d "$xcode" ]; then
+            echo "::error::$xcode がありません。入っている Xcode: $(ls -d /Applications/Xcode_*.app | tr '\n' ' ')"
+            exit 1
+          fi
+          sudo xcode-select -s "$xcode/Contents/Developer"
           xcodebuild -version
 
       - name: Pick simulator

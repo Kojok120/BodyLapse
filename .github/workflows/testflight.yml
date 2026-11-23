@@ -49,9 +49,9 @@ jobs:
     # TESTFLIGHT_ENABLED=true を設定するまではスキップ（シークレット未投入時の誤fail防止）。
     # ref ガード: workflow_dispatch を含め main 以外からは配信しない（未レビューコードの本番署名防止）。
     if: ${{ vars.TESTFLIGHT_ENABLED == 'true' && github.ref == 'refs/heads/main' }}
-    # Apple は App Store Connect アップロードに iOS 26 SDK (Xcode 26+) を必須化。
-    # macos-26 イメージに同梱の Xcode 26 を使う。
-    runs-on: macos-26
+    # 手元と self-hosted CI の Xcode (27.2) に揃える。Xcode 27 は macos-26 イメージには入らず、
+    # xcode-27 イメージ (2026-11 時点で preview) にだけある。iOS 27 SDK でのビルドは 2027-04 からアップロードの必須条件。
+    runs-on: xcode-27
     timeout-minutes: 45
     environment: app-store-production
     env:
@@ -84,12 +84,16 @@ jobs:
           done
           exit "$missing"
 
-      - name: Select Xcode (latest stable = Xcode 26+)
+      - name: Select Xcode 27.2
         run: |
           set -euo pipefail
-          # macos-26 既定が 26 系でない場合に備え、明示的に最新の Xcode_26 を選択。
-          latest="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)"
-          if [ -n "$latest" ]; then sudo xcode-select -s "$latest/Contents/Developer"; fi
+          # イメージの既定 (27.1) でなく、手元と同じ版を名指しで選ぶ。手元の Xcode を上げたらここも上げる
+          xcode=/Applications/Xcode_27.2.app
+          if [ ! -d "$xcode" ]; then
+            echo "::error::$xcode がありません。入っている Xcode: $(ls -d /Applications/Xcode_*.app | tr '\n' ' ')"
+            exit 1
+          fi
+          sudo xcode-select -s "$xcode/Contents/Developer"
 
       - name: Show toolchain
         run: |
